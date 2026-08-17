@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Area Management — 2027 Operating Pack · Maki &amp; Ramen</title>
+<style>
+
+:root{--page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#898781;
+ --grid:#e1e0d9;--axis:#c3c2b7;--ring:rgba(11,11,11,.10);
+ --good:#0ca30c;--warn:#fab219;--crit:#d03b3b;--pos:#2a78d6;--neg:#d03b3b;--dim:#c3c2b7;--navy:#2B2B4A}
+:root[data-theme="dark"]{--page:#0d0d0d;--surface:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#898781;
+ --grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);--pos:#3987e5;--dim:#4a4a48;--navy:#c9c8ff}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--page:#0d0d0d;--surface:#1a1a19;
+ --ink:#fff;--ink2:#c3c2b7;--muted:#898781;--grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);
+ --pos:#3987e5;--dim:#4a4a48;--navy:#c9c8ff}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;line-height:1.55}
+.wrap{max-width:1180px;margin:0 auto;padding:0 24px 80px}
+header{background:var(--navy)}
+:root[data-theme="dark"] header{background:#16161f}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) header{background:#16161f}}
+.hd{max-width:1180px;margin:0 auto;padding:26px 24px;display:flex;justify-content:space-between;align-items:flex-start;gap:24px;flex-wrap:wrap}
+.hd h1{margin:0;font-size:30px;letter-spacing:-.02em;font-weight:700;color:#fff}
+.hd p{margin:6px 0 0;font-size:13.5px;color:rgba(255,255,255,.72)}
+#tt,.lnk{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:999px;
+ padding:7px 15px;font-size:12.5px;cursor:pointer;font-family:inherit;white-space:nowrap;text-decoration:none;display:inline-block}
+#tt:hover,.lnk:hover{background:rgba(255,255,255,.2)}
+.hdbtns{display:flex;gap:8px;flex-wrap:wrap}
+.answer{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:26px 28px;margin:28px 0 10px}
+.lede{font-size:21px;line-height:1.42;letter-spacing:-.01em;margin:0;max-width:76ch}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px;margin-top:22px;
+ background:var(--grid);border:1px solid var(--grid);border-radius:10px;overflow:hidden}
+.tile{background:var(--surface);padding:16px 18px}
+.tile .val{font-size:29px;font-weight:700;letter-spacing:-.025em;line-height:1.1}
+.tile .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:5px}
+.tile .n{font-size:12.5px;color:var(--ink2);margin-top:7px}
+h2{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin:46px 0 6px;font-weight:700}
+.h3{font-size:23px;letter-spacing:-.015em;margin:0 0 10px;font-weight:650}
+.say{font-size:15px;color:var(--ink2);max-width:82ch;margin:0 0 22px}
+.say b{color:var(--ink);font-weight:650}
+.card{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:22px 24px}
+table.ct{width:100%;border-collapse:collapse;font-size:13.5px}
+table.ct th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+ font-weight:650;padding:0 8px 9px;border-bottom:1px solid var(--grid)}
+table.ct td{padding:7px 8px;border-bottom:1px solid var(--grid);vertical-align:middle}
+table.ct tr:last-child td{border-bottom:none}
+.code{font-weight:700}.who{font-size:12.5px;color:var(--ink2)}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:650;padding:3px 9px 3px 7px;
+ border-radius:999px;white-space:nowrap;border:1px solid transparent}
+.c-good{color:#046b04;background:rgba(12,163,12,.11);border-color:rgba(12,163,12,.3)}
+.c-warn{color:#7a5200;background:rgba(250,178,25,.16);border-color:rgba(250,178,25,.45)}
+.c-crit{color:#9c1f1f;background:rgba(208,59,59,.11);border-color:rgba(208,59,59,.3)}
+:root[data-theme="dark"] .c-good{color:#4cd44c}:root[data-theme="dark"] .c-warn{color:#fabe4d}
+:root[data-theme="dark"] .c-crit{color:#f08080}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .c-good{color:#4cd44c}
+:root:where(:not([data-theme="light"])) .c-warn{color:#fabe4d}
+:root:where(:not([data-theme="light"])) .c-crit{color:#f08080}}
+.verdict{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.v{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:20px 22px;border-top:3px solid var(--dim)}
+.v.keep{border-top-color:var(--good)}.v.go{border-top-color:var(--crit)}.v.hmm{border-top-color:var(--warn)}
+.v h4{margin:0 0 2px;font-size:18px;letter-spacing:-.01em}
+.v .sub{font-size:12px;color:var(--muted);margin-bottom:11px}
+.v p{font-size:13.5px;color:var(--ink2);margin:11px 0 0}
+.v .st{display:flex;gap:16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--grid);flex-wrap:wrap}
+.v .st div{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.v .st b{display:block;font-size:17px;color:var(--ink);letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+.callout{border-left:3px solid var(--pos);background:var(--surface);border-radius:0 12px 12px 0;padding:18px 22px;
+ margin:18px 0;font-size:14.5px;color:var(--ink2)}
+.callout b{color:var(--ink)}
+.steps{counter-reset:s;list-style:none;padding:0;margin:0}
+.steps li{counter-increment:s;position:relative;padding:14px 0 14px 46px;border-bottom:1px solid var(--grid)}
+.steps li:last-child{border-bottom:none}
+.steps li::before{content:counter(s);position:absolute;left:0;top:13px;width:28px;height:28px;border-radius:50%;
+ background:var(--pos);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.steps .t{font-weight:650;font-size:15px}.steps .d{font-size:13.5px;color:var(--ink2);margin-top:3px}
+.meta{font-size:12px;color:var(--muted);margin-top:6px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;margin-right:5px}
+footer{margin-top:52px;padding-top:22px;border-top:1px solid var(--grid);font-size:12.5px;color:var(--muted)}
+footer b{color:var(--ink2)}
+.tipbox{position:fixed;pointer-events:none;opacity:0;transition:opacity .1s;background:var(--ink);color:var(--page);
+ font-size:12px;padding:6px 9px;border-radius:6px;z-index:99;white-space:nowrap;font-variant-numeric:tabular-nums}
+.toggle{background:none;border:1px solid var(--ring);color:var(--ink2);border-radius:999px;padding:5px 13px;
+ font-size:12px;cursor:pointer;font-family:inherit}
+#dt{display:none;margin-top:16px}#dt.on{display:block}
+.wkstrip{display:flex;gap:2px;margin:14px 0 4px;flex-wrap:wrap}
+.wk{flex:1;min-width:22px;height:26px;border-radius:3px;display:flex;align-items:center;justify-content:center;
+ font-size:8.5px;color:#fff;font-weight:650}
+@media(max-width:900px){.hd h1{font-size:24px}}
+
+/* --- page additions --- */
+nav.tabs{max-width:1180px;margin:0 auto;padding:0 24px;display:flex;gap:2px;flex-wrap:wrap;
+ border-bottom:1px solid var(--grid);background:var(--page);position:sticky;top:0;z-index:50}
+nav.tabs a{padding:12px 14px;font-size:13px;font-weight:600;color:var(--ink2);text-decoration:none;
+ border-bottom:2px solid transparent;white-space:nowrap}
+nav.tabs a:hover{color:var(--ink)}
+nav.tabs a.on{color:var(--ink);border-bottom-color:var(--pos)}
+section.pane{display:none}
+section.pane.on{display:block}
+table.ct td.wrap{white-space:normal}
+table.ct th.num{text-align:right}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.crit-l{border-left:3px solid var(--crit)!important}
+.warn-l{border-left:3px solid var(--warn)!important}
+.good-l{border-left:3px solid var(--good)!important}
+ul.tick{list-style:none;padding:0;margin:10px 0 0}
+ul.tick li{padding:7px 0 7px 22px;position:relative;font-size:14px;color:var(--ink2);border-bottom:1px solid var(--grid)}
+ul.tick li:last-child{border-bottom:none}
+ul.tick li::before{content:"—";position:absolute;left:0;color:var(--muted)}
+ul.tick li b{color:var(--ink);font-weight:650}
+.formrow{display:grid;grid-template-columns:1fr auto;gap:10px;padding:9px 0;border-bottom:1px solid var(--grid);font-size:13.5px}
+.formrow:last-child{border-bottom:none}
+.formrow .lbl b{font-weight:650}
+.formrow .lbl span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.box{display:inline-block;width:26px;height:24px;border:1px solid var(--axis);border-radius:4px;margin-left:3px;
+ font-size:11px;color:var(--muted);text-align:center;line-height:23px}
+.line{border-bottom:1px dashed var(--axis);min-height:20px;margin-top:5px}
+.grp{border-left:2px solid var(--grid);padding-left:14px;margin:14px 0}
+.small{font-size:12.5px;color:var(--muted)}
+@media print{nav.tabs{display:none}section.pane{display:block!important;page-break-before:always}}
+</style>
+</head><body>
+<header><div class="hd">
+<div>
+<h1>Area Management — 2027 Operating Pack</h1>
+<p>Making Charter v2.5 executable · Baseline 17 Aug 2026 → stable 1 Jan 2027 · Michael Salvador, COO</p>
+</div>
+<div class="hdbtns">
+<a class="lnk" href="../">AM Control Centre</a>
+<a class="lnk" href="../gm/">GM growth</a>
+<a class="lnk" href="../gm/tracker/">GM tracker</a>
+<button id="tt" type="button">Theme</button>
+</div>
+</div></header>
+
+<nav class="tabs">
+<a href="#roadmap">Roadmap</a>
+<a href="#b2b">B2B</a>
+<a href="#targets">Targets &amp; hit rate</a>
+<a href="#succession">Structure &amp; succession</a>
+<a href="#review">GM / AGM review</a>
+<a href="#foh">FOH</a>
+<a href="#quality">Food quality &amp; CX</a>
+<a href="#exit">Exit &amp; HR gate</a>
+</nav>
+
+<div class="wrap">
+<section class="pane" id="p-roadmap">
+
+<div class="answer">
+<p class="lede">Charter v2.5 goes live on the September payroll. The date that governs everything after it is <b>1 January 2027</b> — the point at which the unfair dismissal qualifying period drops from two years to six months and the cap on the compensatory award is removed. Every capability decision currently drifting becomes more expensive and more contestable on that day. "Stable by January" is not a preference. It is a deadline with a legal edge on it.</p>
+</div>
+
+<div class="tiles">
+<div class="tile"><div class="val">5</div><div class="k">Ready-now successors</div><div class="n">Across 19 trading sites. Charter Pillar 1 asks for one behind every GM <i>and</i> every AGM.</div></div>
+<div class="tile"><div class="val">7</div><div class="k">Sites with no second manager</div><div class="n">M1, M6, M8, M13, IKI2, M17, Maki Nori. M19 and M20 unassessed.</div></div>
+<div class="tile"><div class="val">£0</div><div class="k">B2B revenue banked</div><div class="n">120 Shoreditch targets, 36 contacted, 0 deals. The 350-target list dormant since April.</div></div>
+<div class="tile"><div class="val">30 Sep</div><div class="k">Last date to open a process</div><div class="n">For an exit with an effective date of termination inside 2026. Six weeks from today.</div></div>
+</div>
+
+<h2>The deadline, worked backwards</h2>
+<div class="callout crit-l"><b>Effective date of termination, not decision date.</b> The new regime applies where the EDT falls on or after 1 January 2027 — and that includes dismissals decided earlier where statutory notice pushes the EDT past the cutoff. To land an EDT on or before 31 December 2026 with one month's notice, notice must be served by <b>30 November</b>. A fair capability process under the ACAS Code needs roughly eight weeks end to end: standard set, structured support, formal meeting with advance written notice, written outcome, genuine right of appeal. Work back from 30 November and <b>the last date to open a formal capability process for a 2026 EDT is 30 September 2026.</b><br><br>
+<b>And the thing that matters more than the deadline:</b> you cannot dismiss someone to get ahead of the date. The commencement rules address that directly, and a compressed process is exactly what a tribunal reads as unfairness. The right response to 1 January is not to accelerate exits — it is to stop letting capability decisions drift, run each one properly from now, and accept that anything unfinished in December is run under the new regime with full documentation. <b>None of this is legal advice.</b> Hanna Awang confirms every case and employment law advice is taken on anything contested.</div>
+
+<h2>What "stable" means</h2>
+<p class="say">Six tests, all measured on the four weeks to 3 January 2027. Not five of six. If a test is amber the region is not stable and the roadmap has not closed.</p>
+<div class="card">
+<table class="ct">
+<tr><th>#</th><th>Test</th><th>Standard</th><th>Measured from</th></tr>
+<tr><td class="code">1</td><td class="wrap">Every trading site has a substantive GM and a named AGM</td><td class="wrap">Zero indefinite acting-up. Zero vacancies over 8 weeks.</td><td class="who">Structure sheet</td></tr>
+<tr><td class="code">2</td><td class="wrap">Every GM and AGM has a named, scored successor</td><td class="wrap">Ready-now or ready-6-month. Named person, not "recruit".</td><td class="who">Succession tab</td></tr>
+<tr><td class="code">3</td><td class="wrap">Three consecutive scored monthly reviews on file per manager</td><td class="wrap">Evidence line on every score. Every action closed or re-dated with a reason.</td><td class="who">Review tab</td></tr>
+<tr><td class="code">4</td><td class="wrap">Cost held without AM intervention</td><td class="wrap">Wage-to-revenue ≤21% and food ≤25%, four consecutive weeks, GM-run.</td><td class="who">AM Control Centre</td></tr>
+<tr><td class="code">5</td><td class="wrap">Guest rating held</td><td class="wrap">Every region ≥4.7★ rolling 28 days. No site under 4.5★ for two consecutive weeks.</td><td class="who">Daily tab (once the feed is fixed — see Food quality &amp; CX)</td></tr>
+<tr><td class="code">6</td><td class="wrap">B2B is banking revenue</td><td class="wrap">≥3 live accounts per region with revenue against them, signed off in region.</td><td class="who">B2B pipeline</td></tr>
+</table>
+</div>
+
+<h2>Five phases, August to January</h2>
+<div class="card">
+<ol class="steps">
+<li><div class="t">Phase 0 · Baseline — 17 to 31 August</div><div class="d">Publish this pack to all three regions. Score every GM and AGM once against the monthly form, and every FOH Supervisor and Team Leader once. Name the successor behind every one, even where the answer is "none". HR produces the continuous-service list: who is inside the two-year window today, and who crosses six months before 1 January. Build the four B2B foundations per region — nothing opens until all four are green. <b>Owner: AMs · Gate: COO</b></div></li>
+<li><div class="t">Phase 1 · Standards set — 1 to 14 September</div><div class="d">Charter v2.5 live on the September payroll. Charter Day 0 for every GM and AGM: the written standard shown, discussed and signed — wage 21%, food 25%, covers, rating, compliance, team trained. No ambiguity about what good is. B2B target lists built and loaded, 60 qualified targets per region with a named Wave 1 of 20. <b>Owner: AMs · Gate: Ops Director signs every Day 0 sheet</b></div></li>
+<li><div class="t">Phase 2 · The 90-day clock — 15 September to 14 December</div><div class="d">The charter's capability clock runs. Day 30 honest review around 15 October — scored, written, evidenced, delivered face to face. <b>Day 60 decision point around 14 November is the hard gate:</b> if the trend is wrong the formal process starts, and no extension happens without a reason on file. Monthly scored reviews run alongside for everyone, not just those on the clock. B2B outreach runs at the weekly minimum from 15 September. <b>Owner: AM + DAM · Gate: Ops Director at Day 60</b></div></li>
+<li><div class="t">Phase 3 · Close-out — 15 to 31 December</div><div class="d">Where the outcome is an exit, notice is served so the EDT falls on or before 31 December. Successors step up into named roles, not acting cover. External hires land where there was no bench. Every open action from the autumn is closed or carried with a reason. <b>Owner: Ops Director + HR · Gate: HR countersign on every exit</b></div></li>
+<li><div class="t">Phase 4 · Hold — 1 to 31 January 2027</div><div class="d">Four weeks green on all six stability tests. No new formal process opens in January without HR sign-off under the new regime. The weekly report leads with revenue created and capability moved; wage percentage appears once, as a line that held. <b>Owner: COO · Gate: the six tests</b></div></li>
+</ol>
+</div>
+
+<h2>Gates and dates</h2>
+<div class="card">
+<table class="ct">
+<tr><th>Date</th><th>Gate</th><th>Owner</th><th>Evidence it happened</th></tr>
+<tr><td class="code">31 Aug</td><td class="wrap">Baseline complete — every manager scored, every successor named, HR service list issued</td><td class="who">AMs / Hanna Awang</td><td class="wrap">31 scored forms + succession sheet + service list</td></tr>
+<tr><td class="code">14 Sep</td><td class="wrap">Day 0 standards signed by every GM and AGM · B2B lists loaded, Wave 1 named</td><td class="who">AMs</td><td class="wrap">Signed sheets on file · 60 targets per region</td></tr>
+<tr><td class="code">30 Sep</td><td class="wrap">LAST DATE to open a formal capability process for a 2026 EDT</td><td class="who">Ops Director + HR</td><td class="wrap">Process opened or explicitly deferred to 2027, in writing</td></tr>
+<tr><td class="code">15 Oct</td><td class="wrap">Day 30 honest reviews · first B2B hit-rate read</td><td class="who">AM + DAM</td><td class="wrap">Scored reviews · funnel table per region</td></tr>
+<tr><td class="code">14 Nov</td><td class="wrap">Day 60 decision point — formal process or close the clock</td><td class="who">Ops Director</td><td class="wrap">Signed decision per manager on the clock</td></tr>
+<tr><td class="code">30 Nov</td><td class="wrap">Notice served where an exit is the outcome (one month's notice)</td><td class="who">HR</td><td class="wrap">Notice letters issued, EDT recorded</td></tr>
+<tr><td class="code">14 Dec</td><td class="wrap">Day 90 close — standard met and held four weeks, or successor steps up</td><td class="who">Ops Director + HR</td><td class="wrap">Clock closed on every case</td></tr>
+<tr><td class="code">31 Dec</td><td class="wrap">All 2026 EDTs effective · structure complete</td><td class="who">HR</td><td class="wrap">No vacancy over 8 weeks, no indefinite acting-up</td></tr>
+<tr><td class="code">3 Jan</td><td class="wrap">Stability test measured across the prior four weeks</td><td class="who">COO</td><td class="wrap">Six tests, all green</td></tr>
+</table>
+<p class="small" style="margin-top:14px">Dates assume a one-month notice period for GM and AGM contracts. <b>If notice is three months, 30 September has already passed and every 2026 exit is out of reach</b> — this is the first thing to confirm with HR.</p>
+</div>
+
+<h2>What this pack does not do</h2>
+<p class="say">It does not set pay. It produces the evidence pay decisions are taken from, at the group's own cadence. It does not replace the GM Performance Tracker — the monthly scores roll into the same four dimensions and the same weights, so the two are one system. And it does not decide who leaves: it makes each decision defensible, or shows honestly that it is not.</p>
+
+</section>
+<section class="pane" id="p-b2b">
+
+<div class="answer">
+<p class="lede">The ruling: <b>the Area Manager owns B2B in region, end to end.</b> Target list, contact, meeting, close, delivery, revenue. Not a marketing hand-off. Reporting, sign-off and close-out are held in the region, not centrally. That is Charter v2.5 Pillar 5, and it is the pillar with the least evidence behind it today.</p>
+</div>
+
+<h2>Why the current model produced nothing</h2>
+<p class="say">London ran it first and the result is the cleanest evidence in the business: <b>120 Shoreditch targets, 36 contacted, 0 deals, £0 revenue</b>, and a 350-target London list dormant since April. The cause was diagnosed at the time and it was not effort. <b>Outreach started before the foundations existed.</b> No priced catering menu was filed anywhere the team could reach. Slerp was switched off across the estate on 27 July so there was no ordering channel. Deliveroo platform permissions were unconfirmed. And tasting drops — the core mechanic of the whole plan — never happened once: every Wave 1 target on the doorstep was still Not Started, and the team emailed hotels instead.</p>
+<div class="callout"><b>Activity without revenue does not count, and activity without foundations does not even produce activity.</b> The one thing that did work is the counter-example worth copying: G4 Padel, a named strategic partner, £1,000 committed across two phases, 300 loyalty members and £3,000 of revenue. One properly-founded partnership out-earned 120 cold targets by infinity.</div>
+
+<h2>Four foundations — no region opens outreach until all four are green</h2>
+<div class="card">
+<table class="ct">
+<tr><th>#</th><th>Foundation</th><th>Green means</th><th>Owner</th></tr>
+<tr><td class="code">F1</td><td class="wrap">Priced catering menu</td><td class="wrap">Filed in Drive where the team can reach it, and printed as a leave-behind the AM carries. Prices on it.</td><td class="who">Sophie Wang + AM</td></tr>
+<tr><td class="code">F2</td><td class="wrap">Ordering and payment channel</td><td class="wrap">A named inbox and phone route, a deposit method, and a named person who answers inside four working hours.</td><td class="who">AM</td></tr>
+<tr><td class="code">F3</td><td class="wrap">Kitchen capacity confirmed</td><td class="wrap">What each site can produce on top of trade, by day part, agreed in writing with the EC. A ceiling, so nothing is sold that cannot be made.</td><td class="who">Sophie Wang + GM</td></tr>
+<tr><td class="code">F4</td><td class="wrap">Rate card the AM cannot exceed</td><td class="wrap">Corporate 15%, student 15%, resident 10%, bulk 10 / 15 / 20% at 5 / 10 / 20 covers. No discretionary stacking. Anything beyond it goes to the Ops Director.</td><td class="who">COO (set) · AM (apply)</td></tr>
+</table>
+</div>
+
+<h2>The eight target categories</h2>
+<p class="say">Every regional list is built from these eight. A list weighted to one category is a list that has not been walked.</p>
+<div class="card">
+<table class="ct">
+<tr><th>#</th><th>Category</th><th>What you are selling them</th><th>Best sites</th></tr>
+<tr><td class="code">1</td><td>Offices &amp; co-working</td><td class="wrap">Team lunches, standing weekly order, meeting catering, account card</td><td class="who">M18, M19, M8, M9, M1</td></tr>
+<tr><td class="code">2</td><td>Hotels &amp; serviced apartments</td><td class="wrap">Concierge referral, guest voucher, in-room and event catering</td><td class="who">M7, M19, M18, M13</td></tr>
+<tr><td class="code">3</td><td>Gyms, studios, padel, climbing</td><td class="wrap">Post-session bundles, member rate, loyalty tie-in (the G4 Padel model)</td><td class="who">All</td></tr>
+<tr><td class="code">4</td><td>Universities, colleges, halls</td><td class="wrap">Society catering, freshers activation, student rate, data capture</td><td class="who">M9, M11, M16, M10, M1, M13</td></tr>
+<tr><td class="code">5</td><td>Theatres, cinemas, venues, stadia</td><td class="wrap">Pre-theatre covers, cast and crew accounts, event-night volume</td><td class="who">M18, Maki Nori, M9</td></tr>
+<tr><td class="code">6</td><td>Scheme neighbours &amp; retail</td><td class="wrap">Staff rate for the whole scheme, centre-management partnership, staff-room drops</td><td class="who">M15, M14, M17, M7, MAF1</td></tr>
+<tr><td class="code">7</td><td>Agencies, studios, professional services</td><td class="wrap">Client lunches, late-working orders, invoiced account</td><td class="who">M18, M19, M8</td></tr>
+<tr><td class="code">8</td><td>Corporates, hospitals, councils</td><td class="wrap">Standing catering budget, framework listing, volume days</td><td class="who">All</td></tr>
+</table>
+</div>
+
+<h2>The weekly minimum — per region, non-negotiable</h2>
+<div class="tiles">
+<div class="tile"><div class="val">5</div><div class="k">Tasting drops on foot</div><div class="n">Each logged with a named contact. Emailing a hotel is not a drop.</div></div>
+<div class="tile"><div class="val">10</div><div class="k">First contacts</div><div class="n">Call or email into a qualified target that has not been contacted before.</div></div>
+<div class="tile"><div class="val">2</div><div class="k">Meetings booked</div><div class="n">Diarised with a named person, not "will pop in".</div></div>
+<div class="tile"><div class="val">1</div><div class="k">Event per site per month</div><div class="n">Activation, tasting, society night or partner launch.</div></div>
+</div>
+<p class="say" style="margin-top:18px">This is a floor, not a target. It is the smallest amount of activity that produces a pipeline, and it is reported in the Sunday weekly report as four numbers, not a paragraph.</p>
+
+<h2>Pipeline stages and what closes each one</h2>
+<div class="card">
+<table class="ct">
+<tr><th>Stage</th><th>Definition of done — nothing advances without it</th></tr>
+<tr><td class="code">1 Identified</td><td class="wrap">On the list with a category, a site and a walking distance.</td></tr>
+<tr><td class="code">2 Qualified</td><td class="wrap">≥25 staff or a known catering budget or a standing lunch spend. Named decision-maker found.</td></tr>
+<tr><td class="code">3 Contacted</td><td class="wrap">First contact made and dated. A contact with no named person is not a contact.</td></tr>
+<tr><td class="code">4 Tasting dropped</td><td class="wrap">Food delivered on foot, leave-behind handed over, named contact recorded.</td></tr>
+<tr><td class="code">5 Meeting held</td><td class="wrap">Face to face or scheduled call completed. Needs and volume understood.</td></tr>
+<tr><td class="code">6 Proposal sent</td><td class="wrap">Priced, on the rate card, with an order route and a start date on it.</td></tr>
+<tr><td class="code">7 CONFIRMED</td><td class="wrap"><b>Written confirmation from the client plus a first order date.</b> Nothing counts as confirmed on a verbal. This is the number reported to the COO.</td></tr>
+<tr><td class="code">8 Delivered</td><td class="wrap">First order fulfilled, invoiced, and the guest experience checked by the AM personally.</td></tr>
+<tr><td class="code">9 Repeat account</td><td class="wrap">Second order placed. This is the only stage that proves the account is real.</td></tr>
+</table>
+</div>
+
+<h2>One pipeline, one row per target</h2>
+<p class="say">Three parallel systems existed in London — Kaitlin's 120-target Shoreditch tracker, the dormant 350-target April list, and the London rows in the marketing partnership sheet. That is why nobody could say what the pipeline was. One file per region, these columns, no exceptions.</p>
+<div class="card">
+<p class="small" style="margin:0 0 10px"><b>Columns:</b> Target · Category (1–8) · Site · Walking distance · Contact name · Contact role · Channel · First contact date · Last contact date · Next action · Next action date · Stage (1–9) · Estimated annual value · Discount applied · Confirmed date · First order date · Revenue to date · Owner · Notes</p>
+<p class="small" style="margin:0"><b>Two rules that keep it alive:</b> every row has an owner and a next action date — a row with a blank next action is closed as Lost, with a reason. And the AM reads the whole file every Monday in the admin meeting, out loud, by exception.</p>
+</div>
+
+<h2>Events in region</h2>
+<p class="say">One activation per site per month, minimum. Standing slots that already work across the estate: <b>Sip n' Slurp</b>, <b>Student Tuesdays</b>, <b>Bottomless Brunch</b>, plus the site-specific runs such as Maki Nori Lates. Every event is measured on the same seven lines, and an event with no measurement is a cost, not a campaign — the 30 July influencer night ran at 40 confirmed from 200 invites with no output measurement, which makes the spend unattributable to this day.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Line</th><th>Recorded</th></tr>
+<tr><td class="code">1</td><td class="wrap">Date, site, owner, target audience</td></tr>
+<tr><td class="code">2</td><td class="wrap">Capacity and confirmed attendance (confirmed, not invited)</td></tr>
+<tr><td class="code">3</td><td class="wrap">Cost — food, drink, staff, media</td></tr>
+<tr><td class="code">4</td><td class="wrap">Covers generated on the night and in the following seven days</td></tr>
+<tr><td class="code">5</td><td class="wrap">Spend per head on the night against the £22 target</td></tr>
+<tr><td class="code">6</td><td class="wrap">Data points captured into Klaviyo</td></tr>
+<tr><td class="code">7</td><td class="wrap">B2B contacts made — names into the pipeline at Stage 2 or better</td></tr>
+<tr><td class="code">8</td><td class="wrap"><b>Verdict: repeat or kill.</b> Written by the AM within 72 hours.</td></tr>
+</table>
+</div>
+
+<h2>Reporting and sign-off — held in region</h2>
+<div class="card">
+<ul class="tick">
+<li><b>Weekly, Sunday report:</b> the four floor numbers, new confirmations, revenue banked, and the one account most at risk. Four lines.</li>
+<li><b>Weekly, Wednesday AM Updates call:</b> B2B is a standing agenda block, not an "any other business". Cross-region — a target category that worked in one region is tried in the others.</li>
+<li><b>Monthly to COO:</b> accounts confirmed, revenue banked, hit rate against the four success measures, and the events verdict list.</li>
+<li><b>Sign-off:</b> the AM signs the account off in region. <b>The Ops Director countersigns anything above the 15% rate card or above £5,000 estimated annual value.</b> Franchise-adjacent and national corporate accounts route to Matthew Jenner; local accounts do not.</li>
+<li><b>Close-out:</b> an account is closed out in region when it has placed a second order and the AM has personally checked one delivery. Only then does it count towards the regional target.</li>
+</ul>
+</div>
+
+</section>
+<section class="pane" id="p-targets">
+
+<div class="answer">
+<p class="lede">Who we target, how many, and the only four measures that tell you whether it worked. The failure mode is already documented: <b>100% activity and £0 revenue</b>. Every measure below is built so that outcome scores as a fail, not as a busy quarter.</p>
+</div>
+
+<h2>Regional targets to 31 January 2027 — PROPOSED, needs sign-off</h2>
+<p class="say">Scaled from the one target already set and agreed in the business: London's <b>10 live B2B accounts and £8,000 cumulative revenue by 31 October</b> for Shoreditch alone. South carries the heavier load because London has the density and already has a dedicated BDM on it. These numbers are a proposal — they are the first thing on this page that needs your name against them.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Region (from Sept)</th><th>Sites</th><th class="num">Qualified targets</th><th class="num">Wave 1 named</th><th class="num">Live accounts</th><th class="num">B2B + catering revenue</th><th class="num">Events</th></tr>
+<tr><td class="wrap"><b>Scotland</b><div class="who">Ka Ho · Óisín P. Darragh</div></td><td class="num">7</td><td class="num">140</td><td class="num">140</td><td class="num">8</td><td class="num">£14,000</td><td class="num">28</td></tr>
+<tr><td class="wrap"><b>North England &amp; Midlands</b><div class="who">Inka Cheung · Amy Tang</div></td><td class="num">7</td><td class="num">140</td><td class="num">140</td><td class="num">8</td><td class="num">£14,000</td><td class="num">28</td></tr>
+<tr><td class="wrap"><b>South England</b><div class="who">Lincoln (Ziang) · DAM vacant</div></td><td class="num">6</td><td class="num">120</td><td class="num">120</td><td class="num">10</td><td class="num">£20,000</td><td class="num">24</td></tr>
+<tr><td class="wrap"><b>Group</b></td><td class="num">20</td><td class="num">400</td><td class="num">400</td><td class="num">26</td><td class="num">£48,000</td><td class="num">80</td></tr>
+</table>
+<p class="small" style="margin-top:12px">20 qualified targets per site, of which the whole Wave 1 is within ten minutes on foot. Events at one per site per month from September. Revenue is banked and invoiced, not proposed.</p>
+</div>
+
+<h2>The four success measures</h2>
+<p class="say">Everything else is noise. These four convert to a single monthly RAG per region.</p>
+<div class="verdict">
+<div class="v keep"><h4>Contact rate</h4><div class="sub">Contacted ÷ qualified</div>
+<p><b>Standard: 100% of Wave 1 within 30 days of the list going live.</b> This is the measure London failed first — 36 of 120 contacted, and the 84 were never worked. Contact rate below 80% means the list is a document, not a pipeline.</p></div>
+<div class="v hmm"><h4>Meeting rate</h4><div class="sub">Meetings held ÷ contacted</div>
+<p><b>Standard: ≥20%.</b> If contact is high and meetings are low, the approach is wrong — almost always because the contact was an email rather than a tasting drop on foot. Fix the mechanic, not the volume.</p></div>
+<div class="v hmm"><h4>Close rate</h4><div class="sub">Confirmed ÷ meetings held</div>
+<p><b>Standard: ≥33%.</b> One in three meetings should convert when the four foundations are in place. A low close rate with good meetings usually means no priced menu or no ordering channel — that is F1 and F2, not the AM.</p></div>
+<div class="v keep"><h4>Revenue per account</h4><div class="sub">Banked ÷ confirmed accounts</div>
+<p><b>Standard: ≥£1,500 annualised.</b> Guards against a pipeline padded with tiny accounts to hit a count. Twenty £200 accounts is not eight real ones.</p></div>
+</div>
+<div class="callout crit-l"><b>The overriding guard: 100% activity with £0 revenue is a fail, not an amber.</b> If a region hits every activity floor for two consecutive months and has banked nothing, the AM stops adding targets and the Ops Director reviews the foundations. The problem will be F1 to F4, and adding more cold contacts will not touch it.</div>
+
+<h2>Monthly hit-rate read</h2>
+<p class="say">One table, published in the Wednesday call. Blank cells are the point — you can see at a glance which stage a region is stuck at.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Region</th><th class="num">Qualified</th><th class="num">Contacted</th><th class="num">Contact %</th><th class="num">Drops</th><th class="num">Meetings</th><th class="num">Meeting %</th><th class="num">Confirmed</th><th class="num">Close %</th><th class="num">Revenue</th><th class="num">£ / account</th><th>RAG</th></tr>
+<tr><td>Scotland</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="chip c-warn">not started</span></td></tr>
+<tr><td>North England &amp; Midlands</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td><span class="chip c-warn">not started</span></td></tr>
+<tr><td>South England</td><td class="num">120</td><td class="num">36</td><td class="num">30%</td><td class="num">0</td><td class="num">4</td><td class="num">11%</td><td class="num">0</td><td class="num">0%</td><td class="num">£0</td><td class="num">—</td><td><span class="chip c-crit">fail</span></td></tr>
+</table>
+<p class="small" style="margin-top:12px">South England row is the actual Shoreditch position as at the London Area Strategy v1.5, 3 August 2026 — four live meetings, no closes, no tasting drops executed. It is the baseline the whole programme is measured from.</p>
+</div>
+
+<h2>Building Wave 1 — the rule, not a list</h2>
+<p class="say">The named twenty per site is each AM's first deliverable, due <b>14 September</b>. It is built by walking, not by searching. Three qualifying tests, all three required:</p>
+<div class="card">
+<ol class="steps">
+<li><div class="t">Within ten minutes on foot</div><div class="d">If the AM cannot carry a tasting drop there and be back for service, it is not Wave 1. Everything further out is Wave 2 and waits.</div></li>
+<li><div class="t">Twenty-five staff, a catering budget, or a standing lunch spend</div><div class="d">One of the three. A business with fifteen people and no budget is a nice relationship and a bad target.</div></li>
+<li><div class="t">A named decision-maker, found before first contact</div><div class="d">Office manager, EA, head of people, concierge lead, centre manager. "Info@" is not a decision-maker and is the single most common reason a target dies at Stage 3.</div></li>
+</ol>
+</div>
+
+<h2>What is already named and live</h2>
+<p class="say">Not much, which is the point — but these carry over rather than being rebuilt.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Target</th><th>Site</th><th>Stage</th><th>Status</th></tr>
+<tr><td class="wrap"><b>G4 Padel</b></td><td>South</td><td class="code">9 Repeat</td><td class="wrap"><span class="chip c-good">live</span> £1,000 committed across two phases · 300 loyalty members · £3,000 revenue. The template for category 3.</td></tr>
+<tr><td class="wrap">Brew Eagle House · 8 Bishopsgate · two others</td><td>M19</td><td class="code">5 Meeting</td><td class="wrap"><span class="chip c-warn">four live meetings</span> Carried from Kaitlin Docherty. Transfer to the region confirmed in writing, not assumed.</td></tr>
+<tr><td class="wrap">House of Fitness · White Collar Factory · Bezier · Z Hotel</td><td>M19</td><td class="code">1 Identified</td><td class="wrap"><span class="chip c-crit">not started</span> All four are on the doorstep and all four have never been visited. First four drops in the South.</td></tr>
+<tr><td class="wrap">Matthews Foods</td><td>Scotland</td><td class="code">8 Delivered</td><td class="wrap"><span class="chip c-good">live</span> Wholesale frozen at £5.50 per unit — the only wholesale account in the group. Category 8 proof.</td></tr>
+<tr><td class="wrap">Second London anchor partner</td><td>South</td><td class="code">1 Identified</td><td class="wrap"><span class="chip c-warn">named by 15/08</span> Owner Matthew Jenner. National, so it routes to the BDM not the AM.</td></tr>
+<tr><td class="wrap">19 agreed London partner agreements</td><td>South</td><td class="code">—</td><td class="wrap"><span class="chip c-warn">rate card</span> Enable at the capped 15% and purge the expired ones still live on Kobas. These are discounts, not accounts — they do not count towards the target.</td></tr>
+</table>
+</div>
+
+</section>
+<section class="pane" id="p-succession">
+
+<div class="answer">
+<p class="lede">Charter Pillar 1 asks for <b>one ready-now successor behind every GM and every AGM</b>. Measured against the Q2 2026 scorecard — 31 managers, 19 trading sites — <b>five people in the company currently score at ready-now, and seven trading sites have no second manager on file at all.</b> Two more have never been reviewed. This is the constraint on every capability decision in the roadmap: you cannot exit a manager at a site with no bench and call it a plan.</p>
+</div>
+
+<div class="tiles">
+<div class="tile"><div class="val">5</div><div class="k">Ready-now (≥4.0)</div><div class="n">Nabina Pun · Cameron Muir · Kai Chau Leung · Wayne Chen · Óisín P. Darragh</div></div>
+<div class="tile"><div class="val">7</div><div class="k">No second manager</div><div class="n">M1 · M6 · M8 · M13 · IKI2 · M17 · Maki Nori</div></div>
+<div class="tile"><div class="val">3</div><div class="k">GM and bench both below standard</div><div class="n">M11 · M12 · M17 — these cannot be fixed by an exit alone</div></div>
+<div class="tile"><div class="val">1</div><div class="k">Vacancy with two ready successors</div><div class="n">M9 Manchester. The cheapest win in the company, available this month.</div></div>
+</div>
+
+<h2>Readiness bands</h2>
+<div class="card">
+<table class="ct">
+<tr><th>Band</th><th>Test — all conditions, not the score alone</th></tr>
+<tr><td><span class="chip c-good">READY-NOW</span></td><td class="wrap">Composite ≥4.0 <b>and</b> 12+ months in role <b>and</b> has run the site solo for a full trading week including a weekend. Could take the role tomorrow.</td></tr>
+<tr><td><span class="chip c-warn">READY 6 MONTHS</span></td><td class="wrap">Composite 3.5–3.9 with a named development plan, a named gap, and a dated action. Would need support to take the role.</td></tr>
+<tr><td><span class="chip c-warn">READY 12 MONTHS</span></td><td class="wrap">Composite 3.0–3.4. Development plan running. Not a succession answer for this roadmap.</td></tr>
+<tr><td><span class="chip c-crit">NO BENCH</span></td><td class="wrap">No second manager on file, or the second manager scores below 3.0. <b>An external hire is required and must start in parallel with any capability process, not after it.</b></td></tr>
+</table>
+</div>
+
+<h2>Site by site</h2>
+<p class="say">Composites are the Q2 2026 scorecard. Turnover is annualised from the Jan–Jun retention sheet. Regions are the September 2026 structure, with M12 Newcastle and M15 Metrocentre transferring into North.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Site</th><th>Region</th><th>GM</th><th class="num">GM</th><th>Bench</th><th class="num">Bench</th><th>Successor</th><th class="num">Turnover</th><th>Risk</th></tr>
+
+<tr><td class="code">M1</td><td class="who">Scotland</td><td>Derrick Cheung</td><td class="num">3.88</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">19.4%</td><td><span class="chip c-crit">High</span></td></tr>
+<tr><td class="code">M3</td><td class="who">Scotland</td><td>Rory Ferguson</td><td class="num">no review</td><td class="wrap">Óisín P. Darragh (DAM) · Haru Nagato-Apthorp · Ruben Collie · Kwok Hung Samuel Lee</td><td class="num">4.43 / 3.90 / 3.88 / 3.76</td><td><span class="chip c-good">ready-now ×1</span></td><td class="num">16.4%</td><td><span class="chip c-good">Low</span></td></tr>
+<tr><td class="code">M6</td><td class="who">Scotland</td><td>Justyna Polak (RM)</td><td class="num">4.02</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">18.5%</td><td><span class="chip c-crit">High</span></td></tr>
+<tr><td class="code">M7</td><td class="who">Scotland</td><td>Calum Heriot</td><td class="num">4.15</td><td class="wrap">Nabina Pun · Dylan Hughes</td><td class="num">4.24 / 3.96</td><td><span class="chip c-good">ready-now ×1</span></td><td class="num">25.3%</td><td><span class="chip c-good">Low</span></td></tr>
+<tr><td class="code">M8</td><td class="who">Scotland</td><td>Scott Renwick</td><td class="num">4.46</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">6.7%</td><td><span class="chip c-warn">Medium</span></td></tr>
+<tr><td class="code">M13</td><td class="who">Scotland</td><td>Joe Herrera</td><td class="num">3.45</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">76.9%</td><td><span class="chip c-crit">Critical</span></td></tr>
+<tr><td class="code">IKI2</td><td class="who">Scotland</td><td>Sujan (RM)</td><td class="num">no review</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">18.2%</td><td><span class="chip c-crit">High</span></td></tr>
+
+<tr><td class="code">M9</td><td class="who">North</td><td><b>VACANT</b> — AGM-led</td><td class="num">—</td><td class="wrap">Wayne Chen · Kai Chau Leung</td><td class="num">4.33 / 4.32</td><td><span class="chip c-good">ready-now ×2</span></td><td class="num">35.5%</td><td><span class="chip c-warn">Promote now</span></td></tr>
+<tr><td class="code">M10</td><td class="who">North</td><td>Ninder Joshi</td><td class="num">3.60</td><td class="wrap">Samuel Marti · Trushank Mhatre</td><td class="num">3.64 / 3.64</td><td><span class="chip c-warn">6 months ×2</span></td><td class="num">63.6%</td><td><span class="chip c-crit">High</span></td></tr>
+<tr><td class="code">M11</td><td class="who">North</td><td>Caroline Misiani</td><td class="num">3.05</td><td class="wrap">Jervin Johnjeyaranjan</td><td class="num">2.95</td><td><span class="chip c-crit">no bench</span></td><td class="num">110.9%</td><td><span class="chip c-crit">Critical</span></td></tr>
+<tr><td class="code">M12</td><td class="who">North <span class="small">(from Sept)</span></td><td>Matthew Lee</td><td class="num">3.16</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">71.2%</td><td><span class="chip c-crit">Critical</span></td></tr>
+<tr><td class="code">M14</td><td class="who">North</td><td>Eve Brown</td><td class="num">3.75</td><td class="wrap">Michael Barlow</td><td class="num">3.67</td><td><span class="chip c-warn">6 months</span></td><td class="num">52.2%</td><td><span class="chip c-crit">High</span></td></tr>
+<tr><td class="code">M15</td><td class="who">North <span class="small">(from Sept)</span></td><td>Kieran Day</td><td class="num">4.25</td><td class="wrap">Cameron Muir · Shiv Kurun Jyot Singh</td><td class="num">4.03 / 3.66</td><td><span class="chip c-good">ready-now ×1</span></td><td class="num">30.8%</td><td><span class="chip c-good">Low</span></td></tr>
+<tr><td class="code">M16</td><td class="who">North</td><td>Emily Bashford</td><td class="num">3.87</td><td class="wrap">James Thompson</td><td class="num">3.87</td><td><span class="chip c-warn">6 months</span></td><td class="num">83.1%</td><td><span class="chip c-crit">High</span></td></tr>
+
+<tr><td class="code">M17</td><td class="who">South</td><td>Kei Cannon</td><td class="num">3.69</td><td class="wrap"><i>none — AM covering</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">171.5%</td><td><span class="chip c-crit">Critical</span></td></tr>
+<tr><td class="code">M18</td><td class="who">South</td><td>Imre Balogh</td><td class="num">3.52</td><td class="wrap">Ginger Stefano Zerbetto</td><td class="num">3.38</td><td><span class="chip c-warn">12 months</span></td><td class="num">132.1%</td><td><span class="chip c-crit">Critical</span></td></tr>
+<tr><td class="code">Maki Nori</td><td class="who">South</td><td>Kayleigh Middler</td><td class="num">3.64</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">no data</td><td><span class="chip c-crit">High</span></td></tr>
+<tr><td class="code">M19</td><td class="who">South</td><td>Dionne Baldock</td><td class="num">no review</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">no data</td><td><span class="chip c-crit">Unassessed</span></td></tr>
+<tr><td class="code">M20</td><td class="who">South</td><td><i>not on file</i></td><td class="num">no review</td><td class="wrap"><i>none on file</i></td><td class="num">—</td><td><span class="chip c-crit">no bench</span></td><td class="num">no data</td><td><span class="chip c-crit">Unassessed</span></td></tr>
+</table>
+<p class="small" style="margin-top:14px"><b>Read the caveats before acting on a row.</b> M17 and M18 had only three trading months in the retention window, so their annualised turnover is the least reliable column on the page. M19, M20 and Maki Nori are not in the retention sheet at all. IKI2, M19 and M20 have no Q2 review on file, so their GMs are unassessed rather than weak. And M3's GM has no Google review data because the site's Business Profile is not granted to the connector — Rory Ferguson cannot currently be assessed on customer experience at all.</p>
+</div>
+
+<h2>Four things to fix, in this order</h2>
+<div class="card">
+<ol class="steps">
+<li><div class="t">Promote at M9 this month</div><div class="d">Two AGMs scoring 4.33 and 4.32 sit behind a GM vacancy in a region running 35% turnover. Appoint one, name the other as the AGM successor, and the site goes from a vacancy to a full structure with bench in a single decision. <b>Owner: Inka Cheung · Gate: Ops Director</b></div></li>
+<li><div class="t">Name a second manager at the seven bare sites by 14 September</div><div class="d">M1, M6, M8, M13, IKI2, M17 and Maki Nori have nobody on file. Some will have an internal candidate who has simply never been reviewed — score them and find out. Where there is genuinely nobody, that is a recruitment brief to Hanna Awang in September, not December. M8 is the sharpest case: the best-scoring GM in the company, 4.46, with no cover behind him at all.</div></li>
+<li><div class="t">Recruit externally at M11, M12 and M17 in parallel with the clock</div><div class="d">At these three the GM and the bench are both below standard — M11 at 3.05 over a 2.95, M12 at 3.16 over nothing, M17 at 3.69 over nothing with the worst turnover in the estate. Exiting the GM here does not produce a better site, it produces an empty one. <b>Open the roles now so the successor exists by the time the 90-day clock closes.</b></div></li>
+<li><div class="t">Fix the leaver record before it is used as evidence</div><div class="d">All 93 leavers Jan–Jun 2026 are booked as voluntary; involuntary exits are not tracked at all in 2026, and Staff In is unmaintained at 21 recorded ins against 93 outs. If managers are exited this autumn, that record is the first thing disclosed in any dispute — and right now it says the company has never dismissed anyone. <b>Owner: Hanna Awang · Due: 31 August</b></div></li>
+</ol>
+</div>
+
+<h2>The succession form — one per role, reviewed quarterly</h2>
+<p class="say">Every GM, AGM, Supervisor and Team Leader has one of these. It is short deliberately: a succession plan nobody fills in is worth nothing.</p>
+<div class="card">
+<div class="formrow"><div class="lbl"><b>Site · Role · Incumbent · Months in role</b></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>Current composite</b><span>From the latest monthly review</span></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>Flight risk</b><span>High / Medium / Low — and why, in one sentence</span></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>Successor 1 — name, band, the one gap</b><span>Named person. "Recruit externally" is a valid answer and is recorded as NO BENCH.</span></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>Development action this quarter, with a date</b><span>One action. Not three.</span></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>Successor 2 — name and band</b></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>Who covers if the incumbent left tomorrow</b><span>Named, and they must know they are the answer</span></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>External hire required?</b><span>Y / N — if Y, brief to HR on the same day</span></div><div class="line" style="width:220px"></div></div>
+<div class="formrow"><div class="lbl"><b>Reviewed by · date · countersigned</b></div><div class="line" style="width:220px"></div></div>
+</div>
+
+</section>
+<section class="pane" id="p-review">
+
+<div class="answer">
+<p class="lede">Same four dimensions, same weights, same 1–5 scale as the existing GM Scorecard and Performance Tracker — so this is one system, not a parallel one. Three things change: it runs <b>monthly</b> rather than quarterly, every score carries a dated evidence line, and the outcome triggers a status automatically rather than at the reviewer's discretion. <b>It does not set pay.</b> It produces the evidence pay decisions are taken from.</p>
+</div>
+
+<h2>The scored form</h2>
+<p class="say">Twelve measures, four dimensions. Blue measures come from live data and are not the reviewer's opinion — Sales Performance and Cost Management from the AM Control Centre, Retention from HR, and Customer Satisfaction blended 70% review / 30% the site's Google weekly average.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Dimension</th><th class="num">Weight</th><th>Measure</th><th>Source</th><th class="num">1–5</th><th>Evidence line — dated, specific, one sentence</th></tr>
+<tr><td rowspan="2"><b>FINANCIAL</b></td><td class="num" rowspan="2">35%</td><td>Sales performance</td><td class="who">live data</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td>Cost management — wage 21%, food 25%</td><td class="who">live data</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td rowspan="2"><b>PEOPLE</b></td><td class="num" rowspan="2">25%</td><td>Training standards — Mapal currency</td><td class="who">reviewer + Mapal</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td>Retention (W/R)</td><td class="who">HR</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td rowspan="3"><b>STANDARDS</b></td><td class="num" rowspan="3">20%</td><td>Customer satisfaction</td><td class="who">review 70% / Google 30%</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td>Hygiene, compliance &amp; safety — incl. EHO</td><td class="who">reviewer + audit</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td>Operational efficiency</td><td class="who">reviewer</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td rowspan="3"><b>CAPABILITY</b></td><td class="num" rowspan="3">20%</td><td>Aptitude set — leadership to business acumen</td><td class="who">reviewer</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td>Admin efficiency</td><td class="who">reviewer</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+<tr><td>Marketing &amp; local market</td><td class="who">reviewer</td><td class="num"><span class="box"></span></td><td class="wrap"><div class="line"></div></td></tr>
+</table>
+<p class="small" style="margin-top:12px"><b>Composite</b> = Financial × 0.35 + People × 0.25 + Standards × 0.20 + Capability × 0.20. <b>Bands:</b> Strong ≥4.0 · Developing 3.0–3.9 · At risk &lt;3.0. <b>A score with no evidence line is void</b> — the reviewer re-does it. That single rule is what makes this defensible six months later.</p>
+</div>
+
+<h2>Four blocks the current template does not have</h2>
+<div class="verdict">
+<div class="v keep"><h4>1 · Evidence, per score</h4><div class="sub">One dated sentence naming what was actually seen</div>
+<p>"Rota built and posted on Tuesday for three consecutive weeks" is evidence. "Good on rotas" is not. This is the difference between a review that survives scrutiny and one that reads as an opinion formed after the decision.</p></div>
+<div class="v keep"><h4>2 · Actions — maximum three</h4><div class="sub">Owner and due date on each</div>
+<p>Every action from last month is closed, or re-dated with a reason. No blanket "all fine". Charter Pillar 2 is explicit: the conversation happens in the week the gap appears, not at month end, and the review is evidence, not encouragement.</p></div>
+<div class="v hmm"><h4>3 · Succession block</h4><div class="sub">Named successor, band, one development action</div>
+<p>Pulled straight onto the succession sheet. This is how the "ready-now successor behind every GM and AGM" standard gets built month by month rather than being audited once a year and found missing.</p></div>
+<div class="v go"><h4>4 · Status trigger</h4><div class="sub">Automatic, not discretionary</div>
+<p>The reviewer does not decide whether a process opens. The score decides, and the reviewer's job is to be honest about the score. See the trigger table below.</p></div>
+</div>
+
+<h2>Status triggers</h2>
+<div class="card">
+<table class="ct">
+<tr><th>Result</th><th>Status</th><th>What happens — automatically</th><th>Who signs</th></tr>
+<tr><td class="num">≥4.0</td><td><span class="chip c-good">Strong</span></td><td class="wrap">Successor development becomes the agenda. Stretch objective set. Considered for the ready-now bench.</td><td class="who">AM</td></tr>
+<tr><td class="num">3.0–3.9</td><td><span class="chip c-warn">Developing</span></td><td class="wrap">Written development plan against the weakest dimension, reviewed the following month. Not a process.</td><td class="who">AM + DAM</td></tr>
+<tr><td class="num">&lt;3.0 · first month</td><td><span class="chip c-warn">Standard set</span></td><td class="wrap"><b>Charter Day 0.</b> The written standard is shown, discussed and signed. Structured support and coaching for 30 days. The AM removes the excuses.</td><td class="who">AM · signed by manager</td></tr>
+<tr><td class="num">&lt;3.0 · two consecutive months</td><td><span class="chip c-crit">Formal process</span></td><td class="wrap"><b>Charter Day 60 decision point.</b> Formal capability process opens. HR notified before any meeting is booked. Every gate on the Exit &amp; HR tab applies from here.</td><td class="who">Ops Director · HR countersign</td></tr>
+<tr><td class="wrap">Any single dimension &lt;2.5</td><td><span class="chip c-crit">Same trigger</span></td><td class="wrap">Regardless of composite. Financial at 35% can otherwise mask a People collapse — M17 scored 4.98 on Standards while sitting at 1.0 on Retention, and the composite hid it.</td><td class="who">Ops Director</td></tr>
+</table>
+</div>
+
+<h2>Who reviews whom, and when</h2>
+<div class="card">
+<ul class="tick">
+<li><b>Monthly, week 1</b> for the month just closed. Every GM and every AGM. No exceptions for new sites — a manager in Hajime or Owari is reviewed against the phase standard, not excused from review.</li>
+<li><b>AM reviews the GM.</b> Face to face, on site, written before the conversation and shared during it.</li>
+<li><b>GM reviews the AGM</b>, countersigned by the AM. This is how GMs learn to hold a standard rather than just be held to one.</li>
+<li><b>DAM reviews on the AM's behalf</b> where the AM would be reviewing their own DAM, and the Ops Director countersigns.</li>
+<li><b>Quarterly the three monthly scores roll into the GM Performance Tracker</b> — same dimensions, same weights, same 1–5 scale, so nothing is re-keyed and nothing is scored twice. The quarterly form and the tracker are the appendix; the monthly is the operating record.</li>
+</ul>
+</div>
+
+<h2>Signature block</h2>
+<div class="card">
+<div class="formrow"><div class="lbl"><b>Manager reviewed</b><span>Name · site · role · period</span></div><div class="line" style="width:240px"></div></div>
+<div class="formrow"><div class="lbl"><b>Reviewer (AM)</b><span>Signature and date</span></div><div class="line" style="width:240px"></div></div>
+<div class="formrow"><div class="lbl"><b>Countersigned (DAM)</b><span>Signature and date</span></div><div class="line" style="width:240px"></div></div>
+<div class="formrow"><div class="lbl"><b>Manager's signature</b><span>Acknowledges receipt, not agreement. Space for the manager's own comment is mandatory and must be offered.</span></div><div class="line" style="width:240px"></div></div>
+<div class="formrow"><div class="lbl"><b>Manager's comment</b></div><div class="line" style="width:240px"></div></div>
+<div class="formrow"><div class="lbl"><b>Ops Director</b><span>Only where a formal process opens</span></div><div class="line" style="width:240px"></div></div>
+<div class="formrow"><div class="lbl"><b>HR acknowledgement</b><span>Only where a formal process opens — before any meeting is booked</span></div><div class="line" style="width:240px"></div></div>
+</div>
+
+<div class="callout"><b>The one thing that will decide whether this works.</b> The Q2 data shows the pattern to watch: reviewer-scored measures ran high across the estate while live-data measures ran low — several managers scored 5.0 on Marketing and Admin while their sites scored under 2.0 on Financial. If the monthly scores drift back to generous, the whole roadmap loses its evidence base and the January position is undefended. The AM's own bonus is half non-financial, on the pillars — <b>and honest scoring is the pillar being paid for.</b></div>
+
+</section>
+<section class="pane" id="p-foh">
+
+<div class="answer">
+<p class="lede">The same three things, one layer down: <b>what FOH is measured against</b>, <b>the scored review that measures it</b>, and <b>the ladder and bench behind every site</b>. FOH is where the 4.7★ is won or lost and where spend per head is won or lost — the estate sits at £19 to £19.50 against a £22 target on both London Maki sites, and that gap is an FOH behaviour, not a menu problem.</p>
+</div>
+
+<h2>Part 1 · The service standards — the observable list</h2>
+<p class="say">Ten moments. Each one is observable by a stranger standing in the room, which is the test of whether it is a standard or a slogan. This list is what the review scores, what the unannounced audit checks, and what the mystery shopper is briefed on. One list, three uses.</p>
+<div class="card">
+<table class="ct">
+<tr><th>#</th><th>Moment</th><th>The standard</th><th>Why it is on the list</th></tr>
+<tr><td class="code">1</td><td>Door</td><td class="wrap">Greeted within 30 seconds with eye contact. If there is a wait, the length of it is stated unprompted.</td><td class="who">First and last thing a review mentions</td></tr>
+<tr><td class="code">2</td><td>Seating</td><td class="wrap">Menu presented open. Allergen question asked without being prompted. Water offered.</td><td class="who">Allergen ask is compliance, not courtesy</td></tr>
+<tr><td class="code">3</td><td>Order</td><td class="wrap">One recommendation offered by name. A drink attached to every food order. Allergens recorded in Kobas.</td><td class="who">Attachment is the spend-per-head lever</td></tr>
+<tr><td class="code">4</td><td>Pass to table</td><td class="wrap">Ramen leaves the pass and lands within 90 seconds. Correct bowl, correct garnish, to spec.</td><td class="who">A cooling bowl is a food quality failure caused by FOH</td></tr>
+<tr><td class="code">5</td><td>Check-back</td><td class="wrap">Within two minutes of the first bowl landing. By name where the booking gives one.</td><td class="who">The single highest-leverage recovery moment</td></tr>
+<tr><td class="code">6</td><td>Mid-meal</td><td class="wrap">Drinks re-offered once. Table cleared as it clears, not at the end.</td><td class="who">Second drink is pure spend per head</td></tr>
+<tr><td class="code">7</td><td>Dessert and second drink</td><td class="wrap">Offered at every table, every time. Not "at the server's judgement".</td><td class="who">The £19 → £22 gap lives here</td></tr>
+<tr><td class="code">8</td><td>Payment</td><td class="wrap">No longer than three minutes from the guest asking.</td><td class="who">Most common wait complaint after the kitchen</td></tr>
+<tr><td class="code">9</td><td>Departure</td><td class="wrap">Thanked at the door. Review asked for where the meal clearly went well.</td><td class="who">Ask culture built into service — Charter Pillar 3</td></tr>
+<tr><td class="code">10</td><td>Recovery</td><td class="wrap">Any complaint resolved at the table by a supervisor, logged the same shift, post-it and £5 voucher SOP applied with the redemption tracked.</td><td class="who">A complaint fixed at the table does not become a 1★</td></tr>
+</table>
+</div>
+
+<h2>Part 2 · The FOH review form</h2>
+<p class="say">Same skeleton as the GM and AGM form — same 1–5 scale, same bands, same triggers — with different weights, because FOH does not own the P&amp;L and should not be scored as if it does.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Dimension</th><th class="num">Weight</th><th>Measures</th><th>Evidence</th><th class="num">1–5</th></tr>
+<tr><td rowspan="3"><b>SERVICE</b></td><td class="num" rowspan="3">35%</td><td>The ten standards, observed</td><td class="who">Shift observation, dated</td><td class="num"><span class="box"></span></td></tr>
+<tr><td>Check-back discipline</td><td class="who">Observation + guest comment</td><td class="num"><span class="box"></span></td></tr>
+<tr><td>Recovery — complaints handled at the table</td><td class="who">Shift log</td><td class="num"><span class="box"></span></td></tr>
+<tr><td rowspan="2"><b>GUEST</b></td><td class="num" rowspan="2">25%</td><td>Review mentions and complaint rate on their shifts</td><td class="who">Coded negatives</td><td class="num"><span class="box"></span></td></tr>
+<tr><td>Mystery shopper result</td><td class="who">Monthly report</td><td class="num"><span class="box"></span></td></tr>
+<tr><td rowspan="3"><b>TEAM</b></td><td class="num" rowspan="3">20%</td><td>Mapal currency — trained and signed off, no unsigned person on a station</td><td class="who">Mapal %</td><td class="num"><span class="box"></span></td></tr>
+<tr><td>Reliability — punctuality, attendance, notice given</td><td class="who">Rota record</td><td class="num"><span class="box"></span></td></tr>
+<tr><td>Teamwork and handover</td><td class="who">Reviewer</td><td class="num"><span class="box"></span></td></tr>
+<tr><td rowspan="2"><b>COMMERCIAL</b></td><td class="num" rowspan="2">20%</td><td>Attachment rate — drink, side, dessert</td><td class="who">Kobas by server</td><td class="num"><span class="box"></span></td></tr>
+<tr><td>Spend per head on their sections vs £22</td><td class="who">Kobas by server</td><td class="num"><span class="box"></span></td></tr>
+</table>
+<p class="small" style="margin-top:12px"><b>Composite</b> = Service × 0.35 + Guest × 0.25 + Team × 0.20 + Commercial × 0.20 · Same bands: Strong ≥4.0 · Developing 3.0–3.9 · At risk &lt;3.0 · Same evidence rule: a score without a dated evidence line is void.</p>
+</div>
+<div class="card" style="margin-top:16px">
+<table class="ct">
+<tr><th>Grade</th><th>Cadence</th><th>Reviewer</th><th>Countersign</th></tr>
+<tr><td>Team Leader · Supervisor</td><td>Monthly</td><td class="who">AGM</td><td class="who">GM</td></tr>
+<tr><td>Senior FOH · Bar</td><td>Quarterly</td><td class="who">Supervisor</td><td class="who">AGM</td></tr>
+<tr><td>Team Member</td><td>Quarterly</td><td class="who">Supervisor</td><td class="who">AGM</td></tr>
+<tr><td colspan="4" class="wrap small"><b>Probation is the exception and it matters more from January.</b> Every new FOH starter gets a structured check-in at two months and a documented outcome meeting before six months. From 1 January 2027 the six-month point is when unfair dismissal rights begin — an undocumented probation that runs past it removes the company's options entirely.</td></tr>
+</table>
+</div>
+
+<h2>Part 3 · FOH structure and succession</h2>
+<div class="callout warn-l"><b>The sizing rule: one Supervisor per 100 covers per trading day, minimum two per site.</b> Two is the floor because no shift should run without supervisory cover, and the tenth service standard — complaint resolved at the table by a supervisor — is undeliverable without one on the floor. Below the floor, the site cannot hold the standards it is being scored against, and scoring it anyway is dishonest.</div>
+<p class="say">The live risk to name: Soho decided to replace leavers with FOH rather than AGMs while running 132% annualised turnover and a thinning management layer. That removes supervisory cover at the site with the most guest volume in London. The charter's answer is that the DAM is on site weekly — <b>but that is a stopgap, not a structure</b>, and the South DAM post is currently vacant. It needs a decision, not a rota patch.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Level</th><th>Owns</th><th>Ready for the next step when</th></tr>
+<tr><td><b>Team Member</b></td><td class="wrap">Their section, to the ten standards. Mapal current.</td><td class="wrap">Composite ≥3.5 for two quarters · runs a section unsupported at peak · Mapal 100%</td></tr>
+<tr><td><b>Senior / Bar</b></td><td class="wrap">A section plus a station. Trains new starters on their station.</td><td class="wrap">Composite ≥3.8 · has trained and signed off two new starters · opens or closes unsupervised</td></tr>
+<tr><td><b>Supervisor</b></td><td class="wrap">A shift. Complaint recovery at the table. Cash and close.</td><td class="wrap">Composite ≥4.0 · has run a full weekend shift solo · handles a complaint end to end without escalating</td></tr>
+<tr><td><b>Team Leader</b></td><td class="wrap">Multiple shifts, rota input, the standards across a week.</td><td class="wrap">Composite ≥4.0 · covered the AGM for a full week · one dimension of the AGM role held for a month</td></tr>
+<tr><td><b>AGM</b></td><td class="wrap">The FOH operation. Successor to the GM.</td><td class="wrap">Enters the GM/AGM review and the succession bands on the Structure tab</td></tr>
+</table>
+</div>
+<p class="say" style="margin-top:18px">Each site fills the same succession form as the management tier, one per Supervisor and Team Leader post. The output the AM reports is two numbers per site: <b>supervisors held against the covers-based requirement</b>, and <b>named ready-now successors in the FOH ladder</b>. Both go on the Sunday report as figures, not commentary.</p>
+
+<div class="card">
+<table class="ct">
+<tr><th>Site</th><th class="num">Avg covers / day</th><th class="num">Supervisors required</th><th class="num">Supervisors held</th><th class="num">Gap</th><th>FOH ready-now</th><th>Action</th></tr>
+<tr><td colspan="7" class="wrap small" style="text-align:center;padding:22px 8px;color:var(--muted)">To be completed by each AM in Phase 0, due 31 August. Covers per day come from the AM Control Centre daily tab; supervisors held and ready-now come from the site. This table is the FOH structure baseline and nothing in Phase 1 starts without it.</td></tr>
+</table>
+</div>
+
+</section>
+<section class="pane" id="p-quality">
+
+<div class="answer">
+<p class="lede">The system is meant to be one chain: <b>spec → training → execution → check → guest signal → cause → fix → verify</b>. Today it has seven breaks in it, and three of them are at the guest-signal end — which means the estate is running a 4.7★ objective on a feed with four known defects. Fixing the measurement is not admin. It is the precondition for every other judgement on this page.</p>
+</div>
+
+<h2>Seven breaks, with the evidence</h2>
+<div class="card">
+<table class="ct">
+<tr><th>#</th><th>Break</th><th>Evidence</th><th>Owner</th></tr>
+<tr><td class="code">1</td><td class="wrap"><b>The guest signal is unreliable at source</b></td><td class="wrap">The reviews star tab corruption has been re-proven: M14's rating frozen at 4.8 for eleven weeks, M10 doubled, M3 and M7 duplicated. IKI2 has never been in the review lookup at all. M3 had no Google review data because its Business Profile is not granted to the connector. M7's negative pipe silently dropped roughly 166 negatives for a whole window and was never backfilled — <b>"Calum has no complaints" is unmeasured, not clean.</b></td><td class="who">Becca Cuthbertson · Georgie Riddle · Vidya Vijayan</td></tr>
+<tr><td class="code">2</td><td class="wrap"><b>Negatives are over-counted by 5–10%</b></td><td class="wrap">The rule is stars ≤3 with a comment, and there is no sentiment check — a complimentary 3★ logs as a negative. Every negative count in every review, including the ones used in exit cases, carries this inflation.</td><td class="who">Becca Cuthbertson</td></tr>
+<tr><td class="code">3</td><td class="wrap"><b>The 48-hour response standard is not enforced or measured</b></td><td class="wrap">Charter Pillar 3 requires every negative answered within 48 hours and the cause fixed on the floor. M1 sat bottom of the fleet at 3.40★ with two negatives and zero new reviews for four consecutive days; the escalation condition was met and not actioned. There is no measure anywhere of whether responses happen.</td><td class="who">Ka Ho · Óisín P. Darragh</td></tr>
+<tr><td class="code">4</td><td class="wrap"><b>Food quality is measured by cost, not by quality</b></td><td class="wrap">Food percentage is tracked daily to the penny. Broth density, plating, garnish accuracy and hold times are audited by the EC on a cadence the AM cannot see. The two systems never meet — so M11's GM carries a review score for a site where <b>7 of 8 negative reviews are food and kitchen spec</b>. That is an EC problem being scored as an AM one.</td><td class="who">Sophie Wang + AMs</td></tr>
+<tr><td class="code">5</td><td class="wrap"><b>Hygiene is scored on the review form and nowhere else in region</b></td><td class="wrap">M10's EHO Pass was rated 1 out of 5 in the Q2 review and it triggered nothing — no red light, no escalation, no action on file. A 1/5 on hygiene should be the loudest signal in the system and it was the quietest.</td><td class="who">Sophie Wang · Inka Cheung</td></tr>
+<tr><td class="code">6</td><td class="wrap"><b>Delivery quality is a separate, worse product</b></td><td class="wrap">M18 rider wait over five minutes hit 9.1% and order inaccuracy 4.9%; M19 inaccuracy 13.3%. Both were given a 31 August target. <b>Delivery inaccuracy is a food quality failure that never reaches the food quality system</b> — it is treated as a platform metric.</td><td class="who">GMs + Matthew Jenner</td></tr>
+<tr><td class="code">7</td><td class="wrap"><b>There is no mystery shopper running</b></td><td class="wrap">AMO1 carries a 95% mystery shopper key result. Nothing in the operating data suggests the programme is live. An OKR with no instrument behind it is reported as met by default.</td><td class="who">Becca Cuthbertson → AMs</td></tr>
+</table>
+</div>
+
+<h2>The corrected system — six controls</h2>
+<p class="say">Each control has one owner, one cadence and one piece of evidence. Six is the whole system; anything not on this list is not a control, it is a report.</p>
+<div class="card">
+<table class="ct">
+<tr><th></th><th>Control</th><th>What happens</th><th>Cadence</th><th>Owner</th><th>Evidence</th></tr>
+<tr><td class="code">C1</td><td><b>Spec</b></td><td class="wrap">Every dish has a current spec card at the pass. The AM photographs one plated dish per visit against the card.</td><td class="who">Every site visit</td><td class="who">AM + DEC</td><td class="who">Photo on file</td></tr>
+<tr><td class="code">C2</td><td><b>Training</b></td><td class="wrap">Mapal current for every FOH and BOH member. No unsigned-off person on a station, ever.</td><td class="who">Weekly</td><td class="who">GM</td><td class="who">Mapal %</td></tr>
+<tr><td class="code">C3</td><td><b>Unannounced audit</b></td><td class="wrap">The AM audits without warning: the ten FOH standards plus five BOH quality checks — broth density, hold times, garnish accuracy, portion, temperature. Scored, not ticked.</td><td class="who">1 per site per month</td><td class="who">AM</td><td class="who">Scored audit</td></tr>
+<tr><td class="code">C4</td><td><b>Mystery shopper</b></td><td class="wrap">Reinstated against the same ten standards, so the shopper, the audit and the review all measure one list. 95% standard, per AMO1.</td><td class="who">1 per site per month</td><td class="who">Marketing → AM</td><td class="who">Report</td></tr>
+<tr><td class="code">C5</td><td><b>Guest signal</b></td><td class="wrap">Feed fixed at source first. Then daily rating and negatives with a cause code against every one.</td><td class="who">Daily</td><td class="who">AM Control Centre</td><td class="who">Daily tab</td></tr>
+<tr><td class="code">C6</td><td><b>Close the loop</b></td><td class="wrap">Every negative answered within 48 hours, cause coded, fix named, and <b>verified at the AM's next visit</b>. The verification is the control — the response is just politeness.</td><td class="who">48h / next visit</td><td class="who">GM → AM</td><td class="who">Response log</td></tr>
+</table>
+</div>
+
+<h2>Cause coding — the missing piece</h2>
+<p class="say">Right now a negative review is a number. Code every negative to one of five causes and within a fortnight the estate has a picture it can act on — and, critically, each cause routes to a different owner, so the right person gets the problem.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Code</th><th>Covers</th><th>Routes to</th><th>Fixed by</th></tr>
+<tr><td><b>FOOD</b></td><td class="wrap">Spec, temperature, portion, seasoning, quality of the bowl</td><td class="who">Executive Chef / DEC</td><td class="wrap">Spec card, training, par and prep discipline</td></tr>
+<tr><td><b>SERVICE</b></td><td class="wrap">Attitude, attention, being missed, errors at the table</td><td class="who">GM</td><td class="wrap">The ten standards, supervisory cover, FOH review</td></tr>
+<tr><td><b>WAIT</b></td><td class="wrap">Door wait, kitchen wait, payment wait</td><td class="who">GM</td><td class="wrap">Rota shape and pass discipline — separate kitchen wait from door wait, they have different fixes</td></tr>
+<tr><td><b>DELIVERY</b></td><td class="wrap">Missing items, wrong items, cold on arrival, rider wait</td><td class="who">GM + BDM</td><td class="wrap">Packing check, menu accuracy, platform settings</td></tr>
+<tr><td><b>VALUE</b></td><td class="wrap">Price, portion for price, discount confusion</td><td class="who">COO / Marketing</td><td class="wrap">Rate card and menu engineering — not a site issue and should never be scored as one</td></tr>
+</table>
+</div>
+
+<h2>The one signal to act on now</h2>
+<div class="callout"><b>The North inversion, four consecutive days and counting.</b> North England &amp; Midlands is running the fleet's best guest experience — 4.85★ with two negatives out of 123 reviews — while trading the fleet's worst at −17.5%. That is the most durable pattern in the daily data and it says something specific: <b>best-in-fleet service on falling covers is a demand problem, not a standards problem.</b> The wrong response is a standards action to Inka Cheung. The right one is a demand action, which is Pillar 5 — B2B, events and local partnerships — and it is exactly what the North's target on the previous tab is for. Meanwhile the daily percentage oscillates: −14.8%, −30.9%, −2.4%, −21.3%, −17.5%. It oscillates around a bad average rather than collapsing, so do not present it as a collapse and do not tell her it is solved.</div>
+
+<h2>Fix first — five items before Phase 1 opens</h2>
+<div class="card">
+<ol class="steps">
+<li><div class="t">Fix the review feed at source</div><div class="d">M14's frozen rating, M10's doubling, the M3 and M7 duplication, IKI2's absence from the lookup entirely, and M7's 166 dropped negatives backfilled. Until this is done the 4.7★ objective cannot be scored honestly. <b>Becca Cuthbertson · 31 August</b></div></li>
+<li><div class="t">Add a sentiment check to the negative rule</div><div class="d">Stars ≤3 with a comment is not a negative. Every count in every review carries a 5–10% inflation today. <b>Becca Cuthbertson · 31 August</b></div></li>
+<li><div class="t">Reinstate the mystery shopper against the ten standards</div><div class="d">One per site per month. Same list as the review and the audit, so all three agree. <b>Marketing → AMs · 14 September</b></div></li>
+<li><div class="t">Put the EC audit cadence in front of the AM</div><div class="d">BOH quality audits become visible to the region so food-caused negatives route to the EC and stop being scored as GM failures. Start with M11. <b>Sophie Wang + AMs · 14 September</b></div></li>
+<li><div class="t">Bring delivery accuracy inside the quality system</div><div class="d">M18 and M19 inaccuracy under 3% by 31 August as already agreed, and delivery negatives coded DELIVERY from day one so the trend is visible. <b>GMs + Matthew Jenner · 31 August</b></div></li>
+</ol>
+</div>
+
+</section>
+<section class="pane" id="p-exit">
+
+<div class="answer">
+<p class="lede">You asked the right question: <b>can we confirm we are eligible to replace people, and does HR sign it off?</b> Yes — but the ground moves on 1 January 2027, and it moves against the company. Six gates below, all of which must be green before any manager is exited. None of this is legal advice; Hanna Awang confirms every case and employment law advice is taken on anything contested.</p>
+</div>
+
+<h2>What changes on 1 January 2027</h2>
+<div class="card">
+<table class="ct">
+<tr><th></th><th>Today — to 31 December 2026</th><th>From 1 January 2027</th></tr>
+<tr><td><b>Unfair dismissal qualifying period</b></td><td>Two years' continuous service</td><td><b>Six months</b></td></tr>
+<tr><td><b>Compensatory award</b></td><td>Capped</td><td><b>Cap removed</b></td></tr>
+<tr><td><b>Who is protected</b></td><td class="wrap">Long-service employees only</td><td class="wrap">Around 6.3 million more employees nationally gain the right</td></tr>
+<tr><td><b>Which dismissals it applies to</b></td><td class="wrap">—</td><td class="wrap">Any where the <b>effective date of termination</b> falls on or after 1 January 2027 — <b>including dismissals decided earlier where statutory notice pushes the EDT past the date</b></td></tr>
+<tr><td><b>Process expected</b></td><td class="wrap">ACAS Code applies to those with rights</td><td class="wrap">Same Code, far more people inside it. Failure to follow it can uplift a tribunal award by up to 25%</td></tr>
+</table>
+<p class="small" style="margin-top:12px">Employment Rights Act 2025, commencement regulations SI 2026/559. There is no statutory probation period in UK law — a contractual six-month probation now ends exactly where unfair dismissal rights begin, rather than sitting safely inside a two-year window.</p>
+</div>
+
+<div class="callout crit-l"><b>What this means for Maki specifically.</b> Most of the estate opened between November 2025 and July 2026 — M14 in November, M15 and M16 around the turn of the year, M17 in February, M18 in March, Maki Nori in April, M19 in June, M20 in July. A large part of the management population has under two years' service today and therefore no unfair dismissal right at all, and <b>gains one on 1 January 2027.</b> The exact list is HR's to produce and it is gate G4's first job — <b>due 31 August</b>. Until it exists, nobody can say honestly which decisions are cheap now and expensive later.</div>
+
+<h2>The timing rule, stated plainly</h2>
+<div class="card">
+<ol class="steps">
+<li><div class="t">EDT on or before 31 December 2026</div><div class="d">The termination must take effect in 2026, not merely be decided in 2026. Statutory notice counts towards the EDT.</div></li>
+<li><div class="t">Therefore notice served by 30 November — on a one-month notice period</div><div class="d">Longer contractual notice moves this earlier, proportionally. This is the number to confirm with HR before anything else on the page.</div></li>
+<li><div class="t">Therefore a formal process opened by 30 September</div><div class="d">A fair capability process under the ACAS Code needs roughly eight weeks: standard set in writing, structured support, formal meeting with advance written notice of the concerns, right to be accompanied, written outcome, and a genuine right of appeal with time to use it.</div></li>
+<li><div class="t">And the warning that matters more than the deadline</div><div class="d"><b>You cannot dismiss someone to get ahead of the date.</b> The commencement position addresses that directly, and a compressed process is precisely what a tribunal reads as unfairness — the 25% uplift for failing the Code applies on top of an uncapped award. The correct response to 1 January is not to accelerate exits. It is to stop letting capability decisions drift, run each one properly from now, and accept that anything unfinished in December runs under the new regime with full documentation.</div></li>
+</ol>
+</div>
+
+<h2>Six gates — all green, or no exit</h2>
+<div class="card">
+<table class="ct">
+<tr><th></th><th>Gate</th><th>Green means</th><th>Signs</th></tr>
+<tr><td class="code">G1</td><td><b>Standard was set in writing and signed</b></td><td class="wrap">Charter Day 0 sheet: wage 21%, food 25%, covers, rating, compliance, team trained. Dated and signed by the manager. An undated or unsigned sheet means the process starts again.</td><td class="who">AM</td></tr>
+<tr><td class="code">G2</td><td><b>Three scored monthly reviews on file</b></td><td class="wrap">Each with a dated evidence line against every score, three or fewer actions with owners and dates, and delivered face to face with the manager's comment recorded.</td><td class="who">AM + DAM</td></tr>
+<tr><td class="code">G3</td><td><b>Support was given and is evidenced</b></td><td class="wrap">The coaching, the training, the tool that was genuinely missing. "The AM removes the excuses" — and can show what was removed. Weekly notes across the 30-day support window.</td><td class="who">AM</td></tr>
+<tr><td class="code">G4</td><td><b>HR eligibility confirmed in writing before any formal meeting is booked</b></td><td class="wrap">Continuous service and whether the manager is inside or outside the qualifying period today <i>and</i> at the projected EDT · contractual notice period · any live grievance · anything that changes the route. <b>This is the gate that answers your question, and it is Hanna Awang's to give in writing, case by case.</b></td><td class="who">Hanna Awang</td></tr>
+<tr><td class="code">G5</td><td><b>ACAS Code followed in full</b></td><td class="wrap">Written notice of the meeting and the concerns in advance · right to be accompanied by a colleague or union representative · written outcome with reasons · right of appeal with a real opportunity to use it, heard by someone not involved in the decision.</td><td class="who">HR + Ops Director</td></tr>
+<tr><td class="code">G6</td><td><b>Ops Director signs, HR countersigns</b></td><td class="wrap">The AM cannot sign an exit. Authority sits where the charter puts it: the AM signs rota and FOH/AGM hiring; the Ops Director signs GM hiring, red-light recovery and GM disciplinary; the COO signs capex, franchise and new sites.</td><td class="who">Lincoln (Ziang) + Hanna Awang</td></tr>
+</table>
+</div>
+
+<h2>And before any of it — is there a successor?</h2>
+<div class="callout warn-l"><b>A seventh gate that is not legal but is operational.</b> Do not open a process at a site with no bench unless the external hire is already being recruited. Three sites are in exactly that position — <b>M11</b> (GM 3.05 over a bench of 2.95), <b>M12</b> (3.16 over nothing) and <b>M17</b> (3.69 over nothing, on 171% annualised turnover). Exiting the GM at these sites produces an empty site, not a better one. Open the recruitment in September, in parallel with the clock, not after it.</div>
+
+<h2>The cases already on the table</h2>
+<p class="say">From the 30-week payday-stripped growth read, which is the honest commercial lens because it strips out payday weeks and ranks each site against the fleet median for the same weeks. Status here is what the data supports, not a decision.</p>
+<div class="card">
+<table class="ct">
+<tr><th>Manager</th><th>Site</th><th class="num">Composite</th><th class="num">Lean covers</th><th class="num">Turnover</th><th>What the data supports</th></tr>
+<tr><td><b>Matthew Lee</b></td><td class="code">M12</td><td class="num">3.16</td><td class="num">−19.3%</td><td class="num">71.2%</td><td class="wrap"><span class="chip c-crit">confirmed</span> Worst base-eroder in the company on both measures, 25.4% lean wage. Every lens agrees. No bench — recruit in parallel.</td></tr>
+<tr><td><b>Caroline Misiani</b></td><td class="code">M11</td><td class="num">3.05</td><td class="num">−14.7%</td><td class="num">110.9%</td><td class="wrap"><span class="chip c-crit">confirmed, with a caveat</span> Second-worst revenue erosion. But 7 of her 8 negative reviews are food and kitchen spec, which belongs with the EC as much as with her. Bench is 2.95 — there is nobody behind her.</td></tr>
+<tr><td><b>Emily Bashford</b></td><td class="code">M16</td><td class="num">3.87</td><td class="num">−14.8%</td><td class="num">83.1%</td><td class="wrap"><span class="chip c-crit">confirmed</span> Third-worst erosion, has run the site since it opened so it is hers end to end, and 72 negatives — the most of any site — weighted to service and attitude. An earlier 13-week read said otherwise and was wrong.</td></tr>
+<tr><td><b>Joe Herrera</b></td><td class="code">M13</td><td class="num">3.45</td><td class="num">−3.2%</td><td class="num">76.9%</td><td class="wrap"><span class="chip c-warn">reframe</span> On the customer base he is fleet-median, so "cannot grow the site" is not supportable and should not be argued. The real case is standards and people: 10 leavers, headcount down 45%, the sharpest rating fall in the estate, and two food-poisoning claims plus two toilet-hygiene complaints in a single month.</td></tr>
+<tr><td><b>Calum Heriot</b></td><td class="code">M7</td><td class="num">4.15</td><td class="num">+45.3%</td><td class="num">25.3%</td><td class="wrap"><span class="chip c-good">the data will not support an exit</span> The only manager materially growing anything, rating improving, least payday-dependent site but one. His AM scored him 2/5 on Leadership, which contradicts every other measure — <b>resolve that contradiction before anything else happens here.</b></td></tr>
+<tr><td><b>Ninder Joshi</b></td><td class="code">M10</td><td class="num">3.60</td><td class="num">−17.1%</td><td class="num">63.6%</td><td class="wrap"><span class="chip c-warn">not on your list, should be</span> Second-worst covers erosion, sharpest rating fall of an established site, and <b>EHO Pass rated 1 out of 5</b> with nothing triggered by it.</td></tr>
+<tr><td><b>Kei Cannon</b></td><td class="code">M17</td><td class="num">3.69</td><td class="num">−12.0%</td><td class="num">171.5%</td><td class="wrap"><span class="chip c-warn">not on your list, should be</span> Covers down 12%, held up only by rising spend per head — taking more from fewer people. Worst lean wage of an established site, and the worst turnover in the estate. No bench at all.</td></tr>
+</table>
+<p class="small" style="margin-top:12px">Composites are Q2 2026. Lean covers are Q1 → July 2026, payday-stripped, against the fleet median. Turnover is annualised from Jan–Jun; M17's three trading months make its figure the least reliable on the table.</p>
+</div>
+
+<h2>Two record problems to fix before any of this is relied on</h2>
+<div class="card">
+<ul class="tick">
+<li><b>Involuntary exits are not tracked.</b> All 93 leavers Jan–Jun 2026 are booked as voluntary, and Staff In is unmaintained at 21 recorded ins against 93 outs. If managers are exited this autumn, that record is among the first things disclosed — and today it says the company has never dismissed anyone and barely recruits. <b>Hanna Awang · 31 August</b></li>
+<li><b>Reviewer scoring runs generous against live data.</b> Several managers scored 5.0 on Marketing and Admin in Q2 while their sites scored under 2.0 on Financial. A generous review on file is worse than no review — it is evidence <i>against</i> a later capability case. Honest scoring from September is the single most valuable thing an AM can do for this programme. <b>All AMs · from Phase 1</b></li>
+</ul>
+</div>
+
+</section>
+<footer>
+<b>Area Management — 2027 Operating Pack</b> · built 17 August 2026 · Michael Salvador, COO.
+Extends the Area Manager Role Charter v2.5 (effective September 2026 payroll) and the AM Operational Manual v1.0.
+Scores and bands are the existing GM Scorecard v1 / GM Performance Tracker v2 framework — same four dimensions, same weights, same 1–5 scale.
+<br><br>
+<b>Sources.</b> Q2 2026 manager composites and retention: GM_Performance_Tracker_v2.xlsx. Growth read: the 30-week payday-stripped analysis, Jan–Jul 2026.
+Daily trading, reviews and cluster figures: AM Control Centre. London B2B position: London Area Strategy v1.5, 3 August 2026.
+Employment law position: Employment Rights Act 2025, commencement regulations SI 2026/559.
+<br><br>
+<b>Not legal advice.</b> Every capability or exit case is confirmed in writing by HR before a formal meeting is booked, and employment law advice is taken on anything contested.
+Data caveats carry through from the tracker: M17, M18, M19, M20 and Maki Nori have partial or absent retention data; IKI2, M19 and M20 have no Q2 review; M3 has no Google review data; the review star feed has four known defects listed on the Food quality &amp; CX tab.
+</footer>
+</div>
+
+<div class="tipbox" id="tip"></div>
+
+<script>
+(function(){
+  var panes = ['roadmap','b2b','targets','succession','review','foh','quality','exit'];
+  var links = Array.prototype.slice.call(document.querySelectorAll('nav.tabs a'));
+  function show(name){
+    if(panes.indexOf(name) === -1){ name = panes[0]; }
+    panes.forEach(function(p){
+      var el = document.getElementById('p-' + p);
+      if(el){ el.classList.toggle('on', p === name); }
+    });
+    links.forEach(function(a){
+      a.classList.toggle('on', a.getAttribute('href') === '#' + name);
+    });
+    document.title = 'Area Management — 2027 Operating Pack · Maki & Ramen';
+  }
+  function fromHash(){ show((location.hash || '#roadmap').slice(1)); }
+  window.addEventListener('hashchange', fromHash);
+  fromHash();
+
+  var tt = document.getElementById('tt');
+  if(tt){
+    tt.addEventListener('click', function(){
+      var cur = document.documentElement.getAttribute('data-theme');
+      if(!cur){
+        cur = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+      document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+    });
+  }
+})();
+</script>
+</body></html>
