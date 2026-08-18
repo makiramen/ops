@@ -218,7 +218,9 @@ th.diagfirst, td.diagfirst { border-left:2px solid #E7E5E4; }
    v2.3.3 — running-check matches campaigns only (paid_ad name collisions), and
    gate copy updated for the 3-days-or-£50 judging rule.
    v2.4 — verdict pills strip removed, sortable metric headers, collapsible
-   decision history with a show-all control, riskbar never says £0.00. */
+   decision history with a show-all control, riskbar never says £0.00.
+   v2.5 — Meta Ads Manager creative recommendations (18 Aug snapshot): ⚡ chips
+   on board rows, full lists in the popups, Georgie/Vidya task-list section. */
 th.sortable { cursor: pointer; user-select: none; }
 th.sortable:hover { color: #0F172A; background: #F1F5F9; }
 th.sortable.sorted { color: #1D4ED8; }
@@ -227,10 +229,27 @@ h2.histhead { cursor: pointer; user-select: none; }
 h2.histhead:hover { color: #1D4ED8; }
 h2.histhead .chev { display: inline-block; width: 15px; color: #64748B; transition: transform .15s ease; }
 h2.histhead.closed .chev { transform: rotate(-90deg); }
-#hist-body.hidden { display: none; }
+#hist-body.hidden, #recs-body.hidden { display: none; }
 .histmore { display: inline-block; margin: 6px 0; font-size: 11px; font-weight: 600; color: #1D4ED8;
   background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
 .histmore:hover { background: #DBEAFE; }
+/* v2.5 — Meta Ads Manager recommendations (18 Aug snapshot) */
+.metarecschip { display: inline-block; font-size: 9.5px; font-weight: 600; color: #6D28D9;
+  background: #F5F3FF; border: 1px solid #DDD6FE; border-radius: 4px; padding: 1px 6px; }
+.recscols { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
+.recscard { flex: 1 1 340px; background: #FAFAFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px; }
+.recscard h3 { margin: 0 0 6px; font-size: 12px; color: #0F172A; }
+.recscard ul { margin: 0; padding-left: 18px; }
+.recscard li { font-size: 11.5px; color: #334155; margin: 5px 0; line-height: 1.45; }
+.recsaccount { margin-top: 10px; font-size: 11.5px; color: #6D28D9; background: #F5F3FF;
+  border: 1px solid #DDD6FE; border-radius: 8px; padding: 8px 12px; }
+.recsblock { background: #FAFAFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 9px 12px; margin: 0 0 10px; }
+.recshead { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #6D28D9; margin-bottom: 5px; }
+.recitem { font-size: 11.5px; color: #334155; margin: 4px 0; line-height: 1.45; }
+.recowner { display: inline-block; font-size: 9px; font-weight: 700; border-radius: 4px; padding: 1px 5px; margin-right: 4px; }
+.recowner.georgie { color: #7C3AED; background: #F5F3FF; }
+.recowner.vidya { color: #9A3412; background: #FFF7ED; }
+.recstatus { display: block; font-size: 10px; color: #94A3B8; margin-left: 2px; }
 .histstate.superseded { background: #FEF3C7; color: #92400E; }
 .supnote { display: block; font-size: 10px; color: #92400E; margin-top: 2px; }
 .doneline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #15803D; margin-bottom: 10px; }
@@ -598,6 +617,24 @@ tr.hiddenrow { display: none; }
       </tr></thead>
       <tbody id="matrix-table"><tr><td colspan="12" class="loading">Loading…</td></tr></tbody>
     </table>
+  </div>
+  <!-- 18 Aug v2.5 (Michael): Meta Ads Manager creative recommendations. -->
+  <div class="section">
+    <h2 class="histhead" id="recs-toggle" title="Click to expand or collapse"><span class="chev">▾</span>Meta creative recommendations <span class="subtle" style="font-size:11px;font-weight:400" id="recs-sub"></span></h2>
+    <div class="src">Ads Manager → Account Overview → Opportunity Score panel · account 4550572425065893 · <b>Georgie / Summer</b> = images &amp; creative assets · <b>Vidya</b> = duplication, headlines/text, budgets &amp; all other campaign changes · each campaign's own recommendations are inside its row popup on the board above (⚡ chips).</div>
+    <div id="recs-body">
+      <div class="recscols">
+        <div class="recscard">
+          <h3>Georgie / Summer — creative &amp; image tasks</h3>
+          <ul id="recs-georgie"></ul>
+        </div>
+        <div class="recscard">
+          <h3>Vidya — campaign changes</h3>
+          <ul id="recs-vidya"></ul>
+        </div>
+      </div>
+      <div class="recsaccount" id="recs-account"></div>
+    </div>
   </div>
   <div class="section">
     <!-- 18 Aug v2.4 (Michael): the history can be collapsed (click the
@@ -2385,6 +2422,155 @@ function renderComplianceBar(view) {
     '<span class="names">' + escAttr(names) + (bad.length > 6 ? ' …' : '') + '</span></div>';
 }
 
+// =====================================================================
+// 18 Aug v2.5 — META ADS CREATIVE RECOMMENDATIONS (Michael's upload).
+// Source: Ads Manager → Account Overview → Opportunity Score panel,
+// account 4550572425065893, reviewed 18 Aug 2026, score 36/64.
+// Snapshot data — replace this block when the panel is next reviewed.
+// Owners: Georgie/Summer = images & creative assets · Vidya = duplication,
+// headlines/text, budgets and all other campaign changes.
+// =====================================================================
+var META_RECS = {
+  reviewed: '18 Aug 2026',
+  score: '36 of 64 opportunity points',
+  byCampaign: {
+    'SHORE_TRAFFIC_DELIVEROO30_STATIC_AUG26': {flag: 'high cost', recs: [
+      {t: 'Optimise Reels format — add fullscreen 9:16 vertical video with audio (8% lower cost per result)', who: 'Georgie', s: 'No action needed — campaign ends 20 Aug'},
+      {t: 'Review AI-generated images for ad "2026-08_Shoreditch_Deliveroo30off" (10% higher CTR) — replace with manual images/carousel if preferred', who: 'Georgie', s: 'No action needed — campaign ends 20 Aug'},
+      {t: 'Use additional text options / more headline & text variations for ad "2026-08_Shoreditch_Deliveroo30off" (20% lower cost per result)', who: 'Vidya', s: 'Not actioned — campaign ends 20 Aug'},
+      {t: 'Apply 3 more Advantage+ creative enhancements (visual touch-ups, text improvements, overlays; 3% lower cost per result)', who: 'Vidya', s: 'Not actioned — campaign ends 20 Aug'},
+      {t: 'Update performance goal to Maximise Landing Page Views (23% lower cost per landing page view)', who: 'Vidya', s: 'No action needed — campaign ends 20 Aug'}
+    ]},
+    'NOTT_BOOKING_BOOKNOW_STATIC_AUG26': {flag: 'high performing', recs: [
+      {t: 'Optimise ad Reels format — 9:16 vertical video ("Nottingham - Book Now Ad Set")', who: 'Georgie'},
+      {t: 'Review AI-generated images for ad "Nottingham - Static - Book Now" — or supply manual images', who: 'Georgie'},
+      {t: 'Apply 3 more Advantage+ creative enhancements', who: 'Vidya'},
+      {t: 'Scale — increase budget of high-performing ad set "Nottingham - Book Now Ad Set" (part of 57% more conversions opportunity)', who: 'Vidya'}
+    ]},
+    'SOHO_TRAFFIC_THURS20OFF_STATIC_AUG26': {recs: [
+      {t: 'Optimise Reels format — 9:16 vertical video ("Soho Thursdays | 20% Off Ramen")', who: 'Georgie'},
+      {t: 'Review AI-generated images for ad "Soho Thursdays | 20% Off Ramen" — or supply manual images', who: 'Georgie'},
+      {t: 'Apply 3 more Advantage+ creative enhancements', who: 'Vidya'},
+      {t: 'Duplicate existing ad and replace image/video so the ad set has a mix of video + image ads (more conversions per dollar); keep original running', who: 'Vidya'}
+    ]},
+    'SHORE_BOOKING_BOOKNOW_STATIC_AUG26': {flag: 'high performing', recs: [
+      {t: 'Add 2 more formats — Carousel & Collection for ad "Shoreditch - Book Now" (6.8% more conversions); manual carousel/images to be prepared', who: 'Georgie'},
+      {t: 'Apply 3 more Advantage+ creative enhancements', who: 'Vidya'},
+      {t: 'Scale — increase campaign budget (high performer, 57% more conversions opportunity)', who: 'Vidya'}
+    ]},
+    'UK_LEAD_FRANCHISE_STATIC_AUG26': {recs: [
+      {t: 'Optimise Reels format — 9:16 vertical video ("Franchise Ad Aug update 2026 ad set")', who: 'Georgie/Summer'},
+      {t: 'Review AI-generated images for ad "Franchise Ad Aug update 2026 ad" — or supply manual images', who: 'Georgie/Summer'},
+      {t: 'Apply 3 more Advantage+ creative enhancements', who: 'Vidya'}
+    ]},
+    'SOHO_BOOKING_BOOKNOW-AB_STATIC_AUG26': {flag: 'creative fatigue', recs: [
+      {t: '⚠ Creative fatigue on ad "Soho - Static - A/B Test" — review the 64 AI-generated images to refresh creative (up to 21% more results), or replace with fresh manual images', who: 'Georgie/Summer'},
+      {t: 'Optimise Reels format — 9:16 vertical video (A/B Test ad set)', who: 'Georgie/Summer'}
+    ]},
+    'NEWC_LPV_BRUNCH_STATIC_AUG26': {flag: 'creative fatigue', recs: [
+      {t: '⚠ Creative fatigue on ad "Newcastle Bottomless Brunch" — review AI-generated images / refresh with new images', who: 'Georgie/Summer'},
+      {t: 'Optimise Reels format — 9:16 vertical video ("Newcastle Bottomless Brunch" ad set)', who: 'Georgie/Summer'}
+    ]},
+    'SOTON_BOOKING_BOOKNOW_STATIC_AUG26': {flag: 'high performing', recs: [
+      {t: 'Apply 3 more Advantage+ creative enhancements (ad "Southampton - TikTok Video - Book Now")', who: 'Vidya'},
+      {t: 'Scale — increase budget of high-performing ad set (57% more conversions opportunity)', who: 'Vidya'}
+    ]},
+    'METRO_BOOKING_BOOKNOW_VIDEO_AUG26': {recs: [
+      {t: 'Optimise Reels format — 9:16 vertical video ("New Metrocentre campaign June 3rd" ad set)', who: 'Georgie/Summer'},
+      {t: 'Review AI-generated images for ad "Metrocentre Gateshead - Static Ad" — or supply manual images', who: 'Georgie/Summer'}
+    ]},
+    'UK_BOOKING_FOODPHOTOS_STATIC_AUG26': {flag: 'high performing', recs: [
+      {t: 'Optimise Reels format — 9:16 vertical video ("UK_FoodPhotos_BookNow_Ad_Jul26")', who: 'Georgie/Summer'},
+      {t: 'Scale — increase campaign budget (high performer, 57% more conversions opportunity)', who: 'Vidya'}
+    ]},
+    'UK_THRUPLAY_22QUESTIONS_VIDEO_AUG26': {recs: [
+      {t: 'Optimise Reels format — 9:16 vertical video ("UK_Instagram_MakiRamen_22Questions" ad set)', who: 'Georgie/Summer'},
+      {t: 'Increase ad set budget — current budget may be limiting performance', who: 'Vidya'}
+    ]},
+    'SHEF_BOOKING_SUSHI_STATIC_AUG26': {recs: [
+      {t: 'Optimise Reels format — 9:16 vertical video ("Sheffield Sushi Book Now")', who: 'Georgie/Summer'}
+    ]},
+    'LEIC_BOOKING_BOOKNOW_STATIC_AUG26': {recs: [
+      {t: 'Review AI-generated images for ad "Leicester Ad - Copy" — or supply manual images', who: 'Georgie/Summer'}
+    ]},
+    'Instagram post:BHAM_REACH_SAVEDATE_VIDEO_AUG26': {recs: [
+      {t: 'Apply 3 more Advantage+ creative enhancements', who: 'Vidya'}
+    ]},
+    'EDIN_LPV_FRINGE_VIDEO_AUG26': {recs: [
+      {t: 'Apply 3 more Advantage+ creative enhancements (ad "Fringe Festival - Instagram")', who: 'Vidya'}
+    ]},
+    'UK_PURCHASE_LUNCHDEAL_VIDEO_AUG26': {recs: [
+      {t: 'Apply 3 more Advantage+ creative enhancements (ad "Launch lunch Sales Campaign May 27th 2026 VD - Copy")', who: 'Vidya'}
+    ]},
+    'Instagram post: UK_TRAFFIC_LUNCH30_VIDEO_AUG26': {flag: 'high cost', recs: [
+      {t: 'Apply 3 more Advantage+ creative enhancements (ad "LUNCH IN 30 MINUTES OR IT\'S ON…")', who: 'Vidya'}
+    ]},
+    'BHAM_REACH_BRANDAWARE_VIDEO_AUG26': {flag: 'high performing', recs: [
+      {t: 'Scale — increase campaign budget (high performer, 57% more conversions opportunity)', who: 'Vidya'}
+    ]},
+    'SOHO_LPV_STUDENTKPOP_VIDEO_AUG26': {recs: [
+      {t: 'Get additional conversions reported — start sending Email for View Content events via data source "VD Pixel 29th April"', who: 'Vidya'}
+    ]},
+    'Maki & Ramen At The O2 Campaign May 2026': {flag: 'not delivering', recs: [
+      {t: 'Fix errors blocking ad delivery — all ad sets in this campaign have errors', who: 'Vidya'}
+    ]},
+    'Byres Road - Franchise Campaign': {flag: 'not delivering', recs: [
+      {t: 'Fix errors blocking ad delivery — all ad sets have errors; publish or discard the pending unpublished edits', who: 'Vidya'}
+    ]},
+    'SOHO_TRAFFIC_SUSHIPOPS_VIDEO_AUG26': {flag: 'not delivering', recs: [
+      {t: 'Fix errors blocking ad delivery — all ad sets in this campaign have errors', who: 'Vidya'}
+    ]}
+  },
+  accountLevel: 'Run partnership ads featuring a creator or brand (19% lower cost per result) — Vidya to set up; Georgie to source the creator/brand partner.',
+  georgie: [
+    'Produce 9:16 fullscreen vertical videos (with audio) for Reels placements — 10 ad sets: SHORE_TRAFFIC_DELIVEROO30, NOTT_BOOKING_BOOKNOW, SOHO_TRAFFIC_THURS20OFF, SOHO_BOOKING_BOOKNOW-AB, METRO_BOOKING_BOOKNOW, NEWC_LPV_BRUNCH, SHEF_BOOKING_SUSHI, UK_BOOKING_FOODPHOTOS, UK_THRUPLAY_22QUESTIONS, UK_LEAD_FRANCHISE.',
+    'Review AI-generated images (or replace with manual images) — 6 ads: Shoreditch Deliveroo30off, Nottingham Static Book Now, Franchise Ad Aug update, Leicester Ad - Copy, Metrocentre Gateshead Static, Soho Thursdays 20% Off.',
+    'Refresh creative on the 2 fatigue-flagged ads: Soho - Static - A/B Test (SOHO_BOOKING_BOOKNOW-AB) and Newcastle Bottomless Brunch (NEWC_LPV_BRUNCH).',
+    'Prepare manual Carousel & Collection creative for "Shoreditch - Book Now" (SHORE_BOOKING_BOOKNOW).',
+    'Source creator/brand partner for partnership ads.'
+  ],
+  vidya: [
+    'Fix ad errors on the 3 non-delivering campaigns: Maki & Ramen At The O2 (May 2026), Byres Road - Franchise, SOHO_TRAFFIC_SUSHIPOPS.',
+    'Turn on the 3 extra Advantage+ creative enhancements (visual touch-ups, text improvements, overlays) on the 10 flagged ads.',
+    'Add extra headline/primary-text options for the Shoreditch Deliveroo30off ad.',
+    'Duplicate the Soho Thursdays 20% Off ad and swap creative for a video+image mix (keep original live).',
+    'Budget scaling: campaigns UK_BOOKING_FOODPHOTOS, SHORE_BOOKING_BOOKNOW, BHAM_REACH_BRANDAWARE; ad sets Nottingham Book Now, Southampton Book Now; plus raise UK_THRUPLAY_22QUESTIONS ad set budget.',
+    'Change SHORE_TRAFFIC_DELIVEROO30 performance goal to Maximise Landing Page Views.',
+    'Set up Email for View Content events on VD Pixel (SOHO_LPV_STUDENTKPOP).',
+    'Set up partnership ads once Georgie confirms the partner.'
+  ]
+};
+// Name lookup tolerant of the "Instagram post:" space-after-colon inconsistency.
+var _metaRecsIdx = null;
+function metaRecsFor(name) {
+  if (!_metaRecsIdx) {
+    _metaRecsIdx = {};
+    Object.keys(META_RECS.byCampaign).forEach(function(k) {
+      _metaRecsIdx[k.toLowerCase().replace(/\s+/g, '')] = META_RECS.byCampaign[k];
+    });
+  }
+  return _metaRecsIdx[String(name || '').toLowerCase().replace(/\s+/g, '')] || null;
+}
+function metaRecChip(r) {
+  if (r.entity_type !== 'paid_campaign' || r.platform !== 'meta') return '';
+  var m = metaRecsFor(r.entity_name);
+  if (!m) return '';
+  return '<div style="margin-top:3px"><span class="metarecschip" title="Meta Ads Manager recommendations, reviewed ' +
+    META_RECS.reviewed + ' — click the row for the full list">⚡ ' + m.recs.length + ' Meta rec' +
+    (m.recs.length === 1 ? '' : 's') + (m.flag ? ' · ' + escAttr(m.flag) : '') + '</span></div>';
+}
+function metaRecsBlockHtml(name) {
+  var m = metaRecsFor(name);
+  if (!m) return '';
+  return '<div class="recsblock"><div class="recshead">Meta recommendations · reviewed ' + META_RECS.reviewed +
+    (m.flag ? ' · <b>' + escAttr(m.flag) + '</b>' : '') + '</div>' +
+    m.recs.map(function(x) {
+      return '<div class="recitem"><span class="recowner ' +
+        (x.who.indexOf('Vidya') === 0 ? 'vidya' : 'georgie') + '">' + escAttr(x.who) + '</span> ' +
+        escAttr(x.t) + (x.s ? '<span class="recstatus">' + escAttr(x.s) + '</span>' : '') + '</div>';
+    }).join('') + '</div>';
+}
+
 // 18 Aug v2.4 (Michael): click a metric header to re-rank the board by it.
 // null = the default platform-grouped, verdict-ordered view.
 var matrixSort = null; // {key: 'cpa'|'cpc'|'bookings'|'ctr'|'lpv'|'thru', dir: -1 high-first | 1 low-first}
@@ -2571,6 +2757,7 @@ function renderMatrix() {
         (String(r.name_compliant) === 'no' && r.entity_type === 'paid_campaign' && r.platform === 'meta'
           ? '<span class="renameflag">rename me</span>' : '') +
         (siteBits ? '<div style="margin-top:3px">' + siteBits + '</div>' : '') +
+        metaRecChip(r) +
         (isUntagged(r)
           ? '<span class="untagged-note">not split by format</span>' +
             '<span class="rowsub">Nobody has tagged post formats yet, so every ' +
@@ -3204,6 +3391,8 @@ function openMatrixModal(r, dRaw, fromHistory, histEntry) {
     stats.push(mstat('typical saves+shares', fmtPct(r.key_metric_2_value)));
   }
   body += '<div class="mdl-stats">' + stats.join('') + '</div>';
+  // 18 Aug v2.5: the campaign's Meta Ads Manager recommendations, in full.
+  body += metaRecsBlockHtml(r.entity_name);
   if (agg && agg.breakdown) {
     body += '<div class="subtle" style="font-size:11px;margin:-4px 0 8px">What "results" means here: ' + escAttr(agg.breakdown) + '</div>';
   }
@@ -3326,6 +3515,31 @@ function wireMatrixModal() {
       renderMatrix();
     });
   });
+  // v2.5: fill the Meta-recommendations section + its collapse toggle.
+  (function() {
+    var g = document.getElementById('recs-georgie'), v = document.getElementById('recs-vidya');
+    if (g) g.innerHTML = META_RECS.georgie.map(function(t) { return '<li>' + escAttr(t) + '</li>'; }).join('');
+    if (v) v.innerHTML = META_RECS.vidya.map(function(t) { return '<li>' + escAttr(t) + '</li>'; }).join('');
+    var acc = document.getElementById('recs-account');
+    if (acc) acc.innerHTML = '<b>Account-level suggestion:</b> ' + escAttr(META_RECS.accountLevel);
+    var sub = document.getElementById('recs-sub');
+    if (sub) sub.textContent = '· reviewed ' + META_RECS.reviewed + ' · ' + META_RECS.score;
+    var rt = document.getElementById('recs-toggle');
+    if (rt) {
+      rt.addEventListener('click', function() {
+        var body = document.getElementById('recs-body');
+        var closed = body.classList.toggle('hidden');
+        rt.classList.toggle('closed', closed);
+        try { localStorage.setItem('mrhub-recs-open', closed ? '0' : '1'); } catch (err) {}
+      });
+      try {
+        if (localStorage.getItem('mrhub-recs-open') === '0') {
+          document.getElementById('recs-body').classList.add('hidden');
+          rt.classList.add('closed');
+        }
+      } catch (err) {}
+    }
+  })();
   // v2.4: collapse / expand the decision history from its heading. Remembered.
   var histToggle = document.getElementById('hist-toggle');
   if (histToggle) {
