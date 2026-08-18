@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-17",
+  "generated_at": "2026-08-18",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-10 \u2013 2026-08-16",
@@ -60,14 +60,14 @@
           "within_band": null
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": 4.7,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-08-10"
       },
       "efficiency_score": {
-        "score": 62,
+        "score": 64,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -98,11 +98,15 @@
             "weight": 30,
             "value": 0.0,
             "basis": "28.44% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "4.70% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -143,7 +147,7 @@
         "week_ending": "2026-08-16",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
+        "sales": 192.5,
         "orders": null,
         "aov": null,
         "new_customers": null,
@@ -162,12 +166,13 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "PARTIAL ESTIMATE \u2014 ONLY 2/7 DAYS (Mon 10 + Tue 11 Aug) of internal Auto Cash Up Delivery (\u00a3) present; NOT a full-week figure. ALL aggregators, not Deliveroo-only. Replace with the Deliveroo invoice statement (pipe 6d) when Finance files it. + ops from Weekly Summary sheet",
+        "sales_estimated": true,
         "busy_mode_pct": 16.2
       },
       "gaps": [
-        "Stock-take \u2014 no variance entered this week",
-        "Reviews \u2014 no week rating in source"
+        "Reviews \u2014 no week rating in source",
+        "Deliveroo sales are an ESTIMATE from the internal all-aggregator Delivery line (+/-15%) \u2014 no Deliveroo source for this site this week"
       ]
     }
   }
