@@ -2392,6 +2392,9 @@ function cpaValue(r) {
   // Same derivation as cpaCell: sheet CPA when judged on bookings, otherwise
   // rebuilt from daily spend × evidence days ÷ conversions.
   if (r.entity_type !== 'paid_campaign') return null;
+  // Mis-set rows display "not judged" in the CPA cell — the sort must agree
+  // with what the eye sees, so they sink with the other dashes.
+  if (String(r.key_metric_1_name) === 'MIS_SET') return null;
   if (String(r.key_metric_1_name) === 'CPA_gbp' && r.key_metric_1_value !== '' && r.key_metric_1_value != null) {
     var v = Number(r.key_metric_1_value);
     return isFinite(v) ? v : null;
