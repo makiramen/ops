@@ -233,16 +233,14 @@ h2.histhead.closed .chev { transform: rotate(-90deg); }
 .histmore { display: inline-block; margin: 6px 0; font-size: 11px; font-weight: 600; color: #1D4ED8;
   background: #EFF6FF; border: 1px solid #BFDBFE; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
 .histmore:hover { background: #DBEAFE; }
-/* v2.5 — Meta Ads Manager recommendations (18 Aug snapshot) */
-.metarecschip { display: inline-block; font-size: 9.5px; font-weight: 600; color: #6D28D9;
-  background: #F5F3FF; border: 1px solid #DDD6FE; border-radius: 4px; padding: 1px 6px; }
-.recscols { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; }
-.recscard { flex: 1 1 340px; background: #FAFAFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 10px 14px; }
-.recscard h3 { margin: 0 0 6px; font-size: 12px; color: #0F172A; }
-.recscard ul { margin: 0; padding-left: 18px; }
-.recscard li { font-size: 11.5px; color: #334155; margin: 5px 0; line-height: 1.45; }
-.recsaccount { margin-top: 10px; font-size: 11.5px; color: #6D28D9; background: #F5F3FF;
-  border: 1px solid #DDD6FE; border-radius: 8px; padding: 8px 12px; }
+/* v2.5/v2.5.1 — Meta Ads Manager recommendations, embedded in the main table */
+.mrinline { margin-top: 5px; padding-top: 4px; border-top: 1px dashed #DDD6FE; }
+.mrhead { display: block; font-size: 9px; font-weight: 700; letter-spacing: .05em; color: #6D28D9; margin-bottom: 2px; }
+.mritem { display: block; font-size: 10.5px; color: #475569; margin: 1.5px 0; line-height: 1.35; }
+.mrnote { display: block; font-size: 10px; color: #B45309; margin-top: 2px; }
+.mrbar { font-size: 11.5px; color: #4C1D95; background: #F5F3FF; border: 1px solid #DDD6FE;
+  border-radius: 8px; padding: 7px 12px; margin: 8px 0; }
+.mrbar .mrnd { color: #64748B; }
 .recsblock { background: #FAFAFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 9px 12px; margin: 0 0 10px; }
 .recshead { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #6D28D9; margin-bottom: 5px; }
 .recitem { font-size: 11.5px; color: #334155; margin: 4px 0; line-height: 1.45; }
@@ -593,6 +591,9 @@ tr.hiddenrow { display: none; }
     </div>
     <div id="matrix-risk"></div>
     <div id="matrix-compliance"></div>
+    <!-- v2.5.1: account-level Meta items that have no board row live here as
+         one line; per-campaign recs are embedded in the What-to-do column. -->
+    <div id="matrix-metarecs"></div>
     <!-- 18 Aug v2.4 (Michael): the KILL/SCALE/deciding/watching pills strip is
          gone — the platform buttons below carry the decision counts, and the
          verdicts are the first column of the table anyway. -->
@@ -617,24 +618,6 @@ tr.hiddenrow { display: none; }
       </tr></thead>
       <tbody id="matrix-table"><tr><td colspan="12" class="loading">Loading…</td></tr></tbody>
     </table>
-  </div>
-  <!-- 18 Aug v2.5 (Michael): Meta Ads Manager creative recommendations. -->
-  <div class="section">
-    <h2 class="histhead" id="recs-toggle" title="Click to expand or collapse"><span class="chev">▾</span>Meta creative recommendations <span class="subtle" style="font-size:11px;font-weight:400" id="recs-sub"></span></h2>
-    <div class="src">Ads Manager → Account Overview → Opportunity Score panel · account 4550572425065893 · <b>Georgie / Summer</b> = images &amp; creative assets · <b>Vidya</b> = duplication, headlines/text, budgets &amp; all other campaign changes · each campaign's own recommendations are inside its row popup on the board above (⚡ chips).</div>
-    <div id="recs-body">
-      <div class="recscols">
-        <div class="recscard">
-          <h3>Georgie / Summer — creative &amp; image tasks</h3>
-          <ul id="recs-georgie"></ul>
-        </div>
-        <div class="recscard">
-          <h3>Vidya — campaign changes</h3>
-          <ul id="recs-vidya"></ul>
-        </div>
-      </div>
-      <div class="recsaccount" id="recs-account"></div>
-    </div>
   </div>
   <div class="section">
     <!-- 18 Aug v2.4 (Michael): the history can be collapsed (click the
@@ -2551,13 +2534,38 @@ function metaRecsFor(name) {
   }
   return _metaRecsIdx[String(name || '').toLowerCase().replace(/\s+/g, '')] || null;
 }
-function metaRecChip(r) {
+// 18 Aug v2.5.1 (Michael: "it should be embedded into the main table"): the
+// recs render as compact lines inside the What-to-do column, not a separate
+// section. Short labels below; the full Ads Manager wording stays in the popup.
+function metaRecShort(t) {
+  if (/fatigue/i.test(t)) return 'refresh fatigued creative';
+  if (/Reels format/i.test(t)) return '9:16 Reels video';
+  if (/AI-generated images/i.test(t)) return 'review AI images / supply manual';
+  if (/headline & text|text options/i.test(t)) return 'more headline/text options';
+  if (/Advantage\+/i.test(t)) return '3× Advantage+ enhancements';
+  if (/performance goal/i.test(t)) return 'goal → Landing Page Views';
+  if (/Duplicate existing ad/i.test(t)) return 'duplicate ad → video+image mix';
+  if (/Carousel & Collection/i.test(t)) return 'add Carousel + Collection';
+  if (/budget/i.test(t)) return 'scale budget';
+  if (/View Content/i.test(t)) return 'send View-Content events to pixel';
+  if (/errors blocking/i.test(t)) return 'fix delivery errors';
+  return t.length > 46 ? t.slice(0, 44) + '…' : t;
+}
+function metaRecsInline(r) {
   if (r.entity_type !== 'paid_campaign' || r.platform !== 'meta') return '';
   var m = metaRecsFor(r.entity_name);
   if (!m) return '';
-  return '<div style="margin-top:3px"><span class="metarecschip" title="Meta Ads Manager recommendations, reviewed ' +
-    META_RECS.reviewed + ' — click the row for the full list">⚡ ' + m.recs.length + ' Meta rec' +
-    (m.recs.length === 1 ? '' : 's') + (m.flag ? ' · ' + escAttr(m.flag) : '') + '</span></div>';
+  var moot = m.recs.length && m.recs.every(function(x) { return x.s; });
+  return '<div class="mrinline"><span class="mrhead" title="Meta Ads Manager recommendations, reviewed ' +
+    META_RECS.reviewed + ' (' + META_RECS.score + ') — click the row for the full wording">⚡ META RECS' +
+    (m.flag ? ' · ' + escAttr(m.flag) : '') + '</span>' +
+    m.recs.map(function(x) {
+      var w = x.who === 'Georgie/Summer' ? 'G/S' : x.who === 'Georgie' ? 'G' : 'V';
+      return '<span class="mritem"><span class="recowner ' + (w === 'V' ? 'vidya' : 'georgie') +
+        '" title="' + escAttr(x.who) + '">' + w + '</span>' + escAttr(metaRecShort(x.t)) + '</span>';
+    }).join('') +
+    (moot ? '<span class="mrnote">campaign ends 20 Aug — no action needed</span>' : '') +
+    '</div>';
 }
 function metaRecsBlockHtml(name) {
   var m = metaRecsFor(name);
@@ -2757,7 +2765,6 @@ function renderMatrix() {
         (String(r.name_compliant) === 'no' && r.entity_type === 'paid_campaign' && r.platform === 'meta'
           ? '<span class="renameflag">rename me</span>' : '') +
         (siteBits ? '<div style="margin-top:3px">' + siteBits + '</div>' : '') +
-        metaRecChip(r) +
         (isUntagged(r)
           ? '<span class="untagged-note">not split by format</span>' +
             '<span class="rowsub">Nobody has tagged post formats yet, so every ' +
@@ -2773,7 +2780,8 @@ function renderMatrix() {
       ctrCell(r) +
       ratePctCell(r.lpv_rate, 0.70, 'Landing page views ÷ link clicks. Background information only — it does not decide the verdict. Below 70% means the landing page is losing people who clicked. Owner: Vidya.', true) +
       ratePctCell(r.thruplay_rate, 0.25, 'Watched-through ÷ 3-second video plays. Background information only — it does not decide the verdict. Below 25% means the video is losing people early; change the video, not the budget. Owner: Georgie. (Bar moved 60% → 25% on 17 Aug: this account runs 22–33%, so at 60% the whole column read red and stopped meaning anything.)', true) +
-      actionCell(r, d) +
+      // v2.5.1: the Meta recommendations live INSIDE the What-to-do cell.
+      actionCell(r, d).replace(/<\/td>$/, metaRecsInline(r) + '</td>') +
       '</tr>';
   }).join('');
 }
@@ -3515,30 +3523,12 @@ function wireMatrixModal() {
       renderMatrix();
     });
   });
-  // v2.5: fill the Meta-recommendations section + its collapse toggle.
+  // v2.5.1: account-level Meta items with no board row — one compact line.
   (function() {
-    var g = document.getElementById('recs-georgie'), v = document.getElementById('recs-vidya');
-    if (g) g.innerHTML = META_RECS.georgie.map(function(t) { return '<li>' + escAttr(t) + '</li>'; }).join('');
-    if (v) v.innerHTML = META_RECS.vidya.map(function(t) { return '<li>' + escAttr(t) + '</li>'; }).join('');
-    var acc = document.getElementById('recs-account');
-    if (acc) acc.innerHTML = '<b>Account-level suggestion:</b> ' + escAttr(META_RECS.accountLevel);
-    var sub = document.getElementById('recs-sub');
-    if (sub) sub.textContent = '· reviewed ' + META_RECS.reviewed + ' · ' + META_RECS.score;
-    var rt = document.getElementById('recs-toggle');
-    if (rt) {
-      rt.addEventListener('click', function() {
-        var body = document.getElementById('recs-body');
-        var closed = body.classList.toggle('hidden');
-        rt.classList.toggle('closed', closed);
-        try { localStorage.setItem('mrhub-recs-open', closed ? '0' : '1'); } catch (err) {}
-      });
-      try {
-        if (localStorage.getItem('mrhub-recs-open') === '0') {
-          document.getElementById('recs-body').classList.add('hidden');
-          rt.classList.add('closed');
-        }
-      } catch (err) {}
-    }
+    var mr = document.getElementById('matrix-metarecs');
+    if (mr) mr.innerHTML = '<div class="mrbar"><b>⚡ Meta account-level</b> (reviewed ' +
+      META_RECS.reviewed + ' · ' + META_RECS.score + '): ' + escAttr(META_RECS.accountLevel) +
+      ' <span class="mrnd"><b>Not delivering — fix errors (Vidya):</b> Maki &amp; Ramen At The O2 · Byres Road Franchise · SOHO_TRAFFIC_SUSHIPOPS.</span></div>';
   })();
   // v2.4: collapse / expand the decision history from its heading. Remembered.
   var histToggle = document.getElementById('hist-toggle');
