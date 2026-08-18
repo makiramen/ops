@@ -214,7 +214,9 @@ th.diagfirst, td.diagfirst { border-left:2px solid #E7E5E4; }
 .mdl-why.KILL { border-left-color: #DC2626; background: #FEF2F2; }
 .histstate.actioned { background: #DCFCE7; color: #15803D; }
 /* 18 Aug v2.3.2 — ledger fixes: paid/organic type by platform, and superseded
-   marking for old-engine decisions the objective-aware engine has re-judged. */
+   marking for old-engine decisions the objective-aware engine has re-judged.
+   v2.3.3 — running-check matches campaigns only (paid_ad name collisions), and
+   gate copy updated for the 3-days-or-£50 judging rule. */
 .histstate.superseded { background: #FEF3C7; color: #92400E; }
 .supnote { display: block; font-size: 10px; color: #92400E; margin-top: 2px; }
 .doneline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #15803D; margin-bottom: 10px; }
@@ -1528,7 +1530,7 @@ function drawPages(rows) {
 var gadsMatrixByName = {};
 var gadsTableWired = false;
 function gadsDecisionCell(r) {
-  if (!r) return '<td><span class="subtle" title="Not judged yet — needs £20+ and 5+ days of spend in the last 30 days">—</span></td>';
+  if (!r) return '<td><span class="subtle" title="Not judged yet — judged from 3 days of spend, or £20, whichever comes first">—</span></td>';
   var d = decisionOf(r);
   var st = statusOf(r);
   var inner;
@@ -2471,7 +2473,7 @@ function renderMatrix() {
     var r = x.r, d = x.d;
     var cell;
     if (String(r.judged) === 'no' && !r.goal_mismatch) {
-      // Shown but deliberately unjudged — under £50 / 5 days. Saying WATCHING
+      // Shown but deliberately unjudged — under 3 days AND under £50. Saying WATCHING
       // is honest; calling it KEEP would imply somebody had looked.
       cell = '<span class="rag WATCHING">WATCHING</span>';
     } else if (d.building) {
@@ -2548,8 +2550,14 @@ function renderMatrixHistory() {
   var live = matrixRowsCache || [];
   // 18 Aug v2.3.2: keep the live ROW, not just a flag — a ledger decision only
   // counts as current if the live board still says the same thing about it.
+  // v2.3.3: ONLY judgeable rows. A paid_ad row sharing the name of a killed
+  // campaign (ads outlive renamed campaigns) made three properly-dead kills
+  // read "still running" — Michael's audit, 18 Aug pm.
   var liveByKey = {};
-  live.forEach(function(r) { liveByKey[r.entity_name + '||' + r.platform] = r; });
+  live.forEach(function(r) {
+    if (r.entity_type === 'paid_ad') return;
+    liveByKey[r.entity_name + '||' + r.platform] = r;
+  });
   var byKey = {};
   (matrixHistCache || []).forEach(function(r) {
     byKey[r.entity_name + '||' + r.platform + '||' + verdictOf(r) + '||' + String(r.decided_on).slice(0, 10)] = {r: r, fromLedger: true};
