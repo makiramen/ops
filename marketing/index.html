@@ -105,6 +105,84 @@ tr.clusterrow td { background: #EEF2F7; font-weight: 700; font-size: 10px; text-
 .notice.plain summary { cursor: pointer; font-weight: 600; font-size: 11px; color: #3B62C4; }
 .notice.plain details[open] summary { margin-bottom: 4px; }
 .notice.plain .rules { font-size: 11px; color: #35509E; }
+
+/* --- Add/Remove rebuild, 17 Aug 2026 (Michael's 6 points) --------------
+   Point 6: "remember humans are using this, so making this as easy for the
+   creative team to understand is optimal." Everything below exists to make a
+   row readable at a glance by someone who does not live in Ads Manager. */
+.rag.WATCHING { background:#F1F5F9; color:#475569; }
+/* Platform tag — deliberately dark and neutral so it reads as "which account
+   is this in", never as a verdict. It is the first thing on the Ad type cell
+   because it is the first thing you need to know to go and find the ad. */
+.plattag { display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.03em;
+  text-transform:uppercase; padding:2px 7px; border-radius:5px; white-space:nowrap;
+  background:#1E293B; color:#fff; margin-right:2px; }
+.plattag.google { background:#1A73E8; }
+.plattag.tiktok { background:#000; }
+.plattag.instagram { background:#7C3AED; }
+.watchnote { display:block; font-size:9.5px; color:#94A3B8; margin-top:2px; }
+.platrow { display:flex; gap:6px; align-items:center; margin:10px 0 8px; flex-wrap:wrap; }
+.platbtn { border:1px solid #CBD5E1; background:#fff; color:#475569; font-size:11.5px;
+  font-weight:600; padding:5px 14px; border-radius:999px; cursor:pointer; }
+.platbtn:hover { background:#F1F5F9; }
+.platbtn.on { background:#0F172A; border-color:#0F172A; color:#fff; }
+.platbtn .n { opacity:.65; font-weight:500; margin-left:4px; }
+.platbtn[disabled] { opacity:.45; cursor:not-allowed; }
+/* Objective chip — what Meta is actually buying for this campaign. */
+.objchip { display:inline-block; font-size:9.5px; font-weight:700; letter-spacing:.03em;
+  text-transform:uppercase; padding:2px 7px; border-radius:5px; white-space:nowrap; }
+.objchip.CONV    { background:#DCFCE7; color:#15803D; }
+.objchip.LPV     { background:#DBEAFE; color:#1D4ED8; }
+.objchip.CLICK   { background:#DBEAFE; color:#1D4ED8; }
+.objchip.AWARE   { background:#FEF3C7; color:#B45309; }
+.objchip.PROFILE { background:#FEF3C7; color:#B45309; }
+.objchip.THRU    { background:#EDE9FE; color:#6D28D9; }
+.objchip.none    { background:#F1F5F9; color:#64748B; }
+/* Point 5: landing-page ads must be unmissable. */
+.lpbadge { display:inline-block; font-size:9.5px; font-weight:700; padding:2px 7px;
+  border-radius:5px; background:#0369A1; color:#fff; white-space:nowrap; }
+.lpdest { display:block; font-size:10px; color:#64748B; margin-top:3px; word-break:break-all; }
+.lpdest a { color:#3B62C4; text-decoration:none; }
+.lpdest a:hover { text-decoration:underline; }
+.metachip { display:inline-block; font-size:10px; color:#475569; background:#F1F5F9;
+  border-radius:4px; padding:1px 6px; margin-right:4px; }
+.missetflag { display:block; font-size:10px; font-weight:600; color:#9A3412;
+  background:#FFF7ED; border:1px solid #FED7AA; border-radius:5px; padding:3px 7px; margin-top:4px; }
+.renameflag { display:inline-block; font-size:9px; color:#B45309; background:#FEF3C7;
+  border-radius:4px; padding:1px 6px; margin-left:6px; }
+/* Point 1: LPV% / ThruPlay% are SUPPORTING DATA and must not read as inputs
+   to the verdict. Tinted band + explicit header say so. */
+th.diagcol, td.diagcol { background:#FAFAF9; }
+th.diagfirst, td.diagfirst { border-left:2px solid #E7E5E4; }
+.diaghdr { font-size:8.5px; font-weight:600; color:#A8A29E; text-transform:uppercase;
+  letter-spacing:.05em; display:block; }
+.actioncell { font-size:11.5px; line-height:1.5; }
+.actionowner { display:inline-block; font-size:9.5px; font-weight:700; color:#3730A3;
+  background:#E0E7FF; border-radius:4px; padding:1px 6px; margin-top:3px; }
+.riskbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; background:#FEF2F2;
+  border:1px solid #FECACA; border-radius:8px; padding:8px 12px; font-size:12px;
+  color:#991B1B; margin-bottom:10px; }
+.riskbar b { font-size:15px; }
+.riskbar.clear { background:#F0FDF4; border-color:#BBF7D0; color:#15803D; }
+.compbar { display:flex; flex-wrap:wrap; gap:8px; align-items:center; background:#FFFBEB;
+  border:1px solid #FDE68A; border-radius:8px; padding:7px 12px; font-size:11.5px;
+  color:#92400E; margin-bottom:10px; }
+.compbar .names { color:#B45309; font-size:10.5px; }
+/* Ad-level drill-down: the creative team's actual question is "which image
+   worked", and that only answers itself with the image on screen. */
+.adgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; margin-top:8px; }
+.adcard { border:1px solid #E2E8F0; border-radius:10px; overflow:hidden; background:#fff; }
+.adcard img { width:100%; height:120px; object-fit:cover; display:block; background:#F1F5F9; }
+.adcard .noimg { width:100%; height:120px; background:#F1F5F9; display:flex; align-items:center;
+  justify-content:center; color:#94A3B8; font-size:10px; }
+.adcard .adbody { padding:8px 9px 10px; }
+.adcard .adname { font-size:11px; font-weight:600; line-height:1.35; margin-bottom:4px; }
+.adcard .adtitle { font-size:10.5px; color:#475569; line-height:1.4; margin-bottom:5px; }
+.adcard .adstats { display:flex; flex-wrap:wrap; gap:4px; }
+.adcard .adstat { font-size:9.5px; background:#F1F5F9; color:#334155; border-radius:4px; padding:1px 5px; }
+.adcard .addest { font-size:9px; color:#64748B; margin-top:5px; word-break:break-all; }
+.adcard .adwarn { font-size:9.5px; font-weight:600; color:#9A3412; background:#FFF7ED;
+  border-radius:4px; padding:3px 6px; margin-top:5px; display:block; line-height:1.4; }
 /* --- Add/Remove: clickable rows, history, detail modal (v1.1) --- */
 #matrix-table tr.clickable, #matrix-hist-table tr.clickable { cursor: pointer; }
 #matrix-table tr.clickable:hover td, #matrix-hist-table tr.clickable:hover td { background: #F1F5F9; }
@@ -459,19 +537,31 @@ tr.hiddenrow { display: none; }
       <a class="sheetlink" href="https://docs.google.com/spreadsheets/d/1zpm8ixjmnCt60kUXu-SoDbXEua7obJ0XU_zt5jYSIGw/edit" target="_blank">override in sheet ↗</a>
     </div>
     <div class="notice plain">
-      <strong>The four numbers, in plain English — and who fixes what:</strong><br>
-      <strong>£/RESULT</strong> — what one booking, purchase or lead costs us. £5 or under = scale it up · over £12 = kill it. <em>Owner: Vidya (paid media).</em><br>
-      <strong>£/CLICK</strong> — what one click costs. Expensive clicks mean the wrong audience or bidding. <em>Owner: Vidya (paid media).</em><br>
-      <strong>LPV %</strong> — of the people who clicked, how many actually saw the page load. <span style="color:#DC2626;font-weight:600">Red under 70%</span> = the landing page is slow or broken — fix the page before judging the ad. <em>Owner: Vidya (landing pages &amp; tracking).</em><br>
-      <strong>THRUPLAY %</strong> — of the people who started the video, how many watched it through. <span style="color:#DC2626;font-weight:600">Red under 60%</span> = creative problem — the video loses people, so change the video, not the budget. <em>Owner: Georgie (creative).</em>
+      <strong>Every ad is judged on the result Meta was actually told to buy.</strong><br>
+      A campaign set to buy <em>landing page views</em> is judged on the cost of a landing page view — not on bookings it was never optimised for. The <strong>AD TYPE</strong> column tells you which. <em>Bookings are shown on every row regardless, so cheap traffic is never mistaken for a full restaurant.</em><br>
+      <strong>COST</strong> — what one of that campaign's own results costs. The bar changes with the objective; hover the number to see it. <em>Owner: Vidya (paid media).</em><br>
+      <strong>LPV % and THRUPLAY %</strong> sit in the grey band on the right. They are <strong>background information only and do not decide anything</strong> — they tell you <em>why</em> a number looks the way it does. Low LPV % = the landing page is losing people (<em>Vidya</em>). Low ThruPlay % = the video loses people (<em>Georgie</em>).
     </div>
+    <div id="matrix-risk"></div>
+    <div id="matrix-compliance"></div>
     <div class="ragsummary" id="matrix-summary"></div>
+    <div class="platrow" id="matrix-platforms"></div>
     <div class="controls">
-      <label><input type="checkbox" id="matrix-showall"> Show settled KEEPs too</label>
+      <label><input type="checkbox" id="matrix-hidekeeps"> Hide settled KEEPs — show only what needs a decision</label>
     </div>
     <table>
-      <thead><tr><th>Decision</th><th>Name <span class="rowhint">· click for detail</span></th><th>Type</th><th class="ctr">Evidence</th><th class="ctr">£/result</th><th class="ctr">£/click</th><th class="ctr">LPV %</th><th class="ctr">ThruPlay %</th><th>Flagged</th><th>Reason</th></tr></thead>
-      <tbody id="matrix-table"><tr><td colspan="10" class="loading">Loading…</td></tr></tbody>
+      <thead><tr>
+        <th>Decision</th>
+        <th>Campaign <span class="rowhint">· click to see the creative</span></th>
+        <th>Ad type</th>
+        <th class="ctr">Evidence</th>
+        <th class="ctr">Cost</th>
+        <th class="ctr">Bookings</th>
+        <th class="ctr diagcol diagfirst"><span class="diaghdr">background only</span>LPV %</th>
+        <th class="ctr diagcol"><span class="diaghdr">background only</span>ThruPlay %</th>
+        <th>What to do</th>
+      </tr></thead>
+      <tbody id="matrix-table"><tr><td colspan="9" class="loading">Loading…</td></tr></tbody>
     </table>
   </div>
   <div class="section">
@@ -1783,7 +1873,7 @@ async function loadMatrix() {
   matrixAds30 = (DATA && DATA.metaAds30) || [];
   matrixLibRows = (res[2] && res[2].lib) || [];
   matrixAnnById = annotationMaps((res[2] && res[2].ann) || []);
-  document.getElementById('matrix-showall').addEventListener('change', renderMatrix);
+  document.getElementById('matrix-hidekeeps').addEventListener('change', renderMatrix);
   renderMatrix();
   renderMatrixHistory();
   wireMatrixModal();
@@ -1872,10 +1962,11 @@ var STATUS_WORDS = {confirmed: 'agreed', overruled: 'your call', settled: 'settl
 // under 70% = landing page problem). ThruPlay % = watched-through ÷ 3-second
 // plays (red under 60% = creative problem). Meta paid rows only — organic and
 // Google rows show a dash.
-function ratePctCell(v, redBelow, hint) {
-  if (v === '' || v == null || isNaN(Number(v))) return '<td class="ctr"><span class="subtle">—</span></td>';
+function ratePctCell(v, redBelow, hint, diag, first) {
+  var cls = 'ctr' + (diag ? ' diagcol' : '') + (first ? ' diagfirst' : '');
+  if (v === '' || v == null || isNaN(Number(v))) return '<td class="' + cls + '"><span class="subtle">—</span></td>';
   var n = Number(v);
-  return '<td class="ctr"' + (hint ? ' title="' + escAttr(hint) + '"' : '') + '><span class="mval"' +
+  return '<td class="' + cls + '"' + (hint ? ' title="' + escAttr(hint) + '"' : '') + '><span class="mval"' +
     (n < redBelow ? ' style="color:#DC2626;font-weight:700"' : '') + '>' + Math.round(n * 100) + '%</span></td>';
 }
 
@@ -1897,8 +1988,239 @@ function decisionOf(r) {
           source: st === 'overruled' ? 'override' : 'auto', on: r.decided_on || ''};
 }
 
+
+// =====================================================================
+// ADD/REMOVE REBUILD — 17 Aug 2026 (Michael's six points)
+// =====================================================================
+// Point 3: Google and Meta read as one confusing list. They are different
+// businesses with different economics and different bars, so they get their
+// own view. No TikTok button: the tiktok Ads connector is still not connected
+// in Windsor, so a TikTok tab would be an empty promise.
+var matrixPlatform = 'all';
+
+var OBJ_WORDS = {
+  CONV:    {chip: 'Bookings',      what: 'bookings and orders'},
+  LPV:     {chip: 'Landing page',  what: 'visits to a web page'},
+  CLICK:   {chip: 'Traffic',       what: 'clicks through to a web page'},
+  AWARE:   {chip: 'Awareness',     what: 'people seeing it'},
+  PROFILE: {chip: 'Profile visits',what: 'visits to the Instagram profile'},
+  THRU:    {chip: 'Video views',   what: 'people watching the video through'}
+};
+
+// Point 4: "we can remove the flagged bit and add an Ad Type column that can
+// be extracted from the title." The name gives site and format; Meta gives
+// what the campaign is really buying. Both go here, because a creative person
+// needs to know it is a landing-page video for Soho — not decode a slug.
+// Which ad account is this in. Michael, 17 Aug: "just missing the tag on
+// whether it is meta or not."
+// NB there are Meta ads NAMED "TikTok Video" (Shoreditch, Southampton) — they
+// are Meta ads running TikTok-style creative, not TikTok ads. So this reads the
+// platform column, never the name. Paid TikTok will only ever appear here once
+// the `tiktok` connector is linked in Windsor; today only tiktok_organic is.
+function platformTag(r) {
+  var p = String(r.platform || '').toLowerCase();
+  var name = p === 'meta' ? 'Meta' : p === 'google' ? 'Google'
+           : p === 'tiktok' ? 'TikTok' : p === 'instagram' ? 'Instagram'
+           : (p ? p.charAt(0).toUpperCase() + p.slice(1) : '—');
+  return '<span class="plattag ' + escAttr(p) + '">' + name + '</span>';
+}
+
+function adTypeCell(r) {
+  var tag = platformTag(r);
+  if (r.entity_type === 'format_series') {
+    return '<td>' + tag + ' <span class="objchip none">Organic</span></td>';
+  }
+  if (r.platform === 'google') {
+    // Search and PMax buy very different things and have their own bars, so
+    // say which — the raw window value told nobody anything.
+    return '<td>' + tag + ' <span class="metachip">' +
+      (isPmaxName(r.entity_name) ? 'PMax' : 'Search') + '</span></td>';
+  }
+  var g = String(r.objective_group || '');
+  var w = OBJ_WORDS[g];
+  var isLp = String(r.is_landing) === 'yes';
+  // The LPV chip and the landing-page badge would say the same word twice, so
+  // for LPV the badge carries it alone. Traffic keeps its chip — "traffic to a
+  // landing page" is two facts, not one repeated.
+  // ⚠ If objective_group is UNDEFINED the sheet predates the objective-aware
+  // build — say so rather than "Not set", which would blame Meta for a column
+  // this page is expecting and the Apps Script has not yet been deployed to write.
+  var out = tag + ' ';
+  if (r.objective_group === undefined) {
+    out += '<span class="objchip none" title="The Add/Remove sheet has not been rebuilt yet — ' +
+           'deploy ContentLibrary.gs and this fills in on the next run.">awaiting sheet</span>';
+  } else if (isLp && g === 'LPV') {
+    out += '';
+  } else if (w) {
+    out += '<span class="objchip ' + g + '">' + w.chip + '</span>';
+  } else {
+    out += '<span class="objchip none">Not set</span>';
+  }
+  if (r.ad_format) out += ' <span class="metachip">' + escAttr(r.ad_format) + '</span>';
+  // Point 5: "if it is a landing page ad, we have to be super clear on this."
+  if (isLp) {
+    out += ' <span class="lpbadge">→ LANDING PAGE</span>';
+    if (r.destination) {
+      out += '<span class="lpdest"><a href="' + escAttr(r.destination) + '" target="_blank" rel="noopener">' +
+        escAttr(String(r.destination).replace(/^https?:\/\//, '').slice(0, 46)) + '</a></span>';
+    }
+  }
+  if (r.goal_mismatch) {
+    out += '<span class="missetflag">⚠ Named ' + escAttr(r.goal_mismatch) +
+      ', but the ad set is buying ' + escAttr(String(r.objective_actual || '').toLowerCase().replace(/_/g, ' ')) +
+      ' — fix the ad set or rename it.</span>';
+  }
+  return '<td>' + out + '</td>';
+}
+
+// Point 6: a verdict nobody can act on is not a verdict. One sentence saying
+// what to do, and whose name is on it.
+function actionCell(r, d) {
+  var owner = r.metric_owner || (r.entity_type === 'format_series' ? 'Georgie' : 'Vidya');
+  var txt;
+  if (r.goal_mismatch) {
+    txt = 'Not judged — fix the ad set so it buys what the name says, then it will be scored.';
+    owner = 'Vidya';
+  } else if (String(r.judged) === 'no') {
+    // Pull the "needs £X more spend and Y more days" clause straight out of the
+    // reason the sheet wrote, so the page and the sheet can never disagree.
+    var needs = /\(needs ([^)]+)\)/.exec(String(r.reason || ''));
+    txt = 'Nothing yet — too little spend behind it to call' +
+          (needs ? '. Needs ' + escAttr(needs[1]) + '.' : '.');
+  } else if (d.building) {
+    txt = 'Nothing yet — still gathering evidence' +
+      (d.daysToGo ? ' (' + d.daysToGo + ' more day' + (d.daysToGo === 1 ? '' : 's') + ')' : '') + '.';
+  } else if (d.label === 'KILL') {
+    txt = '<b>Switch this off</b> in ' + (r.platform === 'google' ? 'Google Ads' : 'Meta Ads Manager') + '.';
+  } else if (d.label === 'SCALE') {
+    txt = '<b>Give this more budget</b> — it is beating the rest of the account.';
+  } else {
+    txt = 'Leave it alone.';
+  }
+  var extra = '';
+  if (!r.goal_mismatch && String(r.is_landing) === 'yes' && r.lpv_rate !== '' && Number(r.lpv_rate) < 0.7) {
+    extra = '<br><span style="color:#9A3412">The landing page is losing ' +
+      Math.round((1 - Number(r.lpv_rate)) * 100) + '% of the people who click — worth checking.</span>';
+  }
+  return '<td class="actioncell">' + txt + extra +
+    '<br><span class="actionowner">' + escAttr(owner) + '</span></td>';
+}
+
+// The cost cell has to say WHAT it is the cost of — after 17 Aug the same
+// column holds cost per booking on one row and cost per landing page view on
+// the next, so an unlabelled number would be actively misleading.
+function costCell(r) {
+  var name = String(r.key_metric_1_name || '');
+  if (name === 'MIS_SET' || !name) return '<td class="ctr"><span class="subtle">not judged</span></td>';
+  // A watching row still shows its cost so far — it just must not read as a
+  // settled number somebody has acted on.
+  var watching = String(r.judged) === 'no';
+  var label = r.primary_metric_label || METRIC_LABELS[name] || name.replace(/_/g, ' ');
+  var v = r.key_metric_1_value;
+  if (v === '' || v == null) return '<td class="ctr"><span class="subtle">—</span></td>';
+  var n = Number(v);
+  var txt = /_gbp$/.test(name)
+    ? (isFinite(n) ? (n < 1 ? '£' + n.toFixed(3).replace(/0$/, '') : fmtGbp2(n)) : String(v))
+    : String(v);
+  var short = String(label).replace(/^Cost per /, 'per ').replace(/^CPM$/, 'per 1,000 seen');
+  return '<td class="ctr" title="' + escAttr(label) + '"><span class="mval"' +
+    (watching ? ' style="color:#94A3B8"' : '') + '>' + txt +
+    '</span><span class="mlabel">' + escAttr(short) + '</span>' +
+    (watching ? '<span class="watchnote">so far — not judged</span>' : '') + '</td>';
+}
+
+// Michael, 17 Aug: bookings ride on EVERY row whatever the objective, so an
+// awareness campaign with cheap reach and no covers cannot hide behind a good
+// CPM. He declined a separate verdict for it — this column is how the weekly
+// meeting sees it instead.
+function bookingsCell(r) {
+  if (r.entity_type !== 'paid_campaign') return '<td class="ctr"><span class="subtle">—</span></td>';
+  var b = Number(r.bookings || 0);
+  var t = Number(r.conv_total || 0);
+  var n = b || t;
+  if (!n) return '<td class="ctr"><span class="mval" style="color:#94A3B8">0</span></td>';
+  return '<td class="ctr" title="' + escAttr(r.conv_breakdown || '') + '"><span class="mval">' + n + '</span></td>';
+}
+
+// Point 3: the platform switcher. Counts are of things needing a decision, so
+// the button itself tells you where the work is.
+function renderPlatformPills(view) {
+  var el = document.getElementById('matrix-platforms');
+  if (!el) return;
+  var groups = [
+    {key: 'all',    label: 'Everything', test: function() { return true; }},
+    {key: 'meta',   label: 'Meta',       test: function(x) { return x.r.platform === 'meta'; }},
+    {key: 'google', label: 'Google',     test: function(x) { return x.r.platform === 'google'; }},
+    {key: 'organic',label: 'Organic',    test: function(x) { return x.r.entity_type === 'format_series'; }}
+  ];
+  el.innerHTML = groups.map(function(g) {
+    var n = view.filter(function(x) {
+      return g.test(x) && !x.d.building && (x.d.label === 'KILL' || x.d.label === 'SCALE');
+    }).length;
+    var any = view.filter(g.test).length;
+    return '<button class="platbtn' + (matrixPlatform === g.key ? ' on' : '') + '"' +
+      (any ? '' : ' disabled') + ' data-plat="' + g.key + '">' + g.label +
+      '<span class="n">' + (any ? n : 0) + '</span></button>';
+  }).join('') +
+  '<span class="subtle" style="font-size:10.5px;margin-left:6px">number = decisions waiting · ' +
+  'TikTok ads not shown, the connector still is not linked in Windsor</span>';
+  Array.prototype.forEach.call(el.querySelectorAll('.platbtn'), function(b) {
+    b.addEventListener('click', function() { matrixPlatform = b.getAttribute('data-plat'); renderMatrix(); });
+  });
+}
+
+function platformFilter(x) {
+  if (matrixPlatform === 'all') return true;
+  if (matrixPlatform === 'organic') return x.r.entity_type === 'format_series';
+  if (matrixPlatform === 'meta') return x.r.platform === 'meta';
+  if (matrixPlatform === 'google') return x.r.platform === 'google';
+  return true;
+}
+
+// Money still burning on ads we already agreed to kill. "1 ad needs switching
+// off" is a chore; "£47 a day" is a reason to do it now.
+function renderRiskBar(view) {
+  var el = document.getElementById('matrix-risk');
+  if (!el) return;
+  var kills = view.filter(function(x) {
+    return !x.d.building && x.d.label === 'KILL' && x.r.entity_type === 'paid_campaign';
+  });
+  if (!kills.length) {
+    el.innerHTML = '<div class="riskbar clear">Nothing to switch off — every agreed kill is already paused.</div>';
+    return;
+  }
+  var perDay = kills.reduce(function(a, x) { return a + (Number(x.r.daily_spend) || 0); }, 0);
+  var meta = kills.filter(function(x) { return x.r.platform !== 'google'; }).length;
+  var goog = kills.length - meta;
+  var where = meta && goog ? meta + ' in Meta Ads Manager, ' + goog + ' in Google Ads'
+            : goog ? 'in Google Ads' : 'in Meta Ads Manager';
+  el.innerHTML = '<div class="riskbar"><b>' + fmtGbp2(perDay) + ' a day</b> is still going into ' +
+    kills.length + ' ad' + (kills.length === 1 ? '' : 's') + ' we agreed to kill — ' + where + '.' +
+    ' <span class="subtle" style="color:#B91C1C">That is about ' + fmtGbp(perDay * 7) + ' a week.</span></div>';
+}
+
+// The naming convention only pays off if it is followed. Silence lets it rot.
+function renderComplianceBar(view) {
+  var el = document.getElementById('matrix-compliance');
+  if (!el) return;
+  var bad = view.filter(function(x) {
+    return x.r.entity_type === 'paid_campaign' && x.r.platform === 'meta' &&
+           String(x.r.name_compliant) === 'no';
+  });
+  if (!bad.length) { el.innerHTML = ''; return; }
+  var names = bad.slice(0, 6).map(function(x) { return x.r.entity_name; }).join(' · ');
+  el.innerHTML = '<div class="compbar"><strong>' + bad.length + ' campaign' +
+    (bad.length === 1 ? ' does' : 's do') + ' not follow the naming convention</strong>' +
+    ' — still judged on what Meta is really buying, but the site, format and objective cannot be read from the name.' +
+    '<span class="names">' + escAttr(names) + (bad.length > 6 ? ' …' : '') + '</span></div>';
+}
+
 function renderMatrix() {
-  var showAll = document.getElementById('matrix-showall').checked;
+  // Inverted 17 Aug: the board defaults to showing EVERY campaign. Hiding
+  // settled KEEPs is now an opt-in filter, not the default — objective-aware
+  // judging produces very few kills, so an action-only default reads as broken,
+  // and campaigns that were merely quiet used to disappear entirely.
+  var showAll = !document.getElementById('matrix-hidekeeps').checked;
   var all = matrixRowsCache || [];
 
   // Freshness — the matrix is only trustworthy if the daily job actually ran.
@@ -1918,7 +2240,11 @@ function renderMatrix() {
     }
   }
 
-  var view = all.map(function(r) { return {r: r, d: decisionOf(r)}; });
+  // paid_ad rows carry no verdict — they exist for the creative drill-down
+  // inside a campaign's detail popup, so they are held aside here.
+  matrixAdRows = all.filter(function(r) { return r.entity_type === 'paid_ad'; });
+  var view = all.filter(function(r) { return r.entity_type !== 'paid_ad'; })
+                .map(function(r) { return {r: r, d: decisionOf(r)}; });
 
   // Headline counts across everything, regardless of the filter. Only AGREED
   // decisions count — a row still deciding is not something anyone must do.
@@ -1927,39 +2253,61 @@ function renderMatrix() {
     if (x.d.building) counts.BUILDING++;
     else if (counts[x.d.label] != null) counts[x.d.label]++;
   });
-  var killsMeta = 0, killsGoogle = 0;
-  view.forEach(function(x) {
-    if (x.d.building || x.d.label !== 'KILL' || x.r.entity_type !== 'paid_campaign') return;
-    if (x.r.platform === 'google') killsGoogle++; else killsMeta++;
-  });
-  var toSwitchOff = killsMeta + killsGoogle;
-  var whereTxt = killsMeta && killsGoogle
-    ? ' (' + killsMeta + ' in Meta Ads Manager, ' + killsGoogle + ' in Google Ads)'
-    : killsGoogle ? ' in Google Ads' : ' in Meta Ads Manager';
+  var misset = view.filter(function(x) { return !!x.r.goal_mismatch; }).length;
+  var watching = view.filter(function(x) {
+    return String(x.r.judged) === 'no' && !x.r.goal_mismatch;
+  }).length;
   var sumEl = document.getElementById('matrix-summary');
   if (sumEl) {
     sumEl.innerHTML =
       '<span class="rag KILL">KILL ' + counts.KILL + '</span>' +
       '<span class="rag SCALE">SCALE ' + counts.SCALE + '</span>' +
       '<span class="rag PENDING">still deciding ' + counts.BUILDING + '</span>' +
-      (toSwitchOff ? '<span class="subtle" style="align-self:center">→ ' + toSwitchOff + (toSwitchOff === 1 ? ' ad is still running and needs' : ' ads are still running and need') + ' switching off' + whereTxt + '</span>'
-                   : '<span class="subtle" style="align-self:center">→ nothing left to switch off — every agreed kill is already paused</span>');
+      (misset ? '<span class="rag PENDING" style="background:#FFF7ED;color:#9A3412">' + misset +
+                ' mis-set — not judged</span>' : '') +
+      (watching ? '<span class="rag WATCHING">' + watching + ' watching</span>' : '') +
+      '<span class="subtle" style="align-self:center">' + view.length +
+      ' campaigns on the board</span>';
   }
+  // The cost of inaction, the naming nudge, and the platform switcher all read
+  // from the same unfiltered view so their numbers agree with each other.
+  renderRiskBar(view);
+  renderComplianceBar(view);
+  renderPlatformPills(view);
 
   // Default view = things with an actual call to action. KEEPs are settled and
   // just add noise, so they hide behind the checkbox.
   var rows = view.filter(function(x) {
+    if (!platformFilter(x)) return false;
     if (showAll) return true;
+    // Mis-set and still-watching rows sit at KEEP because they were never
+    // judged at all — the "hide settled KEEPs" filter is about SETTLED rows, so
+    // it must not bury them.
+    if (x.r.goal_mismatch) return true;
+    if (String(x.r.judged) === 'no') return true;
     return x.d.label !== 'KEEP';
   });
 
   var ORDER = {ERROR: -1, KILL: 0, SCALE: 1, KEEP: 3};
   var rank = function(x) {
     if (verdictOf(x.r) === 'ERROR') return -1;
+    // Mis-set sits just under the kills: it is money going somewhere nobody
+    // intended, and it cannot be judged until someone fixes it.
+    if (x.r.goal_mismatch) return 0.5;
     if (x.d.building) return 2;
+    // Watching rows come after the decisions but before settled KEEPs — live
+    // spend nobody has ruled on yet is more interesting than a settled row.
+    if (String(x.r.judged) === 'no') return 2.5;
     return ORDER[x.d.label] != null ? ORDER[x.d.label] : 9;
   };
+  // Michael, 17 Aug: "sort the meta and tik tok up top and google on the
+  // bottom, it makes it easier." Google is a different account with different
+  // economics and different bars — grouping it last stops the eye switching
+  // context every other row. Within each group the decision order is unchanged.
+  var platRank = function(x) { return x.r.platform === 'google' ? 1 : 0; };
   rows.sort(function(a, b) {
+    var pa = platRank(a), pb = platRank(b);
+    if (pa !== pb) return pa - pb;
     var oa = rank(a), ob = rank(b);
     if (oa !== ob) return oa - ob;
     // oldest-flagged first inside a decision — the ones that have been shouting longest
@@ -1969,9 +2317,10 @@ function renderMatrix() {
 
   var tbody = document.getElementById('matrix-table');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="10" class="subtle">' +
-      (showAll ? 'ADD_REMOVE_MATRIX empty — run computeAddRemoveMatrix() in the Apps Script project'
-               : 'Nothing to action — everything is settled on KEEP (tick the box to see them)') + '</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="subtle">' +
+      (matrixPlatform !== 'all' ? 'Nothing on ' + matrixPlatform + ' — try Everything'
+       : showAll ? 'ADD_REMOVE_MATRIX empty — run computeAddRemoveMatrix() in the Apps Script project'
+               : 'Nothing needs a decision right now — untick the box to see every campaign') + '</td></tr>';
     return;
   }
 
@@ -1979,7 +2328,12 @@ function renderMatrix() {
   tbody.innerHTML = rows.map(function(x, idx) {
     var r = x.r, d = x.d;
     var cell;
-    if (d.building) {
+    if (String(r.judged) === 'no' && !r.goal_mismatch) {
+      // Shown but deliberately unjudged — under £50 / 5 days. Saying WATCHING
+      // is honest; calling it KEEP would imply somebody had looked.
+      cell = '<span class="rag WATCHING">WATCHING</span>' +
+             '<span class="srcbadge">not enough spend yet</span>';
+    } else if (d.building) {
       cell = '<span class="rag ' + (d.verdict || 'PENDING') + ' prov">' + (d.verdict || 'PENDING') + '</span>' +
         '<span class="srcbadge">not agreed yet · ' + (d.daysToGo != null
           ? (d.daysToGo === 0 ? 'decides next run' : d.daysToGo + ' more day' + (d.daysToGo === 1 ? '' : 's'))
@@ -1990,30 +2344,32 @@ function renderMatrix() {
         (d.source === 'override' ? 'your call' : STATUS_WORDS[d.status] || d.status) +
         (d.on ? ' · ' + String(d.on).slice(0, 10).slice(5) : '') + '</span>';
     }
-    var fs = daysSince(r.flagged_since);
-    var age = fs == null ? '' : fs < 7 ? fs + 'd' : Math.floor(fs / 7) + 'w';
-    var flaggedCell = r.flagged_since
-      ? '<span class="' + (fs != null && fs >= 21 ? 'stale' : 'subtle') + '">' +
-        String(r.flagged_since).slice(0, 10) + (age ? ' · ' + age : '') + '</span>'
-      : '<span class="subtle">—</span>';
     var clickable = r.entity_type === 'paid_campaign' || r.entity_type === 'format_series';
-    return '<tr' + (clickable ? ' class="clickable" data-i="' + idx + '" title="Click for the full story"' : '') + '>' +
+    // Point 4: the "Flagged" column is gone. It repeated what Evidence and the
+    // "N more days" badge already say, and cost a column the creative team
+    // needed for something they can act on.
+    var siteBits = '';
+    if (r.site) siteBits += '<span class="metachip">' + escAttr(r.site) + '</span>';
+    if (r.theme) siteBits += '<span class="metachip">' + escAttr(String(r.theme).toLowerCase()) + '</span>';
+    return '<tr' + (clickable ? ' class="clickable" data-i="' + idx + '" title="Click to see the creative behind this"' : '') + '>' +
       '<td>' + cell + '</td>' +
-      '<td>' + escAttr(matrixDisplayName(r)) + (isUntagged(r)
+      '<td>' + escAttr(matrixDisplayName(r)) +
+        (String(r.name_compliant) === 'no' && r.entity_type === 'paid_campaign' && r.platform === 'meta'
+          ? '<span class="renameflag">rename me</span>' : '') +
+        (siteBits ? '<div style="margin-top:3px">' + siteBits + '</div>' : '') +
+        (isUntagged(r)
           ? '<span class="untagged-note">not split by format</span>' +
             '<span class="rowsub">Nobody has tagged post formats yet, so every ' +
             (r.platform === 'tiktok' ? 'TikTok video' : 'Instagram post') +
             ' is judged as one lump. Tag them and this splits into real formats you can act on.</span>'
           : '') + '</td>' +
-      '<td class="subtle">' + (r.entity_type === 'paid_campaign' ? 'paid' : r.entity_type === 'format_series' ? 'organic' : (r.entity_type || '')) +
-        ' · ' + (r.platform || '') + '</td>' +
+      adTypeCell(r) +
       '<td class="ctr">' + evidenceLabel(r) + '</td>' +
-      '<td class="ctr">' + metricCell(r.key_metric_1_name, r.key_metric_1_value) + '</td>' +
-      '<td class="ctr">' + metricCell(r.key_metric_2_name, r.key_metric_2_value) + '</td>' +
-      ratePctCell(r.lpv_rate, 0.70, 'Landing page views ÷ link clicks. Below 70% = the landing page is slow or broken — fix the page before judging the ad. Owner: Vidya.') +
-      ratePctCell(r.thruplay_rate, 0.60, 'Watched-through ÷ 3-second video plays. Below 60% = creative problem — change the video, not the budget. Owner: Georgie.') +
-      '<td>' + flaggedCell + '</td>' +
-      '<td class="caption">' + (r.reason || '') + '</td>' +
+      costCell(r) +
+      bookingsCell(r) +
+      ratePctCell(r.lpv_rate, 0.70, 'Landing page views ÷ link clicks. Background information only — it does not decide the verdict. Below 70% means the landing page is losing people who clicked. Owner: Vidya.', true, true) +
+      ratePctCell(r.thruplay_rate, 0.25, 'Watched-through ÷ 3-second video plays. Background information only — it does not decide the verdict. Below 25% means the video is losing people early; change the video, not the budget. Owner: Georgie. (Bar moved 60% → 25% on 17 Aug: this account runs 22–33%, so at 60% the whole column read red and stopped meaning anything.)', true) +
+      actionCell(r, d) +
       '</tr>';
   }).join('');
 }
@@ -2026,6 +2382,7 @@ function renderMatrix() {
 // =====================================================================
 var matrixViewRows = [];
 var matrixHistView = [];
+var matrixAdRows = [];   // entity_type='paid_ad' — creative behind each campaign
 
 function renderMatrixHistory() {
   var tbody = document.getElementById('matrix-hist-table');
@@ -2114,7 +2471,17 @@ var MRULES = {
   // PMax counts store visits/calls as conversions and Search counts bookings.
   GADS_SEARCH_SCALE_CPA: 1.25, GADS_SEARCH_SCALE_MINCONV: 25, GADS_SEARCH_KILL_CPA: 5,
   GADS_PMAX_SCALE_CPA: 0.5, GADS_PMAX_SCALE_MINCONV: 100, GADS_PMAX_KILL_CPA: 2,
-  GADS_KILL_MINSPEND: 50, GADS_ZERO_MINSPEND: 30
+  GADS_KILL_MINSPEND: 50, GADS_ZERO_MINSPEND: 30,
+  // 17 Aug 2026 — objective bars, calibrated from 90 days of this account and
+  // approved by Michael. MUST stay in step with HUB2.PAID_GOAL_BARS in
+  // ContentLibrary.gs; these only draw the meter, the sheet does the judging.
+  OBJ_BARS: {
+    LPV:     {scale: 0.09, kill: 0.25, unit: 'landing page view'},
+    CLICK:   {scale: 0.08, kill: 0.25, unit: 'link click'},
+    AWARE:   {scale: 4.50, kill: 11.00, unit: '1,000 impressions'},
+    PROFILE: {scale: 0.15, kill: 0.45, unit: 'profile visit'},
+    THRU:    {scale: 0.01, kill: 0.02, unit: 'ThruPlay'}
+  }
 };
 function isPmaxName(name) { return /p\s*max|performance\s*max/i.test(String(name)); }
 
@@ -2230,6 +2597,40 @@ function matrixWhyHtml(r, d, agg) {
   if (!agg && !cpa && Number(r.key_metric_1_value)) cpa = Number(r.key_metric_1_value);
   var ctr = agg ? agg.ctr : null, cpc = agg ? agg.cpc : (Number(r.key_metric_2_value) || null);
 
+  // 17 Aug 2026 — objective-aware campaigns must NOT be explained with the
+  // booking bars. Before this branch existed the popup told you a landing-page
+  // campaign costing £0.14 per page view was being measured against "£5 a
+  // result = scale, £12 = kill", which is the exact defect the rebuild fixes.
+  if (r.goal_mismatch) {
+    parts.push('<b>This campaign is not being judged.</b> The name says <b>' +
+      escAttr(r.goal_mismatch) + '</b>, but the ad set is optimised for <b>' +
+      escAttr(String(r.objective_actual || '').toLowerCase().replace(/_/g, ' ')) +
+      '</b> — so Meta is buying a different result from the one the name promises.');
+    parts.push('Scoring it either way would give a confident wrong answer, so it waits here until someone either fixes the ad set or renames the campaign.' +
+      (spend != null ? ' It has spent <b>' + fmtGbp2(spend) + '</b> in the meantime.' : ''));
+    parts.push('<span class="subtle">Owner: Vidya (paid media).</span>');
+    return parts.join(' ');
+  }
+  if (isPaid && MRULES.OBJ_BARS[r.objective_group]) {
+    var ob = MRULES.OBJ_BARS[r.objective_group];
+    var oV = Number(r.key_metric_1_value);
+    var money = function(v) { return v < 1 ? '£' + String(v) : fmtGbp2(v); };
+    parts.push('Meta was told to buy <b>' + escAttr(ob.unit) + 's</b> for this campaign, not bookings — so that is what it is judged on.');
+    if (isFinite(oV) && oV > 0) {
+      parts.push('Each ' + escAttr(ob.unit) + ' costs <b>' + money(oV) + '</b>.');
+      parts.push('<span class="subtle">The bars for this objective: ' + money(ob.scale) +
+        ' or under = scale it up · over ' + money(ob.kill) + ' = kill it. ' +
+        'Both come from 90 days of this account — scale at the top-quartile cost, kill at twice the median.</span>');
+    } else {
+      parts.push('<span class="subtle">Not enough results yet to put a cost on it.</span>');
+    }
+    var bk = Number(r.bookings || r.conv_total || 0);
+    parts.push(bk
+      ? 'It has also driven <b>' + bk + ' booking' + (bk === 1 ? '' : 's') + '</b>.'
+      : '<b>No bookings from it</b> — expected for this objective, but worth questioning if it never converts.');
+    parts.push('<b>' + (dec === 'KILL' ? 'Switch it off.' : dec === 'SCALE' ? 'Give it more budget.' : 'Leave it alone.') + '</b>');
+    return parts.join(' ');
+  }
   if (isGoogle) {
     var gwPm = isPmaxName(r.entity_name);
     var gwScale = gwPm ? MRULES.GADS_PMAX_SCALE_CPA : MRULES.GADS_SEARCH_SCALE_CPA;
@@ -2384,6 +2785,54 @@ function matrixContentHtml(r) {
   return html;
 }
 
+
+// Michael, 17 Aug: "remember humans are using this, so making this as easy for
+// the creative team to understand is optimal."
+// A table of campaign names cannot answer "which image worked" — only the
+// image can. Thumbnails were parked back in July because they would not render
+// inside the desktop artifact sandbox; the web Hub is an ordinary page, so
+// that constraint is gone.
+function matrixCreativeHtml(r) {
+  if (r.entity_type !== 'paid_campaign' || r.platform !== 'meta') return '';
+  var ads = (matrixAdRows || []).filter(function(a) { return a.parent_campaign === r.entity_name; });
+  if (!ads.length) return '';
+  ads.sort(function(a, b) { return (Number(b.key_metric_1_value) || 0) - (Number(a.key_metric_1_value) || 0); });
+  var cards = ads.map(function(a) {
+    var img = a.thumb_url
+      ? '<img src="' + escAttr(a.thumb_url) + '" alt="" loading="lazy" ' +
+        'onerror="this.style.display=\'none\';this.insertAdjacentHTML(\'afterend\',\'<div class=&quot;noimg&quot;>image expired</div>\')">'
+      : '<div class="noimg">no image</div>';
+    var stats = [];
+    if (a.key_metric_1_value !== '' && a.key_metric_1_value != null)
+      stats.push('<span class="adstat">' + fmtGbp2(a.key_metric_1_value) + ' spent</span>');
+    if (a.impressions) stats.push('<span class="adstat">' + fmtN(a.impressions) + ' seen</span>');
+    if (a.link_clicks) stats.push('<span class="adstat">' + fmtN(a.link_clicks) + ' clicks</span>');
+    if (a.key_metric_2_value !== '' && a.key_metric_2_value != null && Number(a.key_metric_2_value) > 0)
+      stats.push('<span class="adstat">' + fmtGbp2(a.key_metric_2_value) + '/click</span>');
+    if (a.thruplay_rate !== '' && a.thruplay_rate != null)
+      stats.push('<span class="adstat">' + Math.round(Number(a.thruplay_rate) * 100) + '% watched</span>');
+    var dest = a.destination
+      ? '<div class="addest">→ <a href="' + escAttr(a.destination) + '" target="_blank" rel="noopener">' +
+        escAttr(String(a.destination).replace(/^https?:\/\//, '').slice(0, 42)) + '</a></div>'
+      : '';
+    // Found live on 17 Aug: a booking ad and a £299/mo sales ad both pointing
+    // at an Instagram post. The pixel logs a few conversions and the creative
+    // takes the blame, when the real fault is the link.
+    var warn = a.destination_flag
+      ? '<span class="adwarn">⚠ ' + escAttr(a.destination_flag) + '</span>' : '';
+    return '<div class="adcard">' + img + '<div class="adbody">' +
+      '<div class="adname">' + escAttr(a.entity_name) + '</div>' +
+      (a.creative_title ? '<div class="adtitle">“' + escAttr(a.creative_title) + '”</div>' : '') +
+      (a.cta ? '<div class="adtitle" style="color:#64748B">button: ' + escAttr(a.cta) + '</div>' : '') +
+      '<div class="adstats">' + stats.join('') + '</div>' + dest + warn +
+      '</div></div>';
+  }).join('');
+  return '<div class="mdl-sec"><h4>The actual ads in this campaign</h4>' +
+    '<div class="subtle" style="font-size:11px;margin-bottom:2px">Highest spend first. ' +
+    'The campaign carries the verdict — these are here so you can see what it was spent on.</div>' +
+    '<div class="adgrid">' + cards + '</div></div>';
+}
+
 function openMatrixModal(r, dRaw, fromHistory) {
   var d = dRaw || decisionOf(r);
   var isGoogle = r.platform === 'google';
@@ -2412,7 +2861,15 @@ function openMatrixModal(r, dRaw, fromHistory) {
   if (isPaid && agg) {
     stats.push(mstat('spend · 30d', fmtGbp2(agg.spend)));
     stats.push(mstat(isGoogle ? 'conversions' : 'results', fmtN(agg.conv, isGoogle ? 1 : 0)));
-    stats.push(mstat(isGoogle ? 'cost per conversion' : 'cost per result', agg.cpa != null ? fmtGbp2(agg.cpa) : '—'));
+    // A tile labelled "cost per result" on a landing-page campaign is the same
+    // confusion in miniature — use the objective's own label where we have one.
+    var costLbl = (!isGoogle && r.primary_metric_label)
+      ? String(r.primary_metric_label).toLowerCase()
+      : (isGoogle ? 'cost per conversion' : 'cost per result');
+    var costVal = (!isGoogle && MRULES.OBJ_BARS[r.objective_group] && r.key_metric_1_value !== '')
+      ? Number(r.key_metric_1_value) : (agg.cpa != null ? agg.cpa : null);
+    stats.push(mstat(costLbl, costVal != null
+      ? (costVal < 1 ? '£' + Number(costVal).toFixed(3).replace(/0$/, '') : fmtGbp2(costVal)) : '—'));
     stats.push(mstat('clicks', fmtN(agg.clicks)));
     stats.push(mstat('click rate', fmtPct(agg.ctr)));
     stats.push(mstat('cost per click', fmtGbp2(agg.cpc)));
@@ -2421,8 +2878,12 @@ function openMatrixModal(r, dRaw, fromHistory) {
   } else if (isPaid) {
     var fb = statsFromReason(r.reason);
     if (fb) { stats.push(mstat('final spend', fmtGbp2(fb.spend))); stats.push(mstat('final sales', fmtN(fb.conv))); }
-    if (r.key_metric_1_value) stats.push(mstat('CPA', fmtGbp2(r.key_metric_1_value)));
-    if (r.key_metric_2_value) stats.push(mstat('CPC', fmtGbp2(r.key_metric_2_value)));
+    if (r.key_metric_1_value) {
+      var fbLbl = r.primary_metric_label ? String(r.primary_metric_label).toLowerCase() : 'CPA';
+      var fbV = Number(r.key_metric_1_value);
+      stats.push(mstat(fbLbl, fbV < 1 ? '£' + fbV.toFixed(3).replace(/0$/, '') : fmtGbp2(fbV)));
+    }
+    if (r.key_metric_2_value) stats.push(mstat('cost per click', fmtGbp2(r.key_metric_2_value)));
     stats.push(mstat('status', 'aged out of the 30-day data'));
   } else {
     stats.push(mstat('posts judged', fmtN(evidenceOf(r))));
@@ -2446,6 +2907,22 @@ function openMatrixModal(r, dRaw, fromHistory) {
         meterHtml(gCpaV, gMaxC,
           [{upTo: gScale, color: '#DCFCE7'}, {upTo: gKill, color: '#FEF3C7'}, {upTo: gMaxC, color: '#FEE2E2'}],
           [{v: gScale, t: '£' + gScale + ' scale'}, {v: gKill, t: '£' + gKill + ' kill'}]) + '</div>';
+    }
+  } else if (isPaid && MRULES.OBJ_BARS[r.objective_group]) {
+    // Judged on what Meta was actually told to buy, so the meter has to show
+    // that campaign's own bars — not the booking bars it was never set for.
+    var ob = MRULES.OBJ_BARS[r.objective_group];
+    var oV = Number(r.key_metric_1_value);
+    if (isFinite(oV) && oV > 0) {
+      var oMax = Math.max(ob.kill * 1.6, oV * 1.15);
+      var oFmt = function(v) { return v < 1 ? '£' + String(v) : '£' + v.toFixed(2); };
+      body += '<div class="mdl-sec"><h4>Where it sits — cost per ' + escAttr(ob.unit) + '</h4>' +
+        meterHtml(oV, oMax,
+          [{upTo: ob.scale, color: '#DCFCE7'}, {upTo: ob.kill, color: '#FEF3C7'}, {upTo: oMax, color: '#FEE2E2'}],
+          [{v: ob.scale, t: oFmt(ob.scale) + ' scale'}, {v: ob.kill, t: oFmt(ob.kill) + ' kill'}]) +
+        '<div class="subtle" style="font-size:10.5px;margin-top:5px">These bars come from 90 days of this account: ' +
+        'scale at the top-quartile cost, kill at twice the median. Bookings from this campaign: <b>' +
+        escAttr(String(r.bookings || r.conv_total || 0)) + '</b>.</div></div>';
     }
   } else if (isPaid && !isAwarenessName(r.entity_name) && !isSignupName(r.entity_name)) {
     var cpaV = agg && agg.cpa != null ? agg.cpa : Number(r.key_metric_1_value) || null;
@@ -2476,6 +2953,7 @@ function openMatrixModal(r, dRaw, fromHistory) {
 
   if (agg && agg.dates.length > 1) body += '<div class="mdl-sec"><h4>Daily spend, last 30 days</h4>' + barChartHtml(agg) + '</div>';
 
+  body += matrixCreativeHtml(r);
   body += matrixContentHtml(r);
 
   // timeline
