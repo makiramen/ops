@@ -146,6 +146,15 @@ tr.clusterrow td { background: #EEF2F7; font-weight: 700; font-size: 10px; text-
 .lpdest a:hover { text-decoration:underline; }
 .metachip { display:inline-block; font-size:10px; color:#475569; background:#F1F5F9;
   border-radius:4px; padding:1px 6px; margin-right:4px; }
+/* 18 Aug v2.3 — funnel diagnosis lines in What-to-do, and ad-card numbering
+   in the popup so near-identical " - Copy" ads stop reading as one blur. */
+.diagline { display:block; font-size:11px; margin-top:3px; }
+.diagline.georgie { color:#7C3AED; }
+.diagline.vidya { color:#9A3412; }
+.adnum { display:inline-block; font-size:9px; font-weight:800; letter-spacing:.05em;
+  color:#fff; background:#0F172A; border-radius:4px; padding:1.5px 6px; margin-right:5px; }
+.advariant { font-size:9.5px; font-weight:600; color:#B45309; background:#FEF3C7;
+  border-radius:4px; padding:1px 5px; white-space:nowrap; }
 .missetflag { display:block; font-size:10px; font-weight:600; color:#9A3412;
   background:#FFF7ED; border:1px solid #FED7AA; border-radius:5px; padding:3px 7px; margin-top:4px; }
 .renameflag { display:inline-block; font-size:9px; color:#B45309; background:#FEF3C7;
@@ -539,8 +548,9 @@ tr.hiddenrow { display: none; }
     <div class="notice plain">
       <strong>Every ad is judged on the result Meta was actually told to buy.</strong><br>
       A campaign set to buy <em>landing page views</em> is judged on the cost of a landing page view — not on bookings it was never optimised for. The <strong>AD TYPE</strong> column tells you which. <em>Bookings are shown on every row regardless, so cheap traffic is never mistaken for a full restaurant.</em><br>
-      <strong>COST</strong> — what one of that campaign's own results costs. The bar changes with the objective; hover the number to see it. <em>Owner: Vidya (paid media).</em><br>
-      <strong>LPV % and THRUPLAY %</strong> sit in the grey band on the right. They are <strong>background information only and do not decide anything</strong> — they tell you <em>why</em> a number looks the way it does. Low LPV % = the landing page is losing people (<em>Vidya</em>). Low ThruPlay % = the video loses people (<em>Georgie</em>).
+      <strong>CPA</strong> — £ per booking/order/lead, on every row so the board is comparable. The verdict is still judged on the campaign's own objective — that cost sits in the small print under the CPA. <strong>CPC</strong> — £ per link click. <em>Owner: Vidya (paid media).</em><br>
+      <strong>CTR %, LPV % and THRUPLAY %</strong> sit in the grey band on the right. They are <strong>background information only and do not decide anything</strong> — they tell you <em>why</em> a number looks the way it does. Low CTR % = the ad isn't pulling people in (<em>Georgie</em>). Low LPV % = the landing page is losing people who clicked (<em>Vidya</em>). Low ThruPlay % = the video loses people early (<em>Georgie</em>).<br>
+      <strong>Agreed kills sit at the bottom</strong> — the decision is made; click any row for the agreed date and history.
     </div>
     <div id="matrix-risk"></div>
     <div id="matrix-compliance"></div>
@@ -553,15 +563,18 @@ tr.hiddenrow { display: none; }
       <thead><tr>
         <th>Decision</th>
         <th>Campaign <span class="rowhint">· click to see the creative</span></th>
+        <th>Location</th>
         <th>Ad type</th>
         <th class="ctr">Evidence</th>
-        <th class="ctr">Cost</th>
+        <th class="ctr">CPA</th>
+        <th class="ctr">CPC</th>
         <th class="ctr">Bookings</th>
-        <th class="ctr diagcol diagfirst"><span class="diaghdr">background only</span>LPV %</th>
+        <th class="ctr diagcol diagfirst"><span class="diaghdr">background only</span>CTR %</th>
+        <th class="ctr diagcol"><span class="diaghdr">background only</span>LPV %</th>
         <th class="ctr diagcol"><span class="diaghdr">background only</span>ThruPlay %</th>
         <th>What to do</th>
       </tr></thead>
-      <tbody id="matrix-table"><tr><td colspan="9" class="loading">Loading…</td></tr></tbody>
+      <tbody id="matrix-table"><tr><td colspan="12" class="loading">Loading…</td></tr></tbody>
     </table>
   </div>
   <div class="section">
@@ -2046,17 +2059,22 @@ function adTypeCell(r) {
   // build — say so rather than "Not set", which would blame Meta for a column
   // this page is expecting and the Apps Script has not yet been deployed to write.
   var out = tag + ' ';
+  // 18 Aug (Michael): tag 2 is the PURPOSE straight from the campaign title —
+  // the token after the first underscore (BOOKING, TRAFFIC, LPV, REACH…).
+  // Falls back to the objective-group word for legacy names with no token.
+  var purpose = String(r.objective_named || '');
   if (r.objective_group === undefined) {
     out += '<span class="objchip none" title="The Add/Remove sheet has not been rebuilt yet — ' +
            'deploy ContentLibrary.gs and this fills in on the next run.">awaiting sheet</span>';
-  } else if (isLp && g === 'LPV') {
-    out += '';
+  } else if (purpose) {
+    out += '<span class="objchip ' + (w ? g : 'none') + '"' +
+      (w ? ' title="Buys ' + escAttr(w.what) + '"' : '') + '>' +
+      escAttr(purpose.charAt(0) + purpose.slice(1).toLowerCase()) + '</span>';
   } else if (w) {
     out += '<span class="objchip ' + g + '">' + w.chip + '</span>';
   } else {
     out += '<span class="objchip none">Not set</span>';
   }
-  if (r.ad_format) out += ' <span class="metachip">' + escAttr(r.ad_format) + '</span>';
   // Point 5: "if it is a landing page ad, we have to be super clear on this."
   if (isLp) {
     out += ' <span class="lpbadge">→ LANDING PAGE</span>';
@@ -2073,14 +2091,35 @@ function adTypeCell(r) {
   return '<td>' + out + '</td>';
 }
 
-// Point 6: a verdict nobody can act on is not a verdict. One sentence saying
-// what to do, and whose name is on it.
+// Point 6 + 18 Aug (Michael): a verdict nobody can act on is not a verdict —
+// and now the What-to-do DIAGNOSES as well as instructs. It walks the funnel:
+// CTR (does the ad pull people in) → LPV (does the page load for them) →
+// bookings (do they convert) → ThruPlay (does the video hold them). Creative
+// failures tag GEORGIE ("new creatives are required"), page/destination
+// failures tag VIDYA, and a row failing at both ends tags both — creative
+// refresh first. A SCALE row keeps its verdict and carries the diagnosis as
+// "scale — and optimise", because working-but-improvable is still working.
+function funnelSignals(r) {
+  var impr = Number(r.impressions || 0), clicks = Number(r.link_clicks || 0);
+  var ctr = impr > 0 ? clicks / impr : null;
+  var num = function(v) { return (v !== '' && v != null && isFinite(Number(v))) ? Number(v) : null; };
+  var lpv = num(r.lpv_rate), thru = num(r.thruplay_rate);
+  return {
+    // impressions floor stops a 200-impression day producing a red herring
+    ctrLow:  ctr != null && impr >= 1000 && ctr < 0.008,
+    lpvLow:  lpv != null && lpv < 0.70,
+    thruLow: thru != null && thru < 0.25,
+    convLow: String(r.objective_group) === 'CONV' && Number(r.conv_total || 0) === 0,
+    ctr: ctr, lpv: lpv, thru: thru
+  };
+}
 function actionCell(r, d) {
   var owner = r.metric_owner || (r.entity_type === 'format_series' ? 'Georgie' : 'Vidya');
-  var txt;
+  var owners = [owner];
+  var txt, diag = '', diagOwners = [];
   if (r.goal_mismatch) {
     txt = 'Not judged — fix the ad set so it buys what the name says, then it will be scored.';
-    owner = 'Vidya';
+    owners = ['Vidya'];
   } else if (String(r.judged) === 'no') {
     // Pull the "needs £X more spend and Y more days" clause straight out of the
     // reason the sheet wrote, so the page and the sheet can never disagree.
@@ -2097,36 +2136,128 @@ function actionCell(r, d) {
   } else {
     txt = 'Leave it alone.';
   }
-  var extra = '';
-  if (!r.goal_mismatch && String(r.is_landing) === 'yes' && r.lpv_rate !== '' && Number(r.lpv_rate) < 0.7) {
-    extra = '<br><span style="color:#9A3412">The landing page is losing ' +
-      Math.round((1 - Number(r.lpv_rate)) * 100) + '% of the people who click — worth checking.</span>';
+  // Funnel diagnosis on every JUDGED meta row — including SCALE and KEEP.
+  var judged = r.entity_type === 'paid_campaign' && r.platform === 'meta' &&
+               !r.goal_mismatch && String(r.judged) !== 'no' && !d.building;
+  if (judged) {
+    var s = funnelSignals(r);
+    var creativeLow = s.ctrLow || s.thruLow;
+    var creativeWhy = [];
+    if (s.ctrLow) creativeWhy.push('only ' + (s.ctr * 100).toFixed(1) + '% of people who see it click');
+    if (s.thruLow) creativeWhy.push('the video loses ' + Math.round((1 - s.thru) * 100) + '% of viewers early');
+    if (creativeLow && s.lpvLow) {
+      // Failing at both ends — Michael's "LPV low, ThruPlay low and conversion
+      // low" case: new creatives are required, and the page needs eyes too.
+      diag = '<span class="diagline georgie"><b>New creatives required</b> — ' + creativeWhy.join(' and ') +
+        ', and the landing page then loses ' + Math.round((1 - s.lpv) * 100) + '% of the rest (Vidya to check the page).</span>';
+      diagOwners = ['Georgie', 'Vidya'];
+    } else if (creativeLow) {
+      diag = '<span class="diagline georgie"><b>Creative problem</b> — ' + creativeWhy.join(' and ') + '. New creatives required.</span>';
+      diagOwners = ['Georgie'];
+    } else if (s.lpvLow) {
+      diag = '<span class="diagline vidya"><b>Landing page problem</b> — it loses ' +
+        Math.round((1 - s.lpv) * 100) + '% of the people who click. The ad is doing its job; check the page and the link.</span>';
+      diagOwners = ['Vidya'];
+    } else if (s.convLow) {
+      diag = '<span class="diagline vidya"><b>Page converts nobody</b> — people click and land but do not book. Offer or page problem, not a creative one.</span>';
+      diagOwners = ['Vidya'];
+    }
+    if (diag && d.label === 'SCALE') {
+      diag = '<span class="diagline"><b>…and optimise while scaling:</b></span>' + diag;
+    }
+    // Creative and page problems override the default goal-owner; on a SCALE
+    // row the goal owner stays on the hook for the budget move too.
+    if (diagOwners.length) owners = (d.label === 'SCALE') ? [owner].concat(diagOwners) : diagOwners;
   }
-  return '<td class="actioncell">' + txt + extra +
-    '<br><span class="actionowner">' + escAttr(owner) + '</span></td>';
+  var seen = {}, ownerTxt = owners.filter(function(o) {
+    if (!o || seen[o]) return false; seen[o] = 1; return true;
+  }).map(escAttr).join(' + ');
+  return '<td class="actioncell">' + txt + diag +
+    '<br><span class="actionowner">' + ownerTxt + '</span></td>';
 }
 
-// The cost cell has to say WHAT it is the cost of — after 17 Aug the same
-// column holds cost per booking on one row and cost per landing page view on
-// the next, so an unlabelled number would be actively misleading.
-function costCell(r) {
+// 18 Aug (Michael): "Cost as CPA" — £ per booking/order/lead on EVERY row, so
+// the whole board is comparable in the language the business actually pays in.
+// The verdict is still judged on the campaign's own objective (17 Aug rule,
+// unchanged) — that per-objective cost sits in the small print underneath, so
+// the two can never be confused: CPA is what a customer costs, the subtext is
+// what Meta was told to buy.
+function fmtSmallGbp(n) {
+  return isFinite(n) ? (n < 1 ? '£' + n.toFixed(3).replace(/0$/, '') : fmtGbp2(n)) : String(n);
+}
+function cpaCell(r) {
+  if (r.entity_type !== 'paid_campaign') return '<td class="ctr"><span class="subtle">—</span></td>';
   var name = String(r.key_metric_1_name || '');
-  if (name === 'MIS_SET' || !name) return '<td class="ctr"><span class="subtle">not judged</span></td>';
-  // A watching row still shows its cost so far — it just must not read as a
-  // settled number somebody has acted on.
+  if (name === 'MIS_SET') return '<td class="ctr"><span class="subtle">not judged</span></td>';
   var watching = String(r.judged) === 'no';
-  var label = r.primary_metric_label || METRIC_LABELS[name] || name.replace(/_/g, ' ');
-  var v = r.key_metric_1_value;
-  if (v === '' || v == null) return '<td class="ctr"><span class="subtle">—</span></td>';
-  var n = Number(v);
-  var txt = /_gbp$/.test(name)
-    ? (isFinite(n) ? (n < 1 ? '£' + n.toFixed(3).replace(/0$/, '') : fmtGbp2(n)) : String(v))
-    : String(v);
-  var short = String(label).replace(/^Cost per /, 'per ').replace(/^CPM$/, 'per 1,000 seen');
-  return '<td class="ctr" title="' + escAttr(label) + '"><span class="mval"' +
-    (watching ? ' style="color:#94A3B8"' : '') + '>' + txt +
-    '</span><span class="mlabel">' + escAttr(short) + '</span>' +
+  var conv = Number(r.conv_total || 0);
+  var cpa = null;
+  if (name === 'CPA_gbp' && r.key_metric_1_value !== '' && r.key_metric_1_value != null) {
+    cpa = Number(r.key_metric_1_value);
+  } else if (conv > 0) {
+    // Non-conversion campaigns: the sheet's CPA slot holds their per-goal cost
+    // instead, so rebuild booking CPA from daily spend × days of data.
+    var spend = Number(r.daily_spend || 0) * (Number(r.evidence_days_or_posts) || 0);
+    if (spend > 0) cpa = spend / conv;
+  }
+  var main = (cpa != null && isFinite(cpa))
+    ? '<span class="mval"' + (watching ? ' style="color:#94A3B8"' : '') + '>' + fmtGbp2(cpa) +
+      '</span><span class="mlabel">per booking</span>'
+    : '<span class="subtle" title="No bookings, orders or leads recorded in the window">—</span>';
+  // The per-objective cost — the number the VERDICT actually uses — as subtext
+  // on rows judged on something other than bookings.
+  var sub = '';
+  if (name && name !== 'CPA_gbp' && r.key_metric_1_value !== '' && r.key_metric_1_value != null) {
+    var label = r.primary_metric_label || METRIC_LABELS[name] || name.replace(/_/g, ' ');
+    var short = String(label).replace(/^Cost per /, 'per ').replace(/^CPM$/, 'per 1,000 seen');
+    sub = '<span class="mlabel" title="' + escAttr(label) + ' — this is what the verdict is judged on">' +
+      fmtSmallGbp(Number(r.key_metric_1_value)) + ' ' + escAttr(short) + '</span>';
+  }
+  return '<td class="ctr" title="£ per booking/order/lead (' + escAttr(r.conv_breakdown || (conv ? conv + ' results' : 'no results yet')) +
+    '). The verdict is judged on the campaign’s own objective — see the small print.">' + main + sub +
     (watching ? '<span class="watchnote">so far — not judged</span>' : '') + '</td>';
+}
+
+// 18 Aug (Michael): CPC as its own column — £ per link click, straight from
+// the sheet's second metric slot (meta and google rows both carry it).
+function cpcCell(r) {
+  if (r.entity_type !== 'paid_campaign' || String(r.key_metric_2_name) !== 'CPC_gbp' ||
+      r.key_metric_2_value === '' || r.key_metric_2_value == null || !isFinite(Number(r.key_metric_2_value)) ||
+      Number(r.key_metric_2_value) <= 0) {
+    return '<td class="ctr"><span class="subtle">—</span></td>';
+  }
+  return '<td class="ctr" title="£ per link click"><span class="mval">' +
+    fmtSmallGbp(Number(r.key_metric_2_value)) + '</span></td>';
+}
+
+// 18 Aug (Michael): Location column. The campaign-name site token, humanised;
+// company-wide reads National, franchise campaigns read Franchise whatever
+// their site token says.
+function locationCell(r) {
+  var loc = '';
+  if (r.entity_type === 'format_series') {
+    loc = 'All';
+  } else {
+    var nm = String(r.entity_name || ''), theme = String(r.theme || '');
+    if (/franchise/i.test(theme) || /franchise/i.test(nm)) loc = 'Franchise';
+    else if (String(r.site) === 'All sites') loc = 'National';
+    else if (r.site) loc = String(r.site);
+  }
+  return '<td>' + (loc ? '<span class="metachip">' + escAttr(loc) + '</span>'
+                       : '<span class="subtle">—</span>') + '</td>';
+}
+
+// 18 Aug (Michael): CTR — link clicks ÷ impressions, the one funnel step the
+// board did not show: does the AD pull anyone in at all. Background only, like
+// LPV/ThruPlay. Red under 0.8% (the long-standing kill bar for click interest).
+function ctrCell(r) {
+  var impr = Number(r.impressions || 0), clicks = Number(r.link_clicks || 0);
+  if (r.entity_type !== 'paid_campaign' || r.platform !== 'meta' || !(impr > 0)) {
+    return '<td class="ctr diagcol diagfirst"><span class="subtle">—</span></td>';
+  }
+  var ctr = clicks / impr;
+  return '<td class="ctr diagcol diagfirst" title="Link clicks ÷ impressions. Background information only — it does not decide the verdict. Below 0.8% the ad is not pulling people in — a creative problem. Owner: Georgie."><span class="mval"' +
+    (ctr < 0.008 ? ' style="color:#DC2626;font-weight:700"' : '') + '>' + (ctr * 100).toFixed(1) + '%</span></td>';
 }
 
 // Michael, 17 Aug: bookings ride on EVERY row whatever the objective, so an
@@ -2291,20 +2422,32 @@ function renderMatrix() {
   var ORDER = {ERROR: -1, KILL: 0, SCALE: 1, KEEP: 3};
   var rank = function(x) {
     if (verdictOf(x.r) === 'ERROR') return -1;
-    // Mis-set sits just under the kills: it is money going somewhere nobody
-    // intended, and it cannot be judged until someone fixes it.
+    // Mis-set sits at the top: it is money going somewhere nobody intended,
+    // and it cannot be judged until someone fixes it.
     if (x.r.goal_mismatch) return 0.5;
     if (x.d.building) return 2;
     // Watching rows come after the decisions but before settled KEEPs — live
     // spend nobody has ruled on yet is more interesting than a settled row.
     if (String(x.r.judged) === 'no') return 2.5;
+    // 18 Aug (Michael): an AGREED kill is a decision made, not a decision
+    // needed — it drops below everything else. A provisional kill still
+    // building stays mid-board via the building branch above, and the
+    // spend-at-risk bar keeps shouting about agreed kills that are still
+    // spending. The agreed date lives in the click-through.
+    if (x.d.label === 'KILL') return 8;
     return ORDER[x.d.label] != null ? ORDER[x.d.label] : 9;
   };
   // Michael, 17 Aug: "sort the meta and tik tok up top and google on the
   // bottom, it makes it easier." Google is a different account with different
   // economics and different bars — grouping it last stops the eye switching
   // context every other row. Within each group the decision order is unchanged.
-  var platRank = function(x) { return x.r.platform === 'google' ? 1 : 0; };
+  // 18 Aug: agreed kills outrank the platform grouping — "killed and put on
+  // the bottom" means the bottom of the BOARD, not the bottom of the Meta
+  // section with the Google list underneath it.
+  var platRank = function(x) {
+    if (rank(x) === 8) return 2;               // agreed kills: very bottom
+    return x.r.platform === 'google' ? 1 : 0;
+  };
   rows.sort(function(a, b) {
     var pa = platRank(a), pb = platRank(b);
     if (pa !== pb) return pa - pb;
@@ -2317,7 +2460,7 @@ function renderMatrix() {
 
   var tbody = document.getElementById('matrix-table');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="9" class="subtle">' +
+    tbody.innerHTML = '<tr><td colspan="12" class="subtle">' +
       (matrixPlatform !== 'all' ? 'Nothing on ' + matrixPlatform + ' — try Everything'
        : showAll ? 'ADD_REMOVE_MATRIX empty — run computeAddRemoveMatrix() in the Apps Script project'
                : 'Nothing needs a decision right now — untick the box to see every campaign') + '</td></tr>';
@@ -2331,25 +2474,27 @@ function renderMatrix() {
     if (String(r.judged) === 'no' && !r.goal_mismatch) {
       // Shown but deliberately unjudged — under £50 / 5 days. Saying WATCHING
       // is honest; calling it KEEP would imply somebody had looked.
-      cell = '<span class="rag WATCHING">WATCHING</span>' +
-             '<span class="srcbadge">not enough spend yet</span>';
+      cell = '<span class="rag WATCHING">WATCHING</span>';
     } else if (d.building) {
-      cell = '<span class="rag ' + (d.verdict || 'PENDING') + ' prov">' + (d.verdict || 'PENDING') + '</span>' +
-        '<span class="srcbadge">not agreed yet · ' + (d.daysToGo != null
-          ? (d.daysToGo === 0 ? 'decides next run' : d.daysToGo + ' more day' + (d.daysToGo === 1 ? '' : 's'))
-          : 'not yet') + '</span>';
+      // Provisional pill only — the outlined style already says "not agreed
+      // yet", and the days countdown lives in What-to-do. Michael, 18 Aug:
+      // "I don't need to see whether it is agreed or not … it is a more
+      // efficient use of space." Agreed date + status now live in the popup.
+      cell = '<span class="rag ' + (d.verdict || 'PENDING') + ' prov">' + (d.verdict || 'PENDING') + '</span>';
     } else {
+      // Agreed rows: the pill alone. The one exception is an override —
+      // "your call" is a human decision, not an agreement status, and hiding
+      // it would make a manual call look automatic.
       cell = '<span class="rag ' + d.label + '">' + d.label + '</span>' +
-        '<span class="srcbadge ' + (d.source === 'override' ? 'override' : '') + '">' +
-        (d.source === 'override' ? 'your call' : STATUS_WORDS[d.status] || d.status) +
-        (d.on ? ' · ' + String(d.on).slice(0, 10).slice(5) : '') + '</span>';
+        (d.source === 'override' ? '<span class="srcbadge override">your call</span>' : '');
     }
     var clickable = r.entity_type === 'paid_campaign' || r.entity_type === 'format_series';
     // Point 4: the "Flagged" column is gone. It repeated what Evidence and the
     // "N more days" badge already say, and cost a column the creative team
     // needed for something they can act on.
+    // 18 Aug: site moved to its own Location column; only the theme chip
+    // stays under the campaign name.
     var siteBits = '';
-    if (r.site) siteBits += '<span class="metachip">' + escAttr(r.site) + '</span>';
     if (r.theme) siteBits += '<span class="metachip">' + escAttr(String(r.theme).toLowerCase()) + '</span>';
     return '<tr' + (clickable ? ' class="clickable" data-i="' + idx + '" title="Click to see the creative behind this"' : '') + '>' +
       '<td>' + cell + '</td>' +
@@ -2363,11 +2508,14 @@ function renderMatrix() {
             (r.platform === 'tiktok' ? 'TikTok video' : 'Instagram post') +
             ' is judged as one lump. Tag them and this splits into real formats you can act on.</span>'
           : '') + '</td>' +
+      locationCell(r) +
       adTypeCell(r) +
       '<td class="ctr">' + evidenceLabel(r) + '</td>' +
-      costCell(r) +
+      cpaCell(r) +
+      cpcCell(r) +
       bookingsCell(r) +
-      ratePctCell(r.lpv_rate, 0.70, 'Landing page views ÷ link clicks. Background information only — it does not decide the verdict. Below 70% means the landing page is losing people who clicked. Owner: Vidya.', true, true) +
+      ctrCell(r) +
+      ratePctCell(r.lpv_rate, 0.70, 'Landing page views ÷ link clicks. Background information only — it does not decide the verdict. Below 70% means the landing page is losing people who clicked. Owner: Vidya.', true) +
       ratePctCell(r.thruplay_rate, 0.25, 'Watched-through ÷ 3-second video plays. Background information only — it does not decide the verdict. Below 25% means the video is losing people early; change the video, not the budget. Owner: Georgie. (Bar moved 60% → 25% on 17 Aug: this account runs 22–33%, so at 60% the whole column read red and stopped meaning anything.)', true) +
       actionCell(r, d) +
       '</tr>';
@@ -2714,14 +2862,19 @@ function matrixWhyHtml(r, d, agg) {
   return parts.join(' ');
 }
 
-function adCardHtml(a) {
+function adCardHtml(a, i) {
   var thumb = a.thumbnail_url
     ? '<img class="adthumb" src="' + escAttr(a.thumbnail_url) + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">'
     : '';
+  // 18 Aug: number the cards and strip the " - Copy" tails so duplicates are
+  // labelled as duplicates instead of reading as one confusing blur.
+  var base = adBaseName(a.ad_name);
+  var isCopy = base !== String(a.ad_name || '').trim();
   return '<div class="ccard">' + thumb +
-    '<div class="toprow"><span class="tag image">AD</span><span class="date">' + fmtGbp2(Number(a.spend) || 0) + ' · 30d</span>' +
+    '<div class="toprow"><span class="tag image">AD ' + (typeof i === 'number' ? i + 1 : '') + '</span><span class="date">' + fmtGbp2(Number(a.spend) || 0) + ' · 30d</span>' +
     (a.instagram_permalink_url ? '<a class="postlink" href="' + escAttr(a.instagram_permalink_url) + '" target="_blank">view post ↗</a>' : '') + '</div>' +
-    '<div class="cap" title="' + escAttr(a.body || '') + '"><b>' + escAttr(shortCaption(a.ad_name)) + '</b>' +
+    '<div class="cap" title="' + escAttr(a.body || '') + '"><b>' + escAttr(shortCaption(base)) + '</b>' +
+    (isCopy ? ' <span class="advariant">duplicate</span>' : '') +
     (a.body ? '<br>' + escAttr(shortCaption(a.body)) : '') + '</div></div>';
 }
 
@@ -2754,10 +2907,15 @@ function matrixContentHtml(r) {
       '<span class="subtle" style="font-size:10px"> — paste the name into its search box. Search and PMax ads assemble text + assets on the fly, so there is no one creative to preview here.</span></div>';
   } else {
     // meta paid: show the ads actually circulating in this campaign (4 Aug 2026 —
-    // Michael: "I really want to see the content that is circulating if I click it")
+    // Michael: "I really want to see the content that is circulating if I click it").
+    // 18 Aug: the thumbnail creative grid (matrixCreativeHtml) IS the circulating
+    // view now — rendering this older card list as well showed the same six ads
+    // twice, which is exactly the confusion Michael reported. This block is only
+    // a fallback for campaigns whose ads fell under the £5 ad-level bar.
+    var hasCreativeGrid = (matrixAdRows || []).some(function(a) { return a.parent_campaign === r.entity_name; });
     var ads = (matrixAds30 || []).filter(function(a) { return String(a.campaign || '') === String(r.entity_name); });
     ads.sort(function(a, b) { return (Number(b.spend) || 0) - (Number(a.spend) || 0); });
-    if (ads.length) {
+    if (ads.length && !hasCreativeGrid) {
       html += '<div class="mdl-sec"><h4>What\'s circulating — ' + ads.length + ' ad' + (ads.length === 1 ? '' : 's') + ' in this campaign, last 30 days</h4>' +
         '<div class="cardgrid">' + ads.slice(0, 12).map(adCardHtml).join('') + '</div>' +
         (ads.length > 12 ? '<div class="subtle" style="font-size:10px">Showing the 12 biggest by spend of ' + ads.length + '.</div>' : '') + '</div>';
@@ -2792,12 +2950,25 @@ function matrixContentHtml(r) {
 // image can. Thumbnails were parked back in July because they would not render
 // inside the desktop artifact sandbox; the web Hub is an ordinary page, so
 // that constraint is gone.
+// 18 Aug (Michael): "when we click to open there are multiple ads there — can
+// you be more specific? It's confusing." Meta duplicates an ad every time
+// someone hits Duplicate, so a campaign shows six near-identical " - Copy"
+// cards. Each card now carries an AD number, the CLEANED name, and a
+// duplicate-count label, so six copies read as six copies — not one blur.
+function adBaseName(n) {
+  return String(n || '').replace(/(\s*[-–—]\s*Copy(\s*\d+)?)+\s*$/i, '').trim();
+}
 function matrixCreativeHtml(r) {
   if (r.entity_type !== 'paid_campaign' || r.platform !== 'meta') return '';
   var ads = (matrixAdRows || []).filter(function(a) { return a.parent_campaign === r.entity_name; });
   if (!ads.length) return '';
   ads.sort(function(a, b) { return (Number(b.key_metric_1_value) || 0) - (Number(a.key_metric_1_value) || 0); });
-  var cards = ads.map(function(a) {
+  var baseCounts = {}, baseSeen = {};
+  ads.forEach(function(a) {
+    var b = adBaseName(a.entity_name);
+    baseCounts[b] = (baseCounts[b] || 0) + 1;
+  });
+  var cards = ads.map(function(a, i) {
     var img = a.thumb_url
       ? '<img src="' + escAttr(a.thumb_url) + '" alt="" loading="lazy" ' +
         'onerror="this.style.display=\'none\';this.insertAdjacentHTML(\'afterend\',\'<div class=&quot;noimg&quot;>image expired</div>\')">'
@@ -2820,16 +2991,23 @@ function matrixCreativeHtml(r) {
     // takes the blame, when the real fault is the link.
     var warn = a.destination_flag
       ? '<span class="adwarn">⚠ ' + escAttr(a.destination_flag) + '</span>' : '';
+    var base = adBaseName(a.entity_name);
+    baseSeen[base] = (baseSeen[base] || 0) + 1;
+    var variant = baseCounts[base] > 1
+      ? ' <span class="advariant">copy ' + baseSeen[base] + ' of ' + baseCounts[base] + '</span>'
+      : (base !== String(a.entity_name).trim() ? ' <span class="advariant">duplicate</span>' : '');
     return '<div class="adcard">' + img + '<div class="adbody">' +
-      '<div class="adname">' + escAttr(a.entity_name) + '</div>' +
+      '<div class="adname"><span class="adnum">AD ' + (i + 1) + '</span>' + escAttr(base) + variant + '</div>' +
       (a.creative_title ? '<div class="adtitle">“' + escAttr(a.creative_title) + '”</div>' : '') +
       (a.cta ? '<div class="adtitle" style="color:#64748B">button: ' + escAttr(a.cta) + '</div>' : '') +
       '<div class="adstats">' + stats.join('') + '</div>' + dest + warn +
       '</div></div>';
   }).join('');
-  return '<div class="mdl-sec"><h4>The actual ads in this campaign</h4>' +
+  return '<div class="mdl-sec"><h4>What&rsquo;s circulating — ' + ads.length + ' ad' + (ads.length === 1 ? '' : 's') +
+    ' in this campaign, last 30 days</h4>' +
     '<div class="subtle" style="font-size:11px;margin-bottom:2px">Highest spend first. ' +
-    'The campaign carries the verdict — these are here so you can see what it was spent on.</div>' +
+    '&ldquo;Copy N of M&rdquo; = the same ad duplicated in Ads Manager — Meta counts each copy separately. ' +
+    'The campaign carries the verdict — these are here so you can see what the money bought.</div>' +
     '<div class="adgrid">' + cards + '</div></div>';
 }
 
