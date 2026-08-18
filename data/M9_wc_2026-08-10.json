@@ -50,7 +50,7 @@
           "actual": 837.4
         },
         "waste": {
-          "actual": 54.9
+          "actual": 79.81
         }
       },
       "stock_take": {
@@ -60,14 +60,14 @@
           "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": -2.2,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-08-10"
       },
       "efficiency_score": {
-        "score": 93,
+        "score": 94,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -98,11 +98,15 @@
             "weight": 30,
             "value": 100.0,
             "basis": "20.47% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-2.20% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -128,9 +132,24 @@
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-10.json (AGMM Task List Status). Open items only.",
-        "outstanding_count": 0,
-        "tasks": [],
-        "note": "0 outstanding"
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Aircond servicing (Water is dripping from the aircond and it\u2019s affecting 2 dine-in tables. Even after we turned on dry mode, it doesn\u2019t stop the water droplets).",
+            "priority": "\u2014",
+            "logged_week": "05/08/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Ice Machine keeps tripping off, electrician came and found out that it is not socket issue but equipment itself",
+            "priority": "\u2014",
+            "logged_week": "05/08/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
       },
       "issues_solutions": {
         "source": "GM KPI meeting notes \u2014 email pull not built.",
@@ -167,7 +186,6 @@
         "busy_mode_pct": 0.0
       },
       "gaps": [
-        "Stock-take \u2014 no variance entered this week",
         "Reviews \u2014 no week rating in source"
       ]
     }

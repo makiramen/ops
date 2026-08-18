@@ -60,14 +60,14 @@
           "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": 4.6,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-08-10"
       },
       "efficiency_score": {
-        "score": 88,
+        "score": 89,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -98,11 +98,15 @@
             "weight": 30,
             "value": 82.75,
             "basis": "22.15% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "4.60% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -144,7 +148,7 @@
         "week_ending": "2026-08-16",
         "resolution": "weekly",
         "partial": false,
-        "sales": 110.8,
+        "sales": 799.36,
         "orders": null,
         "aov": null,
         "new_customers": null,
@@ -163,12 +167,11 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "PARTIAL ESTIMATE \u2014 ONLY 2/7 DAYS (Mon 10 + Tue 11 Aug) of internal Auto Cash Up Delivery (\u00a3) present; NOT a full-week figure. ALL aggregators, not Deliveroo-only. Replace with the Deliveroo invoice statement (pipe 6d) when Finance files it. + ops from Weekly Summary sheet",
+        "source": "ESTIMATE \u2014 internal Auto Cash Up Delivery (\u00a3) summed Mon-Sun; ALL aggregators, not Deliveroo-only. Accuracy +/-15% (measured -14% to +23% vs real Deliveroo figures, w/c 2026-07-27). Replace with the Deliveroo invoice statement when it lands. + ops from Weekly Summary sheet",
         "sales_estimated": true,
         "busy_mode_pct": 0.0
       },
       "gaps": [
-        "Stock-take \u2014 no variance entered this week",
         "Reviews \u2014 no week rating in source",
         "Deliveroo sales are an ESTIMATE from the internal all-aggregator Delivery line (+/-15%) \u2014 no Deliveroo source for this site this week"
       ]

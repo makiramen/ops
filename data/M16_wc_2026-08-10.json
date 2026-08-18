@@ -60,14 +60,14 @@
           "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": 4.8,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-08-10"
       },
       "efficiency_score": {
-        "score": 67,
+        "score": 69,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -98,11 +98,15 @@
             "weight": 30,
             "value": 45.85,
             "basis": "24.61% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "4.80% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -128,9 +132,24 @@
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-10.json (AGMM Task List Status). Open items only.",
-        "outstanding_count": 0,
-        "tasks": [],
-        "note": "0 outstanding"
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "MALE CUBICLE - SEWAGE LEAKING? AND DRAIN FLY INFESTATION. ROTTEN WOOD?",
+            "priority": "\u2014",
+            "logged_week": "06/08/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Installation of New Chinese Cooker",
+            "priority": "\u2014",
+            "logged_week": "06/08/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
       },
       "issues_solutions": {
         "source": "GM KPI meeting notes \u2014 email pull not built.",
@@ -168,7 +187,6 @@
         "busy_mode_pct": 0.0
       },
       "gaps": [
-        "Stock-take \u2014 no variance entered this week",
         "Reviews \u2014 no week rating in source"
       ]
     }
