@@ -550,7 +550,7 @@ tr.hiddenrow { display: none; }
       A campaign set to buy <em>landing page views</em> is judged on the cost of a landing page view — not on bookings it was never optimised for. The <strong>AD TYPE</strong> column tells you which. <em>Bookings are shown on every row regardless, so cheap traffic is never mistaken for a full restaurant.</em><br>
       <strong>CPA</strong> — £ per booking/order/lead, on every row so the board is comparable. The verdict is still judged on the campaign's own objective — that cost sits in the small print under the CPA. <strong>CPC</strong> — £ per link click. <em>Owner: Vidya (paid media).</em><br>
       <strong>CTR %, LPV % and THRUPLAY %</strong> sit in the grey band on the right. They are <strong>background information only and do not decide anything</strong> — they tell you <em>why</em> a number looks the way it does. Low CTR % = the ad isn't pulling people in (<em>Georgie</em>). Low LPV % = the landing page is losing people who clicked (<em>Vidya</em>). Low ThruPlay % = the video loses people early (<em>Georgie</em>).<br>
-      <strong>Agreed kills sit at the bottom</strong> — the decision is made; click any row for the agreed date and history.
+      <strong>Kills sit at the top until they are actually switched off</strong> — a KILL on this board is still spending. Once it stops, it moves to the decision history below. Click any row for the agreed date and history.
     </div>
     <div id="matrix-risk"></div>
     <div id="matrix-compliance"></div>
@@ -2422,32 +2422,27 @@ function renderMatrix() {
   var ORDER = {ERROR: -1, KILL: 0, SCALE: 1, KEEP: 3};
   var rank = function(x) {
     if (verdictOf(x.r) === 'ERROR') return -1;
-    // Mis-set sits at the top: it is money going somewhere nobody intended,
-    // and it cannot be judged until someone fixes it.
+    // KILLS STAY AT THE TOP — corrected 18 Aug pm (Michael): "they are still
+    // on, they should still be in the top half — how else do we see them?"
+    // A KILL on the LIVE board is by definition still spending; the moment it
+    // is actually switched off it leaves this table for the decision history.
+    // So the earlier drop-agreed-kills-to-the-bottom rule buried exactly the
+    // rows that still need someone to act, and is reverted.
+    // Mis-set sits just under the kills: it is money going somewhere nobody
+    // intended, and it cannot be judged until someone fixes it.
     if (x.r.goal_mismatch) return 0.5;
     if (x.d.building) return 2;
     // Watching rows come after the decisions but before settled KEEPs — live
     // spend nobody has ruled on yet is more interesting than a settled row.
     if (String(x.r.judged) === 'no') return 2.5;
-    // 18 Aug (Michael): an AGREED kill is a decision made, not a decision
-    // needed — it drops below everything else. A provisional kill still
-    // building stays mid-board via the building branch above, and the
-    // spend-at-risk bar keeps shouting about agreed kills that are still
-    // spending. The agreed date lives in the click-through.
-    if (x.d.label === 'KILL') return 8;
     return ORDER[x.d.label] != null ? ORDER[x.d.label] : 9;
   };
   // Michael, 17 Aug: "sort the meta and tik tok up top and google on the
   // bottom, it makes it easier." Google is a different account with different
   // economics and different bars — grouping it last stops the eye switching
-  // context every other row. Within each group the decision order is unchanged.
-  // 18 Aug: agreed kills outrank the platform grouping — "killed and put on
-  // the bottom" means the bottom of the BOARD, not the bottom of the Meta
-  // section with the Google list underneath it.
-  var platRank = function(x) {
-    if (rank(x) === 8) return 2;               // agreed kills: very bottom
-    return x.r.platform === 'google' ? 1 : 0;
-  };
+  // context every other row. Within each group the decision order is unchanged
+  // — so a live KILL heads its own platform's section.
+  var platRank = function(x) { return x.r.platform === 'google' ? 1 : 0; };
   rows.sort(function(a, b) {
     var pa = platRank(a), pb = platRank(b);
     if (pa !== pb) return pa - pb;
