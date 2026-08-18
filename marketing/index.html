@@ -2623,10 +2623,11 @@ function renderMatrixHistory() {
       '<td class="ctr">' + (offOn
         ? '<span class="offdate">' + fmtDayMon(offOn) + '<small>' + (hstatus === 'actioned' ? 'switched off' : 'ended') + '</small></span>'
         // "still running" reads as "kill it, it's still on" — only say it when
-        // this ledger decision is still the CURRENT decision for the entity.
-        : x.superseded
-        ? '<span class="subtle">—</span>'
-        : '<span class="subtle">still running</span>') + '</td>' +
+        // the entity IS still on the live board AND this ledger decision is
+        // still the current one. Superseded or aged-out rows get a dash.
+        : (x.liveRow && !x.superseded)
+        ? '<span class="subtle">still running</span>'
+        : '<span class="subtle">—</span>') + '</td>' +
       '<td><span class="rag ' + verdictOf(r) + '">' + verdictOf(r) + '</span>' +
         (statusOf(r) === 'overruled' ? '<span class="srcbadge override">your call</span>' : '') + '</td>' +
       '<td>' + escAttr(matrixDisplayName(r)) + '</td>' +
