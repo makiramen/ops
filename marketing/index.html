@@ -213,6 +213,10 @@ th.diagfirst, td.diagfirst { border-left:2px solid #E7E5E4; }
 .mdl-why.ADD, .mdl-why.SCALE { border-left-color: #16A34A; background: #F0FDF4; }
 .mdl-why.KILL { border-left-color: #DC2626; background: #FEF2F2; }
 .histstate.actioned { background: #DCFCE7; color: #15803D; }
+/* 18 Aug v2.3.2 — ledger fixes: paid/organic type by platform, and superseded
+   marking for old-engine decisions the objective-aware engine has re-judged. */
+.histstate.superseded { background: #FEF3C7; color: #92400E; }
+.supnote { display: block; font-size: 10px; color: #92400E; margin-top: 2px; }
 .doneline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 8px; padding: 8px 12px; font-size: 12px; color: #15803D; margin-bottom: 10px; }
 .doneline b { color: #14532D; }
 .doneline .none { color: #64748B; }
@@ -2527,12 +2531,25 @@ var matrixViewRows = [];
 var matrixHistView = [];
 var matrixAdRows = [];   // entity_type='paid_ad' — creative behind each campaign
 
+// 18 Aug v2.3.2 (bug fix): Nottingham's Google SEARCH campaign showed
+// "organic · google" — the old cell treated only meta as paid. Paid/organic is
+// a PLATFORM question: meta and google spend money by definition; organic is
+// the instagram/tiktok format-series rows.
+function histTypeLabel(r) {
+  var p = String(r.platform || '').toLowerCase();
+  if (p === 'meta' || p === 'google') return 'paid · ' + p;
+  if (r.entity_type === 'paid_campaign' || r.entity_type === 'paid_ad') return 'paid · ' + (p || '—');
+  return p ? 'organic · ' + p : '';
+}
+
 function renderMatrixHistory() {
   var tbody = document.getElementById('matrix-hist-table');
   if (!tbody) return;
   var live = matrixRowsCache || [];
-  var liveKeys = {};
-  live.forEach(function(r) { liveKeys[r.entity_name + '||' + r.platform] = true; });
+  // 18 Aug v2.3.2: keep the live ROW, not just a flag — a ledger decision only
+  // counts as current if the live board still says the same thing about it.
+  var liveByKey = {};
+  live.forEach(function(r) { liveByKey[r.entity_name + '||' + r.platform] = r; });
   var byKey = {};
   (matrixHistCache || []).forEach(function(r) {
     byKey[r.entity_name + '||' + r.platform + '||' + verdictOf(r) + '||' + String(r.decided_on).slice(0, 10)] = {r: r, fromLedger: true};
@@ -2549,6 +2566,18 @@ function renderMatrixHistory() {
     return String(b.r.decided_on).localeCompare(String(a.r.decided_on)) ||
            String(a.r.entity_name).localeCompare(String(b.r.entity_name));
   });
+  // 18 Aug v2.3.2 — the cyclical read: live board = current verdicts only, the
+  // ledger = the record. When the engine has RE-JUDGED an entity to a different
+  // verdict (the objective-aware rebuild turned several old booking-CPA kills
+  // into KEEPs), the old ledger row must read as closed out — never as an open
+  // kill instruction wearing a "still running" chip.
+  list.forEach(function(x) {
+    x.liveRow = liveByKey[x.r.entity_name + '||' + x.r.platform] || null;
+    var st = statusOf(x.r);
+    var cur = x.liveRow ? verdictOf(x.liveRow) : '';
+    x.superseded = (x.fromLedger && st !== 'actioned' && st !== 'stopped' &&
+                    cur && cur !== verdictOf(x.r)) ? cur : '';
+  });
   matrixHistView = list;
   // What has actually been DONE — the question Michael kept having to ask by
   // hand: was it killed, and when.
@@ -2556,7 +2585,11 @@ function renderMatrixHistory() {
   if (doneEl) {
     var done = list.filter(function(x) { return statusOf(x.r) === 'actioned'; });
     var outstanding = list.filter(function(x) {
-      return verdictOf(x.r) === 'KILL' && statusOf(x.r) !== 'actioned' && statusOf(x.r) !== 'stopped';
+      // "Still running" means exactly that: the entity is on the live board AND
+      // the kill is still the current verdict. Superseded kills (the engine no
+      // longer wants it dead) and rows that already left the board don't count.
+      return verdictOf(x.r) === 'KILL' && !x.superseded && x.liveRow &&
+             statusOf(x.r) !== 'actioned' && statusOf(x.r) !== 'stopped';
     });
     doneEl.innerHTML = done.length
       ? '<b>' + done.length + ' kill' + (done.length === 1 ? '' : 's') + ' actioned</b>' +
@@ -2575,28 +2608,39 @@ function renderMatrixHistory() {
   }
   tbody.innerHTML = list.map(function(x, idx) {
     var r = x.r;
-    var stillLive = liveKeys[r.entity_name + '||' + r.platform];
     var m1 = metricCell(r.key_metric_1_name, r.key_metric_1_value);
     var m2 = metricCell(r.key_metric_2_name, r.key_metric_2_value);
     var hstatus = statusOf(r);
     var offOn = actionedOn(r);
+    var supNote = x.superseded
+      ? 'Re-judged ' + x.superseded +
+        (x.liveRow && x.liveRow.decided_on ? ' on ' + fmtDayMon(x.liveRow.decided_on) : '') +
+        ' under its real objective — this ' + verdictOf(r) +
+        ' no longer stands. The live board has the current verdict.'
+      : '';
     return '<tr class="clickable" data-h="' + idx + '" title="Click for the full story">' +
       '<td class="subtle">' + String(r.decided_on || '').slice(0, 10) + '</td>' +
       '<td class="ctr">' + (offOn
         ? '<span class="offdate">' + fmtDayMon(offOn) + '<small>' + (hstatus === 'actioned' ? 'switched off' : 'ended') + '</small></span>'
+        // "still running" reads as "kill it, it's still on" — only say it when
+        // this ledger decision is still the CURRENT decision for the entity.
+        : x.superseded
+        ? '<span class="subtle">—</span>'
         : '<span class="subtle">still running</span>') + '</td>' +
       '<td><span class="rag ' + verdictOf(r) + '">' + verdictOf(r) + '</span>' +
         (statusOf(r) === 'overruled' ? '<span class="srcbadge override">your call</span>' : '') + '</td>' +
       '<td>' + escAttr(matrixDisplayName(r)) + '</td>' +
-      '<td class="subtle">' + (r.entity_type === 'HISTORY' || r.entity_type === 'paid_campaign'
-        ? (r.platform === 'meta' ? 'paid · meta' : 'organic · ' + (r.platform || '')) : (r.platform || '')) + '</td>' +
+      '<td class="subtle">' + histTypeLabel(r) + '</td>' +
       '<td class="ctr">' + m1 + '</td><td class="ctr">' + m2 + '</td>' +
-      '<td class="caption">' + escAttr(r.reason || '') + '</td>' +
-      '<td>' + (hstatus === 'actioned'
+      '<td class="caption">' + escAttr(r.reason || '') +
+        (supNote ? '<span class="supnote">' + escAttr(supNote) + '</span>' : '') + '</td>' +
+      '<td>' + (x.superseded
+        ? '<span class="histstate superseded">superseded → ' + escAttr(x.superseded) + '</span>'
+        : hstatus === 'actioned'
         ? '<span class="histstate actioned">switched off ✓</span>'
         : hstatus === 'stopped'
         ? '<span class="histstate gone">ended</span>'
-        : stillLive
+        : x.liveRow
         ? '<span class="histstate live">still running</span>'
         : '<span class="histstate gone">no longer running</span>') + '</td>' +
       '</tr>';
@@ -3006,7 +3050,7 @@ function matrixCreativeHtml(r) {
     '<div class="adgrid">' + cards + '</div></div>';
 }
 
-function openMatrixModal(r, dRaw, fromHistory) {
+function openMatrixModal(r, dRaw, fromHistory, histEntry) {
   var d = dRaw || decisionOf(r);
   var isGoogle = r.platform === 'google';
   var isPaid = r.platform === 'meta' || isGoogle;
@@ -3027,7 +3071,16 @@ function openMatrixModal(r, dRaw, fromHistory) {
     (isPaid ? 'paid · ' + r.platform + (isGoogle ? (isPmaxName(r.entity_name) ? ' · PMax' : ' · Search') : '') : 'organic · ' + (r.platform || '')) +
     (fromHistory ? ' · from the decision history' : '') + '</div>';
 
-  var body = '<div class="mdl-why ' + (d.label || '') + '">' + matrixWhyHtml(r, d, agg) + '</div>';
+  // 18 Aug v2.3.2: a superseded ledger decision must read as closed out in the
+  // popup too — the timeline below is history, this banner is the present.
+  var body = (histEntry && histEntry.superseded
+    ? '<div class="mdl-why KEEP" style="background:#FEF3C7;color:#92400E">This ' +
+      escAttr(d.label || 'decision') + ' has been <b>superseded</b> — the engine re-judged this campaign <b>' +
+      escAttr(histEntry.superseded) + '</b>' +
+      (histEntry.liveRow && histEntry.liveRow.decided_on ? ' on ' + fmtDayMon(histEntry.liveRow.decided_on) : '') +
+      ' under its real objective. The row below is kept for the record only; the live board has the current verdict.</div>'
+    : '') +
+    '<div class="mdl-why ' + (d.label || '') + '">' + matrixWhyHtml(r, d, agg) + '</div>';
 
   // stats
   var stats = [];
@@ -3163,7 +3216,7 @@ function wireMatrixModal() {
     var tr = e.target.closest('tr.clickable');
     if (!tr) return;
     var x = matrixHistView[Number(tr.dataset.h)];
-    if (x) openMatrixModal(x.r, decisionOf(x.r), true);
+    if (x) openMatrixModal(x.r, decisionOf(x.r), true, x);
   });
   document.getElementById('mdl-close').addEventListener('click', closeMatrixModal);
   document.getElementById('mdl-ovl').addEventListener('click', function(e) {
