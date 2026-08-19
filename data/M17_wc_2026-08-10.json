@@ -118,16 +118,30 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": null,
-        "new_reviews": null,
-        "star_breakdown": null,
-        "negatives": null,
-        "negative_reviews": [],
+        "week_avg_rating": 4.7879,
+        "new_reviews": 33,
+        "star_breakdown": {
+          "5": 27,
+          "4": 5,
+          "3": 1,
+          "2": 0,
+          "1": 0
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Cameron O'Neill",
+            "text": "Didn\u2019t order ramen or sushi, therefore I have to be fair and not give 1 star. But honestly, the tempura squid tasted rotten and I requested a refund for that as it was ransid. Spat it out straight away tasted like death. Other than that the gyozas were mid level quality and the teriyaki chicken was nice. Just totally put off by the squid. Oh and the final bill come to nearly \u00a360 for a few sides and two drinks!!! Overpriced and low quality. Personally would never come here again.",
+            "date": "2026-08-15",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Reviews sheet 1aFGfbGr... per-site 'Maki N -' star tabs (weekly avg rating / counts) + 'Raw Data' tab (negative comment text, rating<=3 + comment). Cumulative venue rating not in sheet (null)."
+        "source": "Rebuilt 19/08 from the DAILY reviews feed (Pipe 8b, Google Reviews workbook 1aFGfbGr... 'Raw Data' tab gid 284143046): daily files 2026-08-10..2026-08-17 unioned, deduped, then filtered by review RECEIVED date to 2026-08-10..2026-08-16 (Mon-Sun) - NOT the daily file's rolling 7-day window. Weekly per-site star tabs BYPASSED (corrupt upstream, last valid slice w/c 27/07). negative_reviews = rating<=3 with a non-empty comment. url null (not in feed). Cumulative venue rating not in this source (null)."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-10.json (AGMM Task List Status). Open items only.",
