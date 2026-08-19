@@ -3829,10 +3829,10 @@ function renderScorecard() {
       <div class="scorecard-row" onclick="openSite('${s.code.replace(/'/g, "\\'")}')">
         <div class="sc-code">${s.code}</div>
         <div class="sc-name">${s.name}</div>
-        <div class="sc-chip ${sRag}">${(s.vsTarget >= 0 ? '+' : '') + s.vsTarget.toFixed(1)}% <span class="sc-chip-wow">${trendArrow(h.sales, 'up-is-good')}</span></div>
+        <div class="sc-chip ${sRag}">${(s.vsTarget >= 0 ? '+' : '') + s.vsTarget.toFixed(1)}% <span class="sc-chip-wow">${wowChip(m.salesWowPct, 'up-is-good', '%')}</span></div>
         <div class="sc-chip ${sphRagCls}">${sphTxt} ${sphWowHtml}</div>
-        <div class="sc-chip ${wRag}">${m.wage == null ? 'N/A' : m.wage.toFixed(1) + '%'} <span class="sc-chip-wow">${trendArrow(h.wage, 'down-is-good')}</span></div>
-        <div class="sc-chip ${fRag}">${m.food == null ? 'N/A' : m.food.toFixed(1) + '%'} <span class="sc-chip-wow">${trendArrow(h.food, 'down-is-good')}</span></div>
+        <div class="sc-chip ${wRag}">${m.wage == null ? 'N/A' : m.wage.toFixed(1) + '%'} <span class="sc-chip-wow">${wowChip((m.wageActual != null && window.PREV_WEEK.wage[s.code] != null) ? m.wageActual - window.PREV_WEEK.wage[s.code] : null, 'down-is-good', 'pp')}</span></div>
+        <div class="sc-chip ${fRag}">${m.food == null ? 'N/A' : m.food.toFixed(1) + '%'} <span class="sc-chip-wow">${wowChip((m.foodActual != null && window.PREV_WEEK.food[s.code] != null) ? m.foodActual - window.PREV_WEEK.food[s.code] : null, 'down-is-good', 'pp')}</span></div>
         <div class="sc-chip ${vRag}">${fmtVar(m.foodVar)}</div>
         <div class="sc-chip ${dvRag}">${fmtVar(m.drinksVar)}</div>
         <div class="sc-chip ${wkRag}">${wr == null ? 'N/A' : wr.toFixed(2) + '★'}</div>
@@ -3932,19 +3932,19 @@ function openSite(code) {
           <div class="kpi-label">Sales vs Target</div>
           <div class="kpi-value ${deltaClass(s.vsTarget)}">${s.kpis.vsTarget}</div>
           <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).sales, 'up-is-good', '#4f46e5')}</div>
-          <div class="kpi-trend">WoW ${trendArrow((HISTORY[s.code]||{}).sales, 'up-is-good')}</div>
+          <div class="kpi-trend">${wowChip((METRICS[s.code]||{}).salesWowPct, 'up-is-good', '%')}</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Wage % (tgt ≤21%)</div>
           <div class="kpi-value ${wageRag((METRICS[s.code]||{}).wage)}">${(METRICS[s.code]||{}).wage == null ? 'N/A' : (METRICS[s.code]).wage.toFixed(2) + '%'}</div>
           <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).wage, 'down-is-good', '#4f46e5')}</div>
-          <div class="kpi-trend">WoW ${trendArrow((HISTORY[s.code]||{}).wage, 'down-is-good')}</div>
+          <div class="kpi-trend">${wowChip(((METRICS[s.code]||{}).wageActual != null && window.PREV_WEEK.wage[s.code] != null) ? (METRICS[s.code]).wageActual - window.PREV_WEEK.wage[s.code] : null, 'down-is-good', 'pp')}</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Food Cost % (tgt ≤25%)</div>
           <div class="kpi-value ${foodRag((METRICS[s.code]||{}).food)}">${(METRICS[s.code]||{}).food == null ? 'N/A' : (METRICS[s.code]).food.toFixed(2) + '%'}</div>
           <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).food, 'down-is-good', '#4f46e5')}</div>
-          <div class="kpi-trend">WoW ${trendArrow((HISTORY[s.code]||{}).food, 'down-is-good')}</div>
+          <div class="kpi-trend">${wowChip(((METRICS[s.code]||{}).foodActual != null && window.PREV_WEEK.food[s.code] != null) ? (METRICS[s.code]).foodActual - window.PREV_WEEK.food[s.code] : null, 'down-is-good', 'pp')}</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">SPH (tgt £${sphTarget(s.code)})</div>
@@ -4651,6 +4651,15 @@ function adaptSite(jsonCode, s, isNewest){
     // SPH (Spend Per Head) — live actual £ + WoW% from kpis.sph. Feeds league chip, tile, modal, score.
     METRICS[display].sph       = (kp.sph && kp.sph.actual  != null) ? kp.sph.actual  : null;
     METRICS[display].sphWowPct = (kp.sph && kp.sph.wow_pct != null) ? kp.sph.wow_pct : null;
+    // 🔴 Sales WoW comes from THIS week's JSON. It used to be read off the baked
+    // `const HISTORY` literal, which is frozen at w/e 7 Jun 2026 and has NO entry
+    // at all for M19 / M20 / MakiNori — so those three rendered a grey "—" that
+    // looked like "flat" rather than "not known", and the other 16 rendered June's
+    // movement next to this week's number (M12 showed -16.7% when the week was
+    // -34.61%). Same root cause as the null-week reviews bug. Live only.
+    METRICS[display].salesWowPct = (kp.sales && kp.sales.wow_pct != null) ? kp.sales.wow_pct : null;
+    METRICS[display].wageActual  = (kp.wage_pct && kp.wage_pct.actual != null) ? kp.wage_pct.actual : null;
+    METRICS[display].foodActual  = (kp.food_pct && kp.food_pct.actual != null) ? kp.food_pct.actual : null;
   }
 
   // REVIEWS entry — the WEEKLY fields come ONLY from this week's own JSON.
@@ -4668,6 +4677,53 @@ function adaptSite(jsonCode, s, isNewest){
     REVIEWS[display].stars           = bd ? [bd["5"]||0, bd["4"]||0, bd["3"]||0, bd["2"]||0, bd["1"]||0] : null;
     REVIEWS[display].negativeReviews = rv.negative_reviews || [];
   }
+}
+
+// PREV_WEEK — wage % and food % from the PREVIOUS week, used for the week-on-week
+// deltas in the site modal. `kpis.sales`, `kpis.covers` and `kpis.sph` all carry
+// their own `prev`/`wow_pct`; `kpis.wage_pct` and `kpis.food_pct` do not, so the
+// only honest source for their WoW is the previous week's own file. (Follow-up
+// for build_site_json.py: add prev/wow_abs/wow_pct to wage_pct and food_pct so
+// this extra fetch can go away.)
+window.PREV_WEEK = { key: null, wage: {}, food: {} };
+
+function prevMonday(mondayISO){
+  const d = new Date(mondayISO + 'T00:00:00Z');
+  if (isNaN(d)) return null;
+  d.setUTCDate(d.getUTCDate() - 7);
+  return d.toISOString().slice(0,10);
+}
+
+function loadPrevWeek(mondayISO){
+  const pk = prevMonday(mondayISO);
+  if (!pk) return;
+  if (window.PREV_WEEK.key === pk) return;          // already loaded
+  window.PREV_WEEK = { key: pk, wage: {}, food: {} };
+  fetch(DATA_DIR + 'all_sites_wc_' + pk + '.json', {cache:'no-store'})
+    .then(r => r.ok ? r.json() : null)
+    .then(j => {
+      if (!j || !j.sites) return;                   // earliest week: no previous. Renders "no WoW".
+      Object.keys(j.sites).forEach(function(code){
+        const kp = (j.sites[code] || {}).kpis || {};
+        const disp = (typeof jsonToDisplay === 'function') ? jsonToDisplay(code) : code;
+        if (kp.wage_pct && kp.wage_pct.actual != null) window.PREV_WEEK.wage[disp] = kp.wage_pct.actual;
+        if (kp.food_pct && kp.food_pct.actual != null) window.PREV_WEEK.food[disp] = kp.food_pct.actual;
+      });
+      try { repaintAll(); } catch(e){}
+    })
+    .catch(function(){});
+}
+
+// One WoW chip. `delta` null -> says so out loud rather than showing a bare dash,
+// because "unknown" and "flat" must not look the same.
+function wowChip(delta, direction, unit){
+  if (delta == null || isNaN(delta)) return '<span style="color:var(--ink-3); font-size:11px;">no WoW</span>';
+  if (Math.abs(delta) < 0.005) return '<span style="color:var(--ink-3); font-size:11px;">→ flat</span>';
+  const up = delta > 0;
+  const good = (direction === 'up-is-good') ? up : !up;
+  const col = good ? 'var(--green)' : 'var(--red)';
+  return 'WoW <span style="color:' + col + '; font-weight:700;">' + (up ? '▲' : '▼') + ' '
+       + Math.abs(delta).toFixed(2) + (unit || '%') + '</span>';
 }
 
 // Re-run every top-level render that consumes the swapped data.
@@ -4794,6 +4850,8 @@ function loadLiveWeek(manifestFile, isNewest){
     // Live-load this week's numbers; repaintAll() runs inside on success.
     // On failure the baked data stays rendered (graceful degradation).
     loadLiveWeek(meta.file, isCurrent);
+    // ...and the previous week, for the wage % / food % WoW deltas.
+    try { loadPrevWeek(weekKey); } catch(e){}
   }
   window.applyWeek = applyWeek;
 
