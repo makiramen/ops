@@ -330,6 +330,119 @@ tr.hiddenrow { display: none; }
 .mchip.crit b { color: #fff; }
 .ccard.dead { border-left-color: #7F1D1D; background: #FEF2F2; }
 .ccard.dead .cap { color: #7F1D1D; }
+
+/* ════ INFLUENCER TAB (v5.2 design, scoped) ════ */
+#tab-influencer h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #334155; }
+#tab-influencer .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 14px; }
+#tab-influencer .card { background: #fff; border-radius: 14px; padding: 14px 16px; border: 1px solid #E8ECF3; box-shadow: 0 1px 3px rgba(16,24,40,.06); }
+#tab-influencer .card .label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #64748B; }
+#tab-influencer .card .value { font-size: 24px; font-weight: 700; margin-top: 4px; letter-spacing: -.01em; }
+#tab-influencer .card .delta { font-size: 11px; color: #6B7280; margin-top: 2px; line-height: 1.4; }
+#tab-influencer .card.hero { background: linear-gradient(135deg, #111827 0%, #7F1D1D 100%); border: 0; color: #fff; }
+#tab-influencer .card.hero .label { color: #FCA5A5; }
+#tab-influencer .card.hero .value { font-size: 30px; }
+#tab-influencer .card.hero .delta { color: #FECACA; }
+#tab-influencer .card.act { cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+#tab-influencer .card.act:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,24,40,.12); }
+#tab-influencer .card .value.v-RED { color: #B91C1C; }
+#tab-influencer .card .value.v-AMBER { color: #B45309; }
+#tab-influencer .card .value.v-GREEN { color: #15803D; }
+#tab-influencer .section { background: #fff; border-radius: 14px; border: 1px solid #E8ECF3; box-shadow: 0 1px 3px rgba(16,24,40,.06); padding: 16px; margin-bottom: 14px; }
+#tab-influencer .section .src { font-size: 10px; color: #9CA3AF; text-transform: uppercase; letter-spacing: .04em; margin: 2px 0 10px; }
+#tab-influencer .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 900px) { #tab-influencer .grid2 { grid-template-columns: 1fr; } }
+#tab-influencer table { width: 100%; border-collapse: collapse; font-size: 12px; }
+#tab-influencer th { text-align: left; color: #6B7280; font-weight: bold; border-bottom: 2px solid #E5E7EB; padding: 6px 8px; text-transform: uppercase; font-size: 10px; letter-spacing: .04em; }
+#tab-influencer td { padding: 6px 8px; border-bottom: 1px solid #F3F4F6; vertical-align: middle; }
+#tab-influencer td.num, #tab-influencer th.num { text-align: right; font-variant-numeric: tabular-nums; }
+#tab-influencer td.ctr, #tab-influencer th.ctr { text-align: center; font-variant-numeric: tabular-nums; }
+#tab-influencer tbody tr:hover td { background: #F8FAFC; }
+#tab-influencer th.sortable { cursor: pointer; user-select: none; }
+#tab-influencer th.sortable:hover { color: #0F172A; background: #F1F5F9; }
+#tab-influencer th.sortable.sorted { color: #1D4ED8; }
+#tab-influencer th.sortable .sarrow { display: inline-block; margin-left: 3px; font-size: 8px; color: #1D4ED8; min-width: 8px; }
+#tab-influencer /* the only "chart" on this page: a fill behind the number, #tab-influencer inside the cell */
+td.fillbar { background-repeat: no-repeat; background-position: right center; }
+#tab-influencer td.nowrap, #tab-influencer th.nowrap { white-space: nowrap; }
+#tab-influencer .handle { font-weight: 600; color: #0F172A; }
+#tab-influencer .handle small { display: block; font-weight: 400; font-size: 10px; color: #94A3B8; margin-top: 1px; }
+#tab-influencer .handle .realh { display: block; font-weight: 500; font-size: 10.5px; color: #2563EB; text-decoration: none; margin-top: 1px; }
+#tab-influencer .handle .realh:hover { text-decoration: underline; }
+#tab-influencer .handle .noh { color: #CBD5E1; font-style: italic; cursor: help; }
+#tab-influencer .subtle { color: #9CA3AF; font-size: 10px; }
+#tab-influencer .pos { color: #15803D; }
+#tab-influencer .neg { color: #B91C1C; }
+#tab-influencer .rag { display: inline-block; font-size: 10px; padding: 2px 9px; border-radius: 999px; font-weight: bold; letter-spacing: .02em; white-space: nowrap; }
+#tab-influencer .rag.GREEN { background: #DCFCE7; color: #15803D; }
+#tab-influencer .rag.AMBER { background: #FEF3C7; color: #B45309; }
+#tab-influencer .rag.RED { background: #FEE2E2; color: #B91C1C; }
+#tab-influencer .rag.GREY { background: #E5E7EB; color: #6B7280; }
+#tab-influencer .rag.BLUE { background: #DBEAFE; color: #1D4ED8; }
+#tab-influencer .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: bold; }
+#tab-influencer .tag.story { background: #DBEAFE; color: #1D4ED8; }
+#tab-influencer .tag.reel { background: #FCE7F3; color: #9D174D; }
+#tab-influencer .tag.post { background: #CCFBF1; color: #0F766E; }
+#tab-influencer .tag.collab { background: #F5F3FF; color: #6D28D9; }
+#tab-influencer .grade { display: inline-block; font-size: 9.5px; font-weight: 800; width: 17px; height: 17px; line-height: 17px; text-align: center; border-radius: 5px; }
+#tab-influencer .grade.A { background: #DCFCE7; color: #15803D; }
+#tab-influencer .grade.B { background: #DBEAFE; color: #1D4ED8; }
+#tab-influencer .grade.C { background: #FEF3C7; color: #B45309; }
+#tab-influencer .grade.D { background: #FEE2E2; color: #B91C1C; }
+#tab-influencer .owner { display: inline-block; font-size: 9.5px; font-weight: 700; border-radius: 4px; padding: 2px 7px; white-space: nowrap; }
+#tab-influencer .owner.Georgie { color: #7C3AED; background: #F5F3FF; }
+#tab-influencer .owner.Summer { color: #9A3412; background: #FFF7ED; }
+#tab-influencer .owner.Vidya { color: #0369A1; background: #E0F2FE; }
+#tab-influencer .owner.Becca { color: #15803D; background: #F0FDF4; }
+#tab-influencer .evlink { font-size: 10px; color: #2563EB; text-decoration: none; }
+#tab-influencer .evlink:hover { text-decoration: underline; }
+#tab-influencer /* loop status strip — the closed-loop health line */
+.loopbar { display: flex; flex-wrap: wrap; gap: 0; align-items: stretch; border-radius: 14px; overflow: hidden; border: 1px solid #E8ECF3; background: #fff; box-shadow: 0 1px 3px rgba(16,24,40,.06); margin-bottom: 14px; }
+#tab-influencer .loopstep { flex: 1; min-width: 150px; padding: 11px 14px; border-right: 1px solid #F1F5F9; position: relative; }
+#tab-influencer .loopstep:last-child { border-right: 0; }
+#tab-influencer .loopstep .lname { font-size: 9.5px; text-transform: uppercase; letter-spacing: .05em; color: #94A3B8; font-weight: 700; }
+#tab-influencer .loopstep .lval { font-size: 13px; font-weight: 700; margin-top: 3px; }
+#tab-influencer .loopstep .lnote { font-size: 10px; color: #94A3B8; margin-top: 2px; line-height: 1.4; }
+#tab-influencer .loopstep.ok .lval { color: #15803D; }
+#tab-influencer .loopstep.warn { background: #FFFBEB; }
+#tab-influencer .loopstep.warn .lval { color: #B45309; }
+#tab-influencer .loopstep.bad { background: #FEF2F2; }
+#tab-influencer .loopstep.bad .lval { color: #B91C1C; }
+#tab-influencer .loopstep .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; vertical-align: 1px; }
+#tab-influencer .loopstep.ok .dot { background: #16A34A; }
+#tab-influencer .loopstep.warn .dot { background: #F59E0B; }
+#tab-influencer .loopstep.bad .dot { background: #DC2626; }
+#tab-influencer .alert { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; border-radius: 10px; padding: 10px 14px; font-size: 12px; margin-bottom: 12px; line-height: 1.5; }
+#tab-influencer .alert.bad { background: #FEF2F2; border: 1px solid #FECACA; color: #991B1B; }
+#tab-influencer .alert.good { background: #F0FDF4; border: 1px solid #BBF7D0; color: #15803D; }
+#tab-influencer .alert.info { background: #EFF6FF; border: 1px solid #BFDBFE; color: #1E40AF; }
+#tab-influencer .alert b { font-weight: 700; }
+#tab-influencer .alert .who { margin-left: auto; font-size: 11px; }
+#tab-influencer /* friendly plain-English lead line at the top of each section */
+.lede { font-size: 12.5px; color: #475569; line-height: 1.6; margin-bottom: 10px; max-width: 860px; }
+#tab-influencer .lede b { color: #0F172A; }
+#tab-influencer tr.done td { opacity: .55; }
+#tab-influencer /* owner group header row */
+tr.grouprow td { background: #EEF2F7; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #334155; border-bottom: 1px solid #E2E8F0; padding: 7px 8px; }
+#tab-influencer /* collapsible sections */
+h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center; gap: 8px; }
+#tab-influencer h2.fold:hover { color: #1D4ED8; }
+#tab-influencer h2.fold .chev { display: inline-block; width: 13px; color: #64748B; transition: transform .15s ease; font-size: 11px; }
+#tab-influencer h2.fold.closed .chev { transform: rotate(-90deg); }
+#tab-influencer h2.fold .cnt { margin-left: auto; font-size: 10px; font-weight: 700; color: #94A3B8; letter-spacing: .04em; }
+#tab-influencer .foldbody.hidden { display: none; }
+#tab-influencer .foldbody { margin-top: 10px; }
+#tab-influencer .controls { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; font-size: 12px; }
+#tab-influencer .controls input, #tab-influencer .controls select { font-size: 12px; padding: 5px 10px; border-radius: 7px; border: 1px solid #D1D5DB; font-family: inherit; }
+#tab-influencer .controls input:focus { outline: 2px solid #E11D48; outline-offset: 1px; border-color: transparent; }
+#tab-influencer .filterbtn { border: 1px solid #CBD5E1; background: #fff; color: #475569; font-size: 11.5px; font-weight: 600; padding: 5px 13px; border-radius: 999px; cursor: pointer; font-family: inherit; }
+#tab-influencer .filterbtn:hover { background: #F1F5F9; }
+#tab-influencer .filterbtn.on { background: #0F172A; border-color: #0F172A; color: #fff; }
+#tab-influencer .filterbtn .n { opacity: .6; font-weight: 500; margin-left: 4px; }
+#tab-influencer .scroll { max-height: 460px; overflow-y: auto; border: 1px solid #EEF2F7; border-radius: 10px; }
+#tab-influencer .scroll thead th { position: sticky; top: 0; background: #fff; z-index: 1; }
+#tab-influencer .note { color: #92400E; font-size: 11px; background: #FEF3C7; border-radius: 6px; padding: 3px 8px; display: inline-block; }
+#tab-influencer .methodrow { display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; font-size: 12px; color: #475569; line-height: 1.6; padding: 7px 0; border-bottom: 1px solid #F3F4F6; }
+#tab-influencer .methodrow b { color: #0F172A; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
 </style>
 </head>
 <body>
@@ -343,7 +456,7 @@ tr.hiddenrow { display: none; }
   <button data-tab="instagram">Instagram</button>
   <button data-tab="tiktok">TikTok</button>
   <button data-tab="google">Google</button>
-  <button data-tab="paid">Paid media</button>
+  <button data-tab="influencer">Influencers</button>
   <button data-tab="budget">Budget</button>
   <button data-tab="matrix">Add/Remove</button>
   <button data-tab="manual">Manual feeds</button>
@@ -503,20 +616,147 @@ tr.hiddenrow { display: none; }
 <!-- ================================================================ -->
 <!-- PAID MEDIA TAB — Meta + TikTok                                    -->
 <!-- ================================================================ -->
-<div id="tab-paid" class="tabpane">
-  <div class="section">
-    <h2>Meta Ads — last 30 days</h2>
-    <div class="src">Facebook + Instagram Ads by campaign · via Windsor · kill/keep/scale from ADD_REMOVE_MATRIX · results = Book Now conversions + purchases + leads (matches Ads Manager) · paused/ended campaigns listed separately below</div>
-    <table>
-      <thead><tr><th>Campaign</th><th class="num">Spend</th><th class="num">Share</th><th class="num">Impr.</th><th class="num">Clicks</th><th class="num">CTR</th><th class="num">CPC</th><th class="num">Results</th><th class="num">£/result</th><th>Auto flag</th></tr></thead>
-      <tbody id="meta-table"><tr><td colspan="10" class="loading">Loading…</td></tr></tbody>
-    </table>
+<div id="tab-influencer" class="tabpane">
+<!-- ══ 1. IS THE LOOP RUNNING? ══ -->
+<div id="loopAlert"></div>
+<div class="loopbar" id="loopbar"></div>
+
+<!-- ══ 2. THE NUMBERS THAT MATTER ══ -->
+<div class="cards" id="kpis"></div>
+
+<!-- ══ 3. WHAT TO DO NOW ══ -->
+<div class="section">
+  <h2>What to do now</h2>
+  <div class="src">Live from DYI_INFLUENCER_MASTER · clocks run from the last message in the data, never from today</div>
+  <div class="lede" id="chaseLede"></div>
+  <div class="controls" id="chaseFilters"></div>
+  <table id="chaseTable"></table>
+  <div style="margin-top:10px" class="subtle" id="chaseFoot"></div>
+</div>
+
+<!-- ══ 4. COMPED, NOTHING BACK ══ -->
+<div class="section">
+  <h2 class="fold closed" data-fold="noback">
+    <span class="chev">▼</span>We fed them and got nothing back
+    <span class="cnt" id="nbCnt"></span>
+  </h2>
+  <div class="foldbody hidden" id="fold-noback">
+    <div class="lede" id="nbLede"></div>
+    <div class="scroll"><table id="nbTable"></table></div>
   </div>
-  <div class="section">
-    <h2>TikTok Ads</h2>
-    <div class="src">Live since 1 Jul 2026 · budget £1,400/mo</div>
-    <div class="warn"><strong>Campaign detail blocked:</strong> TikTok ads are spending (£162 in week 1 per the expense tracker) but the TikTok Ads connector is not yet connected in Windsor — spend is invisible to the budget board until it is. Connect at windsor.ai → tiktok. The daily pull is already wired to pick it up automatically.</div>
+</div>
+
+<!-- ══ 5. WHERE THE FUNNEL LEAKS ══ -->
+<div class="section">
+  <h2 class="fold closed" data-fold="funnel">
+    <span class="chev">▼</span>Where the funnel leaks
+    <span class="cnt" id="fnCnt"></span>
+  </h2>
+  <div class="foldbody hidden" id="fold-funnel">
+    <div class="lede" id="fnLede"></div>
+    <div class="grid2">
+      <div>
+        <h2 style="font-size:11px;margin-bottom:6px">Funnel</h2>
+        <table id="funnelTable"></table>
+        <h2 style="font-size:11px;margin:16px 0 6px">Stage of every thread</h2>
+        <table id="stageTable"></table>
+      </div>
+      <div>
+        <h2 style="font-size:11px;margin-bottom:6px">What we asked them to post</h2>
+        <table id="delivTable"></table>
+        <div class="note" style="margin-top:8px" id="delivNote"></div>
+        <h2 style="font-size:11px;margin:16px 0 6px">What we offered</h2>
+        <table id="offerTable"></table>
+      </div>
+    </div>
   </div>
+</div>
+
+<!-- ══ 6. WHAT WE GOT BACK ══ -->
+<div class="section">
+  <h2 class="fold closed" data-fold="mix">
+    <span class="chev">▼</span>What we got back
+    <span class="cnt" id="mixCnt"></span>
+  </h2>
+  <div class="foldbody hidden" id="fold-mix">
+    <div class="lede" id="mixLede"></div>
+    <div class="grid2">
+      <div>
+        <h2 style="font-size:11px;margin-bottom:6px">Content mix of comped visits</h2>
+        <table id="mixTable"></table>
+        <h2 style="font-size:11px;margin:16px 0 6px">Content by week</h2>
+        <table id="weekTable"></table>
+      </div>
+      <div>
+        <h2 style="font-size:11px;margin-bottom:6px">Top creators by content delivered</h2>
+        <table id="topTable"></table>
+        <h2 style="font-size:11px;margin:16px 0 6px">Sites named in threads</h2>
+        <table id="siteTable"></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 7. WHAT THE DATA CAN PROVE ══ -->
+<div class="section">
+  <h2 class="fold closed" data-fold="proof">
+    <span class="chev">▼</span>What this data can and cannot prove
+    <span class="cnt" id="pfCnt"></span>
+  </h2>
+  <div class="foldbody hidden" id="fold-proof">
+    <div class="lede" id="pfLede"></div>
+    <div class="grid2">
+      <div>
+        <h2 style="font-size:11px;margin-bottom:6px">Signal coverage</h2>
+        <table id="covTable"></table>
+      </div>
+      <div>
+        <h2 style="font-size:11px;margin-bottom:6px">Evidence grade on shared reels and posts</h2>
+        <table id="gradeTable"></table>
+        <h2 style="font-size:11px;margin:16px 0 6px">Collabs we think happened</h2>
+        <div class="scroll" style="max-height:260px"><table id="collabTable"></table></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 8. REVIEW QUEUE ══ -->
+<div class="section">
+  <h2 class="fold closed" data-fold="review">
+    <span class="chev">▼</span>Georgie's review queue
+    <span class="cnt" id="rvCnt"></span>
+  </h2>
+  <div class="foldbody hidden" id="fold-review">
+    <div class="lede" id="rvLede"></div>
+    <div class="scroll"><table id="reviewTable"></table></div>
+  </div>
+</div>
+
+<!-- ══ 9. FULL TRACKER ══ -->
+<div class="section">
+  <h2 class="fold closed" data-fold="master">
+    <span class="chev">▼</span>Full tracker
+    <span class="cnt" id="msCnt"></span>
+  </h2>
+  <div class="foldbody hidden" id="fold-master">
+    <div class="controls">
+      <input id="filter" placeholder="Search handle, site, status, format…" style="width:300px" aria-label="Search tracker">
+      <span id="mqf"></span>
+    </div>
+    <div class="scroll" style="max-height:520px"><table id="masterTable"></table></div>
+    <div style="margin-top:8px" class="subtle" id="masterFoot"></div>
+  </div>
+</div>
+
+<!-- ══ 10. METHOD ══ -->
+<div class="section">
+  <h2 class="fold closed" data-fold="method">
+    <span class="chev">▼</span>How this works, and what breaks it
+    <span class="cnt">READ BEFORE QUOTING NUMBERS</span>
+  </h2>
+  <div class="foldbody hidden" id="fold-method"></div>
+</div>
+<div class="subtle" style="text-align:center;padding:6px 0 2px" id="inf-foot"></div>
 </div>
 
 <!-- ================================================================ -->
@@ -801,7 +1041,7 @@ async function loadTab(name) {
     if (name === 'instagram') return await loadInstagram();
     if (name === 'tiktok') return await loadTikTok();
     if (name === 'google') return await loadGoogle();
-    if (name === 'paid') return await loadMetaPaid();
+    if (name === 'influencer') return await loadInfluencer();
     if (name === 'budget') return await loadBudget();
     if (name === 'matrix') return await loadMatrix();
     if (name === 'manual') return await loadManual();
@@ -1637,130 +1877,6 @@ function drawGadsTable(rows) {
 // =====================================================================
 // PAID MEDIA TAB — Meta (+ TikTok placeholder until Windsor connected)
 // =====================================================================
-async function loadMetaPaid() {
-  var [meta30, matrixCsv] = await Promise.all([
-    getWindsor('facebook', ['campaign','spend','impressions','clicks','actions_purchase','actions_lead'], {date_preset: 'last_30d'}),
-    readSheetCsv(SHEETS.ADD_REMOVE_MATRIX).catch(function() { return ''; })
-  ]);
-  var matrix = csvToObjects(matrixCsv);
-  var flagByCamp = {}, histByCamp = {};
-  matrix.forEach(function(r) {
-    if (r.entity_type === 'paid_campaign' && r.platform === 'meta') flagByCamp[r.entity_name] = {row: r, d: decisionOf(r)};
-    // 11 Aug: the ledger knows which campaigns are paused/finished. A campaign
-    // in HISTORY with no live row shouldn't sit in the main table looking
-    // active — its spend is real (still inside the 30-day window) but the
-    // campaign isn't running.
-    if (r.entity_type === 'HISTORY' && r.platform === 'meta') {
-      var hst = String(r.status || '').trim();
-      if (hst === 'actioned' || hst === 'stopped') histByCamp[r.entity_name] = r;
-    }
-  });
-  var byCamp = {};
-  var totSpend = 0;
-  meta30.forEach(function(r) {
-    var c = r.campaign || '(unnamed)';
-    byCamp[c] = byCamp[c] || {spend: 0, impr: 0, clicks: 0, conv: 0, book: {}};
-    byCamp[c].spend += Number(r.spend) || 0;
-    byCamp[c].impr += Number(r.impressions) || 0;
-    byCamp[c].clicks += Number(r.clicks) || 0;
-    byCamp[c].conv += (Number(r.actions_purchase) || 0) + (Number(r.actions_lead) || 0);
-    // 11 Aug pm: Book Now custom conversions now ride along in the meta30
-    // payload (WebApi V6), so campaigns UNDER the judge gate — no matrix row
-    // to override from — still count real results. Same MAX-not-SUM rule as
-    // the matrix: overlapping custom conversions fire together.
-    // The field list comes from the payload (booking_fields — the shared
-    // BOOKING_FIELDS_CSV property) so new conversions need NO page redeploy;
-    // the hard-coded list is only the fallback for old payloads.
-    ((DATA && Array.isArray(DATA.booking_fields) && DATA.booking_fields.length) ? DATA.booking_fields : BOOKING_FIELDS).forEach(function(f) {
-      var n = Number(r[f]) || 0;
-      if (n) byCamp[c].book[f] = (byCamp[c].book[f] || 0) + n;
-    });
-    totSpend += Number(r.spend) || 0;
-  });
-  var list = Object.keys(byCamp).map(function(c) {
-    var v = byCamp[c];
-    // 11 Aug: the matrix counts Book Now custom conversions (the same events
-    // Ads Manager calls results); the raw payload here still counts
-    // purchases+leads only. Trust the matrix's count wherever it has judged.
-    var f = flagByCamp[c];
-    if (f && f.row.conv_total !== undefined && f.row.conv_total !== '' && !isNaN(Number(f.row.conv_total))) {
-      v.conv = Number(f.row.conv_total);
-      v.convNote = f.row.conv_breakdown || '';
-    } else {
-      // Not judged yet — no matrix row to trust, so count bookings from the
-      // raw feed the same way the matrix would: MAX across the custom
-      // conversion fields, plus the purchases/leads already in v.conv.
-      var bk = 0;
-      Object.keys(v.book || {}).forEach(function(fld) { if (v.book[fld] > bk) bk = v.book[fld]; });
-      bk = Math.round(bk);
-      if (bk > 0) {
-        v.convNote = bk + ' Book Now action' + (bk === 1 ? '' : 's') + (v.conv ? ' + ' + v.conv + ' purchase/lead' + (v.conv === 1 ? '' : 's') : '');
-        v.conv += bk;
-      }
-    }
-    var ctr = v.impr > 0 ? v.clicks / v.impr : 0;
-    var cpc = v.clicks > 0 ? v.spend / v.clicks : 0;
-    var cpa = v.conv > 0 ? v.spend / v.conv : null;
-    var share = totSpend > 0 ? v.spend / totSpend : 0;
-    return {c: c, v: v, ctr: ctr, cpc: cpc, cpa: cpa, share: share, flag: f,
-            ended: !f && histByCamp[c] ? histByCamp[c] : null};
-  }).sort(function(a, b) { return b.v.spend - a.v.spend; });
-  var tbody = document.getElementById('meta-table');
-  if (!list.length) { tbody.innerHTML = '<tr><td colspan="10" class="subtle">No Meta campaign data</td></tr>'; return; }
-  var endedList = list.filter(function(x) { return x.ended; });
-  list = list.filter(function(x) { return !x.ended; });
-  var maxSpend = list.length ? list[0].v.spend : 0;
-  var maxClicks = list.reduce(function(m, x) { return Math.max(m, x.v.clicks); }, 0);
-  var maxConv = list.reduce(function(m, x) { return Math.max(m, x.v.conv); }, 0);
-  tbody.innerHTML = list.map(function(x) {
-    var flagCell = '<span class="subtle">not yet judged</span>';
-    if (x.flag) {
-      var d = x.flag.d, fdays = daysSince(x.flag.row.flagged_since);
-      if (d.building) {
-        flagCell = '<span class="rag ' + (d.verdict || 'NT') + ' prov">' + (d.verdict || 'NT') + '</span>' +
-          '<span class="srcbadge">not agreed' + (d.daysToGo ? ' · ' + d.daysToGo + 'd to go' : '') + '</span>';
-      } else {
-        flagCell = '<span class="rag ' + d.label + '">' + d.label + '</span>' +
-          '<span class="srcbadge ' + (d.source === 'override' ? 'override' : '') + '">' +
-          (d.source === 'override' ? 'your call' : 'auto') +
-          (fdays != null && fdays >= 21 ? ' · ' + Math.floor(fdays / 7) + 'w' : '') + '</span>';
-      }
-    }
-    return '<tr>' +
-      '<td>' + x.c + (x.v.convNote ? '<span class="rowsub">Results: ' + escAttr(x.v.convNote) + '</span>' : '') + '</td>' +
-      barCell(x.v.spend, maxSpend, fmtGbp(x.v.spend), 'rgba(37,99,235,.14)') +
-      '<td class="num">' + (x.share * 100).toFixed(1) + '%</td>' +
-      '<td class="num">' + fmtN(x.v.impr) + '</td>' +
-      barCell(x.v.clicks, maxClicks, fmtN(x.v.clicks), 'rgba(15,23,42,.10)') +
-      '<td class="num">' + fmtPct(x.ctr) + '</td>' +
-      '<td class="num">' + fmtGbp2(x.cpc) + '</td>' +
-      barCell(x.v.conv, maxConv, fmtN(x.v.conv), 'rgba(225,29,72,.14)') +
-      '<td class="num">' + (x.cpa != null ? fmtGbp2(x.cpa) : '—') + '</td>' +
-      '<td>' + flagCell + '</td>' +
-      '</tr>';
-  }).join('') + (endedList.length
-    ? '<tr><td colspan="10" style="background:#F8FAFC;font-weight:600;color:#64748B;font-size:11px;padding-top:10px">Paused / ended — no longer running, spend still inside the 30-day window (' + endedList.length + ')</td></tr>' +
-      endedList.map(function(x) {
-        var h = x.ended, st = String(h.status || '').trim();
-        var when = actionedOn(h);
-        var eCell = '<span class="rag ' + verdictOf(h) + '">' + verdictOf(h) + '</span>' +
-          '<span class="srcbadge">' + (st === 'actioned' ? 'switched off' : 'ended') + (when ? ' · ' + fmtDayMon(when) : '') + '</span>';
-        return '<tr style="opacity:.55">' +
-          '<td>' + x.c + '</td>' +
-          '<td class="num">' + fmtGbp(x.v.spend) + '</td>' +
-          '<td class="num">' + (x.share * 100).toFixed(1) + '%</td>' +
-          '<td class="num">' + fmtN(x.v.impr) + '</td>' +
-          '<td class="num">' + fmtN(x.v.clicks) + '</td>' +
-          '<td class="num">' + fmtPct(x.ctr) + '</td>' +
-          '<td class="num">' + fmtGbp2(x.cpc) + '</td>' +
-          '<td class="num">' + fmtN(x.v.conv) + '</td>' +
-          '<td class="num">' + (x.cpa != null ? fmtGbp2(x.cpa) : '—') + '</td>' +
-          '<td>' + eCell + '</td>' +
-          '</tr>';
-      }).join('')
-    : '');
-}
-
 // =====================================================================
 // BUDGET TAB
 // =====================================================================
@@ -3584,11 +3700,703 @@ async function loadManual() {
   }).join('');
 }
 
+
+// =====================================================================
+// INFLUENCER TAB — DYI pipeline (v5.2 design; data live from WebApi)
+// =====================================================================
+/* ═══ Influencer tab data builder ═══
+   Runs IN THE PAGE. Rebuilds the v5.2 DATA blob from:
+     master — payload.dyi_master  (DYI_INFLUENCER_MASTER rows, keyed by header)
+     ledger — payload.dyi_ledger  (DYI_CHASE_LEDGER rows)
+     agg    — payload.dyi_agg     (DM_RAW-derived aggregates, computed in WebApi)
+   Ported from build_dash_data.py + the v5.2 preview bake; verified against the
+   approved 17 Aug snapshot (see dyi_verify.js).                                 */
+(function (root) {
+  'use strict';
+  const DAY = 86400000;
+
+  const KIND = {
+    'CHASE - 7d past visit': { label: 'Visited, no content', rank: 2 },
+    'CHASE - 5d no date': { label: 'No date agreed', rank: 1 },
+    'CHASE - 5d no reply': { label: 'No reply', rank: 0 }
+  };
+  const OWNER_BY_KIND = {
+    'Visited, no content': 'Georgie',
+    'No date agreed': 'Georgie',
+    'No reply': 'Georgie'
+  };
+  const STAGES = ['Outreach sent', 'Awaiting confirmation', 'Confirmed', 'Visited - awaiting content',
+    'Content delivered', 'No content', 'Cold', 'Inbound - no outreach', 'Unclassified'];
+
+  const ms = s => { if (!s) return null; const t = Date.parse(String(s).replace(' ', 'T') + (String(s).length === 10 ? 'T00:00:00Z' : 'Z')); return isNaN(t) ? null : t; };
+  const nm40 = s => Array.from(String(s || '')).slice(0, 40).join('');
+  const datePart = s => String(s || '').slice(0, 10);
+  const num = v => Number(v) || 0;
+  const realHandle = ev => { const m = /instagram\.com\/stories\/([^\/]+)\//.exec(String(ev || '')); return m ? m[1] : ''; };
+
+  function build(master, ledger, agg) {
+    const EXT = master.filter(m => m.account_class === 'EXTERNAL');
+    const INT = master.filter(m => m.account_class !== 'EXTERNAL');
+    const asofMs = agg.hi_ms;
+    const cap = new Set(agg.cap_threads || []);
+    const disc = new Set(agg.disc_threads || []);
+
+    const invited = EXT.filter(m => m.invited);
+    const booked = EXT.filter(m => m.visit_resolved === 'TRUE');
+    const bookedContent = booked.filter(m => m.posted === 'YES');
+    const invContent = invited.filter(m => m.posted === 'YES');
+    const withContent = EXT.filter(m => m.posted === 'YES');
+    const dtp = bookedContent.filter(m => m.days_to_post !== '' && m.days_to_post != null)
+      .map(m => parseFloat(m.days_to_post)).sort((a, b) => a - b);
+    const noneStated = invited.filter(m => m.agreed_posting === 'NONE STATED').length;
+    const statusC = {};
+    EXT.forEach(m => { statusC[m.status] = (statusC[m.status] || 0) + 1; });
+    const chaseRows = EXT.filter(m => m.chase_flag && KIND[m.chase_flag]);
+
+    const median = a => a.length ? (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : 0;
+    const r1 = v => Math.round(v * 10) / 10;
+
+    const totals = {
+      threads: EXT.length, internal: INT.length,
+      messages: agg.messages, msgs_in: agg.msgs_in, msgs_out: agg.msgs_out,
+      tags: agg.tags, creators: agg.creators,
+      invited: invited.length, with_content: withContent.length, inv_content: invContent.length,
+      booked: booked.length, booked_content: bookedContent.length,
+      conv: booked.length ? Math.round(bookedContent.length / booked.length * 100) : 0,
+      inv_to_book: invited.length ? Math.round(booked.length / invited.length * 100) : 0,
+      nocontent: statusC['No content'] || 0,
+      multi: EXT.filter(m => num(m.booking_count) > 1).length,
+      bookings: EXT.reduce((s, m) => s + num(m.booking_count), 0),
+      none_stated: noneStated,
+      none_stated_pct: invited.length ? Math.round(noneStated / invited.length * 100) : 0,
+      terms: EXT.filter(m => m.terms_confirmed).length,
+      visit: EXT.filter(m => m.visit_date).length,
+      dtp_n: dtp.length,
+      dtp_median: dtp.length ? r1(median(dtp)) : 0,
+      dtp_p90: dtp.length ? r1(dtp[Math.min(Math.floor(dtp.length * 0.9), dtp.length - 1)]) : 0,
+      needs_review: EXT.filter(m => m.needs_review === 'TRUE').length,
+      reactions: agg.reactions,
+      story: agg.story, reel: agg.reel, post: agg.post,
+      own_reshares: agg.own_reshares,
+      chases: chaseRows.length,
+      collab_content: agg.collab_content,
+      collab_creators: agg.collab_creators,
+      collab_discussed: (agg.disc_threads || []).length,
+      collab_discussed_booked: booked.filter(m => disc.has(m.thread_path)).length
+    };
+
+    /* content mix of comped visits */
+    const nb = booked.length;
+    const pc = n => nb ? Math.round(n / nb * 100) : 0;
+    const mixCounts = {
+      story: booked.filter(m => num(m.story_tags) > 0).length,
+      reel: booked.filter(m => num(m.reel_tags) > 0).length,
+      post: booked.filter(m => num(m.post_tags) > 0).length,
+      collab: booked.filter(m => cap.has(m.thread_path)).length,
+      nothing: booked.filter(m => m.posted !== 'YES').length
+    };
+    const mix = { n: nb, counts: mixCounts, pct: Object.fromEntries(Object.entries(mixCounts).map(([k, v]) => [k, pc(v)])) };
+
+    const funnel = [
+      { k: 'Invites sent', n: invited.length },
+      { k: 'Comped visits booked', n: booked.length },
+      { k: 'Produced content', n: bookedContent.length }
+    ];
+    const pipeline = STAGES.map(s => ({ stage: s, n: statusC[s] || 0 }));
+
+    const countBy = (rows, f) => { const c = {}; rows.forEach(r => { const k = f(r); if (k) c[k] = (c[k] || 0) + 1; }); return c; };
+    const topN = (c, n) => Object.entries(c).sort((a, b) => b[1] - a[1]).slice(0, n);
+
+    const sites = topN(countBy(EXT, m => m.site), 10).map(([site, n]) => ({ site, n }));
+    const offerBucket = o => o.startsWith('£') ? '£ value' : (o.includes('% off') ? '% off' : o);
+    const offers = topN(countBy(EXT.filter(m => m.offer), m => offerBucket(m.offer)), 3).map(([k, n]) => ({ k, n }));
+    const deliv = topN(countBy(invited, m => m.agreed_posting), 7).map(([k, n]) => ({ k, n }));
+    const bands = [[0, .25, '0.00–0.24'], [.25, .5, '0.25–0.49'], [.5, .75, '0.50–0.74'], [.75, 1.01, '0.75–1.00']];
+    const conf = bands.map(([a, b, band]) => ({ band, n: EXT.filter(m => { const c = parseFloat(m.confidence) || 0; return c >= a && c < b; }).length }));
+
+    /* ── the chase list (master flags → display rows) ── */
+    const dayFloor = (a, b) => (a == null || b == null) ? '' : Math.floor((a - b) / DAY);
+    const chases = chaseRows.map(m => {
+      const idx = master.indexOf(m);
+      const k = KIND[m.chase_flag];
+      return {
+        nm: nm40(m.name || m.handle), slug: m.handle, real: realHandle(m.content_evidence),
+        site: m.site || '', offer: m.offer || '',
+        kind: k.label, rank: k.rank, status: m.status,
+        msgs: num(m.msgs_total), last: datePart(m.last_message),
+        wait: dayFloor(asofMs, ms(m.last_message)),
+        visit: datePart(m.visit_date),
+        owner: OWNER_BY_KIND[k.label],
+        key: m.thread_path, _i: idx
+      };
+    }).sort((a, b) => b.rank - a.rank || b.wait - a.wait || a._i - b._i);
+    chases.forEach(c => { delete c._i; });
+
+    /* ── comped, nothing back ── */
+    const noback = booked.filter(m => m.posted !== 'YES').map(m => ({
+      nm: nm40(m.name || m.handle), slug: m.handle, real: realHandle(m.content_evidence),
+      site: m.site || '', offer: m.offer || '',
+      visit: datePart(m.visit_date),
+      since: dayFloor(asofMs, ms(m.visit_date)),
+      status: m.status, msgs: num(m.msgs_total), last: datePart(m.last_message), _i: master.indexOf(m)
+    })).sort((a, b) => b.since - a.since || a._i - b._i);
+    noback.forEach(c => { delete c._i; });
+    const nobackOverdue = noback.filter(x => x.since > 7).length;
+
+    /* ── review queue ── */
+    const review = EXT.filter(m => m.needs_review === 'TRUE')
+      .sort((a, b) => num(b.msgs_total) - num(a.msgs_total)).slice(0, 25)
+      .map(m => ({
+        nm: nm40(m.name || m.handle), slug: m.handle, real: realHandle(m.content_evidence),
+        status: m.status, confidence: parseFloat(m.confidence) || 0,
+        msgs_total: num(m.msgs_total), site: m.site || '', last_message: m.last_message
+      }));
+
+    /* ── full tracker (array rows, MCOLS order) ── */
+    const table = EXT.map((m, _ti) => {
+      const real = realHandle(m.content_evidence);
+      const row = [
+        nm40(m.name || m.handle), m.handle, real, m.site || '', m.status, m.offer || '',
+        datePart(m.visit_date), m.visit_resolved === 'TRUE' ? 1 : 0, m.posted || '',
+        m.format || '', m.evidence_grade || '',
+        num(m.story_tags), num(m.reel_tags), num(m.post_tags),
+        m.days_to_post === '' || m.days_to_post == null ? '' : String(m.days_to_post),
+        m.chase_flag ? String(m.chase_flag).replace('CHASE - ', '') : '',
+        num(m.msgs_total), datePart(m.last_message),
+        Math.round((parseFloat(m.confidence) || 0) * 100) / 100,
+        m.content_evidence || '',
+        m.agreed_posting || '', m.disclosed === 'TRUE' ? 1 : 0
+      ];
+      row._i = _ti;
+      return row;
+    }).sort((a, b) => (b[11] + b[12] + b[13]) - (a[11] + a[12] + a[13]) || a._i - b._i);
+    table.forEach(r => { delete r._i; });
+
+    const resolvable = EXT.filter(m => realHandle(m.content_evidence)).length;
+
+    /* ── ledger map: thread_path → latest-cycle outcome ── */
+    const ledgerMap = {};
+    (ledger || []).forEach(r => {
+      const cyc = num(r.cycle);
+      if (!ledgerMap[r.thread_path] || cyc >= ledgerMap[r.thread_path]._c) {
+        ledgerMap[r.thread_path] = { _c: cyc, o: r.outcome || 'OPEN' };
+      }
+    });
+    const ledgerOut = {};
+    Object.keys(ledgerMap).forEach(k => { ledgerOut[k] = ledgerMap[k].o; });
+
+    return {
+      window: agg.window, asof: agg.asof,
+      generated: agg.asof + ' (last message in the data)',
+      totals, mix, funnel, deliv, pipeline,
+      top: agg.top, sites, grades: agg.grades, disclosed: agg.disclosed,
+      collabs: agg.collabs, review,
+      weeks: agg.weeks, wseries: agg.wseries,
+      offers, conf, chases, noback, table,
+      noback_overdue: nobackOverdue,
+      resolvable, resolvable_pct: EXT.length ? Math.round(resolvable / EXT.length * 1000) / 10 : 0,
+      ledger: ledgerOut
+    };
+  }
+
+  if (typeof module !== 'undefined') module.exports = { dyiBuildData: build };
+  else root.dyiBuildData = build;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+
+function dyiLoopStatus(IDATA, ledger, aggHiMs) {
+  var DAY = 86400000;
+  var stale = Math.floor((Date.now() - aggHiMs) / DAY);
+  var open = 0, acted = 0;
+  var latest = {};
+  (ledger || []).forEach(function (r) {
+    var c = Number(r.cycle) || 0;
+    var k = r.thread_path;
+    if (!latest[k] || c >= latest[k].c) latest[k] = { c: c, o: r.outcome || 'OPEN' };
+  });
+  Object.keys(latest).forEach(function (k) {
+    if (latest[k].o === 'OPEN') open++; else acted++;
+  });
+  var s1 = stale > 9 ? 'bad' : stale > 7 ? 'warn' : 'ok';
+  var steps = [
+    { name: '1 · Export in', state: s1,
+      value: IDATA.asof + ' received',
+      note: 'Vidya, weekly to Drive 01_INBOX. DyiLoop emails Michael if data goes 9 days stale.' },
+    { name: '2 · Importer', state: 'ok', value: 'Running daily',
+      note: 'DyiImporter.gs, 07:00–08:00 UK. Skips quietly when the inbox is empty.' },
+    { name: '3 · Gap check', state: 'ok', value: 'Emails on every import',
+      note: 'Ranges must overlap. Sunday 9 Aug was lost before the check existed — unrecoverable.' },
+    { name: '4 · Action recorded', state: ledger && ledger.length ? 'ok' : 'warn',
+      value: ledger && ledger.length ? (open + ' open · ' + acted + ' resolved') : 'Seeded, first cycle pending',
+      note: 'Detected automatically from outbound DMs, no buttons. DYI_CHASE_LEDGER survives the weekly rebuild.' },
+    { name: '5 · Owner told', state: 'ok', value: 'Tuesday email to Georgie',
+      note: 'Last week’s result first, then this week’s list. Went-cold-unchased is named, never silent.' }
+  ];
+  var worstBad = steps.some(function (s) { return s.state === 'bad'; });
+  return {
+    steps: steps,
+    alert: worstBad
+      ? { title: 'The weekly export has gone stale.',
+          body: 'No new data for ' + stale + ' days — every clock on this page is frozen at ' + IDATA.asof + '. Chase Vidya’s Monday zip before trusting anything below.',
+          who: 'Owner: Vidya' }
+      : { title: '', body: '', who: '' }
+  };
+}
+
+async function loadInfluencer() {
+  var d = await loadData();
+  var pane = document.getElementById('tab-influencer');
+  if (!d.dyi_master || !d.dyi_master.length || !d.dyi_agg) {
+    pane.insertAdjacentHTML('afterbegin', '<div class="err">Influencer data not in the payload yet — WebApi needs the DYI sheets (dyi_master / dyi_ledger / dyi_agg). Deploy the new WebApi version, then reload.</div>');
+    return;
+  }
+  var IDATA = dyiBuildData(d.dyi_master, d.dyi_ledger || [], d.dyi_agg);
+  IDATA.generated = 'refreshed live from the sheet';
+  IDATA.loop = dyiLoopStatus(IDATA, d.dyi_ledger || [], d.dyi_agg.hi_ms);
+
+/* ─────────── helpers ─────────── */
+const $ = s => document.querySelector('#tab-influencer ' + s);
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const fmt = n => Number(n).toLocaleString('en-GB');
+const T = IDATA.totals;
+
+/* ─────────── who is this person, honestly ───────────
+   The `handle` column in the master is a slugged DISPLAY NAME, not an Instagram
+   handle. Where a creator posted a story we can recover the real handle from the
+   story URL; 88% of the time it differs from the slug, sometimes completely
+   (slug "sabashaikh" is really @curiouslyy_her). So: lead with the display name,
+   because that is the string that appears in the Instagram inbox and the string
+   Georgie will search for. Show a real @handle ONLY when we can prove it. */
+function creatorCell(r) {
+  const td = el('td');
+  const box = el('div', 'handle', r.nm || r.slug);
+  if (r.real) {
+    const a = el('a', 'realh', '@' + r.real);
+    a.href = 'https://instagram.com/' + r.real; a.target = '_blank'; a.rel = 'noopener';
+    a.title = 'Confirmed handle, recovered from a story URL';
+    box.append(a);
+  } else {
+    // No caption here on purpose: it would repeat on 416 of 602 visible rows and
+    // become noise. The section lede explains it once; the absence of a blue
+    // handle is the signal. The tooltip carries the detail for anyone who asks.
+    box.title = 'Inbox name. The export gives a slugged display name for this thread, '
+              + 'not an Instagram handle. Search this name in the Instagram inbox.';
+  }
+  td.append(box);
+  return td;
+}
+
+/* The only "chart" on this page. The fill grows RIGHT-to-LEFT so it always ends
+   exactly where the right-aligned number sits: the number is the tip of its own
+   bar, and the eye reads value and scale in one movement. */
+function fillCell(v, max, {colour='#E2E8F0', text=null, cls=''}={}) {
+  const td = el('td', 'num fillbar ' + cls, text == null ? fmt(v) : text);
+  const pct = max > 0 ? Math.max(Math.min(v / max * 100, 100), v > 0 ? 3 : 0) : 0;
+  td.style.backgroundImage = `linear-gradient(270deg, ${colour} 0 ${pct}%, transparent ${pct}% 100%)`;
+  td.style.backgroundSize = '100% 64%';
+  return td;
+}
+
+/* generic table builder. cols: {h, k, f, num, sort, w} */
+function build(mount, cols, rows, opts={}) {
+  const t = typeof mount === 'string' ? $(mount) : mount;
+  t.replaceChildren();
+  const thead = el('thead'), tr = el('tr');
+  cols.forEach((c, i) => {
+    const th = el('th', (c.num ? 'num ' : '') + (c.sort !== false && opts.sortable ? 'sortable' : ''), c.h);
+    if (c.w) th.style.width = c.w;
+    if (opts.sortable && c.sort !== false) {
+      th.append(el('span', 'sarrow', ''));
+      th.onclick = () => {
+        const dir = (t._sc === i && t._sd === 1) ? -1 : 1;
+        t._sc = i; t._sd = dir;
+        const key = c.sk || c.k;
+        rows.sort((a, b) => {
+          const av = key ? a[key] : 0, bv = key ? b[key] : 0;
+          if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+          return String(av).localeCompare(String(bv)) * dir;
+        });
+        build(mount, cols, rows, opts);
+      };
+      if (t._sc === i) { th.classList.add('sorted'); th.querySelector('.sarrow').textContent = t._sd === 1 ? '▲' : '▼'; }
+    }
+    tr.append(th);
+  });
+  thead.append(tr); t.append(thead);
+  const tb = el('tbody');
+  rows.forEach((r, ri) => {
+    /* group headers only make sense in the default order; a user-chosen sort
+       interleaves the groups, so suppress them once anything is sorted */
+    if (opts.group && t._sc == null) { const g = opts.group(r, ri, rows); if (g) { const gr = el('tr','grouprow'); const gtd=el('td',null,g); gtd.colSpan=cols.length; gr.append(gtd); tb.append(gr); } }
+    const trr = el('tr');
+    if (opts.rowClass) { const rc = opts.rowClass(r); if (rc) trr.className = rc; }
+    if (opts.rowId) trr.dataset.id = opts.rowId(r);
+    cols.forEach(c => {
+      if (c.cell) { trr.append(c.cell(r)); return; }
+      const td = el('td', c.num ? 'num' : null);
+      const v = c.f ? c.f(r) : r[c.k];
+      if (v instanceof Node) td.append(v); else td.textContent = v == null || v === '' ? '' : String(v);
+      trr.append(td);
+    });
+    tb.append(trr);
+  });
+  t.append(tb);
+  return t;
+}
+
+
+
+/* ═══════════ 1. THE LOOP ═══════════ */
+/* Everything here answers one question: is data still flowing, and did anyone act? */
+const LOOP = IDATA.loop;
+{
+  const b = $('#loopbar');
+  LOOP.steps.forEach(s => {
+    const d = el('div', 'loopstep ' + s.state);
+    d.append(el('div', 'lname', s.name));
+    const v = el('div', 'lval');
+    v.append(el('span', 'dot'), document.createTextNode(s.value));
+    d.append(v, el('div', 'lnote', s.note));
+    b.append(d);
+  });
+  const worst = LOOP.steps.some(s => s.state === 'bad') ? 'bad' : LOOP.steps.some(s => s.state === 'warn') ? 'warn' : 'good';
+  if (worst === 'bad') {
+    const a = el('div', 'alert bad');
+    a.append(el('b', null, LOOP.alert.title), document.createTextNode(' ' + LOOP.alert.body));
+    a.append(el('span', 'who', LOOP.alert.who));
+    $('#loopAlert').append(a);
+  } else {
+    const a = el('div', 'alert good');
+    a.append(el('b', null, 'Loop healthy.'), document.createTextNode(' Data in, actions out, nothing stalled.'));
+    $('#loopAlert').append(a);
+  }
+}
+
+/* ═══════════ 2. KPI CARDS ═══════════ */
+{
+  const c = $('#kpis');
+  const hero = el('div', 'card hero');
+  hero.append(el('div', 'label', 'Comped visits that produce content'),
+              el('div', 'value', T.conv + '%'),
+              el('div', 'delta', fmt(T.booked_content) + ' of ' + fmt(T.booked) + ' comped visits · steady at 47 to 49% across three windows'));
+  c.append(hero);
+  const cards = [
+    ['Chases due now', fmt(T.chases), 'RED', 'someone has to send a message today'],
+    ['Fed, nothing back', fmt(IDATA.noback_overdue), 'AMBER', 'visited over 7 days ago, still no post'],
+    ['Invites sent', fmt(T.invited), '', T.inv_to_book + '% turn into a comped visit'],
+    ['Content pieces logged', fmt(T.tags), '', fmt(T.story) + ' story · ' + fmt(T.reel) + ' reel · ' + fmt(T.post) + ' post'],
+    ['No deliverable agreed', T.none_stated_pct + '%', 'AMBER', fmt(T.none_stated) + ' invites asked for nothing specific'],
+  ];
+  for (const [l, v, rag, d] of cards) {
+    const k = el('div', 'card');
+    k.append(el('div', 'label', l));
+    const val = el('div', 'value' + (rag ? ' v-' + rag : ''), v);
+    k.append(val, el('div', 'delta', d));
+    c.append(k);
+  }
+}
+
+/* ═══════════ 3. CHASES — THE ACTION LIST ═══════════ */
+/* Chase state comes from DYI_CHASE_LEDGER, which the loop module maintains.
+   There is deliberately nothing to click: a chase is recorded when an outbound
+   message appears on the thread in the next weekly export. The ledger is empty
+   until the loop module is deployed, so everything reads OPEN today. */
+const LEDGER = IDATA.ledger || {};
+const STATE_LABEL = { OPEN: 'Not yet chased', CHASED: 'Chased', CONTENT: 'Posted',
+  CHASED_NO_CONTENT: 'Chased, nothing', WENT_COLD_UNCHASED: 'Went cold unchased' };
+const STATE_RAG = { OPEN: 'GREY', CHASED: 'BLUE', CONTENT: 'GREEN',
+  CHASED_NO_CONTENT: 'AMBER', WENT_COLD_UNCHASED: 'RED' };
+
+let chaseFilter = 'OPEN';
+const CH = IDATA.chases;
+const KINDRAG = { 'Visited, no content': 'RED', 'No date agreed': 'AMBER', 'No reply': 'GREY' };
+
+$('#chaseLede').innerHTML = 'Every row here is one message someone needs to send, <b>ordered by cost to the business</b>: '
+  + 'a creator who has already eaten a comped meal and posted nothing sits at the top, because that money is already spent. '
+  + '<b>Nothing to tick off.</b> Send the message in Instagram and the next weekly export proves you sent it, '
+  + 'moving the row to Chased by itself. '
+  + 'Names shown are the <b>inbox names</b> you will search for in Instagram, not handles: the export gives us a slugged display name, '
+  + 'and where we can prove the real handle from a story URL it is shown as a blue link underneath.';
+
+function chaseRows() {
+  return CH.filter(c => chaseFilter === 'ALL'
+    || (chaseFilter === 'OPEN' ? (LEDGER[c.key] || 'OPEN') === 'OPEN' : c.kind !== 'No reply'));
+}
+function renderChaseFilters() {
+  const f = $('#chaseFilters'); f.replaceChildren();
+  const open = CH.filter(c => (LEDGER[c.key] || 'OPEN') === 'OPEN').length;
+  // Owner chips removed 19 Aug: Georgie owns all of these for now, so a filter
+  // with one value is dead furniture. The split that actually matters is the one
+  // between debts (they ate, or they agreed a visit) and failed cold DMs.
+  const costs = CH.filter(c => c.kind !== 'No reply').length;
+  const opts = [['OPEN', 'Not yet chased', open], ['COST', 'Cost us something', costs],
+    ['ALL', 'Everything', CH.length]];
+  opts.forEach(([k, label, n]) => {
+    const b = el('button', 'filterbtn' + (chaseFilter === k ? ' on' : ''), label);
+    b.append(el('span', 'n', String(n)));
+    b.onclick = () => { chaseFilter = k; renderChase(); };
+    f.append(b);
+  });
+}
+function renderChase() {
+  renderChaseFilters();
+  const rows = chaseRows();
+  const maxWait = Math.max(...CH.map(c => c.wait), 1);
+  build('#chaseTable', [
+    { h: 'Creator', sk: 'nm', cell: creatorCell },
+    { h: 'Why', cell: c => { const td = el('td'); td.append(el('span', 'rag ' + KINDRAG[c.kind], c.kind)); return td; } },
+    { h: 'Site', f: c => c.site.replace('Maki & Ramen ', '') || '—' },
+    { h: 'Offer', f: c => c.offer || '—' },
+    { h: 'Waiting', num: true, sk: 'wait',
+      cell: c => fillCell(c.wait, maxWait, { colour: c.rank === 2 ? '#FEE2E2' : '#FEF3C7', text: c.wait + 'd' }) },
+    { h: 'Msgs', k: 'msgs', num: true },
+    { h: 'Last contact', k: 'last' },
+    { h: 'Chase state', sk: 'state', cell: c => { const td = el('td');
+        const st = LEDGER[c.key] || 'OPEN';
+        td.append(el('span', 'rag ' + STATE_RAG[st], STATE_LABEL[st]));
+        return td; } },
+  ], rows, {
+    sortable: true,
+    rowClass: c => (LEDGER[c.key] && LEDGER[c.key] !== 'OPEN') ? 'done' : '',
+    group: (c, i, rs) => (i === 0 || rs[i - 1].kind !== c.kind) ? c.kind + ' — ' + rs.filter(x => x.kind === c.kind).length + ' creator' + (rs.filter(x => x.kind === c.kind).length === 1 ? '' : 's') : null,
+  });
+  $('#chaseFoot').textContent = rows.length + ' shown · clocks run from ' + IDATA.asof
+    + ', the last message in the data, not from today. '
+    + 'Georgie owns all of these for now. '
+    + 'The 25 "no reply" rows are listed here but kept out of the Tuesday email: an unanswered cold DM '
+    + 'is a failed outreach, not a debt. Chase states populate from the first weekly export after go-live.';
+}
+renderChase();
+
+/* ═══════════ 4. FED, NOTHING BACK ═══════════ */
+{
+  const nb = IDATA.noback;
+  $('#nbCnt').textContent = IDATA.noback_overdue + ' OVERDUE · ' + (nb.length - IDATA.noback_overdue) + ' STILL IN WINDOW';
+  $('#nbLede').innerHTML = '<b>' + nb.length + ' comped visits have produced nothing.</b> '
+    + IDATA.noback_overdue + ' of them are more than a week past the visit, so the meal is spent and the post is not coming without a nudge. '
+    + 'The remaining ' + (nb.length - IDATA.noback_overdue) + ' are still inside a fair posting window; leave them alone. '
+    + 'Sorted longest-waiting first, because the oldest are the ones nobody will ever chase unless they are on a list.';
+  const maxS = Math.max(...nb.map(x => x.since), 1);
+  build('#nbTable', [
+    { h: 'Creator', sk: 'nm', cell: creatorCell },
+    { h: 'Site', f: x => x.site.replace('Maki & Ramen ', '') || '—' },
+    { h: 'Offer', f: x => x.offer || '—' },
+    { h: 'Visited', k: 'visit' },
+    { h: 'Days since', num: true, sk: 'since',
+      cell: x => fillCell(x.since, maxS, { colour: x.since > 7 ? '#FEE2E2' : '#F1F5F9', text: x.since + 'd' }) },
+    { h: 'Status', cell: x => { const td = el('td');
+        td.append(el('span', 'rag ' + (x.since > 7 ? 'RED' : 'GREY'), x.since > 7 ? 'Overdue' : 'In window')); return td; } },
+    { h: 'Msgs', k: 'msgs', num: true },
+    { h: 'Last contact', k: 'last' },
+  ], nb, { sortable: true });
+}
+
+/* ═══════════ 5. FUNNEL ═══════════ */
+{
+  $('#fnCnt').textContent = fmt(T.invited) + ' → ' + fmt(T.booked) + ' → ' + fmt(T.booked_content);
+  $('#fnLede').innerHTML = 'Read this top to bottom: we invite <b>' + fmt(T.invited) + '</b>, <b>' + fmt(T.booked)
+    + '</b> actually come in, and <b>' + fmt(T.booked_content) + '</b> post something. '
+    + 'The biggest single leak is not the visit, it is the ask: <b>' + T.none_stated_pct
+    + '% of invites do not say what we want posted</b>, so there is nothing to hold anyone to.';
+  const fmax = Math.max(...IDATA.funnel.map(f => f.n));
+  build('#funnelTable', [
+    { h: 'Stage', k: 'k' },
+    { h: 'Threads', num: true, sk: 'n', cell: f => fillCell(f.n, fmax, { colour: '#DBEAFE' }) },
+    { h: 'Of previous', num: true, f: (f) => { const i = IDATA.funnel.indexOf(f); return i === 0 ? '—' : Math.round(f.n / IDATA.funnel[i - 1].n * 100) + '%'; } },
+  ], IDATA.funnel);
+  const smax = Math.max(...IDATA.pipeline.map(p => p.n));
+  build('#stageTable', [
+    { h: 'Stage', k: 'stage' },
+    { h: 'Threads', num: true, sk: 'n', cell: p => fillCell(p.n, smax, { colour: '#E2E8F0' }) },
+  ], IDATA.pipeline, { sortable: true });
+  const dmax = Math.max(...IDATA.deliv.map(d => d.n));
+  build('#delivTable', [
+    { h: 'Deliverable agreed', k: 'k' },
+    { h: 'Invites', num: true, sk: 'n', cell: d => fillCell(d.n, dmax, { colour: d.k === 'NONE STATED' ? '#FEE2E2' : '#DCFCE7' }) },
+    { h: 'Share', num: true, f: d => Math.round(d.n / T.invited * 100) + '%' },
+  ], IDATA.deliv, { sortable: true });
+  $('#delivNote').textContent = 'Fixable in one afternoon: put a named deliverable in the invite template. ' + fmt(T.none_stated) + ' invites currently ask for nothing.';
+  const omax = Math.max(...IDATA.offers.map(o => o.n));
+  build('#offerTable', [
+    { h: 'Offer', k: 'k' },
+    { h: 'Threads', num: true, sk: 'n', cell: o => fillCell(o.n, omax, { colour: '#EDE9FE' }) },
+  ], IDATA.offers, { sortable: true });
+}
+
+/* ═══════════ 6. WHAT WE GOT BACK ═══════════ */
+{
+  $('#mixCnt').textContent = fmt(T.tags) + ' PIECES · ' + fmt(T.creators) + ' CREATORS';
+  $('#mixLede').innerHTML = 'Of the <b>' + IDATA.mix.n + ' comped visits</b>, this is what actually appeared. '
+    + 'Just over half produce nothing at all, which is the number worth arguing about. '
+    + 'Collab is <b>inferred from wording</b>, never proven, because Instagram does not export a co-author field.';
+  const MIXROWS = [
+    ['Posted a story', 'story', '#DBEAFE', 'the only proof-grade signal we have'],
+    ['Posted a reel', 'reel', '#FCE7F3', 'shared to us; caption is the evidence'],
+    ['Posted a feed post', 'post', '#CCFBF1', 'shared to us; caption is the evidence'],
+    ['Collab detected', 'collab', '#F5F3FF', 'inferred from keywords, not a real field'],
+    ['Nothing back', 'nothing', '#FEE2E2', 'includes some still inside their posting window'],
+  ].map(([label, k, c, note]) => ({ label, k, c, note, n: IDATA.mix.counts[k], pct: IDATA.mix.pct[k] }));
+  build('#mixTable', [
+    { h: 'Outcome', k: 'label' },
+    { h: 'Visits', k: 'n', num: true },
+    { h: 'Share', num: true, sk: 'pct', cell: r => fillCell(r.pct, 100, { colour: r.c, text: r.pct + '%' }) },
+    { h: '', f: r => r.note },
+  ], MIXROWS);
+  const wk = IDATA.weeks.map(w => {
+    const s = IDATA.wseries.story[w] || 0, r = IDATA.wseries.reel[w] || 0, p = IDATA.wseries.post[w] || 0;
+    const d = new Date(w);
+    return { w, lab: d.getDate() + ' ' + d.toLocaleString('en-GB', { month: 'short' }), s, r, p, n: s + r + p };
+  }).reverse();
+  const wmax = Math.max(...wk.map(x => x.n), 1);
+  build('#weekTable', [
+    { h: 'Week of', k: 'lab' },
+    { h: 'Story', k: 's', num: true }, { h: 'Reel', k: 'r', num: true }, { h: 'Post', k: 'p', num: true },
+    { h: 'Total', num: true, sk: 'n', cell: x => fillCell(x.n, wmax, { colour: '#DBEAFE' }) },
+  ], wk, { sortable: true });
+  const tmax = Math.max(...IDATA.top.map(t => t.n));
+  build('#topTable', [
+    { h: 'Creator', f: t => '@' + t.handle },
+    { h: 'Story', k: 'story', num: true }, { h: 'Reel', k: 'reel', num: true }, { h: 'Post', k: 'post', num: true },
+    { h: 'Pieces', num: true, sk: 'n', cell: t => fillCell(t.n, tmax, { colour: '#DCFCE7' }) },
+  ], IDATA.top, { sortable: true });
+  const stmax = Math.max(...IDATA.sites.map(s => s.n));
+  build('#siteTable', [
+    { h: 'Site', f: s => s.site.replace('Maki & Ramen ', '') },
+    { h: 'Threads', num: true, sk: 'n', cell: s => fillCell(s.n, stmax, { colour: '#FEF3C7' }) },
+  ], IDATA.sites, { sortable: true });
+}
+
+/* ═══════════ 7. WHAT THIS CAN PROVE ═══════════ */
+{
+  $('#pfCnt').textContent = fmt(T.story) + ' PROOF · ' + fmt(T.reel + T.post) + ' INFERRED';
+  $('#pfLede').innerHTML = 'Before anyone quotes these numbers in a board pack: <b>only story tags are proof.</b> '
+    + 'A story tag arrives in our DMs as a notification, so the message <i>is</i> the evidence. '
+    + 'Reels and posts are things creators chose to share with us, so the caption is all we have. '
+    + 'Collaborations cannot be verified at all from this export.';
+  const cov = [
+    { sig: 'Story tag', st: 'GREEN', stl: 'Proof', n: fmt(T.story), why: 'Instagram delivers the tag into our DMs. The message is the tag.' },
+    { sig: 'Reel', st: 'AMBER', stl: 'Inferred', n: fmt(T.reel), why: 'A reel shared to us. The caption is the only evidence of a mention.' },
+    { sig: 'Post or carousel', st: 'AMBER', stl: 'Inferred', n: fmt(T.post), why: 'Same as reels.' },
+    { sig: 'Collaboration', st: 'RED', stl: 'Keywords only', n: fmt(T.collab_content), why: 'No co-author field exists anywhere in the export. Audited 17 Aug.' },
+    { sig: 'Tagged us, never messaged', st: 'RED', stl: 'Invisible', n: '—', why: 'If they never DM us, this data cannot see them at all.' },
+    { sig: 'Comments on our posts', st: 'RED', stl: 'Absent', n: '—', why: 'Not in the export. The webhook is the only source, and it stays live for this.' },
+  ];
+  build('#covTable', [
+    { h: 'Signal', k: 'sig' },
+    { h: 'Can we prove it', cell: c => { const td = el('td'); td.append(el('span', 'rag ' + c.st, c.stl)); return td; } },
+    { h: 'n', k: 'n', num: true },
+    { h: 'Why', k: 'why' },
+  ], cov);
+  const G = IDATA.grades.filter(g => g.type !== 'STORY').map(g => ({ ...g, label: g.type === 'FEED' ? 'Post' : 'Reel' }));
+  const gmax = Math.max(...G.map(g => g.n), 1);
+  build('#gradeTable', [
+    { h: 'Format', k: 'label' },
+    { h: 'A · names @makiramen', k: 'A', num: true },
+    { h: 'B · brand named', k: 'B', num: true },
+    { h: 'C · no mention', k: 'C', num: true },
+    { h: 'D · no caption', k: 'D', num: true },
+    { h: 'Total', num: true, cell: g => fillCell(g.n, gmax, { colour: '#E0E7FF' }) },
+  ], G);
+  build('#collabTable', [
+    { h: 'Date', cell: c => el('td', 'nowrap', c.date) },
+    { h: 'Format', cell: c => { const td = el('td'); td.append(el('span', 'tag ' + c.type, c.type.toUpperCase())); return td; } },
+    { h: 'Creator', f: c => '@' + c.handle },
+    { h: 'Caption', f: c => c.caption },
+  ], IDATA.collabs);
+}
+
+/* ═══════════ 8. REVIEW QUEUE ═══════════ */
+{
+  $('#rvCnt').textContent = fmt(T.needs_review) + ' FLAGGED · TOP 25 SHOWN';
+  $('#rvLede').innerHTML = 'Threads the parser is <b>not confident about</b>: under 0.5 confidence with three or more messages. '
+    + 'Georgie confirms or corrects, and her edit always wins over the parser. '
+    + 'This is how the machine learns what a real booking looks like.';
+  build('#reviewTable', [
+    { h: 'Creator', sk: 'nm', cell: creatorCell },
+    { h: 'Status', k: 'status' },
+    { h: 'Confidence', num: true, sk: 'confidence', cell: r => fillCell(r.confidence, 1, { colour: '#FEE2E2', text: r.confidence.toFixed(2) }) },
+    { h: 'Msgs', k: 'msgs_total', num: true },
+    { h: 'Site', f: r => (r.site || '').replace('Maki & Ramen ', '') },
+    { h: 'Last message', k: 'last_message' },
+  ], IDATA.review, { sortable: true });
+}
+
+/* ═══════════ 9. FULL TRACKER ═══════════ */
+const MCOLS = ['nm','slug','real','site','status','offer','visit','booked','posted','format','grade','story','reel','post','dtp','chase','msgs','last','conf','evidence','agreed','disclosed'];
+const MROWS = IDATA.table.map(a => Object.fromEntries(MCOLS.map((k, i) => [k, a[i]])));
+{
+  $('#msCnt').textContent = fmt(MROWS.length) + ' EXTERNAL THREADS';
+  const cols = [
+    { h: 'Creator', cell: creatorCell, sk: 'nm' },
+    { h: 'Site', f: r => (r.site || '').replace('Maki & Ramen ', ''), sk: 'site' },
+    { h: 'Status', k: 'status' },
+    { h: 'Booked', ctr: true, cell: r => { const td = el('td', 'ctr'); if (r.booked) td.append(el('span', 'rag GREEN', r.visit || '✓')); return td; }, sk: 'visit' },
+    { h: 'Posted', cell: r => { const td = el('td'); if (r.posted === 'YES') td.append(el('span', 'rag GREEN', 'Yes'));
+        else if (r.posted) td.append(el('span', 'rag GREY', 'Not yet')); return td; }, sk: 'posted' },
+    { h: 'Format', k: 'format' },
+    { h: 'Grade', cell: r => { const td = el('td', 'ctr'); if (r.grade) td.append(el('span', 'grade ' + r.grade, r.grade)); return td; }, sk: 'grade' },
+    { h: 'S', k: 'story', num: true }, { h: 'R', k: 'reel', num: true }, { h: 'P', k: 'post', num: true },
+    { h: 'Days to post', sk: 'dtp', cell: r => { const td = el('td', 'num');
+        if (r.dtp === '' || r.dtp == null) return td;
+        const n = Number(r.dtp);
+        td.textContent = r.dtp;
+        if (n < 0) { td.textContent = ''; const s = el('span', 'rag AMBER', r.dtp);
+          s.title = 'Content pre-dates the recorded visit. Usually a repeat visitor whose earlier post is matched to a later booking, or a mis-parsed visit date. 7 of 124 rows.'; td.append(s); }
+        return td; } },
+    { h: 'Chase', cell: r => { const td = el('td'); if (r.chase) td.append(el('span', 'rag AMBER', r.chase)); return td; }, sk: 'chase' },
+    { h: 'Msgs', k: 'msgs', num: true },
+    { h: 'Proof', sort: false, cell: r => { const td = el('td'); if (r.evidence) {
+        const a = el('a', 'evlink', 'view'); a.href = r.evidence; a.target = '_blank'; a.rel = 'noopener'; td.append(a); } return td; } },
+  ];
+  let shown = MROWS;
+  const render = q => {
+    q = (q || '').trim().toLowerCase();
+    shown = !q ? MROWS : MROWS.filter(r => [r.nm, r.slug, r.real, r.site, r.status, r.format, r.chase, r.offer, r.agreed].join(' ').toLowerCase().includes(q));
+    const cap = shown.slice(0, 400);
+    build('#masterTable', cols, cap, { sortable: true });
+    $('#masterFoot').textContent = fmt(shown.length) + ' of ' + fmt(MROWS.length) + ' threads match'
+      + (shown.length > 400 ? ' · first 400 rendered, narrow the search to see the rest' : '')
+      + ' · S/R/P are story, reel and post counts. Proof opens the actual story or reel.';
+  };
+  render('');
+  $('#filter').addEventListener('input', e => render(e.target.value));
+}
+
+/* ═══════════ 10. METHOD ═══════════ */
+{
+  const mb = $('#fold-method');
+  const items = [
+    ['Where it comes from', 'Meta "Download Your Information" exports of the @makiramen inbox. Vidya raises one every week and drops it into Drive 01_INBOX; the importer picks it up automatically each morning. Nobody sends anything to Claude.'],
+    ['The one rule', 'Every weekly export range must OVERLAP the previous one by at least a day. Adjacent ranges lose a day permanently, which is how Sunday 9 August was lost. Duplicates cost nothing, gaps cannot be recovered.'],
+    ['What counts as booked', 'A comped visit counts only when the booking-confirmation template resolves to a real date. The 🍣 🥢 🎌 template is the only place a visit date exists. If marketing changes that template, this page stops counting bookings.'],
+    ['Who gets the credit', 'Content is credited to the handle inside the story or reel URL, never the thread name. Thread names are display names and only 24 of 198 match the real handle.'],
+    ['Collab', 'Inferred from caption and DM wording only. The export has no co-author field, proven by sweeping every file in the archive. Never quote a collab number as fact.'],
+    ['Known gaps', 'Sunday 9 August (one-day export gap). Inbound comments on our posts (webhook only). Follower counts (not in the messages export, so no reach tiers yet). Creators who tag us but never message us are invisible.'],
+    ['Known defect', '7 of the 124 days-to-post figures are negative, meaning the content pre-dates the recorded visit. These are repeat visitors whose earlier post is being matched to a later booking, or a mis-parsed visit date. They are flagged amber in the tracker. Median days-to-post is 1.9 including them, 2.1 excluding them, so the headline holds either way, but per-booking grain would fix it properly.'],
+    ['Clocks', 'Every chase and SLA clock runs from ' + IDATA.asof + ', the last message in the data, never from the moment you open the page. This is deliberate: it stops the list inflating overnight when no new data has arrived.'],
+    ['Actions', 'Chase state lives in a separate DYI_CHASE_LEDGER tab keyed on the thread, never in the master. The master is rebuilt from scratch every week, so anything written into it would be wiped. A chase is recorded when a new outbound message appears on the thread in the next export — no buttons. This is what makes the loop closed.'],
+  ];
+  items.forEach(([h, b]) => { const r = el('div', 'methodrow'); r.append(el('b', null, h), el('span', null, b)); mb.append(r); });
+}
+
+/* ═══════════ folds ═══════════ */
+document.querySelectorAll('#tab-influencer h2.fold').forEach(h => {
+  h.onclick = () => {
+    h.classList.toggle('closed');
+    $('#fold-' + h.dataset.fold).classList.toggle('hidden');
+  };
+});
+
+$('#inf-foot').textContent = 'Influencer pipeline · data ' + IDATA.window[0] + ' to ' + IDATA.window[1]
+  + ' · ' + IDATA.generated + ' · source DYI_INFLUENCER_MASTER (' + fmt(T.threads) + ' external threads, ' + fmt(T.messages) + ' messages)';
+
+}
+
 // =====================================================================
 // BOOT
 // =====================================================================
 var startTab = 'summary';
-try { var saved = localStorage.getItem(TAB_KEY); if (saved) startTab = saved; } catch (e) {}
+try { var saved = localStorage.getItem(TAB_KEY); if (saved && document.querySelector('nav.tabs button[data-tab="' + saved + '"]')) startTab = saved; } catch (e) {}
 activateTab(startTab);
 </script>
 </body>
