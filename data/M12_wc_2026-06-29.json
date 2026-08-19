@@ -121,22 +121,30 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.571428571,
-        "new_reviews": 7,
+        "week_avg_rating": 4.5,
+        "new_reviews": 6,
         "star_breakdown": {
-          "5": 5,
-          "4": 1,
-          "3": 1,
+          "1": 0,
           "2": 0,
-          "1": 0
+          "3": 1,
+          "4": 1,
+          "5": 4
         },
-        "negatives": null,
-        "negative_reviews": [],
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Divya Prem",
+            "text": "Seriously overpriced. Salmon overcooked. They took away the squid and prawn from my dish at my request and replaced it with salmon instead, and charged extra for it. If it was going to be extra, it should have been mentioned while ordering. The service really sweet though. Just miffed at the price in the end.",
+            "date": "2026-06-30",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Reviews sheet 1aFGfbGr... per-site 'Maki N -' star tabs (weekly avg rating / counts) + 'Raw Data' tab (negative comment text, rating<=3 + comment). Cumulative venue rating not in sheet (null)."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-06-29..2026-07-05 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-19."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-06-29.json (AGMM Task List Status). Open items only.",
