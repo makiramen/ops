@@ -106,22 +106,37 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.7,
+        "week_avg_rating": 4.3333,
         "new_reviews": 12,
         "star_breakdown": {
-          "5": 7,
-          "4": 2,
-          "3": 3,
+          "1": 0,
           "2": 0,
-          "1": 0
+          "3": 3,
+          "4": 2,
+          "5": 7
         },
-        "negatives": null,
-        "negative_reviews": [],
+        "negatives": 3,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "linda walker",
+            "text": "Sat in the outside area as my daughter needs gluten free and couldn't eat here. Enjoyed my food. Portions were large.",
+            "date": "2026-05-30",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Wai-Khin Hoi",
+            "text": "Had dinner at the restaurant on 26 May 26. Served by Monica. She gave the us the feeling, she was rushing through taking many orders but the restaurant was not full. We didn't dare to make charges to the orders as she seems to be rushing off. There was no complimentary water given until we asked for it. The ramen served was average and after we finished our meal, she just put the tab on the table. When we paid, a 10% was added. Try asking others to take orders when you are there or maybe today will become better.",
+            "date": "2026-05-27",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Reviews sheet 1aFGfbGr... gid 284143046 (weekly per-site tab) + Negative Review Tracker gid 60786975 (full comment text). Cumulative venue rating not in sheet (null)."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-05-25..2026-05-31 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-19."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-05-25.json (AGMM Task List Status). Open items only.",
