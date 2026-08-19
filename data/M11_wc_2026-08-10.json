@@ -122,11 +122,11 @@
         "week_avg_rating": 4.5,
         "new_reviews": 2,
         "star_breakdown": {
-          "5": 1,
-          "4": 1,
-          "3": 0,
+          "1": 0,
           "2": 0,
-          "1": 0
+          "3": 0,
+          "4": 1,
+          "5": 1
         },
         "negatives": 0,
         "negative_reviews": [],
@@ -134,7 +134,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Rebuilt 19/08 from the DAILY reviews feed (Pipe 8b, Google Reviews workbook 1aFGfbGr... 'Raw Data' tab gid 284143046): daily files 2026-08-10..2026-08-17 unioned, deduped, then filtered by review RECEIVED date to 2026-08-10..2026-08-16 (Mon-Sun) - NOT the daily file's rolling 7-day window. Weekly per-site star tabs BYPASSED (corrupt upstream, last valid slice w/c 27/07). negative_reviews = rating<=3 with a non-empty comment. url null (not in feed). Cumulative venue rating not in this source (null)."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-10..2026-08-16 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-19."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-10.json (AGMM Task List Status). Open items only.",

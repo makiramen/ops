@@ -119,21 +119,21 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.9565,
-        "new_reviews": 69,
+        "week_avg_rating": 4.9307,
+        "new_reviews": 101,
         "star_breakdown": {
-          "5": 68,
-          "4": 0,
-          "3": 0,
+          "1": 0,
           "2": 1,
-          "1": 0
+          "3": 0,
+          "4": 4,
+          "5": 96
         },
         "negatives": 1,
         "negative_reviews": [
           {
             "stars": 2,
             "author": "Layton",
-            "text": "We had a bit of a strange experience here. The app charged me for sushi that I\u2019d removed from my basket, which I didn\u2019t realise until after I\u2019d paid. I mentioned it to the waiter, who seemed just as baffled, so I ended up keeping the sushi anyway. Unfortunately, it was some of the worst sushi I\u2019ve had. The app also automatically adds a tip, which you have to manually remove from your total. I find that quite odd? why am I being asked to tip before I\u2019ve even had my food or received any service? Why am I being asked to tip at all for a QR code? The ramen broth was definitely the highlight of the meal, but overall, the rest was pretty disappointing especially as we were celebrating a birthday. Hopefully some improvements to the app and food quality are made, as there\u2019s potential here.",
+            "text": "We had a bit of a strange experience here. The app charged me for sushi that I\u2019d removed from my basket, which I didn\u2019t realise until after I\u2019d paid. I mentioned it to the waiter, who seemed just as baffled, so I ended up keeping the sushi anyway. Unfortunately, it was some of the worst sushi I\u2019ve had.\n\nThe app also automatically adds a tip, which you have to manually remove from your total. I find that quite odd? why am I being asked to tip before I\u2019ve even had my food or received any service? Why am I being asked to tip at all for a QR code?\n\nThe ramen broth was definitely the highlight of the meal, but overall, the rest was pretty disappointing especially as we were celebrating a birthday. Hopefully some improvements to the app and food quality are made, as there\u2019s potential here.",
             "date": "2026-08-12",
             "url": null
           }
@@ -142,7 +142,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Rebuilt 19/08 from the DAILY reviews feed (Pipe 8b, Google Reviews workbook 1aFGfbGr... 'Raw Data' tab gid 284143046): daily files 2026-08-10..2026-08-17 unioned, deduped, then filtered by review RECEIVED date to 2026-08-10..2026-08-16 (Mon-Sun) - NOT the daily file's rolling 7-day window. Weekly per-site star tabs BYPASSED (corrupt upstream, last valid slice w/c 27/07). negative_reviews = rating<=3 with a non-empty comment. url null (not in feed). Cumulative venue rating not in this source (null)."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-10..2026-08-16 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-19."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-10.json (AGMM Task List Status). Open items only.",
