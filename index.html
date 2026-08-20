@@ -389,7 +389,7 @@
   }
   .pb-row {
     display: grid;
-    grid-template-columns: 30px minmax(210px, 1fr) 86px 86px 86px 86px 78px 78px 74px 74px 68px 86px;
+    grid-template-columns: 30px minmax(200px, 1fr) 84px 84px 84px 84px 74px 74px 70px 70px 70px 64px 84px;
     gap: 6px;
     padding: 12px 14px;
     align-items: center;
@@ -452,7 +452,7 @@
   }
   .pb-sub {
     display: grid;
-    grid-template-columns: 30px minmax(210px, 1fr) 86px 86px 86px 86px 78px 78px 74px 74px 68px 86px;
+    grid-template-columns: 30px minmax(200px, 1fr) 84px 84px 84px 84px 74px 74px 70px 70px 70px 64px 84px;
     gap: 6px; padding: 7px 14px; align-items: center; cursor: pointer;
   }
   .pb-sub:hover { background: var(--surface); }
@@ -471,7 +471,7 @@
     background: var(--surface-2); border-top: 1px solid var(--line);
   }
   @media (max-width: 1100px) {
-    .pb-row, .pb-sub { grid-template-columns: 26px minmax(150px,1fr) repeat(10, 62px); font-size: 11px; }
+    .pb-row, .pb-sub { grid-template-columns: 26px minmax(150px,1fr) repeat(11, 60px); font-size: 11px; }
   }
   .scorecard {
     background: var(--surface);
@@ -4689,6 +4689,48 @@ function fmtFoodVar(st){
 //     data-completeness %, so a thin score cannot pass as a full one.
 //   • Deliveroo = region-WEIGHTED roll-up (order-weighted), one pill, click to
 //     expand the five metrics and the sites behind them.
+// --- 30-DAY ROLLING GOOGLE STAR (added 20/08/2026) -------------------------
+// Michael 20/08: lifetime rating structurally flatters NEW sites (few, recent
+// reviews) and punishes OLD ones (years of history), AND the page's lifetime
+// figure is a baked constant pulled 29 May 2026 that has never refreshed. So the
+// board carries a 30-day rolling star ALONGSIDE lifetime — lifetime stays
+// everywhere it already is, nothing was removed.
+//
+// Source: data/reviews_rolling30.json, built from the Google Reviews workbook's
+// `Raw Data` tab (gid 284143046) — full history, deduped on reviewId, bucketed by
+// the date each review was RECEIVED. Each week's window is the TRUE 30 days
+// ENDING on that week's SUNDAY, so rolling the week selector back rolls the
+// window back with it.
+//
+// 🔴 If the active week is not in the file we render N/A. We deliberately do NOT
+// fall back to the newest week — that is exactly how a stale number ends up
+// showing through under a heading that claims it is current.
+window.ROLLING30 = null;
+function loadRolling30() {
+  if (window.ROLLING30 !== null) return;
+  window.ROLLING30 = 'loading';
+  fetch(DATA_DIR + 'reviews_rolling30.json', { cache: 'no-store' })
+    .then(r => r.ok ? r.json() : null)
+    .then(j => { window.ROLLING30 = j || false; try { renderPeopleBoard(); } catch (e) {} })
+    .catch(() => { window.ROLLING30 = false; });
+}
+// Returns {rating, n, bd} for one DISPLAY code in the active week, or null.
+function rolling30For(displayCode) {
+  const R = window.ROLLING30;
+  if (!R || R === 'loading' || !R.weeks) return null;
+  const wk = R.weeks[window.currentWeekKey];
+  if (!wk || !wk.sites) return null;
+  const j = (typeof DISPLAY_TO_JSON !== 'undefined' && DISPLAY_TO_JSON[displayCode]) || displayCode;
+  const v = wk.sites[j];
+  return (v && v.rating != null) ? v : null;
+}
+// The window actually in force, for the caption. Null when we have no file/week.
+function rolling30Window() {
+  const R = window.ROLLING30;
+  if (!R || R === 'loading' || !R.weeks) return null;
+  return R.weeks[window.currentWeekKey] || null;
+}
+
 const PEOPLE_DEFS = [
   { id: 'scotland', region: 'Scotland & Newcastle',     head: 'Ka Ho',       dam: 'Óisín Patrick Darragh' },
   { id: 'north',    region: 'North England & Midlands', head: 'Inka Cheung', dam: 'Amy Tang' },
@@ -4747,7 +4789,7 @@ function regionAggregate(id) {
   let wageN = 0, wageD = 0, foodN = 0, foodD = 0;
   let coversSum = 0, coversSales = 0, sphN = 0, sphD = 0;
   let fvN = 0, fvD = 0, dvN = 0, dvD = 0;
-  let wkN = 0, wkD = 0, ltN = 0, ltD = 0;
+  let wkN = 0, wkD = 0, ltN = 0, ltD = 0, r30N = 0, r30D = 0;
   const scores = [];
   let compHave = 0, compTot = 0;
 
@@ -4766,6 +4808,8 @@ function regionAggregate(id) {
     const wr = weeklyRating(r);
     if (wr != null && r.weekCount) { wkN += wr * r.weekCount; wkD += r.weekCount; }
     if (r.rating != null && r.total) { ltN += r.rating * r.total; ltD += r.total; }
+    const r30 = rolling30For(s.code);
+    if (r30 && r30.n) { r30N += r30.rating * r30.n; r30D += r30.n; }
     const eff = efficiencyScore(s);
     if (eff != null) scores.push(eff);
     // Data completeness — the six scoring components, per site.
@@ -4790,6 +4834,8 @@ function regionAggregate(id) {
     drinksVar: dvD > 0 ? dvN / dvD : null,
     weekStar: wkD > 0 ? wkN / wkD : null,
     weekReviews: wkD,
+    rolling30Star: r30D > 0 ? r30N / r30D : null,
+    rolling30Count: r30D,
     lifetimeStar: ltD > 0 ? ltN / ltD : null,
     score: score,
     scoredSites: scores.length,
@@ -4845,7 +4891,7 @@ function renderPeopleBoard() {
     <div class="pb-row header">
       <div>#</div><div>Accountable</div><div>Sales vs Tgt</div><div style="text-align:center;">SPH</div>
       <div>Wage %</div><div>Food Cost</div><div>Food Var</div><div>Drinks Var</div>
-      <div>Wk ★</div><div>Lifetime ★</div><div style="text-align:center;">Roo</div><div style="text-align:center;">Score /100</div>
+      <div>Wk ★</div><div>30-Day ★</div><div>Lifetime ★</div><div style="text-align:center;">Roo</div><div style="text-align:center;">Score /100</div>
     </div>`;
 
   const body = aggs.map((a, i) => {
@@ -4857,6 +4903,7 @@ function renderPeopleBoard() {
     const dRag = varBandClass(a.drinksVar);
     const wkRag = weeklyRatingRag(a.weekStar);
     const ltRag = a.lifetimeStar == null ? 'na' : ratingRag(a.lifetimeStar);
+    const r30Rag = weeklyRatingRag(a.rolling30Star);
     const sphRagCls = a.sph == null ? 'na' : (a.sph >= 22 ? 'green' : (a.sph >= 20 ? 'amber' : 'red'));
     const roo = a.deliveroo;
     const rooCls = roo ? roo.rag : 'na';
@@ -4882,6 +4929,7 @@ function renderPeopleBoard() {
         <div class="sc-chip ${vRag}">${fmtVar(a.foodVar)}</div>
         <div class="sc-chip ${dRag}">${fmtVar(a.drinksVar)}</div>
         <div class="sc-chip ${wkRag}">${a.weekStar == null ? 'N/A' : a.weekStar.toFixed(2) + '★'}</div>
+        <div class="sc-chip ${r30Rag}" title="${a.rolling30Count ? a.rolling30Count + ' Google reviews in the 30-day window' : 'no 30-day review data for this week'}">${a.rolling30Star == null ? 'N/A' : a.rolling30Star.toFixed(2) + '★'}</div>
         <div class="sc-chip ${ltRag}">${a.lifetimeStar == null ? 'N/A' : a.lifetimeStar.toFixed(2) + '★'}</div>
         <div class="pb-roo ${rooCls}" onclick="pbToggleRoo('${a.id}', event)" title="Region-weighted Deliveroo roll-up (order-weighted across the region's stores). Click for the five metrics and the sites behind them.">${rooTxt}</div>
         <div class="pb-score ${rag}">${a.score == null ? 'N/A' : a.score}</div>
@@ -4933,6 +4981,7 @@ function renderPeopleBoard() {
         const eff = efficiencyScore(s);
         const dd = s.deliveroo;
         const dRagS = _delivHasOps(dd) ? _delivRollup(dd).rag : 'na';
+        const s30 = rolling30For(s.code);
         return `
           <div class="pb-sub" onclick="openSite('${s.code.replace(/'/g, "\\'")}')">
             <div></div>
@@ -4944,6 +4993,7 @@ function renderPeopleBoard() {
             <div class="sc-chip ${varBandClass(m.foodVar)}">${fmtVar(m.foodVar)}</div>
             <div class="sc-chip ${varBandClass(m.drinksVar)}">${fmtVar(m.drinksVar)}</div>
             <div class="sc-chip ${weeklyRatingRag(wr)}">${wr == null ? 'N/A' : wr.toFixed(2) + '★'}</div>
+            <div class="sc-chip ${weeklyRatingRag(s30 ? s30.rating : null)}" title="${s30 ? s30.n + ' reviews in the 30-day window' : 'no 30-day review data'}">${s30 ? s30.rating.toFixed(2) + '★' : 'N/A'}</div>
             <div class="sc-chip ${ratingRag(r.rating)}">${r.rating == null ? 'N/A' : r.rating.toFixed(1) + '★'}</div>
             <div class="pb-roo ${dRagS}" style="cursor:default;">${dRagS === 'na' ? '—' : dRagS.toUpperCase()}</div>
             <div class="pb-score ${effRagCls(eff)}" style="font-size:14px;padding:5px 6px;">${eff == null ? 'N/A' : eff}</div>
@@ -4954,10 +5004,11 @@ function renderPeopleBoard() {
     return row + panels;
   }).join('');
 
+  const rw = rolling30Window();
   const spread = (scored.length >= 2)
     ? `Spread between best and worst region: <strong>${scored[0].score - scored[scored.length - 1].score} points</strong>.`
     : '';
-  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. 19-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>. ${spread}</div>`;
+  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. 19-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>. ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
 
   wrap.innerHTML = header + body + foot;
 }
@@ -4967,7 +5018,7 @@ function renderPeopleBoard() {
 // them (temporal dead zone).
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function () {
-    try { renderPeopleBoard(); } catch (e) { console.warn('people board init failed', e); }
+    try { loadRolling30(); renderPeopleBoard(); } catch (e) { console.warn('people board init failed', e); }
   });
 } else {
   try { renderPeopleBoard(); } catch (e) { console.warn('people board init failed', e); }
@@ -5138,6 +5189,7 @@ function wowChip(delta, direction, unit){
 // Re-run every top-level render that consumes the swapped data.
 function repaintAll(){
   try { if (typeof renderHeatmap   === 'function') renderHeatmap(typeof currentFilter !== 'undefined' ? currentFilter : 'all'); } catch(e){}
+  try { if (typeof loadRolling30 === 'function') loadRolling30(); } catch(e){}
   try { if (typeof renderPeopleBoard === 'function') renderPeopleBoard(); } catch(e){}
   try { if (typeof renderScorecard === 'function') renderScorecard(); } catch(e){}
   try { if (typeof renderClusters  === 'function') renderClusters(); } catch(e){}
