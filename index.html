@@ -378,6 +378,101 @@
   .metric-chip.active .metric-target { opacity: .55; }
 
   /* 3-KPI SCORECARD */
+  /* ---------- REGIONAL ACCOUNTABILITY BOARD (people league table) ---------- */
+  .pboard {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+  .pb-row {
+    display: grid;
+    grid-template-columns: 30px minmax(210px, 1fr) 86px 86px 86px 86px 78px 78px 74px 74px 68px 86px;
+    gap: 6px;
+    padding: 12px 14px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    transition: background .12s;
+    cursor: pointer;
+  }
+  .pb-row:hover { background: var(--surface-2); }
+  .pb-row.header {
+    background: var(--surface-2);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--ink-3);
+    font-weight: 700;
+    cursor: default;
+    padding: 9px 14px;
+  }
+  .pb-row.header:hover { background: var(--surface-2); }
+  .pb-row.header > div { text-align: center; white-space: nowrap; font-size: 9px; letter-spacing: .05em; }
+  .pb-row.header > div:nth-child(1),
+  .pb-row.header > div:nth-child(2) { text-align: left; }
+  .pb-rank {
+    font-weight: 800; font-size: 15px; color: var(--ink-3); text-align: center;
+  }
+  .pb-people { line-height: 1.35; }
+  .pb-line { font-size: 13px; font-weight: 700; letter-spacing: -.01em; }
+  .pb-line .pb-tag {
+    display: inline-block; min-width: 40px; font-size: 9px; font-weight: 800;
+    letter-spacing: .09em; color: var(--ink-3); margin-right: 6px; vertical-align: 1px;
+  }
+  .pb-meta { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+  .pb-meta .pb-dot { opacity: .5; margin: 0 5px; }
+  .pb-flag {
+    display: inline-block; margin-left: 6px; padding: 1px 5px; border-radius: 4px;
+    font-size: 9px; font-weight: 800; letter-spacing: .04em;
+    background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber);
+  }
+  .pb-roo {
+    text-align: center; font-weight: 800; font-size: 10px; letter-spacing: .05em;
+    padding: 6px 4px; border-radius: 6px; cursor: pointer; border: 1px solid transparent;
+  }
+  .pb-roo.green { background: var(--green-bg); color: var(--green); border-color: var(--green); }
+  .pb-roo.amber { background: var(--amber-bg); color: var(--amber); border-color: var(--amber); }
+  .pb-roo.red   { background: var(--red-bg);   color: var(--red);   border-color: var(--red); }
+  .pb-roo.na    { background: var(--surface-2); color: var(--ink-3); font-weight: 600; }
+  .pb-roo:hover { filter: brightness(.96); }
+  .pb-score {
+    text-align: center; font-weight: 800; font-size: 17px;
+    padding: 7px 8px; border-radius: 9px;
+  }
+  .pb-score.green { background: var(--green); color: #fff; }
+  .pb-score.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber); }
+  .pb-score.red   { background: var(--red);   color: #fff; }
+  .pb-score.na    { background: var(--surface-2); color: var(--ink-3); }
+  .pb-panel { background: var(--surface-2); border-bottom: 1px solid var(--line); padding: 4px 0 10px; }
+  .pb-panel-title {
+    font-size: 10px; text-transform: uppercase; letter-spacing: .08em;
+    color: var(--ink-3); font-weight: 700; padding: 10px 14px 6px;
+  }
+  .pb-sub {
+    display: grid;
+    grid-template-columns: 30px minmax(210px, 1fr) 86px 86px 86px 86px 78px 78px 74px 74px 68px 86px;
+    gap: 6px; padding: 7px 14px; align-items: center; cursor: pointer;
+  }
+  .pb-sub:hover { background: var(--surface); }
+  .pb-sub-name { font-size: 12px; }
+  .pb-sub-name strong { font-weight: 700; margin-right: 6px; }
+  .pb-sub-name span { color: var(--ink-2); }
+  .pb-roomatrix { padding: 2px 14px 6px; font-size: 11px; color: var(--ink-2); }
+  .pb-roomatrix table { border-collapse: collapse; width: 100%; max-width: 720px; }
+  .pb-roomatrix th, .pb-roomatrix td {
+    padding: 5px 8px; border: 0.5px solid var(--line); text-align: center; font-size: 11px;
+  }
+  .pb-roomatrix th { font-weight: 700; color: var(--ink-3); text-transform: uppercase; letter-spacing: .05em; font-size: 9px; }
+  .pb-roomatrix td.lbl { text-align: left; font-weight: 700; }
+  .pb-foot {
+    padding: 10px 14px; font-size: 11px; color: var(--ink-3);
+    background: var(--surface-2); border-top: 1px solid var(--line);
+  }
+  @media (max-width: 1100px) {
+    .pb-row, .pb-sub { grid-template-columns: 26px minmax(150px,1fr) repeat(10, 62px); font-size: 11px; }
+  }
   .scorecard {
     background: var(--surface);
     border: 1px solid var(--line);
@@ -1348,6 +1443,16 @@
       document.addEventListener('week-changed', paintAll);
     });
   </script>
+
+<!-- REGIONAL ACCOUNTABILITY BOARD -->
+  <div class="section-head">
+    <div>
+      <h2>Regional Accountability Board</h2>
+      <div class="hint">The same league table, rolled up to the <strong>people accountable</strong>. £ and % columns are true regional totals (region sales vs region target; region wage £ &divide; region sales £), so a small good site cannot mask a big bad one. Score /100 is the average of that region's site efficiency scores. Bands are absolute: <strong>&ge;85 green &middot; 70&ndash;84 amber &middot; under 70 red</strong>. Click a row to expand the sites behind the number; click the Roo pill for the region-weighted Deliveroo roll-up.</div>
+    </div>
+  </div>
+
+  <div class="pboard" id="people-board"></div>
 
 <!-- HEAT MAP -->
   <div class="section-head">
@@ -4569,6 +4674,305 @@ function fmtFoodVar(st){
   const v = st && st.food && st.food.variance_pct;
   return fmtVar(v);
 }
+// ===================== REGIONAL ACCOUNTABILITY BOARD =====================
+// A PEOPLE league table, not a site one. One row per region = the Head + DAM who
+// carry it. Locked with Michael 20/08/2026:
+//   • Unit of accountability = THE PAIR. Head and DAM share one score for the
+//     whole region. The per-site `am` field is not used to split them.
+//   • £ / % columns are TRUE REGIONAL TOTALS (region actual vs region target;
+//     region wage £ ÷ region sales £), NOT the mean of site percentages.
+//   • Score /100 = the average of that region's site efficiency scores, so it
+//     ties back to the Site League Table below.
+//   • Bands are ABSOLUTE: >=85 green, 70-84 amber, <70 red. They do not move
+//     when the fleet moves — a region cannot be green just by being least bad.
+//   • Missing KPIs renormalise (same as the site score) but the row carries a
+//     data-completeness %, so a thin score cannot pass as a full one.
+//   • Deliveroo = region-WEIGHTED roll-up (order-weighted), one pill, click to
+//     expand the five metrics and the sites behind them.
+const PEOPLE_DEFS = [
+  { id: 'scotland', region: 'Scotland & Newcastle',     head: 'Ka Ho',       dam: 'Óisín Patrick Darragh' },
+  { id: 'north',    region: 'North England & Midlands', head: 'Inka Cheung', dam: 'Amy Tang' },
+  { id: 'south',    region: 'South England',            head: 'Ziang Lin',   dam: 'Kaitlin Docherty' }
+];
+
+// Site sales in £. Prefers the live figures captured by adaptSite; falls back to
+// re-deriving them from the baked `kpis.vsTarget` string + vsTarget %, so the
+// board is never blank before the live week lands.
+function pbSiteSales(s) {
+  const m = METRICS[s.code] || {};
+  if (m.salesActual != null && m.salesTarget != null) return { actual: m.salesActual, target: m.salesTarget };
+  let gap = null;
+  if (s.kpis && s.kpis.vsTarget) {
+    const mt = s.kpis.vsTarget.match(/([+\-]?)\s*£\s*([\d,]+(?:\.\d+)?)/);
+    if (mt) gap = (mt[1] === '-' ? -1 : 1) * parseFloat(mt[2].replace(/,/g, ''));
+  }
+  if (gap == null || s.vsTarget == null || Math.abs(s.vsTarget) < 0.005) return { actual: null, target: null };
+  const target = gap / (s.vsTarget / 100);
+  if (!isFinite(target) || target <= 0) return { actual: null, target: null };
+  return { actual: target + gap, target: target };
+}
+
+// Order-weighted Deliveroo roll-up for a set of sites. Returns a synthetic
+// deliveroo object that goes through the SAME _delivRollup thresholds as a site,
+// so the region is judged on the exact rules a site is.
+function pbDelivAggregate(sites) {
+  const rows = sites
+    .map(s => ({ code: s.code, name: s.name, d: s.deliveroo }))
+    .filter(x => _delivHasOps(x.d));
+  if (!rows.length) return null;
+  const agg = {};
+  DELIV_METRIC_DEFS.forEach(def => {
+    const f = def[0];
+    let num = 0, den = 0;
+    rows.forEach(x => {
+      const v = x.d[f];
+      if (v == null) return;
+      const w = (x.d.orders != null && x.d.orders > 0) ? x.d.orders : 1;
+      num += v * w; den += w;
+    });
+    agg[f] = den > 0 ? num / den : null;
+  });
+  const roll = _delivRollup(agg);
+  const perSite = rows.map(x => ({ code: x.code, name: x.name, rag: _delivRollup(x.d).rag, d: x.d }));
+  const order = { red: 0, amber: 1, green: 2 };
+  perSite.sort((a, b) => order[a.rag] - order[b.rag] || a.code.localeCompare(b.code, undefined, { numeric: true }));
+  return { rag: roll.rag, drivers: roll.drivers, metrics: agg, sites: perSite, covered: rows.length, total: sites.length };
+}
+
+// Roll one region up. Every column aggregated the way that column is honestly
+// aggregated — totals for money, £-weighted for rates, review-weighted for stars.
+function regionAggregate(id) {
+  const sites = SITES.filter(s => s.cluster === id);
+  let salesA = 0, salesT = 0, haveSales = false;
+  let wageN = 0, wageD = 0, foodN = 0, foodD = 0;
+  let coversSum = 0, coversSales = 0, sphN = 0, sphD = 0;
+  let fvN = 0, fvD = 0, dvN = 0, dvD = 0;
+  let wkN = 0, wkD = 0, ltN = 0, ltD = 0;
+  const scores = [];
+  let compHave = 0, compTot = 0;
+
+  sites.forEach(s => {
+    const m = METRICS[s.code] || {};
+    const r = REVIEWS[s.code] || {};
+    const g = pbSiteSales(s);
+    const w = (g.actual != null && g.actual > 0) ? g.actual : null;
+    if (g.actual != null && g.target != null) { salesA += g.actual; salesT += g.target; haveSales = true; }
+    if (m.wage != null && w != null) { wageN += m.wage * w; wageD += w; }
+    if (m.food != null && w != null) { foodN += m.food * w; foodD += w; }
+    if (m.covers != null && m.covers > 0 && g.actual != null) { coversSum += m.covers; coversSales += g.actual; }
+    if (m.sph != null && w != null) { sphN += m.sph * w; sphD += w; }
+    if (m.foodVar != null && w != null) { fvN += m.foodVar * w; fvD += w; }
+    if (m.drinksVar != null && w != null) { dvN += m.drinksVar * w; dvD += w; }
+    const wr = weeklyRating(r);
+    if (wr != null && r.weekCount) { wkN += wr * r.weekCount; wkD += r.weekCount; }
+    if (r.rating != null && r.total) { ltN += r.rating * r.total; ltD += r.total; }
+    const eff = efficiencyScore(s);
+    if (eff != null) scores.push(eff);
+    // Data completeness — the six scoring components, per site.
+    compTot += 6;
+    [s.vsTarget, m.food, m.wage, m.sph, wr, m.foodVar].forEach(v => { if (v != null) compHave++; });
+  });
+
+  const score = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+  return {
+    id: id,
+    siteCount: sites.length,
+    sites: sites,
+    salesActual: haveSales ? salesA : null,
+    salesTarget: haveSales ? salesT : null,
+    vsTargetPct: (haveSales && salesT > 0) ? ((salesA - salesT) / salesT) * 100 : null,
+    gapGBP: haveSales ? (salesA - salesT) : null,
+    wage: wageD > 0 ? wageN / wageD : null,
+    food: foodD > 0 ? foodN / foodD : null,
+    sph: (coversSum > 0 && coversSales > 0) ? (coversSales / coversSum) : (sphD > 0 ? sphN / sphD : null),
+    sphBasis: (coversSum > 0 && coversSales > 0) ? 'covers' : (sphD > 0 ? 'weighted' : null),
+    foodVar: fvD > 0 ? fvN / fvD : null,
+    drinksVar: dvD > 0 ? dvN / dvD : null,
+    weekStar: wkD > 0 ? wkN / wkD : null,
+    weekReviews: wkD,
+    lifetimeStar: ltD > 0 ? ltN / ltD : null,
+    score: score,
+    scoredSites: scores.length,
+    completeness: compTot > 0 ? Math.round((compHave / compTot) * 100) : null,
+    deliveroo: pbDelivAggregate(sites)
+  };
+}
+
+// Site sub-rows keep the SITE bands (efficiencyRag: >=95 green, >=80 amber) so a
+// site never shows one colour here and a different one in the Site League Table.
+function effRagCls(score) {
+  const r = efficiencyRag(score);
+  return r === 'green' ? 'green' : (r === 'amber' ? 'amber' : (r === 'na' ? 'na' : 'red'));
+}
+// ABSOLUTE bands, locked 20/08/2026. >=85 green, 70-84 amber, <70 red.
+function personRag(score) {
+  if (score == null) return 'na';
+  if (score >= 85) return 'green';
+  if (score >= 70) return 'amber';
+  return 'red';
+}
+function pbGBP(v) {
+  if (v == null) return 'N/A';
+  const a = Math.abs(v);
+  const s = a >= 1000 ? '£' + (a / 1000).toFixed(1) + 'k' : '£' + a.toFixed(0);
+  return (v >= 0 ? '+' : '-') + s;
+}
+function pbNum(v, dp, suffix) {
+  return v == null ? 'N/A' : v.toFixed(dp) + (suffix || '');
+}
+
+// Which region rows are expanded, and which have the Deliveroo panel open.
+window.PB_OPEN = window.PB_OPEN || {};
+window.PB_ROO_OPEN = window.PB_ROO_OPEN || {};
+function pbToggle(id) { window.PB_OPEN[id] = !window.PB_OPEN[id]; renderPeopleBoard(); }
+function pbToggleRoo(id, ev) {
+  if (ev && ev.stopPropagation) ev.stopPropagation();
+  window.PB_ROO_OPEN[id] = !window.PB_ROO_OPEN[id];
+  renderPeopleBoard();
+}
+
+function renderPeopleBoard() {
+  const wrap = document.getElementById('people-board');
+  if (!wrap) return;
+  const aggs = PEOPLE_DEFS.map(p => Object.assign({}, p, regionAggregate(p.id)));
+  aggs.sort((a, b) => (b.score == null ? -1 : b.score) - (a.score == null ? -1 : a.score));
+
+  const scored = aggs.filter(a => a.score != null);
+  const fleetSites = SITES.map(efficiencyScore).filter(v => v != null);
+  const fleetAvg = fleetSites.length ? Math.round(fleetSites.reduce((a, b) => a + b, 0) / fleetSites.length) : null;
+
+  const header = `
+    <div class="pb-row header">
+      <div>#</div><div>Accountable</div><div>Sales vs Tgt</div><div style="text-align:center;">SPH</div>
+      <div>Wage %</div><div>Food Cost</div><div>Food Var</div><div>Drinks Var</div>
+      <div>Wk ★</div><div>Lifetime ★</div><div style="text-align:center;">Roo</div><div style="text-align:center;">Score /100</div>
+    </div>`;
+
+  const body = aggs.map((a, i) => {
+    const rag = personRag(a.score);
+    const sRag = a.vsTargetPct == null ? 'na' : salesRag(a.vsTargetPct);
+    const wRag = a.wage == null ? 'na' : wageRag(a.wage);
+    const fRag = a.food == null ? 'na' : foodRag(a.food);
+    const vRag = varBandClass(a.foodVar);
+    const dRag = varBandClass(a.drinksVar);
+    const wkRag = weeklyRatingRag(a.weekStar);
+    const ltRag = a.lifetimeStar == null ? 'na' : ratingRag(a.lifetimeStar);
+    const sphRagCls = a.sph == null ? 'na' : (a.sph >= 22 ? 'green' : (a.sph >= 20 ? 'amber' : 'red'));
+    const roo = a.deliveroo;
+    const rooCls = roo ? roo.rag : 'na';
+    const rooTxt = roo ? roo.rag.toUpperCase() : 'N/A';
+    const gapTxt = a.gapGBP == null ? '' : pbGBP(a.gapGBP) + ' vs target';
+    const compFlag = (a.completeness != null && a.completeness < 100)
+      ? `<span class="pb-flag" title="Share of the six scoring components actually reported across this region's sites. Missing components renormalise the score — a thin score is not the same as a good one.">${a.completeness}% DATA</span>` : '';
+    const open = !!window.PB_OPEN[a.id];
+    const rooOpen = !!window.PB_ROO_OPEN[a.id];
+
+    const row = `
+      <div class="pb-row" onclick="pbToggle('${a.id}')" title="Click to expand the sites behind this number">
+        <div class="pb-rank">${i + 1}</div>
+        <div class="pb-people">
+          <div class="pb-line"><span class="pb-tag">HEAD</span>${a.head}</div>
+          <div class="pb-line"><span class="pb-tag">DAM</span>${a.dam}</div>
+          <div class="pb-meta">${a.region}<span class="pb-dot">·</span>${a.siteCount} sites<span class="pb-dot">·</span>${gapTxt}${compFlag}<span class="pb-dot">·</span>${open ? '▾ hide sites' : '▸ show sites'}</div>
+        </div>
+        <div class="sc-chip ${sRag}">${a.vsTargetPct == null ? 'N/A' : (a.vsTargetPct >= 0 ? '+' : '') + a.vsTargetPct.toFixed(1) + '%'}</div>
+        <div class="sc-chip ${sphRagCls}">${a.sph == null ? 'N/A' : '£' + a.sph.toFixed(2)}</div>
+        <div class="sc-chip ${wRag}">${pbNum(a.wage, 1, '%')}</div>
+        <div class="sc-chip ${fRag}">${pbNum(a.food, 1, '%')}</div>
+        <div class="sc-chip ${vRag}">${fmtVar(a.foodVar)}</div>
+        <div class="sc-chip ${dRag}">${fmtVar(a.drinksVar)}</div>
+        <div class="sc-chip ${wkRag}">${a.weekStar == null ? 'N/A' : a.weekStar.toFixed(2) + '★'}</div>
+        <div class="sc-chip ${ltRag}">${a.lifetimeStar == null ? 'N/A' : a.lifetimeStar.toFixed(2) + '★'}</div>
+        <div class="pb-roo ${rooCls}" onclick="pbToggleRoo('${a.id}', event)" title="Region-weighted Deliveroo roll-up (order-weighted across the region's stores). Click for the five metrics and the sites behind them.">${rooTxt}</div>
+        <div class="pb-score ${rag}">${a.score == null ? 'N/A' : a.score}</div>
+      </div>`;
+
+    let panels = '';
+    if (rooOpen) {
+      if (!roo) {
+        panels += `<div class="pb-panel"><div class="pb-panel-title">Deliveroo — ${a.region}</div><div class="pb-roomatrix">No Deliveroo ops rows for this region in the selected week.</div></div>`;
+      } else {
+        const cells = DELIV_METRIC_DEFS.map(def => {
+          const v = roo.metrics[def[0]];
+          const band = _delivBand(v, def[2], def[3], def[4]);
+          const bg = band === 'green' ? 'var(--green-bg)' : band === 'amber' ? 'var(--amber-bg)' : band === 'red' ? 'var(--red-bg)' : 'var(--surface-2)';
+          const fg = band === 'green' ? 'var(--green)' : band === 'amber' ? 'var(--amber)' : band === 'red' ? 'var(--red)' : 'var(--ink-3)';
+          const dp = def[0] === 'rating' ? 2 : 1;
+          return `<td style="background:${bg};color:${fg};font-weight:700;">${v == null ? '—' : v.toFixed(dp)}</td>`;
+        }).join('');
+        const siteRows = roo.sites.map(x => {
+          const tds = DELIV_METRIC_DEFS.map(def => {
+            const v = x.d[def[0]];
+            const band = _delivBand(v, def[2], def[3], def[4]);
+            const bg = band === 'green' ? 'var(--green-bg)' : band === 'amber' ? 'var(--amber-bg)' : band === 'red' ? 'var(--red-bg)' : 'var(--surface-2)';
+            const fg = band === 'green' ? 'var(--green)' : band === 'amber' ? 'var(--amber)' : band === 'red' ? 'var(--red)' : 'var(--ink-3)';
+            const dp = def[0] === 'rating' ? 2 : 1;
+            return `<td style="background:${bg};color:${fg};font-weight:600;">${v == null ? '—' : v.toFixed(dp)}</td>`;
+          }).join('');
+          return `<tr><td class="lbl">${x.code} <span style="color:var(--ink-3);font-weight:500;">${x.name}</span></td>${tds}<td style="font-weight:800;color:${x.rag === 'green' ? 'var(--green)' : x.rag === 'amber' ? 'var(--amber)' : 'var(--red)'};">${x.rag.toUpperCase()}</td></tr>`;
+        }).join('');
+        panels += `
+          <div class="pb-panel">
+            <div class="pb-panel-title">Deliveroo roll-up — ${a.region} · ${roo.covered} of ${a.siteCount} sites reporting ops · ${roo.drivers}</div>
+            <div class="pb-roomatrix">
+              <table>
+                <tr><th style="text-align:left;">Region weighted</th><th>Rating</th><th>Open %</th><th>Prep min</th><th>Inacc %</th><th>Rider %</th><th>RAG</th></tr>
+                <tr><td class="lbl">${a.head} · ${a.dam}</td>${cells}<td style="font-weight:800;color:${roo.rag === 'green' ? 'var(--green)' : roo.rag === 'amber' ? 'var(--amber)' : 'var(--red)'};">${roo.rag.toUpperCase()}</td></tr>
+                ${siteRows}
+              </table>
+            </div>
+          </div>`;
+      }
+    }
+
+    if (open) {
+      const subs = [...a.sites].sort((x, y) => (efficiencyScore(x) ?? -1) - (efficiencyScore(y) ?? -1)).map(s => {
+        const m = METRICS[s.code] || {};
+        const r = REVIEWS[s.code] || {};
+        const wr = weeklyRating(r);
+        const eff = efficiencyScore(s);
+        const dd = s.deliveroo;
+        const dRagS = _delivHasOps(dd) ? _delivRollup(dd).rag : 'na';
+        return `
+          <div class="pb-sub" onclick="openSite('${s.code.replace(/'/g, "\\'")}')">
+            <div></div>
+            <div class="pb-sub-name"><strong>${s.code}</strong><span>${s.name}</span></div>
+            <div class="sc-chip ${s.vsTarget == null ? 'na' : salesRag(s.vsTarget)}">${s.vsTarget == null ? 'N/A' : (s.vsTarget >= 0 ? '+' : '') + s.vsTarget.toFixed(1) + '%'}</div>
+            <div class="sc-chip ${sphRag(m.sph, s.code)}">${m.sph == null ? 'N/A' : '£' + m.sph.toFixed(2)}</div>
+            <div class="sc-chip ${wageRag(m.wage)}">${pbNum(m.wage, 1, '%')}</div>
+            <div class="sc-chip ${foodRag(m.food)}">${pbNum(m.food, 1, '%')}</div>
+            <div class="sc-chip ${varBandClass(m.foodVar)}">${fmtVar(m.foodVar)}</div>
+            <div class="sc-chip ${varBandClass(m.drinksVar)}">${fmtVar(m.drinksVar)}</div>
+            <div class="sc-chip ${weeklyRatingRag(wr)}">${wr == null ? 'N/A' : wr.toFixed(2) + '★'}</div>
+            <div class="sc-chip ${ratingRag(r.rating)}">${r.rating == null ? 'N/A' : r.rating.toFixed(1) + '★'}</div>
+            <div class="pb-roo ${dRagS}" style="cursor:default;">${dRagS === 'na' ? '—' : dRagS.toUpperCase()}</div>
+            <div class="pb-score ${effRagCls(eff)}" style="font-size:14px;padding:5px 6px;">${eff == null ? 'N/A' : eff}</div>
+          </div>`;
+      }).join('');
+      panels += `<div class="pb-panel"><div class="pb-panel-title">${a.head} · ${a.dam} — ${a.siteCount} sites, worst first. Site scores are coloured on the SITE bands (≥95 green · ≥80 amber), same as the Site League Table below — not the person bands. Click a site for full detail.</div>${subs}</div>`;
+    }
+    return row + panels;
+  }).join('');
+
+  const spread = (scored.length >= 2)
+    ? `Spread between best and worst region: <strong>${scored[0].score - scored[scored.length - 1].score} points</strong>.`
+    : '';
+  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. 19-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>. ${spread}</div>`;
+
+  wrap.innerHTML = header + body + foot;
+}
+
+// Initial paint. Deferred to DOMContentLoaded because this block sits after the
+// Deliveroo const definitions but the init sequence above them must not touch
+// them (temporal dead zone).
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function () {
+    try { renderPeopleBoard(); } catch (e) { console.warn('people board init failed', e); }
+  });
+} else {
+  try { renderPeopleBoard(); } catch (e) { console.warn('people board init failed', e); }
+}
+
 // Deliveroo weekly sales cell for the site detail. Handles the gap sites
 // (M11-M18) whose figure comes from the weekly Dash PDF (partial=true: sales /
 // AOV / new-customers only, orders estimated). Replaces the monthly stopgap.
@@ -4660,6 +5064,11 @@ function adaptSite(jsonCode, s, isNewest){
     METRICS[display].salesWowPct = (kp.sales && kp.sales.wow_pct != null) ? kp.sales.wow_pct : null;
     METRICS[display].wageActual  = (kp.wage_pct && kp.wage_pct.actual != null) ? kp.wage_pct.actual : null;
     METRICS[display].foodActual  = (kp.food_pct && kp.food_pct.actual != null) ? kp.food_pct.actual : null;
+    // Regional Accountability Board: real £ and covers, so the region row can be a
+    // TOTAL (region actual vs region target) rather than a mean of site percentages.
+    METRICS[display].salesActual = (kp.sales && kp.sales.actual != null) ? kp.sales.actual : null;
+    METRICS[display].salesTarget = (kp.sales && kp.sales.target != null) ? kp.sales.target : null;
+    METRICS[display].covers      = (kp.covers && kp.covers.actual != null) ? kp.covers.actual : null;
   }
 
   // REVIEWS entry — the WEEKLY fields come ONLY from this week's own JSON.
@@ -4729,6 +5138,7 @@ function wowChip(delta, direction, unit){
 // Re-run every top-level render that consumes the swapped data.
 function repaintAll(){
   try { if (typeof renderHeatmap   === 'function') renderHeatmap(typeof currentFilter !== 'undefined' ? currentFilter : 'all'); } catch(e){}
+  try { if (typeof renderPeopleBoard === 'function') renderPeopleBoard(); } catch(e){}
   try { if (typeof renderScorecard === 'function') renderScorecard(); } catch(e){}
   try { if (typeof renderClusters  === 'function') renderClusters(); } catch(e){}
   try { if (typeof renderThemes    === 'function') renderThemes(); } catch(e){}
