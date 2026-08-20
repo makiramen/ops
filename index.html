@@ -422,6 +422,16 @@
     letter-spacing: .09em; color: var(--ink-3); margin-right: 6px; vertical-align: 1px;
   }
   .pb-meta { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+  /* Michael 20/08: the grey meta line under the names was removed — names only.
+     The expand affordance survives as a hover-only cue. It is ABSOLUTELY positioned
+     so it takes no layout space at rest — inline, it stole ~60px and wrapped
+     "Óisín Patrick Darragh" onto two lines. Region / site count / £ gap /
+     data-completeness moved into the row's title tooltip, so nothing was lost. */
+  .pb-people { position: relative; }
+  .pb-chev { position: absolute; right: 4px; bottom: 1px; font-size: 10px; font-weight: 600;
+             color: var(--ink-3); opacity: 0; transition: opacity .12s;
+             white-space: nowrap; pointer-events: none; }
+  .pb-row:hover .pb-chev { opacity: 1; }
   .pb-meta .pb-dot { opacity: .5; margin: 0 5px; }
   .pb-flag {
     display: inline-block; margin-left: 6px; padding: 1px 5px; border-radius: 4px;
@@ -4915,12 +4925,12 @@ function renderPeopleBoard() {
     const rooOpen = !!window.PB_ROO_OPEN[a.id];
 
     const row = `
-      <div class="pb-row" onclick="pbToggle('${a.id}')" title="Click to expand the sites behind this number">
+      <div class="pb-row" onclick="pbToggle('${a.id}')" title="${a.region} · ${a.siteCount} sites · ${gapTxt || 'no £ figure this week'}${a.completeness != null && a.completeness < 100 ? ' · only ' + a.completeness + '% of KPI components reported' : ''} — click to expand the sites behind this number">
         <div class="pb-rank">${i + 1}</div>
         <div class="pb-people">
           <div class="pb-line"><span class="pb-tag">HEAD</span>${a.head}</div>
           <div class="pb-line"><span class="pb-tag">DAM</span>${a.dam}</div>
-          <div class="pb-meta">${a.region}<span class="pb-dot">·</span>${a.siteCount} sites<span class="pb-dot">·</span>${gapTxt}${compFlag}<span class="pb-dot">·</span>${open ? '▾ hide sites' : '▸ show sites'}</div>
+          <span class="pb-chev">${open ? '▾ hide sites' : '▸ show sites'}</span>
         </div>
         <div class="sc-chip ${sRag}">${a.vsTargetPct == null ? 'N/A' : (a.vsTargetPct >= 0 ? '+' : '') + a.vsTargetPct.toFixed(1) + '%'}</div>
         <div class="sc-chip ${sphRagCls}">${a.sph == null ? 'N/A' : '£' + a.sph.toFixed(2)}</div>
