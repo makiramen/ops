@@ -112,7 +112,11 @@ VENUE_TO_CODE = {
 # Deliberately excluded. M4 and Ikigai 1 are PHANTOM source columns, not sites
 # (Michael, 28/07/2026). AA Factory is production. Maki O2 is franchise (MAF3)
 # and its feed runs a day behind on `RAW Data Franchisee`.
-VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2"}
+# "Maki 21" began filing rows on 21/08/2026 (first row: Fri 21/08). It is NOT
+# in CLUSTERS, so it is ignored pending Michael's ruling on whether it becomes
+# live site #20 and which cluster owns it. Ignoring keeps the fleet series
+# comparable day-to-day; without this entry the builder FATALs on every run.
+VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2", "Maki 21"}
 
 # ---- org map ----------------------------------------------------------------
 # Regions, Area Managers and Deputy Area Managers, from the Area Management
