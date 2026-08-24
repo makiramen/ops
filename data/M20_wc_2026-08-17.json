@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-24",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-08-17 \u2013 2026-08-23",
+    "commencing": "2026-08-17",
+    "ending": "2026-08-23"
+  },
+  "sites": {
+    "M20": {
+      "code": "M20",
+      "name": "Maki 20",
+      "gm": "TBC",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 38393.08,
+          "target": 42000.0,
+          "var_pct": -8.59,
+          "prev": 36874.15,
+          "wow_abs": 1518.93,
+          "wow_pct": 4.12
+        },
+        "covers": {
+          "actual": 2827,
+          "prev": 1725,
+          "wow_abs": 1102,
+          "wow_pct": 63.88
+        },
+        "sph": {
+          "actual": 13.33,
+          "prev": 20.78,
+          "wow_abs": -7.45,
+          "wow_pct": -35.85,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 29.36,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 22.64,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 778.9
+        },
+        "waste": {
+          "actual": 263.03
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-08-17"
+      },
+      "efficiency_score": {
+        "score": 46,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 91.82,
+            "basis": "70% (100-8.59) + 30% (\u00a3gap -3607 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 0.0,
+            "basis": "\u00a313.33 vs \u00a322 tgt \u2014 level 0, WoW -35.85% \u2192 mom 0"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "22.64% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "29.36% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "wage 29.4%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7692,
+        "new_reviews": 26,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 2,
+          "5": 23
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Kieran Gandhi",
+            "text": "Extremely Disappointing Experience\n\nAbsolutely disgusting experience at Maki & Ramen in Southampton today. I have never experienced such poor service, especially when dining with children.\n\nMy wife\u2019s food and one of my sons\u2019 meals arrived within a couple of minutes of ordering. Meanwhile, my food and all of our side dishes didn\u2019t arrive until around 29 minutes after we ordered. By that point, my wife and one of my children had already finished eating.\n\nBut the worst part was what happened with my two-year-old son.\n\nWe specifically ordered a katsu chicken main without the sauce, so he could simply have the chicken and rice. We were told this could instead be ordered as two side dishes. Fine \u2014 we agreed. Yet when everyone else\u2019s food eventually arrived, his food had not even been started.\n\nWe waited a few more minutes before having to call someone over and ask where his food was. The server checked, and I could clearly see the cook looking through old tickets. It was obvious that the order had simply never been started.\n\nWe were then offered his meal for free, but were told we would have to wait for it to actually be cooked. What exactly were we supposed to do? Wait another 20\u201330 minutes while my food went cold? My son is two years old. This is completely unacceptable.\n\nI asked for further compensation given the situation, and instead of showing any understanding, we were challenged repeatedly about it.\n\nAt that point, I was so disgusted and frustrated that I didn\u2019t even eat my own meal. It was taken away, and I left the restaurant having paid for a lunch where I effectively didn\u2019t get to eat.\n\nWhat makes this even more frustrating is that I noticed other tables around us receiving their food together and being served normally.\n\nI am honestly left wondering whether people who look like me are treated differently in this restaurant. I sincerely hope that isn\u2019t the case, but after today\u2019s experience, I cannot ignore how it felt.\n\nThis was supposed to be a family lunch, only a week before my birthday, and instead it turned into an incredibly disappointing and upsetting experience.\n\nThe way my two-year-old was treated was particularly disgusting. There was no urgency, no proper explanation and very little empathy.\n\nWe will never be coming back to Maki & Ramen. I would strongly encourage the management to look seriously at what happened here, because this is simply not acceptable customer service.",
+            "date": "2026-08-21",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-24."
+      },
+      "maintenance": {
+        "source": "maintenance_2026-08-17.json - NOT PULLED for this week.",
+        "status": "not_pulled",
+        "pulled": false,
+        "outstanding_count": null,
+        "tasks": [],
+        "note": "Maintenance NOT PULLED this week - outstanding count is UNKNOWN, not 0."
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week",
+        "Maintenance \u2014 not pulled this week (no maintenance slice); outstanding count is UNKNOWN, not 0",
+        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+      ]
+    }
+  }
+}
