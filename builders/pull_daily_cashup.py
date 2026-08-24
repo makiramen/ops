@@ -85,7 +85,8 @@ from datetime import datetime
 # ----------------------------------------------------------------------------
 # Site map. Keys are TRIMMED venue labels -- 5 of 22 carry trailing spaces at
 # source ("Maki 7 ", "Ikigai 1 ", "Maki 17 ", "Maki O2 ", "Maki Nori ").
-# The 19 live sites match build_site_json.py's CLUSTERS exactly.
+# The live sites match this file's CLUSTERS exactly (20 from 21/08/2026,
+# 19 before that — M21 simply has no rows on earlier dates).
 # ----------------------------------------------------------------------------
 VENUE_TO_CODE = {
     "Maki 1": "M1",
@@ -105,6 +106,10 @@ VENUE_TO_CODE = {
     "Maki 18": "M18",
     "Maki 19": "M19",
     "Maki 20": "M20",
+    # ⭐ Michael, 24/08/2026: "South England owns it". `Maki 21` began filing on
+    #    Fri 21/08/2026 and is a LIVE SITE #20 from that date. Its LOCATION is
+    #    still unconfirmed — do not write one anywhere.
+    "Maki 21": "M21",
     "Maki Nori": "MakiNori",
     "Ikigai 2": "IKI2",
 }
@@ -112,11 +117,11 @@ VENUE_TO_CODE = {
 # Deliberately excluded. M4 and Ikigai 1 are PHANTOM source columns, not sites
 # (Michael, 28/07/2026). AA Factory is production. Maki O2 is franchise (MAF3)
 # and its feed runs a day behind on `RAW Data Franchisee`.
-# "Maki 21" began filing rows on 21/08/2026 (first row: Fri 21/08). It is NOT
-# in CLUSTERS, so it is ignored pending Michael's ruling on whether it becomes
-# live site #20 and which cluster owns it. Ignoring keeps the fleet series
-# comparable day-to-day; without this entry the builder FATALs on every run.
-VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2", "Maki 21"}
+# "Maki 21" was parked here 22/08/2026 pending a ruling. Michael ruled on
+# 24/08/2026 — South England, live site #20 from 21/08 — so it has moved into
+# VENUE_TO_CODE and CLUSTERS as M21 and is NO LONGER ignored. The fleet is 20
+# sites from 21/08/2026 onward; days before that legitimately carry 19.
+VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2"}
 
 # ---- org map ----------------------------------------------------------------
 # Regions, Area Managers and Deputy Area Managers, from the Area Management
@@ -130,7 +135,7 @@ CLUSTERS = [
     ("North England & Midlands", "Inka Cheung", "Amy Tang",
      ["M9", "M10", "M11", "M14", "M16"]),
     ("South England", "Lincoln (Ziang)", "Kaitlin Dorcherty",
-     ["M17", "M18", "M19", "M20", "MakiNori"]),
+     ["M17", "M18", "M19", "M20", "M21", "MakiNori"]),
 ]
 CODE_TO_CLUSTER = {c: name for name, _am, _dam, codes in CLUSTERS for c in codes}
 

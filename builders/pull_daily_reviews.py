@@ -64,7 +64,7 @@ CLUSTERS = [
     ("North England & Midlands", "Inka Cheung", "Amy Tang",
      ["M9", "M10", "M11", "M14", "M16"]),
     ("South England", "Lincoln (Ziang)", "Kaitlin Dorcherty",
-     ["M17", "M18", "M19", "M20", "MakiNori"]),
+     ["M17", "M18", "M19", "M20", "M21", "MakiNori"]),
 ]
 CODE_TO_CLUSTER = {c: n for n, _am, _dam, codes in CLUSTERS for c in codes}
 SITES = [c for _n, _am, _dam, codes in CLUSTERS for c in codes]
@@ -77,6 +77,9 @@ SITES = [c for _n, _am, _dam, codes in CLUSTERS for c in codes]
 #    is NOT Ikigai 2. Do not add it. Leith rows fall through to `unmapped`.
 # ⭐ IKI2 has NO label on this tab at all, so it always reads zero reviews.
 #    That is a SOURCE gap, not a bug, and is reported in `gaps`.
+# ⭐ M21 (added to CLUSTERS 24/08/2026) likewise has NO label on this tab yet.
+#    It will report as `no_reviews_in_window` until the site is added to the
+#    reviews workbook lookup. Chase: Becca / Georgie. Never render it as 0.
 # ⭐ MAF1/MAF3/MAF-NQ are franchise, collected-but-not-rendered (not in SITES).
 # --------------------------------------------------------------------------
 SITE_TO_CODE = {
