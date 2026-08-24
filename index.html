@@ -922,6 +922,11 @@
   .at-status.prog { background:var(--amber-bg); color:var(--amber); border-color:transparent; }
   .at-status.done { background:var(--green-bg); color:var(--green); border-color:transparent; }
   .at-status.blocked { background:var(--red-bg); color:var(--red); border-color:transparent; }
+  .at-od { font-weight:700; font-size:10.5px; letter-spacing:.03em; padding:2px 7px; border-radius:6px; background:var(--red-bg); color:var(--red); white-space:nowrap; }
+  .at-nd { font-weight:600; font-size:10.5px; padding:2px 7px; border-radius:6px; background:var(--surface-2); color:var(--ink-3); white-space:nowrap; }
+  .at-site { font-weight:700; font-size:11px; padding:2px 8px; border-radius:6px; background:var(--maki-orange-bg); color:var(--maki-orange); white-space:nowrap; }
+  .at-site.grp { background:var(--surface-2); color:var(--ink-3); }
+  .at-row-od td { background:color-mix(in srgb, var(--red-bg) 45%, transparent); }
   .stepper { display:flex; flex-direction:column; gap:0; margin:8px 0 24px; }
   .step { display:flex; gap:14px; }
   .step-rail { display:flex; flex-direction:column; align-items:center; }
@@ -2090,12 +2095,12 @@
   <div class="tabpanel" id="tab-actions">
     <div class="mini-hero">
       <h2>Action Tracker</h2>
-      <p>Live view of the AM Manual &sect;14 Master Task List &mdash; every governance action with its owner, due date and status, banded P0/P1/P2.</p>
+      <p>Every open action with its site, owner, due date and status, banded P0/P1/P2. Seeded from the AM Manual &sect;14 Master Task List; site-level actions are added as they are raised. Overdue is computed live against today&rsquo;s date.</p>
     </div>
     <div class="risk-controls" id="at-stats"></div>
     <div class="risk-controls" id="at-filters"></div>
     <table class="risk-table" id="at-table"></table>
-    <p style="font-size:11.5px;color:var(--ink-3);margin-top:12px;">Source: AM Function Operational Manual v1.0, &sect;14 Master Task List.</p>
+    <p style="font-size:11.5px;color:var(--ink-3);margin-top:12px;">Sources: AM Function Operational Manual v1.0 &sect;14 Master Task List (items 1&ndash;21, group-level) &middot; M16 Nottingham BOH Stock &amp; Food Cost Assessment, Sophie Wang HEC, received 23/08/2026 (items 22&ndash;27).</p>
   </div>
 
   <!-- ============ TAB: GM SCORECARD ============ -->
@@ -5994,27 +5999,33 @@ const MEETING_RISK = {
 <script>
 // ---------- ACTION TRACKER (AM Manual Sec 14 Master Task List) ----------
 var ACTION_TRACKER = [
-{"id":1,"title":"Build Ziang/Kaitlin South England AM rota (M17, M18/Soho, Shoreditch, Southampton, Birmingham, MAF3)","owner":"Ziang Lin (+ COO)","priority":"P0","due":"Within 5 working days","status":"In progress"},
-{"id":2,"title":"Maki 18 (Soho) Recovery Plan \u2014 root cause, wage rota correction, action timeline","owner":"Ziang Lin + Lincoln","priority":"P0","due":"Within 7 working days","status":"In progress"},
-{"id":3,"title":"Maki 13 (Aberdeen) red-light visit cadence correction \u2014 2x/week minimum","owner":"Ka Ho","priority":"P0","due":"Immediate","status":"In progress"},
-{"id":4,"title":"New KPI Report Template (April 2026 draft) \u2014 finalise and roll out across all three regions","owner":"AM Team + Lincoln","priority":"P0","due":"End May 2026","status":"In progress"},
-{"id":5,"title":"Recovery Plan template \u2014 formalise the Meadowhall format as group standard","owner":"Inka Cheung","priority":"P0","due":"End May 2026","status":"In progress"},
-{"id":6,"title":"Compliance Calendar \u2014 build and distribute (fire alarms, EHO, contractor reviews)","owner":"AM Team","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":7,"title":"Compliance Documentation Storage \u2014 central, indexed, searchable","owner":"AM Team","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":8,"title":"Contractor List \u2014 consolidated by region, with contacts + rate cards","owner":"AM Team + HR","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":9,"title":"Fire Alarm Testing & Fire Drill Protocol \u2014 written SOP, scheduled all sites","owner":"AM Team","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":10,"title":"Channel structure \u2014 function-specific channels (Ops, AM, HR, Finance/Payroll, EC)","owner":"AM Team + Lincoln","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":11,"title":"Interview & Trial Shift SOP (FOH and Managers) \u2014 complete and roll out","owner":"Lincoln (+ COO)","priority":"P1","due":"End May 2026","status":"In progress"},
-{"id":12,"title":"Promotion Pathways (FOH and Managers) \u2014 complete and roll out","owner":"HR + AM Team","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":13,"title":"Maki & Ramen Trial Shift Assessment Form \u2014 update","owner":"HR + AM Team","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":14,"title":"Interview Training delivery \u2014 first cohort (all AMs and DAMs)","owner":"HR + AM Team","priority":"P1","due":"End June 2026","status":"Not started"},
-{"id":15,"title":"STAR method rollout across all FOH and Manager interviews","owner":"HR","priority":"P1","due":"Mid-July 2026","status":"Not started"},
-{"id":16,"title":"CV screening standard \u2014 define 'good' for FOH, AGM, GM levels","owner":"HR + AM Team","priority":"P2","due":"End July 2026","status":"Not started"},
-{"id":17,"title":"Trial Shift ownership \u2014 define whether Supervisors can oversee trial shifts","owner":"HR + AM Team","priority":"P2","due":"End July 2026","status":"Not started"},
-{"id":18,"title":"Relocation Request SOP","owner":"HR","priority":"P2","due":"End August 2026","status":"Not started"},
-{"id":19,"title":"Pay Raise Request SOP","owner":"HR","priority":"P2","due":"End August 2026","status":"Not started"},
-{"id":20,"title":"Cluster size review \u2014 confirm 9-site ceiling, plan 4th region as estate grows","owner":"COO + Lincoln","priority":"P2","due":"End Q3 2026","status":"Not started"},
-{"id":21,"title":"Owari \u2192 Kiban transition criteria \u2014 confirm 4 consecutive weeks green","owner":"Lincoln + Ross","priority":"P2","due":"End Q2 2026","status":"Not started"}
+{"id": 1, "site": "Group", "title": "Build Ziang/Kaitlin South England AM rota (M17, M18/Soho, Shoreditch, Southampton, Birmingham, MAF3)", "owner": "Ziang Lin (+ COO)", "priority": "P0", "due": "Within 5 working days", "due_iso": null, "status": "In progress"},
+{"id": 2, "site": "Group", "title": "Maki 18 (Soho) Recovery Plan \u2014 root cause, wage rota correction, action timeline", "owner": "Ziang Lin + Lincoln", "priority": "P0", "due": "Within 7 working days", "due_iso": null, "status": "In progress"},
+{"id": 3, "site": "Group", "title": "Maki 13 (Aberdeen) red-light visit cadence correction \u2014 2x/week minimum", "owner": "Ka Ho", "priority": "P0", "due": "Immediate", "due_iso": null, "status": "In progress"},
+{"id": 4, "site": "Group", "title": "New KPI Report Template (April 2026 draft) \u2014 finalise and roll out across all three regions", "owner": "AM Team + Lincoln", "priority": "P0", "due": "End May 2026", "due_iso": "2026-05-31", "status": "In progress"},
+{"id": 5, "site": "Group", "title": "Recovery Plan template \u2014 formalise the Meadowhall format as group standard", "owner": "Inka Cheung", "priority": "P0", "due": "End May 2026", "due_iso": "2026-05-31", "status": "In progress"},
+{"id": 6, "site": "Group", "title": "Compliance Calendar \u2014 build and distribute (fire alarms, EHO, contractor reviews)", "owner": "AM Team", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 7, "site": "Group", "title": "Compliance Documentation Storage \u2014 central, indexed, searchable", "owner": "AM Team", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 8, "site": "Group", "title": "Contractor List \u2014 consolidated by region, with contacts + rate cards", "owner": "AM Team + HR", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 9, "site": "Group", "title": "Fire Alarm Testing & Fire Drill Protocol \u2014 written SOP, scheduled all sites", "owner": "AM Team", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 10, "site": "Group", "title": "Channel structure \u2014 function-specific channels (Ops, AM, HR, Finance/Payroll, EC)", "owner": "AM Team + Lincoln", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 11, "site": "Group", "title": "Interview & Trial Shift SOP (FOH and Managers) \u2014 complete and roll out", "owner": "Lincoln (+ COO)", "priority": "P1", "due": "End May 2026", "due_iso": "2026-05-31", "status": "In progress"},
+{"id": 12, "site": "Group", "title": "Promotion Pathways (FOH and Managers) \u2014 complete and roll out", "owner": "HR + AM Team", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 13, "site": "Group", "title": "Maki & Ramen Trial Shift Assessment Form \u2014 update", "owner": "HR + AM Team", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 14, "site": "Group", "title": "Interview Training delivery \u2014 first cohort (all AMs and DAMs)", "owner": "HR + AM Team", "priority": "P1", "due": "End June 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 15, "site": "Group", "title": "STAR method rollout across all FOH and Manager interviews", "owner": "HR", "priority": "P1", "due": "Mid-July 2026", "due_iso": "2026-07-15", "status": "Not started"},
+{"id": 16, "site": "Group", "title": "CV screening standard \u2014 define 'good' for FOH, AGM, GM levels", "owner": "HR + AM Team", "priority": "P2", "due": "End July 2026", "due_iso": "2026-07-31", "status": "Not started"},
+{"id": 17, "site": "Group", "title": "Trial Shift ownership \u2014 define whether Supervisors can oversee trial shifts", "owner": "HR + AM Team", "priority": "P2", "due": "End July 2026", "due_iso": "2026-07-31", "status": "Not started"},
+{"id": 18, "site": "Group", "title": "Relocation Request SOP", "owner": "HR", "priority": "P2", "due": "End August 2026", "due_iso": "2026-08-31", "status": "Not started"},
+{"id": 19, "site": "Group", "title": "Pay Raise Request SOP", "owner": "HR", "priority": "P2", "due": "End August 2026", "due_iso": "2026-08-31", "status": "Not started"},
+{"id": 20, "site": "Group", "title": "Cluster size review \u2014 confirm 9-site ceiling, plan 4th region as estate grows", "owner": "COO + Lincoln", "priority": "P2", "due": "End Q3 2026", "due_iso": "2026-09-30", "status": "Not started"},
+{"id": 21, "site": "Group", "title": "Owari \u2192 Kiban transition criteria \u2014 confirm 4 consecutive weeks green", "owner": "Lincoln + Ross", "priority": "P2", "due": "End Q2 2026", "due_iso": "2026-06-30", "status": "Not started"},
+{"id": 22, "site": "Group", "title": "JFC supply failure \u2014 restore normal protein spec (Chicken Karaage, Chashu); replacements are being sent group-wide at higher cost", "owner": "Operations (+ Michael Salvador)", "priority": "P0", "due": "Ongoing until restock", "due_iso": null, "status": "In progress"},
+{"id": 23, "site": "M16", "title": "Track food cost daily and report the variance to the HEC until JFC restocks the normal protein spec", "owner": "Sophie Wang + Maged Greige", "priority": "P0", "due": "28/08/2026", "due_iso": "2026-08-28", "status": "Not started"},
+{"id": 24, "site": "M16", "title": "Reorganise drinks storage into zones (high-rotation at eye level, bulk low) with par labels and FIFO", "owner": "Inka Cheung + Maged Greige", "priority": "P1", "due": "28/08/2026", "due_iso": "2026-08-28", "status": "Not started"},
+{"id": 25, "site": "M16", "title": "Audit and tag every gas cylinder \u2014 in-use / reserve / empty / awaiting collection", "owner": "Inka Cheung + Maged Greige", "priority": "P1", "due": "28/08/2026", "due_iso": "2026-08-28", "status": "Not started"},
+{"id": 26, "site": "M16", "title": "Cut ordering on sponges and low-rotation chemicals by 30\u201340% and move to a quarterly cycle", "owner": "Procurement + Maged Greige", "priority": "P2", "due": "28/08/2026", "due_iso": "2026-08-28", "status": "Not started"},
+{"id": 27, "site": "M16", "title": "Review and tighten food par levels (coconut milk, shredded chilli) and enforce FIFO on bulk chilli", "owner": "Maged Greige + Sophie Wang", "priority": "P2", "due": "06/09/2026", "due_iso": "2026-09-06", "status": "Not started"}
 ];
 
 var AT_FILTER = 'all';
@@ -6030,6 +6041,20 @@ function atStatusClass(st){
 }
 function atPrioRank(p){ return p==='P0'?0:(p==='P1'?1:2); }
 
+function atDueDate(a){ return a.due_iso ? new Date(a.due_iso + 'T23:59:59') : null; }
+function atIsDone(a){ return String(a.status).toLowerCase() === 'done'; }
+function atIsOverdue(a){
+  var d = atDueDate(a);
+  if(!d || atIsDone(a)) return false;
+  return d.getTime() < Date.now();
+}
+function atIsUndated(a){ return !a.due_iso && !atIsDone(a); }
+function atDueLabel(a){
+  if(!a.due_iso) return atEsc(a.due);
+  var p = a.due_iso.split('-');
+  return p[2] + '/' + p[1] + '/' + p[0];
+}
+
 function renderActionTracker(){
   var data = ACTION_TRACKER;
   var total = data.length;
@@ -6039,6 +6064,8 @@ function renderActionTracker(){
   var p0 = data.filter(function(a){return a.priority==='P0';}).length;
   var p1 = data.filter(function(a){return a.priority==='P1';}).length;
   var p2 = data.filter(function(a){return a.priority==='P2';}).length;
+  var overdue = data.filter(atIsOverdue).length;
+  var undated = data.filter(atIsUndated).length;
 
   var statsEl = document.getElementById('at-stats');
   if(statsEl){
@@ -6048,14 +6075,18 @@ function renderActionTracker(){
       '<span style="color:var(--red);font-weight:600;">' + p0 + ' P0</span> / ' +
       '<span style="color:var(--amber);font-weight:600;">' + p1 + ' P1</span> / ' +
       '<span style="color:var(--green);font-weight:600;">' + p2 + ' P2</span>' +
+      '</div>' +
+      '<div style="font-size:12.5px;margin-top:6px;">' +
+      '<span class="at-od">' + overdue + ' OVERDUE</span> &middot; ' +
+      '<span style="color:var(--ink-3);">' + undated + ' with no due date</span>' +
       '</div>';
   }
 
   var filtersEl = document.getElementById('at-filters');
   if(filtersEl){
-    var bands = ['all','P0','P1','P2'];
+    var bands = ['all','overdue','P0','P1','P2'];
     filtersEl.innerHTML = bands.map(function(b){
-      var lbl = b==='all' ? 'All' : b;
+      var lbl = b==='all' ? 'All' : (b==='overdue' ? 'Overdue' : b);
       var active = (AT_FILTER===b) ? ' active' : '';
       return '<button class="at-chip' + active + '" data-at-filter="' + b + '">' + lbl + '</button>';
     }).join('');
@@ -6071,20 +6102,25 @@ function renderActionTracker(){
     var r = atPrioRank(a.priority) - atPrioRank(b.priority);
     return r !== 0 ? r : (a.id - b.id);
   });
-  if(AT_FILTER !== 'all') rows = rows.filter(function(a){return a.priority===AT_FILTER;});
+  if(AT_FILTER === 'overdue'){ rows = rows.filter(atIsOverdue); }
+  else if(AT_FILTER !== 'all'){ rows = rows.filter(function(a){return a.priority===AT_FILTER;}); }
 
-  var html = '<thead><tr><th>#</th><th>Priority</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>';
+  var html = '<thead><tr><th>#</th><th>Site</th><th>Priority</th><th>Action</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody>';
   rows.forEach(function(a){
-    html += '<tr>' +
+    var od = atIsOverdue(a);
+    html += '<tr' + (od ? ' class="at-row-od"' : '') + '>' +
       '<td>' + a.id + '</td>' +
+      '<td><span class="at-site' + (a.site==='Group' ? ' grp' : '') + '">' + atEsc(a.site) + '</span></td>' +
       '<td><span class="rag ' + atRag(a.priority) + '">' + a.priority + '</span></td>' +
       '<td>' + atEsc(a.title) + '</td>' +
       '<td>' + atEsc(a.owner) + '</td>' +
-      '<td style="white-space:nowrap;">' + atEsc(a.due) + '</td>' +
+      '<td style="white-space:nowrap;">' + atDueLabel(a) +
+        (od ? ' <span class="at-od">OVERDUE</span>' : '') +
+        (atIsUndated(a) ? ' <span class="at-nd">no date</span>' : '') + '</td>' +
       '<td><span class="at-status ' + atStatusClass(a.status) + '">' + atEsc(a.status) + '</span></td>' +
       '</tr>';
   });
-  if(rows.length===0){ html += '<tr><td colspan="6" style="color:var(--ink-3);">No actions in this band.</td></tr>'; }
+  if(rows.length===0){ html += '<tr><td colspan="7" style="color:var(--ink-3);">No actions in this band.</td></tr>'; }
   html += '</tbody>';
   var tbl = document.getElementById('at-table');
   if(tbl) tbl.innerHTML = html;
