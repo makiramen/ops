@@ -2691,6 +2691,28 @@ const SITES = [
     "actions": []
   },
   {
+    "code": "M21",
+    "isNew": true,
+    "name": "Maki 21",
+    "cluster": "south",
+    "clusterName": "South England",
+    "am": "Lincoln",
+    "gm": "—",
+    "rag": "amber",
+    "vsTarget": 0,
+    "kpis": {
+      "covers": "n/a",
+      "sph": "n/a",
+      "vsTarget": "n/a",
+      "foodVar": "N/A"
+    },
+    "issues": [
+      "New site — first traded 21/08/2026 (baked view predates opening; live weeks load from data/)."
+    ],
+    "carryover": [],
+    "actions": []
+  },
+  {
     "code": "Maki Nori",
     "isNew": true,
     "name": "Maki Nori",
@@ -2750,6 +2772,19 @@ const SITES = [
     ]
   }
 ];
+
+// M21 opened 21/08/2026. It is baked into SITES above so every render path can see
+// it, but weeks before that date carry no M21 entry in their manifest. loadLiveWeek
+// calls applySiteGate() once the week's manifest is in, rebuilding SITES from
+// SITES_ALL: every ungated site, plus any date-gated site that week actually has.
+// Mirrors SITE_LIVE_FROM in build_site_json.py.
+const SITE_LIVE_FROM = { "M21": "2026-08-21" };
+const SITES_ALL = SITES.slice();
+function applySiteGate(weekCodes){
+  const present = new Set(weekCodes || []);
+  SITES.length = 0;
+  SITES_ALL.forEach(s => { if(!SITE_LIVE_FROM[s.code] || present.has(s.code)) SITES.push(s); });
+}
 
 const THEMES = [
   {
@@ -2881,6 +2916,7 @@ const METRICS = {
   "M18": { wage: 25.20, food: 25.43, foodVar: null, varIncomplete: "both" },
   "M19": { wage: null, food: null, foodVar: null, varIncomplete: "both" },
   "M20": { wage: null, food: null, foodVar: null, varIncomplete: "both" },
+  "M21": { wage: null, food: null, foodVar: null, varIncomplete: "both" },
   "Maki Nori": { wage: 23, food: 19, foodVar: null, varIncomplete: "both" },
   "IKI2": { wage: 28.6, food: 23.72, foodVar: null, varIncomplete: "both" }
 };
@@ -5023,7 +5059,7 @@ function renderPeopleBoard() {
   const spread = (scored.length >= 2)
     ? `Spread between best and worst region: <strong>${scored[0].score - scored[scored.length - 1].score} points</strong>.`
     : '';
-  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. 19-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>. ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
+  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. ${SITES.length}-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>. ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
 
   wrap.innerHTML = header + body + foot;
 }
@@ -5266,6 +5302,7 @@ function loadLiveWeek(manifestFile, isNewest){
   return source
     .then(({ manifest, settled }) => {
       const list = manifest.sites || [];
+      applySiteGate(list.map(si => jsonToDisplay(si.code)));   // date-gated sites (M21) drop out of weeks that predate them
       settled.forEach((res, i) => {
         if(res.status !== "fulfilled") return;          // per-site failure: leave that site baked
         const sites = (res.value && res.value.sites) || {};
