@@ -77,9 +77,11 @@ SITES = [c for _n, _am, _dam, codes in CLUSTERS for c in codes]
 #    is NOT Ikigai 2. Do not add it. Leith rows fall through to `unmapped`.
 # ⭐ IKI2 has NO label on this tab at all, so it always reads zero reviews.
 #    That is a SOURCE gap, not a bug, and is reported in `gaps`.
-# ⭐ M21 (added to CLUSTERS 24/08/2026) likewise has NO label on this tab yet.
-#    It will report as `no_reviews_in_window` until the site is added to the
-#    reviews workbook lookup. Chase: Becca / Georgie. Never render it as 0.
+# ⭐ M21 had NO label on this tab until 25/08/2026, when a `Maki Birmingham`
+#    label appeared at source carrying 179 reviews dated 20/08 onward (nothing
+#    before). Mapping approved by Michael 25/08/2026. The label is still NOT
+#    `Maki 21` — if it is ever renamed at source, ADD the new key, do not
+#    replace this one, or the history silently drops. Chase: Becca / Georgie.
 # ⭐ MAF1/MAF3/MAF-NQ are franchise, collected-but-not-rendered (not in SITES).
 # --------------------------------------------------------------------------
 SITE_TO_CODE = {
@@ -93,6 +95,10 @@ SITE_TO_CODE = {
     #    31/07/2026 — this is M3's feed coming alive under a new label.
     #    Mapping approved by Michael 11/08/2026 (M3 = Fountainbridge, Edinburgh).
     "fountainbridge": "M3",
+    # ⭐ 25/08/2026: 'Maki Birmingham' rows started arriving in Raw Data on
+    #    20/08/2026, one day before M21 opened. Mapping approved by Michael
+    #    25/08/2026 (M21 = Birmingham).
+    "maki birmingham": "M21",
 }
 RATING_WORD_TO_INT = {"five": 5, "four": 4, "three": 3, "two": 2, "one": 1}
 
