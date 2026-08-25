@@ -460,8 +460,8 @@ footer{border-top:1px solid var(--maki-line);margin-top:40px;padding:14px 22px;f
 <script>
 const FALLBACK_DATA = {
   meta: {
-    version: "1.27.0",
-    generated_at: "2026-08-05T06:30:00Z",
+    version: "1.28.0",
+    generated_at: "2026-08-25T06:45:00Z",
     food_cost_target_pct: 25, food_cost_warn_pct: 25, food_cost_critical_pct: 27, food_cost_low_pct: 23,
     /* Per-week food-cost band override (Michael, 27 Jul 2026). w/c 27 Jul budget raised to 27% so sites can
        replenish par levels after the summer draw-down; reverts to the standing 25% from w/c 03 Aug. Bands move
@@ -661,6 +661,7 @@ const FALLBACK_DATA = {
   ],
 
   data_caveats: [
+    "M21 BIRMINGHAM ADDED TO THE BUDGET BURN (25 Aug, v1.28.0, Michael: 'm21 needs added to the budget burn'). New site object in daily_spend.sites (South cluster) + codeCluster hooks, plus a standing_budget of £8,750/wk (25% × £35,000 run-rate estimate — no Soph KPI target exists yet; reprice when one is published). Ledger backfilled with the 6 Head Chef Daily Reports filed 9–16 Aug (never ingested — 'Maki Birmingham Ltd' had no code in the daily-skim mapping). 15 Aug daily was filed as 8848.37 = the WTD figure; booked as £459.98 by WTD delta. 9 Aug WTD (7,781.15) is lower than the same day's itemised orders (8,134.18) — the orders were for 10–13 Aug delivery, so the 10 Aug WTD of 8,134.18 is taken as the true week figure. NOT FILED 17–24 Aug despite trading from Fri 21 Aug (Kobas). M21 is NOT on the heat map / Sales-vs-Budget tile (Soph-driven) — the 18-site scope there is unchanged.",
     "w/c 27 JUL BACKFILL (04 Aug, v1.26.0): food variance and Deliveroo RAG for w/c 27 Jul are now filled from the AM Control Centre manifest manifest_wc_2026-07-27.json (19 site files, generated 03-04 Aug). Food variance = stock_take.food.variance_pct for all 18 heat-map sites (no site left null). del_rag = the AM CC Deliveroo Overall roll-up recomputed from the per-site deliveroo block using the AM CC's own 5-metric rule (rating \u22654.7/\u22654.0 \u00b7 open-hrs \u226598/\u226595 \u00b7 prep \u226415/\u226418 \u00b7 inaccuracy \u22642/\u22643 \u00b7 rider-wait \u22642/\u22644; RED if any metric red, GREEN only if all five green, missing metric \u21d2 amber) \u2014 the rule was validated by reproducing all 19 filed w/c 20 Jul del_rag values exactly. M7 Leith Street, Maki Nori and M20 Southampton have no Deliveroo this week so del_rag stays null. The Deliveroo RAG block was rebuilt on the same AM CC basis (15 sites) \u2014 the June workbook numbers were NOT carried forward. IK2 is still absent from sites[] (known coverage hole, unchanged). NOT REFRESHED and still stale: the whole Monthly tab \u2014 labour cost runs to May 2026, delivery spend to a partial June 2026, and the EC OKRs are genuinely May 2026 (left labelled May on purpose, not faked). The Factory \u00a3 callout on the Weekly tab is still w/c 29 Jun 2026 \u2014 no July factory pull exists in Lincoln's Daily Sales workbook; the heading now says so. Hygiene %, food quality %, RACI, risks and OKR arrays untouched.",
     "SUPERSEDED 04 Aug (see the w/c 27 JUL BACKFILL entry above) — w/c 27 Jul (filed 03 Aug): food variance and Deliveroo RAG were null for every site because the AM Control Centre had not yet published that week — backfill both from the AM CC JSON layer once manifest_wc_2026-07-27.json exists. M17 fc 14.26% carries a probable missing-invoice LOW; expect a catch-up spike in w/c 03 Aug.",
     "M19 SHOREDITCH + M20 SOUTHAMPTON ADDED TO THE HEAT MAP (29 Jul, v1.24.0, Michael's call). Both were excluded under the 9 Jun standing decision as pre-open/stabilisation sites; both are now trading and carried on the AM Control Centre, so the main grid is 18 sites and the South cluster is M17, M18, MN, M19, M20. AM CC only holds M19 from w/c 29 Jun (4 weeks) and M20 from w/c 06 Jul (3 weeks) — everything older is blank because the sites did not exist, not because it is missing. READ BOTH WITH CARE: M19 wage runs 36.6-78.4% and M20 food cost reads 7.2% in one week; these are new-site artefacts (labour not yet on rota, supplier invoices not yet coded to the site), so their composite RAG is red for reasons that are not standards failures. Neither site has hygiene or food-quality audit scores yet. M20 is not on Mapal and has no Deliveroo. Star for M19, M20 and MN is the AM weekly average review rating, not a lifetime venue rating.",
@@ -796,7 +797,10 @@ const FALLBACK_DATA = {
     standing_budget: {
       M20: { amount: 11500.00, pct: 25, from: "2026-07-05",
              basis: "25% × Soph KPI target sales £46,000 (w/c 20 Jul) — the standing budget rule",
-             reason: "Head Chef has reported Budget Left This Week = £0 on every filed day (10, 16, 19, 26, 27 Jul) — no weekly budget has ever been issued to the site, so the HC-derived basis was meaningless." }
+             reason: "Head Chef has reported Budget Left This Week = £0 on every filed day (10, 16, 19, 26, 27 Jul) — no weekly budget has ever been issued to the site, so the HC-derived basis was meaningless." },
+      M21: { amount: 8750.00, pct: 25, from: "2026-08-09",
+             basis: "25% × £35,000/wk run-rate estimate (Michael, 25 Aug 2026) — Birmingham is not yet on the Soph KPI sheet, so no published target exists. First 4 Kobas trading days (Fri 21–Mon 24 Aug) netted £2,773 / £5,674 / £4,253 / £6,157. Reprice to 25% × Soph target once Matthew publishes one.",
+             reason: "Head Chef has filed Budget Left This Week = £0 on every filed day (9, 10, 12, 13, 15, 16 Aug) with the comment 'No budget set for the site yet' — same fault as M20: without a central figure the burn reads 100% by construction." }
     },
     june_cap_basis: "Interim monthly caps = 23% × Mar–May avg MA revenue (until official caps are issued)",
     sites: [
@@ -817,6 +821,7 @@ const FALLBACK_DATA = {
       { code:"M18", yday:4327.90, hc_wtd:4327.90,  hc_left:2681.10, wk_budget:7360.00,  mtd:14769.30, cap:30451, note:"Harro £758.77 + Lynas £1,593.19 + TWF £269.56 + LWC £1,160.99 + AA Factory £545.39 = £4,327.90. Day-1 burn 59% of wk budget. HC config now showing weekly base £7,009 (was zero last week) — closer to ours; Δ £351." },
       { code:"M19", yday:null, hc_wtd:3716.13, hc_left:1688.67, wk_budget:6345.00, mtd:null, cap:null,  note:"Shoreditch — budget now set centrally: 27% × £23,500 Soph KPI target = £6,345 for w/c 27 Jul, reverting to 23% (£5,405) after. The Head Chef base was already a correct 23% of target, so only the override week changes. Ledger history since 27 Jun; skim still files some days under legacy code SHO (aliased to M19 on load). No monthly cap yet (new site — no Mar–May MA base). Food cost 29.3% for w/c 20 Jul (up from 23.0%) — food spend +50% on sales +18%: the real issue at this site." },
       { code:"M20", yday:null, hc_wtd:7466.26, hc_left:0.00, wk_budget:12420.00, mtd:null, cap:null,  note:"Southampton — NEVER HAD A WEEKLY BUDGET. The Head Chef has entered Budget Left This Week = £0 on every filed day (10, 16, 19, 26 Jul), so the derived basis equalled its own spend and the burn read 100% by construction. Budget now set centrally: standing 25% × £46,000 Soph KPI target = £11,500/wk, and 27% (£12,420) for the w/c 27 Jul par-replenishment week. On that basis Southampton has been running at roughly 65% of budget, not 100%. ACTION: issue the £11,500 figure to the Head Chef so Mapal reports a real Budget Left. Ledger history since 10 Jul; skim still files some days under legacy code SOT (aliased to M20 on load). No monthly cap yet." },
+      { code:"M21", yday:null, hc_wtd:10387.70, hc_left:0.00, wk_budget:8750.00, mtd:null, cap:null,  note:"Birmingham — site code M21 assigned 25 Aug 2026 (Michael). Head Chef Daily Reports began 9 Aug (Srawut \"O\" Chairipu, then Bikash Tamang / Rogerio Maia) but were never ingested — no code in the skim mapping — so the 6 filed days (9, 10, 12, 13, 15, 16 Aug) were backfilled by hand on 25 Aug. w/c 9 Aug = £8,848 pre-opening stock (Dunster / JFC / Harro / JFE / Solstice / True World); w/c 16 Aug = £10,388 on the Sunday alone (JFE £1,814 + JFC £8,574). NOT FILED 17–24 Aug although Kobas shows the site trading from Fri 21 Aug — chase DEC O / Bikash. Budget Left = £0 every day ('no budget set for the site yet'), so a standing budget of £8,750/wk (25% × £35k run-rate) is applied from w/c 9 Aug; expect >100% on the two stock-build weeks. Not on Soph KPI, no monthly cap, not on the heat map." },
       { code:"IK2", yday:454.23,  hc_wtd:454.23,   hc_left:3932.77, wk_budget:4956.50,  mtd:2902.08,  cap:17547, note:"AA Factory £408.30 + Global Fruits £45.93 = £454.23. | HC base £4,387 vs our £4,957 (Δ £570)." },
       { code:"MN",  yday:1826.77, hc_wtd:1826.77,  hc_left:5173.23, wk_budget:7000.00,  mtd:8640.25,  cap:null,  note:"Single £1,826.77 figure logged (suppliers not itemised). HC base £7,000 — wk_budget set from HC base (no Soph KPI row for MN)." }
     ],
@@ -1308,7 +1313,7 @@ function renderWeeklyBudget(){
 function renderDailySpend(){
   const d = DATA.daily_spend; if(!d) return;
   let view = d.sites;
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const effC = budgetEffCluster();
   if(effC!=="all") view = view.filter(r=>codeCluster[r.code]===effC);  const filed = d.sites.filter(r=>r.hc_wtd!=null).length;
   const ydaySum = d.sites.reduce((a,r)=>a+(r.yday||0),0);
@@ -1636,7 +1641,7 @@ function renderBudgetStatusAndOverview(d, dates, view, selSun, selThrough){
 function renderClosedWeeks(d, dates){
   const tb=document.querySelector("#closedWeeksTbl tbody"); if(!tb) return;
   const liveSun=liveWeekSun(d);
-  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south";
+  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const effC=budgetEffCluster();
   const sites=d.sites.filter(r=> effC==="all" || codeCluster[r.code]===effC);
   const sumRange=(code,a,b)=>dates.filter(dt=>dt>=a&&dt<=b).reduce((s,dt)=>s+((d.ledger[dt]||{})[code]||0),0);
@@ -1699,7 +1704,7 @@ function renderBudget(){
   document.getElementById("budgetHeroTitle").textContent = `Budget burn · ${weekLabel(sunISO)}${isLiveWeek?" (current)":""} · ${dObj.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`;
   const month = date.slice(0,7);
   const dayOfMonth = parseInt(date.slice(8,10),10);
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const sumRange = (code, fromISO, toISO) => dates.filter(dt=>dt>=fromISO&&dt<=toISO).reduce((a,dt)=>a+((d.ledger[dt]||{})[code]||0),0);
   const bar = (pct, warn, crit) => {
     if(pct==null) return '<span style="color:var(--maki-muted)">—</span>';
