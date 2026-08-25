@@ -1618,7 +1618,7 @@
   </div>
   <div style="overflow-x:auto"><table class="tbl" id="budgetBurnTbl">
     <thead><tr><th>Site</th><th class="num">Spent Yesterday £</th><th class="num">Weekly Spend £</th><th class="num">Weekly Budget £</th><th style="min-width:130px">Week Usage</th><th class="num">Monthly Spend £</th><th class="num">Month Cap £</th><th style="min-width:130px">Month Pace</th></tr></thead><tbody></tbody></table></div>
-  <div class="section-intro" style="margin-top:10px">Week Usage = spend Sun→selected day vs the HC weekly budget (red &gt;100% · amber &gt;85%). Month Pace = monthly spend vs the month cap (interim: 23% × Mar–May avg revenue) pro-rated to the selected day (red &gt;110% · amber &gt;100%). Only filed reports count — the ledger starts 9 Jun 2026.</div>
+  <div class="section-intro" style="margin-top:10px">Week Usage = spend Sun→selected day vs the HC weekly budget (red &gt;100% · amber &gt;85%). Month Pace = monthly spend vs the month cap (interim: 23% × Mar–May avg revenue; M19, M20, M21 and Maki Nori have no Mar–May history, so their caps are the weekly budget in force × 52/12 — set 25 Aug 2026, reprice when official caps are issued) pro-rated to the selected day (red &gt;110% · amber &gt;100%). Only filed reports count — the ledger starts 9 Jun 2026.</div>
   <div class="delivery-tile" id="dailySpendTile" style="border-top-color:#1F8A4C">
     <h2>Daily Spend Skim · BOH food spend vs budget</h2>
     <div class="tile-sub">From the Mapal <strong>Head Chef Daily Report</strong> emails, parsed each morning. Figures and filing status refresh live from the ledger sheet on every load. <span class="source-chip manual">Mapal Compliance emails</span></div>
@@ -6583,7 +6583,7 @@ function renderBudget(){
     { l:"WTD", n: fmtGBP(gWtd), cls:"" },
     { l:"Weekly budget", n: fmtGBP(gWkB), cls:"green" },
     { l:"MTD", n: fmtGBP(gMtd), cls:"" },
-    { l:"June caps", n: fmtGBP(gCap), cls:"green" }
+    { l:"Month caps", n: fmtGBP(gCap), cls:"green" }
   ];
   document.getElementById("budgetHeroStats").innerHTML = hero.map(h=>`<div class="hstat ${h.cls}"><div class="n" style="font-size:19px">${h.n}</div><div class="l">${h.l}</div></div>`).join("");
   // ---- previous-week like-for-like delta (same number of days into the week) ----
