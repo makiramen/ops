@@ -6197,6 +6197,10 @@ function parseSheetCSV(text){
 }
 function applySheetRows(rows){
   const ds=DATA.daily_spend; if(!ds) return;
+  // Site go-live gate — { CODE:"YYYY-MM-DD" } from the snapshot. A new site's ledger
+  // history BEFORE its go-live date is ignored everywhere on this tab (spend, MTD,
+  // weekly base, missed-filing tally). Data-driven so the bake applies it identically.
+  const LIVE_FROM = ds.live_from || {};
   const newLedger={}; const newBaseline={}; const newWeeksBudget={}; const newWeekClose={}; const newHcBase={};
   let latestDate=null;
   for(const r of rows){
@@ -6204,6 +6208,7 @@ function applySheetRows(rows){
     if(((r.notes||"")+"").trim().toUpperCase().startsWith("VOID")) continue;   // mislabelled rows voided in the ledger
     if(r.site_code==="SHO") r.site_code="M19";   // legacy skim codes for Shoreditch/Southampton
     if(r.site_code==="SOT") r.site_code="M20";
+    if(LIVE_FROM[r.site_code] && r.date < LIVE_FROM[r.site_code]) continue;   // pre-go-live row — deliberately excluded, see live_from
     const val=(r.daily_total===""||r.daily_total==null)?null:parseFloat(r.daily_total);
     if(r.source==="weekly_budget_lock"){           // per-week locked 23% basis · date = w/c Sunday
       if(!r.site_code) continue;
@@ -6252,7 +6257,7 @@ function applySheetRows(rows){
   // Refresh sites[] for the latest date. Filed sites get live figures; non-filers are nulled
   // and get a LIVE-computed status (never the baked snapshot note — those go stale).
   if(latestDate && Array.isArray(ds.sites)){
-    const HC_CHASE = { M10:"Sebastian Przekop / Drew" };
+    const HC_CHASE = { M10:"Sebastian Przekop / Drew", M21:"DEC O / Bikash" };
     const fmtShortDate = iso => new Date(iso+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
     const ledgerDatesDesc = Object.keys(newLedger).sort().reverse();
     const curWkSun = weekSunISO(latestDate);
@@ -6270,7 +6275,7 @@ function applySheetRows(rows){
         site.wk_budget = (wb && wb[site.code]!=null) ? wb[site.code] : null;
         let lastFiled=null;
         for(const dt of ledgerDatesDesc){ const v=(newLedger[dt]||{})[site.code]; if(v!=null && isFinite(v)){ lastFiled=dt; break; } }
-        site.note = "NOT FILED — chase " + (HC_CHASE[site.code]||"site HC") + (lastFiled ? (". Last filed "+fmtShortDate(lastFiled)+".") : ". Never filed.");
+        site.note = "NOT FILED — chase " + (HC_CHASE[site.code]||"site HC") + (lastFiled ? (". Last filed "+fmtShortDate(lastFiled)+".") : (LIVE_FROM[site.code] ? ". Nothing filed since go-live "+fmtShortDate(LIVE_FROM[site.code])+"." : ". Never filed."));
       }
     }
   }
@@ -6303,7 +6308,7 @@ function fmtMonthShort(ym){ if(!ym) return ""; const [y,m]=ym.split("-"); const 
 function renderDailySpend(){
   const d = DATA.daily_spend; if(!d) return;
   let view = d.sites;
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const effC = budgetEffCluster();
   if(effC!=="all") view = view.filter(r=>codeCluster[r.code]===effC);  const filed = d.sites.filter(r=>r.hc_wtd!=null).length;
   const ydaySum = d.sites.reduce((a,r)=>a+(r.yday||0),0);
@@ -6335,6 +6340,7 @@ function renderDailySpend(){
 }
 function weekSunISO(dateISO){ const x=new Date(dateISO+"T12:00:00"); x.setDate(x.getDate()-x.getDay()); return x.toISOString().slice(0,10); }
 function weekSatISO(sunISO){ const x=new Date(sunISO+"T12:00:00"); x.setDate(x.getDate()+6); return x.toISOString().slice(0,10); }
+function siteLiveInWeek(d, code, sunISO){ const lf=(d && d.live_from || {})[code]; return !lf || sunISO >= weekSunISO(lf); }   // go-live gate, week granularity
 function weekLabel(sunISO){ const s=new Date(sunISO+"T12:00:00"); return "w/c "+s.toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
 function liveWeekSun(d){ const dates=Object.keys(d.ledger||{}); if(!dates.length) return null; const last=(d.as_at && dates.includes(d.as_at))?d.as_at:dates.slice().sort().slice(-1)[0]; return weekSunISO(last); }
 function seedWeekBudgets(d){
@@ -6346,7 +6352,7 @@ function seedWeekBudgets(d){
   [...new Set(dates.map(weekSunISO))].forEach(sun=>{
     if(d.weeks_budget[sun] && (d.weeks_budget[sun]._locked || d.weeks_budget[sun]._derived)){ delete d._provisionalWeeks[sun]; return; }
     d.weeks_budget[sun] = d.weeks_budget[sun] || {};
-    d.sites.forEach(s=>{ if(d.weeks_budget[sun][s.code]==null && s.wk_budget!=null) d.weeks_budget[sun][s.code]=s.wk_budget; });
+    d.sites.forEach(s=>{ if(!siteLiveInWeek(d,s.code,sun)) return; if(d.weeks_budget[sun][s.code]==null && s.wk_budget!=null) d.weeks_budget[sun][s.code]=s.wk_budget; });
     d._provisionalWeeks[sun]=true;   // current 23% basis applied to a week that was never contemporaneously locked
   });
   applyStandingBudgets(d);
@@ -6360,6 +6366,7 @@ function applyStandingBudgets(d){
     for(const code in sb){
       const s=sb[code]; if(!s || s.amount==null) continue;
       if(s.from && sun < weekSunISO(s.from)) continue;
+      if(!siteLiveInWeek(d,code,sun)) continue;
       d.weeks_budget[sun]=d.weeks_budget[sun]||{};
       d.weeks_budget[sun][code]=s.amount;
       (d._standingWeeks[sun]=d._standingWeeks[sun]||{})[code]=true;
@@ -6424,7 +6431,7 @@ function renderBudgetStatusAndOverview(d, dates, view, selSun, selThrough){
 function renderClosedWeeks(d, dates){
   const tb=document.querySelector("#closedWeeksTbl tbody"); if(!tb) return;
   const liveSun=liveWeekSun(d);
-  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south";
+  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const effC=budgetEffCluster();
   const sites=d.sites.filter(r=> effC==="all" || codeCluster[r.code]===effC);
   const sumRange=(code,a,b)=>dates.filter(dt=>dt>=a&&dt<=b).reduce((s,dt)=>s+((d.ledger[dt]||{})[code]||0),0);
@@ -6486,14 +6493,14 @@ function renderBudget(){
   document.getElementById("budgetHeroTitle").textContent = `Budget burn · ${weekLabel(sunISO)}${isLiveWeek?" (current)":""} · ${dObj.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`;
   const month = date.slice(0,7);
   const dayOfMonth = parseInt(date.slice(8,10),10);
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const sumRange = (code, fromISO, toISO) => dates.filter(dt=>dt>=fromISO&&dt<=toISO).reduce((a,dt)=>a+((d.ledger[dt]||{})[code]||0),0);
   const bar = (pct, warn, crit) => {
     if(pct==null) return '<span style="color:var(--maki-muted)">—</span>';
     const col = pct>crit?"var(--rag-red)":pct>warn?"var(--rag-amber)":"var(--rag-green)";
     return `<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:8px;background:var(--maki-soft);border-radius:4px;overflow:hidden"><div style="width:${Math.min(100,pct).toFixed(0)}%;height:100%;background:${col}"></div></div><span style="font-size:11px;font-weight:600;min-width:38px;text-align:right;color:${col}">${pct.toFixed(0)}%</span></div>`;
   };
-  let view = d.sites;
+  let view = d.sites.filter(r=>siteLiveInWeek(d,r.code,sunISO));
   const effCluster = budgetEffCluster();
   if(effCluster!=="all") view = view.filter(r=>codeCluster[r.code]===effCluster);
   let gDay=0,gWtd=0,gMtd=0,gWkB=0,gCap=0;
@@ -6608,15 +6615,17 @@ function renderMissedFilings(d, dates){
   const latest = dates[dates.length-1];
   const roster = (d.sites||[]).map(s=>s.code);
   if(!roster.length){ el.innerHTML=""; return; }
+  const LIVE_FROM = d.live_from || {};
   // first day each site ever filed — so we don't count pre-onboarding days as misses
   const firstFiled={};
   roster.forEach(code=>{ for(const dt of dates){ const v=(d.ledger[dt]||{})[code]; if(v!=null && isFinite(v)){ firstFiled[code]=dt; break; } } });
   const missCount={};
-  roster.forEach(code=>{ const start=firstFiled[code]||dates[0]; missCount[code]=dates.filter(dt=>dt>=start && ((d.ledger[dt]||{})[code]==null)).length; });
-  const missedLatest = roster.filter(code=>((d.ledger[latest]||{})[code]==null));
+  roster.forEach(code=>{ const start=firstFiled[code]||LIVE_FROM[code]||dates[0]; missCount[code]=dates.filter(dt=>dt>=start && ((d.ledger[dt]||{})[code]==null)).length; });
+  const liveRoster = roster.filter(code=>!(LIVE_FROM[code] && latest < LIVE_FROM[code]));   // a site not yet live is not a non-filer
+  const missedLatest = liveRoster.filter(code=>((d.ledger[latest]||{})[code]==null));
   const dLabel = new Date(latest+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
   if(!missedLatest.length){
-    el.innerHTML = `<div class="note" style="background:#E9F8EF;border:1px solid #B7E4C7;color:#0E5A30;padding:10px 14px;border-radius:var(--radius);font-size:12.5px">&#10003; <strong>All ${roster.length} sites filed</strong> the daily input for ${dLabel}.</div>`;
+    el.innerHTML = `<div class="note" style="background:#E9F8EF;border:1px solid #B7E4C7;color:#0E5A30;padding:10px 14px;border-radius:var(--radius);font-size:12.5px">&#10003; <strong>All ${liveRoster.length} sites filed</strong> the daily input for ${dLabel}.</div>`;
     return;
   }
   missedLatest.sort((a,b)=>(missCount[b]||0)-(missCount[a]||0));
