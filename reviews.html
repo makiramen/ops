@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maki &amp; Ramen · Reviews Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --maki-orange:#E94E1B;--maki-orange-soft:#F47C24;--maki-orange-bg:#FFF1EA;--maki-orange-ring:#E94E1B33;--maki-ink:#1A1410;--maki-cream:#FFF8F0;
+  --bg:#f4f5f9;--surface:#fff;--surface-2:#fafbfd;--ink:#0f172a;--ink-2:#475569;--ink-3:#94a3b8;--line:#e2e8f0;
+  --red:#dc2626;--red-bg:#fef2f2;--red-ring:#fecaca;--amber:#d97706;--amber-bg:#fffbeb;--amber-ring:#fde68a;--green:#059669;--green-bg:#ecfdf5;--green-ring:#a7f3d0;--indigo:#4f46e5;--indigo-bg:#eef2ff;
+  --c-food:#c2410c;--c-service:#1d4ed8;--c-speed:#d97706;--c-value:#7c3aed;--c-clean:#0d9488;--c-other:#94a3b8;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.06);--shadow-lg:0 4px 24px rgba(15,23,42,.08),0 16px 40px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Inter","Segoe UI","Noto Sans JP",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+/* ===== BRAND BAR (identical to the Control Centre) ===== */
+.maki-brand-bar{background:var(--maki-cream);border-bottom:2px solid var(--maki-orange);padding:14px 32px;display:flex;align-items:center;gap:18px;box-shadow:0 1px 0 rgba(233,78,27,.06)}
+.maki-brand-bar .maki-logo{height:48px;width:auto;display:block;flex-shrink:0}
+.maki-brand-bar .maki-logo-fallback{display:none;flex-shrink:0;font-weight:800;font-size:22px;letter-spacing:-.01em;line-height:1;padding:6px 14px;background:var(--maki-ink);color:#fff;border-radius:10px;border:2px solid var(--maki-orange)}
+.maki-brand-bar .maki-logo-fallback .accent{color:var(--maki-orange)}
+.maki-brand-bar img.maki-logo[data-broken="true"]{display:none}
+.maki-brand-bar img.maki-logo[data-broken="true"]+.maki-logo-fallback{display:inline-block}
+.maki-brand-title{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.maki-brand-name{white-space:nowrap;font-size:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--maki-ink);line-height:1}
+.maki-brand-name .dot{color:var(--maki-orange);margin:0 8px}
+.maki-brand-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;font-weight:600;color:var(--maki-orange);letter-spacing:.01em;line-height:1.2}
+.maki-brand-kanji{font-family:"Noto Sans JP","Plus Jakarta Sans",system-ui,sans-serif;font-size:13px;font-weight:700;color:var(--maki-orange);letter-spacing:.04em;white-space:nowrap}
+.maki-brand-chip{background:var(--maki-orange-bg);border:1px solid var(--maki-orange-ring);color:var(--maki-orange);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.week-toggle-bar{margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.week-toggle-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3)}
+.week-select{background:#fff;border:1px solid var(--line);color:var(--ink);padding:7px 30px 7px 12px;border-radius:9px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:var(--shadow);-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'><path d='M1 1l4 4 4-4' stroke='%23E94E1B' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");background-repeat:no-repeat;background-position:right 12px center;max-width:230px}
+.week-chip{background:#fff;border:1px solid var(--line);color:var(--ink-2);padding:6px 14px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;transition:.15s ease;white-space:nowrap;user-select:none;font-family:inherit}
+.week-chip:hover{border-color:var(--maki-orange);color:var(--maki-orange)}
+.week-chip.active{background:var(--maki-orange);border-color:var(--maki-orange);color:#fff;box-shadow:0 1px 3px rgba(233,78,27,.25)}
+.week-chip.nav{padding:6px 10px;font-weight:800}
+.week-past-badge{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-ring);font-size:10.5px;font-weight:700;padding:3px 8px;border-radius:999px;text-transform:uppercase;letter-spacing:.05em}
+.wrap{max-width:1280px;margin:0 auto;padding:24px}
+/* ===== HERO ===== */
+.hero{background:linear-gradient(120deg,var(--maki-orange),var(--maki-orange-soft));color:#fff;border-radius:14px;padding:16px 18px;margin-bottom:20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap;box-shadow:var(--shadow)}
+.hero-inner{min-width:0}
+.eyebrow{text-transform:uppercase;letter-spacing:.12em;font-size:10px;font-weight:800;color:#fff;opacity:.85}
+.hero h1{margin:2px 0 0;font-size:19px;font-weight:800;letter-spacing:-.01em;color:#fff}
+.hero-sub{color:#fff;opacity:.9;font-size:11.5px;margin-top:3px;max-width:560px}
+.hero-stats{margin:0 0 0 auto;display:flex;gap:10px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.22);border-radius:11px;padding:8px 13px;text-align:center;min-width:62px;cursor:default}
+.stat-num{font-size:20px;font-weight:800;line-height:1;letter-spacing:-.01em}
+.stat-label{font-size:9.5px;color:#fff;opacity:.9;text-transform:uppercase;letter-spacing:.06em;margin-top:3px;font-weight:700}
+.stat.red .stat-num{color:#ffd9d2}.stat.amber .stat-num{color:#ffe9c2}.stat.green .stat-num{color:#c9f7e2}
+/* ===== TABBAR + SCOPE NAV ===== */
+.tabbar{display:flex;gap:2px;background:rgba(255,255,255,.86);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;padding:7px;margin-bottom:14px;box-shadow:var(--shadow);position:sticky;top:10px;z-index:60;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.tabbar::-webkit-scrollbar{display:none}
+.tabbtn{flex:none;border:0;background:transparent;color:var(--ink-2);font-weight:600;font-size:13px;padding:8px 14px;border-radius:9px;cursor:pointer;transition:all .12s;font-family:inherit;display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tabbtn:hover{background:var(--surface-2);color:var(--ink)}
+.tabbtn.active{background:var(--maki-orange-bg);color:var(--maki-orange)}
+.tb-badge{background:var(--red);color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px}
+.tb-badge.amber{background:var(--amber)}.tb-badge.zero{background:var(--ink-3)}
+.tabpanel{display:none;animation:fade .2s ease-out}.tabpanel.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.cluster-nav{position:sticky;top:64px;z-index:55;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;display:flex;align-items:center;gap:8px;padding:9px 14px;margin-bottom:20px;box-shadow:var(--shadow);overflow-x:auto;scrollbar-width:none}
+.cluster-nav::-webkit-scrollbar{display:none}
+.cn-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);flex:none;margin-right:2px}
+.cn-pill{flex:none;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:6px 11px;cursor:pointer;transition:.12s;font-family:inherit}
+.cn-pill:hover{border-color:var(--ink-3)}
+.cn-pill.active{background:var(--maki-ink);border-color:var(--maki-ink)}
+.cn-name{font-size:12px;font-weight:700;color:var(--ink)}.cn-pill.active .cn-name{color:#fff}
+.cn-count{font-size:11px;color:var(--ink-3);font-weight:600}.cn-pill.active .cn-count{color:rgba(255,255,255,.7)}
+.cn-rag{display:flex;gap:3px;align-items:center}
+.chip-dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle}
+.chip-dot.red{background:var(--red)}.chip-dot.amber{background:var(--amber)}.chip-dot.green{background:var(--green)}.chip-dot.na{background:var(--ink-3)}
+.cn-site{margin-left:auto;flex:none;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--ink-2)}
+.cn-site b{color:var(--ink)}
+.cn-site .x{background:var(--maki-orange-bg);color:var(--maki-orange);border:1px solid var(--maki-orange-ring);border-radius:999px;padding:3px 10px;font-weight:700;cursor:pointer;font-size:11.5px}
+/* ===== SECTIONS ===== */
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin:22px 0 12px;gap:12px;flex-wrap:wrap}
+.section-head h2{margin:0;font-size:18px;font-weight:700;letter-spacing:-.01em}
+.section-head .hint{color:var(--ink-3);font-size:12px}
+.section-head:first-child{margin-top:4px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 20px;margin-bottom:18px}
+.card h3{margin:0 0 2px;font-size:14px;font-weight:800}
+.card .sub{color:var(--ink-2);font-size:12.5px;margin-bottom:12px}
+.grid{display:grid;gap:18px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:repeat(3,1fr)}
+@media (max-width:900px){.g2,.g3{grid-template-columns:1fr}}
+/* KPI tiles (Control Centre .kpi grammar) */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
+@media (max-width:1000px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);cursor:default;transition:transform .12s,box-shadow .12s;border-left:4px solid var(--line)}
+.kpi.clickable{cursor:pointer}.kpi.clickable:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.kpi.red{border-left-color:var(--red)}.kpi.amber{border-left-color:var(--amber)}.kpi.green{border-left-color:var(--green)}
+.kpi-label{font-size:10px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+.kpi-value{font-size:22px;font-weight:800;margin-top:4px;letter-spacing:-.01em;line-height:1.1}
+.kpi-value.red{color:var(--red)}.kpi-value.amber{color:var(--amber)}.kpi-value.green{color:var(--green)}.kpi-value.na{color:var(--ink-3)}
+.kpi-trend{font-size:11.5px;color:var(--ink-2);margin-top:3px}
+.row-delta{font-weight:700}.row-delta.green{color:var(--green)}.row-delta.red{color:var(--red)}.row-delta.amber{color:var(--amber)}.row-delta.na{color:var(--ink-3);font-weight:500}
+/* alert */
+.alert{background:linear-gradient(90deg,#fef2f2 0%,#fff 100%);border:1px solid var(--red-ring);border-left:4px solid var(--red);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+.alert-icon{width:32px;height:32px;background:var(--red);color:#fff;border-radius:50%;display:grid;place-items:center;font-weight:700;flex-shrink:0}
+.alert b{color:var(--red)}.alert small{color:var(--ink-2);display:block;margin-top:2px}
+/* items (issues / actions) */
+.panel{margin-bottom:8px}
+.panel-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px;color:var(--ink-2)}
+.panel-head.issues{color:var(--red)}.panel-head.actions{color:var(--green)}.panel-head.info{color:var(--ink-3)}
+.item{background:var(--surface-2);border-left:3px solid var(--line);padding:10px 14px;border-radius:6px;margin-bottom:6px;font-size:13px;color:var(--ink);line-height:1.5;cursor:pointer;transition:background .12s}
+.item:hover{background:#f1f5f9}
+.item.red{border-left-color:var(--red)}.item.amber{border-left-color:var(--amber)}.item.info{border-left-color:var(--ink-3)}
+.item b{display:block}.item .why{font-size:12.5px;color:var(--ink-2)}.item .own{font-size:11.5px;font-weight:700;margin-top:3px;color:var(--ink-2)}
+.item-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.site-pill{display:inline-block;font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--surface);border:1px solid var(--line);color:var(--ink-2)}
+/* read-out */
+.readout{white-space:pre-wrap;font-size:13.5px;line-height:1.65}
+.readout.empty{color:var(--ink-3);font-style:italic}
+/* heat map tiles */
+.metric-toggle{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.metric-toggle-label{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);margin-right:4px}
+.metric-chip{background:var(--surface);border:1px solid var(--line);color:var(--ink-2);padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.metric-chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.metric-chip.active{background:var(--maki-ink);color:#fff;border-color:var(--maki-ink)}
+.cluster-group{margin-bottom:18px}
+.cluster-head{display:flex;align-items:center;gap:10px;margin:0 0 10px;flex-wrap:wrap}
+.cluster-title{font-weight:800;font-size:14px}
+.cluster-am{font-size:12px;color:var(--ink-2)}
+.cluster-score{margin-left:auto;display:flex;gap:6px;align-items:center;font-size:12px;color:var(--ink-2)}
+.heatmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:10px}
+.tile{border-radius:13px;padding:10px 14px;cursor:pointer;transition:transform .15s,box-shadow .15s;background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--ink-3);box-shadow:var(--shadow);position:relative;overflow:hidden;display:flex;flex-direction:row;align-items:center;gap:14px}
+.tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.tile.red{background:linear-gradient(180deg,var(--red-bg),#fff 60%);border-left-color:var(--red)}
+.tile.amber{background:linear-gradient(180deg,var(--amber-bg),#fff 60%);border-left-color:var(--amber)}
+.tile.green{background:linear-gradient(180deg,var(--green-bg),#fff 60%);border-left-color:var(--green)}
+.tile.na{opacity:.85}
+.tile-code{font-size:16px;white-space:nowrap;font-weight:800;letter-spacing:-.02em}
+.tile-name{font-size:11px;color:var(--ink-2);font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile-left{flex:1 1 auto;min-width:0}
+.tile-delta{font-size:18px;font-weight:700;letter-spacing:-.01em;min-width:64px;text-align:right;flex:none}
+.tile-delta.red{color:var(--red)}.tile-delta.amber{color:var(--amber)}.tile-delta.green{color:var(--green)}.tile-delta.na{color:var(--ink-3)}
+.tile-delta small{display:block;font-size:9.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em}
+.tile-metrics{display:flex;flex-wrap:nowrap;justify-content:flex-end;gap:4px;flex:none}
+.tile-metric{flex:0 0 auto;min-width:40px;background:rgba(255,255,255,.7);border:1px solid var(--line);border-radius:4px;padding:3px 5px;text-align:center;font-size:9.5px;font-weight:700;color:var(--ink-2);line-height:1.2}
+.tile-metric b{display:block;font-size:11px;color:var(--ink)}
+.tile-metric.bad b{color:var(--red)}.tile-metric.warn b{color:var(--amber)}.tile-metric.good b{color:var(--green)}
+.tile-metric.iss b{color:var(--red)}
+.tile-mix{position:absolute;left:0;right:0;bottom:0;height:4px;display:flex}
+.tile-mix i{display:block;height:100%}
+/* scorecard table */
+.scorecard{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:18px}
+.scorecard-row{display:grid;grid-template-columns:minmax(200px,1.4fr) minmax(150px,1fr) 70px 70px 70px 70px 70px minmax(130px,1fr) 120px;gap:6px;padding:10px 14px;align-items:center;border-bottom:1px solid var(--line);transition:background .12s;cursor:pointer}
+.scorecard-row:hover{background:var(--surface-2)}
+.scorecard-row.header{background:var(--surface-2);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:700;cursor:default}
+.scorecard-row.header:hover{background:var(--surface-2)}
+.scorecard-row.region{background:#fff;font-weight:700}
+.scorecard-row.site{background:var(--surface-2)}
+.scorecard-row:last-child{border-bottom:0}
+.sc-code{font-weight:700;font-size:13px}.sc-name{font-size:12px;color:var(--ink-2)}
+.sc-chip{text-align:center;font-weight:700;font-size:12px;padding:5px 6px;border-radius:6px}
+.sc-chip.green{background:var(--green-bg);color:var(--green)}.sc-chip.amber{background:var(--amber-bg);color:var(--amber)}.sc-chip.red{background:var(--red-bg);color:var(--red)}.sc-chip.na{background:var(--surface-2);color:var(--ink-3)}
+.sc-num{text-align:center;font-variant-numeric:tabular-nums;font-weight:600}
+.sc-chev{color:var(--ink-3);font-size:11px;margin-right:6px}
+.bar{display:flex;height:12px;border-radius:4px;overflow:hidden;background:var(--line);min-width:110px}
+.bar i{display:block;height:100%;margin-right:2px}.bar i:last-child{margin-right:0}
+.sw{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.legend{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:12px;color:var(--ink-2);margin:0 0 10px}
+.legend span{cursor:pointer}.legend span.off{opacity:.35;text-decoration:line-through}
+/* bars */
+.hbar{display:grid;grid-template-columns:200px 1fr 56px;gap:8px;align-items:center;padding:5px 0;font-size:13px;border-radius:6px}
+.hbar.clickable{cursor:pointer}.hbar.clickable:hover{background:var(--surface-2)}
+.hbar .trk{height:12px;background:var(--line);border-radius:4px;overflow:hidden}
+.hbar .trk i{display:block;height:100%;border-radius:0 4px 4px 0;transition:width .3s}
+.hbar .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.hbar.tight{grid-template-columns:1fr 80px 36px}
+.hbar.sub{font-size:12.5px;color:var(--ink-2);padding-left:18px}.hbar.sub .trk{height:8px}
+.owner{font-size:11px;color:var(--ink-3);font-weight:600}
+.split{display:flex;height:22px;border-radius:8px;overflow:hidden;margin:6px 0 10px;font-size:11px;font-weight:800;color:#fff}
+.split i{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden}
+/* chart */
+.chart{width:100%;height:220px;display:block}
+.chart-wrap{position:relative}
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--surface);border:1px solid var(--line);color:var(--ink-2);padding:5px 12px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;font-family:inherit}
+.chip:hover{border-color:var(--ink-3);color:var(--ink)}
+.chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tag{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:6px;color:#fff;cursor:pointer}
+.tag.pos{background:var(--green)}.tag.dish{background:#475569}.tag.dishneg{background:#9f1239}.tag.staff{background:#0f766e}.tag.staffneg{background:#9f1239}
+/* reader */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center}
+input[type=search]{font:inherit;padding:8px 12px;border:1px solid var(--line);border-radius:10px;min-width:240px;box-shadow:var(--shadow)}
+select.f{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:600;box-shadow:var(--shadow)}
+.rv{border-top:1px solid var(--line);padding:12px 0}
+.rv .meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px;color:var(--ink-2);margin-bottom:6px}
+.rv .stars{font-weight:800;color:var(--amber);letter-spacing:1px}.rv .stars .off{color:var(--line)}
+.rv .txt{white-space:pre-wrap;color:var(--ink)}
+.rv .tr{color:var(--ink-2);font-style:italic;font-size:12.5px;margin-top:4px}
+.rv .sum{font-size:12px;font-weight:700;color:var(--maki-orange);margin-top:4px}
+.rv .site{font-weight:800;color:var(--ink);cursor:pointer}.rv .site:hover{color:var(--maki-orange)}
+.more{display:block;width:100%;margin-top:10px;padding:10px;border-radius:10px;border:1px dashed var(--line);background:var(--surface-2);font:inherit;font-weight:700;color:var(--ink-2);cursor:pointer}
+/* heat grid */
+.hm{display:grid;grid-template-columns:70px repeat(4,1fr);gap:3px;font-size:12px}
+.hm .h{font-size:10.5px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;text-align:center}
+.hm .c{border-radius:6px;padding:8px 4px;text-align:center;font-weight:700;font-variant-numeric:tabular-nums;cursor:default;transition:transform .1s}
+.hm .c:hover{transform:scale(1.04)}
+.hm .r{font-weight:700;color:var(--ink-2);display:flex;align-items:center}
+/* kpi cross table */
+table.x{width:100%;border-collapse:collapse}
+table.x th{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+table.x td{padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.x tr.row{cursor:pointer}table.x tr.row:hover td{background:var(--surface-2)}
+table.x td.num,table.x th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.x tr.warn td{background:var(--amber-bg)}
+.muted{color:var(--ink-3)}.small{font-size:12px}
+.note{font-size:12px;color:var(--ink-3);margin-top:8px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:12.5px}.kv b{color:var(--ink-2);font-weight:600}
+details summary{cursor:pointer;font-weight:700;color:var(--ink-2);font-size:12.5px}
+.footer{text-align:center;color:var(--ink-3);font-size:11px;margin-top:32px;padding-top:20px;border-top:1px solid var(--line)}
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);display:none;align-items:flex-start;justify-content:center;padding:40px 20px;z-index:100;overflow-y:auto}
+.modal-bg.show{display:flex}
+.modal{background:var(--surface);border-radius:18px;max-width:860px;width:100%;box-shadow:var(--shadow-lg);overflow:hidden;animation:slide-in .25s ease-out}
+@keyframes slide-in{from{transform:translateY(20px);opacity:0}to{transform:none;opacity:1}}
+.modal-header{padding:22px 26px;background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);color:#fff;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.modal-title{font-size:22px;font-weight:700;letter-spacing:-.015em}
+.modal-sub{color:#cbd5e1;font-size:12px;margin-top:2px}
+.modal-close{background:rgba(255,255,255,.12);color:#fff;border:0;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;flex-shrink:0}
+.modal-close:hover{background:rgba(255,255,255,.22)}
+.modal-body{padding:22px 26px}
+.modal-link{background:var(--maki-orange);color:#fff;border:0;border-radius:9px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+.modal-link:hover{background:#d0421a}
+.mstats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:16px}
+.mstat{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.mstat .l{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);font-weight:700}
+.mstat .v{font-size:18px;font-weight:800;margin-top:2px}
+html.embed .maki-brand-bar{display:none}html.embed .tabbar,html.embed .cluster-nav{position:static}html.embed .wrap{padding-top:12px}html.embed .footer{margin-top:16px}
+html.embed .embedbar{display:flex}
+.embedbar{display:none;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tt{position:fixed;pointer-events:none;background:var(--maki-ink);color:#fff;font-size:12px;padding:6px 9px;border-radius:8px;z-index:200;max-width:340px;display:none;box-shadow:var(--shadow);line-height:1.4}
+kbd{font:inherit;font-size:10.5px;background:var(--surface-2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;color:var(--ink-2)}
+@media (max-width:1380px){.maki-brand-kanji{display:none}}
+@media (max-width:720px){.maki-brand-bar{padding:10px 16px;gap:12px;flex-wrap:wrap}.kpi-grid{grid-template-columns:repeat(2,1fr)}.mstats{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<header class="maki-brand-bar" role="banner">
+  <img src="maki-logo1.png" alt="Maki &amp; Ramen" class="maki-logo" onerror="this.setAttribute('data-broken','true');">
+  <span class="maki-logo-fallback" aria-hidden="true">MAKI <span class="accent">&amp; RAMEN</span></span>
+  <div class="maki-brand-title">
+    <div class="maki-brand-name">Maki <span class="dot">&bull;</span> Ramen</div>
+    <div class="maki-brand-sub">Reviews Intelligence · Area Management</div>
+  </div>
+  <span class="maki-brand-kanji" aria-hidden="true">寿司とラーメン</span>
+  <span class="maki-brand-chip" id="verchip">v2 · Reviews</span>
+  <div class="week-toggle-bar">
+    <span class="week-toggle-label">View</span>
+    <button class="week-chip" data-p="week">Week</button><button class="week-chip" data-p="month">Month</button><button class="week-chip" data-p="quarter">Quarter</button>
+    <button class="week-chip nav" id="pPrev" title="Previous period (←)">‹</button>
+    <select id="pkey" class="week-select"></select>
+    <button class="week-chip nav" id="pNext" title="Next period (→)">›</button>
+    <span id="inprog" class="week-past-badge" style="display:none">In progress</span>
+  </div>
+</header>
+<div class="wrap">
+  <div class="embedbar"><span class="week-toggle-label">View</span><button class="week-chip" data-p="week">Week</button><button class="week-chip" data-p="month">Month</button><button class="week-chip" data-p="quarter">Quarter</button><button class="week-chip nav" id="pPrev2" title="Previous period">‹</button><select id="pkey2" class="week-select"></select><button class="week-chip nav" id="pNext2" title="Next period">›</button><span id="inprog2" class="week-past-badge" style="display:none">In progress</span><a class="week-chip" href="reviews.html" target="_blank" style="margin-left:auto;text-decoration:none">Open full page ↗</a></div>
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="eyebrow">Reviews Intelligence · Google</div>
+      <h1 id="heroH1">—</h1>
+      <div class="hero-sub" id="heroSub"></div>
+    </div>
+    <div class="hero-stats" id="heroStats"></div>
+  </div>
+  <nav class="tabbar" id="tabs">
+    <button class="tabbtn active" data-tab="overview">Overview</button>
+    <button class="tabbtn" data-tab="where">Where it comes from</button>
+    <button class="tabbtn" data-tab="issues">Service vs quality</button>
+    <button class="tabbtn" data-tab="people">Dishes &amp; staff</button>
+    <button class="tabbtn" data-tab="timing">Timing &amp; KPIs</button>
+    <button class="tabbtn" data-tab="reader">Reviews <span class="tb-badge zero" id="tbReader">0</span></button>
+    <button class="tabbtn" data-tab="actions">Actions <span class="tb-badge zero" id="tbActions">0</span></button>
+  </nav>
+  <div class="cluster-nav" id="cnav"></div>
+
+  <!-- OVERVIEW -->
+  <section class="tabpanel active" data-panel="overview">
+    <div class="kpi-grid" id="tiles"></div>
+    <div id="alertBox"></div>
+    <div class="grid g2">
+      <div class="card"><h3 id="roTitle">Read-out</h3><div class="sub">Written from the review text for this period and scope. Refreshed by the weekly run.</div><div class="readout" id="readout"></div></div>
+      <div>
+        <div class="card"><h3>Service issue or quality issue?</h3><div class="sub">Share of issues by category. Click a bar to read those reviews.</div><div id="splitMini"></div></div>
+        <div class="card"><h3>Top actions</h3><div class="sub">The three flags that matter most. Full list under <b>Actions</b>.</div><div id="flagsTop"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHERE -->
+  <section class="tabpanel" data-panel="where">
+    <div class="section-head"><h2>Region → AM pair → site → GM</h2><span class="hint">Sorted worst first by issues per 100 reviews. Click a region to open it, a site for its snapshot.</span></div>
+    <div class="scorecard" id="board"></div>
+    <div class="section-head"><h2>Site heat map</h2>
+      <div class="metric-toggle"><span class="metric-toggle-label">Colour by</span>
+        <button class="metric-chip active" data-m="combined">Combined</button><button class="metric-chip" data-m="star">★ vs OKR</button><button class="metric-chip" data-m="neg">Negative %</button><button class="metric-chip" data-m="rate">Issues / 100</button><button class="metric-chip" data-m="vol">Volume</button>
+      </div></div>
+    <div id="heatmap"></div>
+  </section>
+
+  <!-- ISSUES -->
+  <section class="tabpanel" data-panel="issues">
+    <div class="grid g2">
+      <div class="card"><h3>Issues by category</h3><div class="sub">One review can carry several issues; each counts once. Click a row to read the reviews behind it.</div><div id="mix"></div></div>
+      <div>
+        <div class="card"><h3>13-week trend · issues per 100 reviews</h3><div class="sub">Stacked by category for the current scope. Hover for the week's figures; click a legend entry to hide it.</div><div class="chart-wrap"><svg class="chart" id="trend"></svg></div><div class="legend" id="trendLegend"></div></div>
+        <div class="card"><h3>What customers praise</h3><div class="sub">Praise themes across reviews with text.</div><div id="praise"></div><div class="note" id="praiseNote"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PEOPLE -->
+  <section class="tabpanel" data-panel="people">
+    <div class="grid g2">
+      <div class="card"><h3>Named dishes</h3><div class="sub">Menu items named by customers. A dish complained about at several sites is a spec or supply signal, not a GM.</div><div id="dishes"></div></div>
+      <div class="card"><h3>Named staff</h3><div class="sub">Team members customers named. Positive mentions are recognition material; negative ones need a conversation, after reading the review.</div><div id="staff"></div></div>
+    </div>
+  </section>
+
+  <!-- TIMING -->
+  <section class="tabpanel" data-panel="timing">
+    <div class="grid g2">
+      <div class="card"><h3>When negatives arrive</h3><div class="sub">Share of reviews that are ≤3★ by day and daypart RECEIVED (UK time). Google posts arrive after the visit, so read this as a pattern, not a rota.</div><div id="heat"></div></div>
+      <div class="card"><h3>Reviews beside the week's KPIs</h3><div class="sub" id="kpiSub">Week view. A speed spike on a week where hours were cut is a labour decision before it is a GM failure.</div><div id="kpix"></div></div>
+    </div>
+  </section>
+
+  <!-- READER -->
+  <section class="tabpanel" data-panel="reader">
+    <div class="card"><h3>Read the reviews</h3><div class="sub">Every review with text in the selected scope and period, negatives first. Filters stack. <kbd>Esc</kbd> clears.</div>
+      <div class="filters"><input type="search" id="q" placeholder="Search text, dish, staff, author…"><select class="f" id="fStars"><option value="">All stars</option><option value="neg">≤3★ only</option><option value="but">4-5★ with a complaint</option><option value="5">5★</option><option value="4">4★</option><option value="3">3★</option><option value="2">2★</option><option value="1">1★</option></select><select class="f" id="fCat"><option value="">All categories</option></select><select class="f" id="fSite"><option value="">All sites in scope</option></select><button class="chip" id="clearF">clear filters</button><span class="small muted" id="readerCount"></span></div>
+      <div id="reader"></div></div>
+  </section>
+
+  <!-- ACTIONS -->
+  <section class="tabpanel" data-panel="actions">
+    <div class="section-head"><h2>Recommended actions</h2><span class="hint">Rules-based flags with a suggested owner. Nothing is raised automatically; you decide.</span></div>
+    <div class="grid g2"><div id="flagsRed"></div><div id="flagsAmber"></div></div>
+    <div class="card" style="margin-top:6px"><details><summary>How the flags are decided</summary><div class="kv" id="flagRules" style="margin-top:8px"></div></details></div>
+  </section>
+
+  <div class="card"><details><summary>Method, sources and what is NOT in this page</summary><div class="kv" id="method" style="margin-top:8px"></div></details></div>
+  <div class="footer" id="foot"></div>
+</div>
+
+<div class="modal-bg" id="modalBg"><div class="modal" role="dialog"><div class="modal-header"><div><div class="modal-title" id="mTitle"></div><div class="modal-sub" id="mSub"></div></div><div style="display:flex;gap:8px;align-items:center"><button class="modal-link" id="mScope">Scope page to this site</button><button class="modal-close" id="mClose">✕</button></div></div><div class="modal-body" id="mBody"></div></div></div>
+<div class="tt" id="tt"></div>
+<script id="RV_DATA" type="application/json">/*__DATA__*/</script>
+<script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const CATCOL={food:'var(--c-food)',service:'var(--c-service)',speed:'var(--c-speed)',value:'var(--c-value)',cleanliness_ambience:'var(--c-clean)'};
+const CATHEX={food:'#c2410c',service:'#1d4ed8',speed:'#d97706',value:'#7c3aed',cleanliness_ambience:'#0d9488',other:'#94a3b8'};
+const MAIN=['food','service','speed','value','cleanliness_ambience'];
+const catCol=c=>CATCOL[c]||'var(--c-other)';
+const OKR=4.7;
+let D=null, S={ptype:'week',pkey:null,scope:{type:'fleet',id:null},tab:'overview',metric:'combined',f:{q:'',stars:'',cat:'',site:''},hidden:new Set(),readerLimit:60};
+
+const QS=new URLSearchParams(location.search);const EMBED=QS.get('embed')==='1';
+if(EMBED){document.documentElement.classList.add('embed');}
+async function load(){
+  const el=$('#RV_DATA'); let txt=el.textContent.trim();
+  if(txt&&!txt.startsWith('/*')){D=JSON.parse(txt);}else{const r=await fetch('data/reviews_intel.json');D=await r.json();}
+  init();
+}
+/* ---------- periods ---------- */
+const fmtDate=iso=>{const [y,m,d]=iso.split('-');return `${d}/${m}/${y}`;};
+const periods=t=>[...new Set(D.reviews.map(r=>r[t]))].sort();
+function periodEnd(t,k){if(t==='week'){const d=new Date(k+'T00:00:00Z');return new Date(d.getTime()+6*864e5).toISOString().slice(0,10);}if(t==='month'){const [y,m]=k.split('-');return new Date(Date.UTC(+y,+m,0)).toISOString().slice(0,10);}const [y,q]=k.split('-Q');return new Date(Date.UTC(+y,+q*3,0)).toISOString().slice(0,10);}
+const isComplete=(t,k)=>periodEnd(t,k)<D.meta.source_pulled_at.slice(0,10);
+function lastComplete(t){const p=periods(t).filter(k=>isComplete(t,k));return p.length?p[p.length-1]:periods(t).slice(-1)[0];}
+function weekLabel(k){const e=periodEnd('week',k);const [y,m,d]=k.split('-'),[ey,em,ed]=e.split('-');const mn=s=>new Date(Date.UTC(2026,+s-1,1)).toLocaleString('en-GB',{month:'short',timeZone:'UTC'});return m===em?`${+d}–${+ed} ${mn(m)} ${y}`:`${+d} ${mn(m)} – ${+ed} ${mn(em)} ${y}`;}
+function monthLabel(k){const [y,m]=k.split('-');return new Date(Date.UTC(+y,+m-1,1)).toLocaleString('en-GB',{month:'long',year:'numeric',timeZone:'UTC'});}
+const pLabel=(t,k)=>t==='week'?weekLabel(k):t==='month'?monthLabel(k):k.replace('-',' ');
+const prevKey=(t,k)=>{const p=periods(t);const i=p.indexOf(k);return i>0?p[i-1]:null;};
+const nextKey=(t,k)=>{const p=periods(t);const i=p.indexOf(k);return i<p.length-1?p[i+1]:null;};
+/* ---------- scope + stats ---------- */
+const siteIn=(s,sc)=>sc.type==='fleet'||(sc.type==='site'?s===sc.id:D.roster[s].region===sc.id);
+const rows=(pk,scope)=>{const sc=scope||S.scope;return D.reviews.filter(r=>r[S.ptype]===pk&&siteIn(r.site,sc));};
+function stats(rs){
+  const n=rs.length,neg=rs.filter(r=>r.stars<=3).length,wt=rs.filter(r=>r.text).length;
+  const avg=n?rs.reduce((a,r)=>a+r.stars,0)/n:null;
+  const cats={},subs={};let issues=0;
+  rs.forEach(r=>r.issues.forEach(i=>{issues++;cats[i.cat]=(cats[i.cat]||0)+1;const k=i.cat+'/'+i.sub;subs[k]=(subs[k]||0)+1;}));
+  const praise={};rs.forEach(r=>r.praise.forEach(p=>praise[p]=(praise[p]||0)+1));
+  return {n,neg,wt,avg,cats,subs,issues,praise,negPct:n?neg/n*100:null,issueRate:n?issues/n*100:null};
+}
+const starRag=v=>v==null?'na':v>=OKR?'green':v>=4.5?'amber':'red';
+const negRag=(p,n)=>p==null||n<5?'na':p<=4?'green':p<=8?'amber':'red';
+const rateRag=(r,n)=>r==null||n<5?'na':r<=10?'green':r<=20?'amber':'red';
+const worst=(...r)=>r.includes('red')?'red':r.includes('amber')?'amber':r.includes('green')?'green':'na';
+function siteRag(st){if(st.n<5)return 'na';return worst(starRag(st.avg),negRag(st.negPct,st.n),rateRag(st.issueRate,st.n));}
+const scopeLabel=()=>{const sc=S.scope;if(sc.type==='fleet')return 'Fleet';if(sc.type==='site')return D.roster[sc.id].name;return sc.id;};
+function setScope(type,id){S.scope={type,id};S.f.site='';S.readerLimit=60;render();}
+function delta(cur,prev,fmt,invert){if(cur==null||prev==null)return '<span class="row-delta na">no prior</span>';const d=cur-prev;if(Math.abs(d)<1e-9)return '<span class="row-delta na">unchanged</span>';const good=invert?d<0:d>0;return `<span class="row-delta ${good?'green':'red'}">${d>0?'+':''}${fmt(d)}</span> <span class="muted">vs prior</span>`;}
+const tip=(el,txt)=>`data-tt="${esc(txt)}"`;
+
+/* ---------- init ---------- */
+function init(){
+  S.pkey=lastComplete('week');
+  const qw=QS.get('week');if(qw&&periods('week').includes(qw))S.pkey=qw;
+  window.addEventListener('message',e=>{const d=e.data||{};if(d.type==='rv-week'&&d.week&&periods('week').includes(d.week)){S.ptype='week';S.pkey=d.week;S.readerLimit=60;render();}});
+  if(EMBED){const post=()=>{try{parent.postMessage({type:'rv-height',h:document.documentElement.scrollHeight},'*');}catch(e){}};new ResizeObserver(post).observe(document.body);setInterval(post,1500);}
+  $('#pkey2').onchange=e=>{S.pkey=e.target.value;S.readerLimit=60;render();};
+  $('#pPrev2').onclick=()=>$('#pPrev').click();$('#pNext2').onclick=()=>$('#pNext').click();
+  $$('.week-chip[data-p]').forEach(b=>b.onclick=()=>{S.ptype=b.dataset.p;S.pkey=lastComplete(S.ptype);S.readerLimit=60;render();});
+  $('#pkey').onchange=e=>{S.pkey=e.target.value;S.readerLimit=60;render();};
+  $('#pPrev').onclick=()=>{const k=prevKey(S.ptype,S.pkey);if(k){S.pkey=k;render();}};
+  $('#pNext').onclick=()=>{const k=nextKey(S.ptype,S.pkey);if(k){S.pkey=k;render();}};
+  $$('#tabs .tabbtn').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+  $$('.metric-chip').forEach(b=>b.onclick=()=>{S.metric=b.dataset.m;$$('.metric-chip').forEach(x=>x.classList.toggle('active',x===b));renderHeatmap();});
+  const fc=$('#fCat');Object.entries(D.taxonomy).forEach(([k,v])=>{const o=document.createElement('option');o.value=k;o.textContent=v.label;fc.appendChild(o);});
+  ['q','fStars','fCat','fSite'].forEach(id=>{const el=$('#'+id);el.oninput=el.onchange=e=>{S.f[{q:'q',fStars:'stars',fCat:'cat',fSite:'site'}[id]]=e.target.value;S.readerLimit=60;renderReader();};});
+  $('#clearF').onclick=clearFilters;
+  $('#mClose').onclick=closeModal;$('#modalBg').onclick=e=>{if(e.target===$('#modalBg'))closeModal();};
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'){if($('#modalBg').classList.contains('show'))closeModal();else clearFilters();}
+    if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+    if(e.key==='ArrowLeft')$('#pPrev').click();if(e.key==='ArrowRight')$('#pNext').click();});
+  document.body.addEventListener('mousemove',e=>{const t=$('#tt');if(t.style.display==='block'){const x=Math.min(e.clientX+14,window.innerWidth-360);t.style.left=x+'px';t.style.top=(e.clientY+14)+'px';}});
+  document.body.addEventListener('mouseover',e=>{const el=e.target.closest('[data-tt]');const t=$('#tt');if(el&&el.dataset.tt){t.textContent=el.dataset.tt;t.style.display='block';}else t.style.display='none';});
+  const m=D.meta;$('#foot').textContent=`Source: Google Reviews workbook, Raw Data tab · pulled ${m.source_pulled_at.replace('T',' ').slice(0,16)}Z · built ${m.built_at.replace('T',' ').slice(0,16)}Z · taxonomy v${m.taxonomy_version} · ${m.llm_labels_applied.toLocaleString()} reviews Claude-verified · ${D.reviews.length.toLocaleString()} reviews since 20/04/2026`;
+  $('#verchip').textContent=`v2 · taxonomy ${m.taxonomy_version}`;
+  render();
+}
+function showTab(t){S.tab=t;$$('#tabs .tabbtn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));$$('.tabpanel').forEach(p=>p.classList.toggle('active',p.dataset.panel===t));if(EMBED){try{parent.postMessage({type:'rv-scrolltop'},'*');}catch(e){}}else window.scrollTo({top:0,behavior:'smooth'});}
+function clearFilters(){S.f={q:'',stars:'',cat:'',site:''};$('#q').value='';$('#fStars').value='';$('#fCat').value='';$('#fSite').value='';S.readerLimit=60;renderReader();}
+function goRead(f){Object.assign(S.f,f);$('#q').value=S.f.q||'';$('#fStars').value=S.f.stars||'';$('#fCat').value=S.f.cat||'';$('#fSite').value=S.f.site||'';S.readerLimit=60;renderReader();showTab('reader');}
+
+/* ---------- render all ---------- */
+function render(){
+  $$('.week-chip[data-p]').forEach(b=>b.classList.toggle('active',b.dataset.p===S.ptype));
+  const opts=periods(S.ptype).slice().reverse().map(k=>`<option value="${k}" ${k===S.pkey?'selected':''}>${esc(pLabel(S.ptype,k))}${isComplete(S.ptype,k)?'':' (to date)'}</option>`).join('');
+  $('#pkey').innerHTML=opts;$('#pkey2').innerHTML=opts;
+  ['#inprog','#inprog2'].forEach(id=>{$(id).style.display=isComplete(S.ptype,S.pkey)?'none':'inline-block';$(id).textContent='In progress · to '+fmtDate(D.meta.source_pulled_at.slice(0,10));});
+  $('#pPrev').disabled=$('#pPrev2').disabled=!prevKey(S.ptype,S.pkey);$('#pNext').disabled=$('#pNext2').disabled=!nextKey(S.ptype,S.pkey);
+  renderHero();renderCnav();renderTiles();renderReadout();renderSplitMini();renderFlags();renderBoard();renderHeatmap();renderMix();renderTrend();renderPraise();renderDishes();renderStaff();renderHeat();renderKpix();renderReader();renderMethod();
+}
+function renderHero(){
+  const rs=rows(S.pkey),st=stats(rs);
+  const sites=[...new Set(D.reviews.filter(r=>r[S.ptype]===S.pkey).map(r=>r.site))].filter(s=>siteIn(s,S.scope));
+  const rag={red:0,amber:0,green:0,na:0};sites.forEach(s=>rag[siteRag(stats(rs.filter(r=>r.site===s)))]++);
+  $('#heroH1').textContent=`${scopeLabel()} · ${pLabel(S.ptype,S.pkey)}`;
+  $('#heroSub').textContent=`${st.n.toLocaleString()} reviews received · ${st.wt.toLocaleString()} with a comment · ${sites.length} site${sites.length===1?'':'s'} reporting · issues counted once each, one review can carry several`;
+  const sr=starRag(st.avg);
+  $('#heroStats').innerHTML=`<div class="stat"><div class="stat-num">${st.n.toLocaleString()}</div><div class="stat-label">Reviews</div></div>
+  <div class="stat ${sr==='na'?'':sr}" ${tip(0,'OKR: weekly average ≥ 4.7. Amber ≥ 4.5.')}><div class="stat-num">${st.avg==null?'–':st.avg.toFixed(2)}</div><div class="stat-label">Avg ★</div></div>
+  <div class="stat ${negRag(st.negPct,st.n)==='na'?'':negRag(st.negPct,st.n)}"><div class="stat-num">${st.neg}</div><div class="stat-label">≤3★</div></div>
+  <div class="stat"><div class="stat-num">${st.issues}</div><div class="stat-label">Issues</div></div>
+  <div class="stat red" ${tip(0,'Sites rated red on the combined view (★, negative %, issues per 100)')}><div class="stat-num">${rag.red}</div><div class="stat-label">Red</div></div>
+  <div class="stat amber"><div class="stat-num">${rag.amber}</div><div class="stat-label">Amber</div></div>
+  <div class="stat green"><div class="stat-num">${rag.green}</div><div class="stat-label">Green</div></div>`;
+}
+function renderCnav(){
+  const all=D.reviews.filter(r=>r[S.ptype]===S.pkey);
+  let html=`<span class="cn-label">Scope</span>`;
+  const fleet=stats(all);
+  const pill=(id,name,st,sites,active)=>{const rag={red:0,amber:0,green:0};sites.forEach(s=>{const g=siteRag(stats(all.filter(r=>r.site===s)));if(rag[g]!=null)rag[g]++;});
+    return `<button class="cn-pill ${active?'active':''}" data-id="${esc(id)}"><span class="cn-name">${esc(name)}</span><span class="cn-count">${st.n}</span><span class="cn-rag">${rag.red?`<span class="chip-dot red" ${tip(0,rag.red+' red')}></span>`:''}${rag.amber?`<span class="chip-dot amber"></span>`:''}${rag.green?`<span class="chip-dot green"></span>`:''}</span></button>`;};
+  html+=pill('__fleet','Fleet',fleet,Object.keys(D.roster),S.scope.type==='fleet');
+  Object.keys(D.regions).forEach(reg=>{const sites=Object.values(D.roster).filter(x=>x.region===reg).map(x=>x.code);html+=pill(reg,reg,stats(all.filter(r=>sites.includes(r.site))),sites,S.scope.type==='region'&&S.scope.id===reg||S.scope.type==='site'&&D.roster[S.scope.id].region===reg);});
+  if(S.scope.type==='site'){const R=D.roster[S.scope.id];html+=`<span class="cn-site">Site: <b>${esc(R.name)}</b> <span class="muted">${esc(R.gm||'GM tbc')}</span><span class="x" id="cnClear">✕ back to ${esc(R.region)}</span></span>`;}
+  $('#cnav').innerHTML=html;
+  $$('#cnav .cn-pill').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(id==='__fleet')setScope('fleet',null);else setScope('region',id);});
+  const x=$('#cnClear');if(x)x.onclick=()=>setScope('region',D.roster[S.scope.id].region);
+}
+function renderTiles(){
+  const rs=rows(S.pkey),st=stats(rs),pk=prevKey(S.ptype,S.pkey),ps=pk?stats(rows(pk)):null;
+  const fleet=stats(D.reviews.filter(r=>r[S.ptype]===S.pkey));
+  const top=Object.entries(st.cats).sort((a,b)=>b[1]-a[1])[0];
+  const t=[
+    {l:'Reviews received',v:st.n.toLocaleString(),d:ps?delta(st.n,ps.n,x=>Math.round(x).toLocaleString()):'',rag:''},
+    {l:'Average ★',v:st.avg==null?'–':st.avg.toFixed(2),rag:starRag(st.avg),d:(ps?delta(st.avg,ps.avg,x=>x.toFixed(2)):'')+` · OKR ≥ ${OKR}`,click:()=>goRead({stars:'neg'})},
+    {l:'Negative (≤3★)',v:st.n?`${st.neg} <span class="small muted">${st.negPct.toFixed(1)}%</span>`:'–',rag:negRag(st.negPct,st.n),d:ps?delta(st.negPct,ps.negPct,x=>x.toFixed(1)+'pp',true):'',click:()=>goRead({stars:'neg'})},
+    {l:'Issues logged',v:st.issues,rag:rateRag(st.issueRate,st.n),d:`${st.issueRate==null?'–':st.issueRate.toFixed(1)} per 100 reviews`+(S.scope.type!=='fleet'?` · fleet ${fleet.issueRate==null?'–':fleet.issueRate.toFixed(1)}`:'')+(ps?` · ${delta(st.issues,ps.issues,x=>Math.round(x),true)}`:''),tt:'Distinct complaints found in the review text. One review can carry several; each counts once.'},
+    {l:'Top issue',v:top?`<span style="color:${catCol(top[0])}">${esc(D.taxonomy[top[0]].label)}</span>`:'<span class="muted">none</span>',rag:'',d:top?`${top[1]} of ${st.issues} · owner ${esc(D.taxonomy[top[0]].owner)}`:'',click:top?()=>goRead({cat:top[0]}):null},
+    {l:'With a comment',v:st.n?Math.round(st.wt/st.n*100)+'%':'–',rag:'',d:`${st.wt.toLocaleString()} of ${st.n.toLocaleString()} can be read`},
+  ];
+  $('#tiles').innerHTML=t.map((x,i)=>`<div class="kpi ${x.rag} ${x.click?'clickable':''}" data-i="${i}" ${x.tt?tip(0,x.tt):''}><div class="kpi-label">${x.l}</div><div class="kpi-value ${x.rag}">${x.v}</div><div class="kpi-trend">${x.d||''}</div></div>`).join('');
+  $$('#tiles .kpi').forEach(el=>{const x=t[+el.dataset.i];if(x.click)el.onclick=x.click;});
+  // alert bar: food safety in scope
+  const hyg=rs.filter(r=>r.issues.some(i=>i.sub==='hygiene_foreign'));
+  $('#alertBox').innerHTML=hyg.length?`<div class="alert"><div class="alert-icon">!</div><div><b>${hyg.length} food-safety / foreign-object mention${hyg.length>1?'s':''}</b> in ${esc(scopeLabel())} this period: ${[...new Set(hyg.map(r=>D.roster[r.site].name))].map(esc).join(', ')}.<small>Read them before anything else. Owner: BOH / Executive Chef with the site GM.</small></div><button class="chip" style="margin-left:auto" id="alertRead">read them</button></div>`:'';
+  const ar=$('#alertRead');if(ar)ar.onclick=()=>goRead({q:'',stars:'',cat:'food'});
+}
+const annoKey=()=>`${S.ptype}|${S.pkey}|${S.scope.type}|${S.scope.id||''}`;
+function renderReadout(){
+  const a=(D.annotations||{})[annoKey()];const el=$('#readout');
+  $('#roTitle').textContent=`Read-out · ${scopeLabel()}`;
+  if(a){el.className='readout';el.textContent=a.text||a;}else{el.className='readout empty';el.textContent='No written read-out for this scope and period. The weekly run writes one for the latest week, month-to-date and quarter-to-date at fleet and region level, and for sites where a flag fires.';}
+}
+function stackBar(cats,total,h){
+  if(!total)return `<div class="bar" style="height:${h||12}px"></div>`;
+  const other=Object.entries(cats).filter(([c])=>!MAIN.includes(c)).reduce((a,[,v])=>a+v,0);
+  let s=`<div class="bar" style="height:${h||12}px">`;MAIN.forEach(c=>{if(cats[c])s+=`<i style="width:${cats[c]/total*100}%;background:${catCol(c)}" ${tip(0,D.taxonomy[c].label+': '+cats[c])}></i>`;});
+  if(other)s+=`<i style="width:${other/total*100}%;background:var(--c-other)" ${tip(0,'Other (accuracy, hours, availability, tech): '+other)}></i>`;return s+'</div>';
+}
+function renderSplitMini(){
+  const st=stats(rows(S.pkey));const q=st.cats.food||0,sv=(st.cats.service||0)+(st.cats.speed||0),rest=st.issues-q-sv;
+  let html=st.issues?`<div class="split"><i style="flex:${q};background:var(--c-food)" ${tip(0,'Food quality: '+q)}>${q?Math.round(q/st.issues*100)+'% quality':''}</i><i style="flex:${sv};background:var(--c-service)" ${tip(0,'Service + speed: '+sv)}>${sv?Math.round(sv/st.issues*100)+'% service':''}</i><i style="flex:${rest};background:var(--c-other)" ${tip(0,'Value, cleanliness, accuracy, hours, availability, tech: '+rest)}>${rest?Math.round(rest/st.issues*100)+'% other':''}</i></div>`:'<div class="muted small">No issues logged.</div>';
+  const cats=Object.entries(D.taxonomy).map(([c,v])=>({c,label:v.label,n:st.cats[c]||0})).filter(x=>x.n).sort((a,b)=>b.n-a.n);const mx=Math.max(1,...cats.map(x=>x.n));
+  html+=cats.map(x=>`<div class="hbar clickable" data-cat="${x.c}"><div><span class="sw" style="background:${catCol(x.c)}"></span><b>${esc(x.label)}</b></div><div class="trk"><i style="width:${x.n/mx*100}%;background:${catCol(x.c)}"></i></div><div class="n">${x.n}</div></div>`).join('');
+  $('#splitMini').innerHTML=html;$$('#splitMini .hbar').forEach(el=>el.onclick=()=>goRead({cat:el.dataset.cat}));
+}
+/* ---------- flags ---------- */
+function flagsFor(){
+  const out=[];const rs=rows(S.pkey);const fs=stats(D.reviews.filter(r=>r[S.ptype]===S.pkey));
+  const sites=[...new Set(rs.map(r=>r.site))];const bySite={};sites.forEach(s=>bySite[s]=stats(rs.filter(r=>r.site===s)));
+  const own=c=>D.taxonomy[c].owner;
+  sites.forEach(s=>{
+    const st=bySite[s],R=D.roster[s],who=`${R.gm||'GM tbc'} (GM) · ${R.head} / ${R.dam}`;
+    const hyg=rs.filter(r=>r.site===s&&r.issues.some(i=>i.sub==='hygiene_foreign'));
+    if(hyg.length)out.push({lvl:'red',site:s,t:`${R.name}: ${hyg.length} food-safety / foreign-object mention${hyg.length>1?'s':''}`,why:hyg.map(h=>'"'+(h.issues.find(i=>i.sub==='hygiene_foreign').evidence||'').slice(0,80)+'"').join(' · '),own:`${own('food')} → ${who}`,read:{site:s,cat:'food'}});
+    Object.entries(st.cats).filter(([c,n])=>n>=3).forEach(([c,n])=>{const subs=Object.entries(st.subs).filter(([k])=>k.startsWith(c+'/')).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${D.taxonomy[c].subs[k.split('/')[1]]} ×${v}`).join(', ');
+      out.push({lvl:n>=5?'red':'amber',site:s,t:`${R.name}: ${n} ${D.taxonomy[c].label.toLowerCase()} issues this ${S.ptype}`,why:subs,own:`${own(c)} → ${who}`,read:{site:s,cat:c}});});
+    if(st.n>=10&&fs.negPct>0&&st.negPct>=2*fs.negPct&&st.neg>=3)out.push({lvl:'red',site:s,t:`${R.name}: negative rate ${st.negPct.toFixed(1)}% vs fleet ${fs.negPct.toFixed(1)}%`,why:`${st.neg} of ${st.n} reviews ≤3★ (≥2× fleet)`,own:who,read:{site:s,stars:'neg'}});
+    if(st.n>=10&&st.avg<4.5)out.push({lvl:'amber',site:s,t:`${R.name}: ${st.avg.toFixed(2)}★ on ${st.n} reviews, below 4.5`,why:`OKR is ≥ ${OKR}★`,own:who,read:{site:s,stars:'neg'}});
+    const negStaff={};rs.filter(r=>r.site===s).forEach(r=>r.staff.filter(x=>x.sent==='neg').forEach(x=>negStaff[x.name]=(negStaff[x.name]||0)+1));
+    Object.entries(negStaff).filter(([k,v])=>v>=2).forEach(([k,v])=>out.push({lvl:'amber',site:s,t:`${R.name}: "${k}" named negatively ${v} times`,why:'Read the reviews before acting; a name can be misheard',own:`${R.gm||'GM'} → ${R.head}`,read:{site:s,q:k}}));
+  });
+  const dishSites={};rs.forEach(r=>r.dishes.filter(d=>d.sent==='neg').forEach(d=>{(dishSites[d.name]=dishSites[d.name]||new Set()).add(r.site);}));
+  Object.entries(dishSites).filter(([k,v])=>v.size>=3&&!/unspecified|general/.test(k)).forEach(([k,v])=>out.push({lvl:'amber',t:`${k}: complained about at ${v.size} sites`,why:[...v].map(s=>D.roster[s].name).join(', ')+' · a spec, supply or recipe question before it is a GM question',own:'Executive Chef / Supply chain',read:{q:k}}));
+  if(S.ptype==='week'){const k=D.kpis[S.pkey]||{},pk=prevKey('week',S.pkey),kp=pk?(D.kpis[pk]||{}):{};
+    sites.forEach(s=>{const sp=bySite[s].cats.speed||0;const h=k[s]&&k[s].labour_hours,hp=kp[s]&&kp[s].labour_hours;if(sp>=2&&h&&hp&&h<hp*0.95)out.push({lvl:'amber',site:s,t:`${D.roster[s].name}: ${sp} speed complaints on a week with labour hours down ${((1-h/hp)*100).toFixed(0)}%`,why:`${h.toFixed(0)}h vs ${hp.toFixed(0)}h prior week · a labour decision before it is a GM failure`,own:`${D.roster[s].head} / ${D.roster[s].dam} (rota) · ${D.roster[s].gm||'GM'}`,read:{site:s,cat:'speed'}});});}
+  if(sites.length>=5){const ns=sites.map(s=>bySite[s].n).sort((a,b)=>a-b);const med=ns[Math.floor(ns.length/2)];sites.filter(s=>bySite[s].n<med*0.25&&med>=8).forEach(s=>out.push({lvl:'info',site:s,t:`${D.roster[s].name}: only ${bySite[s].n} reviews vs a median of ${med}`,why:'A review-collection problem. Low volume also makes the rating swing on one bad review.',own:`${D.roster[s].gm||'GM'} · Marketing (review SOP)`}));}
+  Object.entries(D.meta.not_connected||{}).forEach(([s,why])=>{if(siteIn(s,S.scope))out.push({lvl:'info',site:s,t:`${D.roster[s].name}: no review feed`,why,own:'Marketing (Becca / Vidya) · Google Business Profile connection'});});
+  const order={red:0,amber:1,info:2};out.sort((a,b)=>order[a.lvl]-order[b.lvl]);return out;
+}
+function flagHTML(x){return `<div class="item ${x.lvl}" data-site="${x.site||''}"><b>${esc(x.t)}</b><div class="why">${esc(x.why)}</div><div class="own">Owner: ${esc(x.own)}</div><div class="item-meta">${x.site?`<span class="site-pill">${esc(D.roster[x.site].region)}</span>`:''}${x.read?`<span class="site-pill" style="color:var(--maki-orange);border-color:var(--maki-orange-ring);background:var(--maki-orange-bg)">read the reviews →</span>`:''}</div></div>`;}
+function bindFlags(sel){$$(sel+' .item').forEach((el,i)=>{});}
+function renderFlags(){
+  const f=flagsFor();S._flags=f;
+  const red=f.filter(x=>x.lvl==='red'),amb=f.filter(x=>x.lvl==='amber'),info=f.filter(x=>x.lvl==='info');
+  const b=$('#tbActions');b.textContent=red.length+amb.length;b.className='tb-badge '+(red.length?'':amb.length?'amber':'zero');
+  $('#flagsTop').innerHTML=f.slice(0,3).map(flagHTML).join('')||'<div class="muted small">Nothing tripped a rule for this scope and period.</div>';
+  $('#flagsRed').innerHTML=`<div class="panel"><div class="panel-head issues">● Act now · ${red.length}</div>${red.map(flagHTML).join('')||'<div class="muted small">None.</div>'}</div>`;
+  $('#flagsAmber').innerHTML=`<div class="panel"><div class="panel-head" style="color:var(--amber)">● Watch · ${amb.length}</div>${amb.map(flagHTML).join('')||'<div class="muted small">None.</div>'}</div><div class="panel"><div class="panel-head info">● Housekeeping · ${info.length}</div>${info.map(flagHTML).join('')||'<div class="muted small">None.</div>'}</div>`;
+  const all=[...$$('#flagsTop .item'),...$$('#flagsRed .item'),...$$('#flagsAmber .item')];
+  const lists=[f.slice(0,3),red,amb,info].flat();
+  all.forEach((el,i)=>{const x=lists[i];el.onclick=()=>{if(x.read)goRead({q:x.read.q||'',stars:x.read.stars||'',cat:x.read.cat||'',site:x.read.site||''});else if(x.site)openSite(x.site);};});
+  $('#flagRules').innerHTML=[['Act now (red)','Any food-safety / foreign-object mention. Five or more issues in one category at a site. Negative rate at least twice the fleet on 10+ reviews.'],['Watch (amber)','Three or four issues in one category. Average below 4.5★ on 10+ reviews. A staff member named negatively twice. A dish complained about at three or more sites. Week view: two or more speed complaints on a week where labour hours fell more than 5%.'],['Housekeeping','A site with under a quarter of the median review volume. A site with no review feed.'],['Site colour','Combined = worst of ★ vs OKR (≥4.7 green, ≥4.5 amber), negative % (≤4 green, ≤8 amber) and issues per 100 (≤10 green, ≤20 amber). Fewer than 5 reviews = grey, small numbers.']].map(([k,v])=>`<b>${k}</b><div>${v}</div>`).join('');
+}
+/* ---------- board ---------- */
+function renderBoard(){
+  const pk=S.pkey,rs=D.reviews.filter(r=>r[S.ptype]===pk);
+  const cell=(st)=>{const top=Object.entries(st.cats).sort((a,b)=>b[1]-a[1])[0];return `<div class="sc-chip ${starRag(st.avg)}" ${tip(0,'Average star rating vs OKR ≥ 4.7')}>${st.avg==null?'–':st.avg.toFixed(2)}</div><div class="sc-chip ${negRag(st.negPct,st.n)}" ${tip(0,st.neg+' reviews ≤3★')}>${st.n?st.negPct.toFixed(1)+'%':'–'}</div><div class="sc-num">${st.issues}</div><div class="sc-chip ${rateRag(st.issueRate,st.n)}" ${tip(0,'Issues per 100 reviews received')}>${st.issueRate==null?'–':st.issueRate.toFixed(0)}</div><div>${stackBar(st.cats,st.issues)}</div><div class="small">${top?`<span style="color:${catCol(top[0])};font-weight:700">${esc(D.taxonomy[top[0]].label)}</span> ${top[1]}`:'<span class="muted">–</span>'}</div>`;};
+  let html=`<div class="scorecard-row header"><div>Region / site</div><div>Head · DAM / GM</div><div style="text-align:center">Reviews</div><div style="text-align:center">★</div><div style="text-align:center">≤3★</div><div style="text-align:center">Issues</div><div style="text-align:center">per 100</div><div>Issue mix</div><div>Top issue</div></div>`;
+  const regRows=Object.keys(D.regions).map(reg=>{const sites=Object.values(D.roster).filter(x=>x.region===reg).map(x=>x.code);return {reg,sites,st:stats(rs.filter(r=>sites.includes(r.site)))};}).sort((a,b)=>(b.st.issueRate||0)-(a.st.issueRate||0));
+  regRows.forEach(({reg,sites,st})=>{const R=D.regions[reg];const open=S.scope.type==='region'?S.scope.id===reg:S.scope.type==='site'?D.roster[S.scope.id].region===reg:false;
+    html+=`<div class="scorecard-row region" data-reg="${esc(reg)}"><div><span class="sc-chev">${open?'▾':'▸'}</span><span class="sc-code">${esc(reg)}</span> <span class="sc-name">${sites.length} sites</span></div><div class="sc-name"><b style="color:var(--ink)">${esc(R.head)}</b> · ${esc(R.dam)}</div><div class="sc-num"><b>${st.n}</b></div>${cell(st)}</div>`;
+    if(open){sites.map(s=>({s,st:stats(rs.filter(r=>r.site===s))})).sort((a,b)=>(b.st.issueRate||0)-(a.st.issueRate||0)||(b.st.negPct||0)-(a.st.negPct||0)).forEach(({s,st})=>{const R=D.roster[s];
+      html+=`<div class="scorecard-row site" data-site="${s}"><div style="padding-left:22px"><span class="sc-code">${esc(R.name)}</span> <span class="sc-name">${s}</span>${R.reviews_connected===false?' <span class="site-pill">no feed</span>':''}</div><div class="sc-name">${esc(R.gm||'')}</div><div class="sc-num">${st.n}</div>${cell(st)}</div>`;});}
+  });
+  $('#board').innerHTML=html;
+  $$('#board [data-reg]').forEach(el=>el.onclick=()=>{const reg=el.dataset.reg;if(S.scope.type==='region'&&S.scope.id===reg)setScope('fleet',null);else setScope('region',reg);});
+  $$('#board [data-site]').forEach(el=>el.onclick=()=>openSite(el.dataset.site));
+}
+function renderHeatmap(){
+  const all=D.reviews.filter(r=>r[S.ptype]===S.pkey);const fleet=stats(all);
+  const m=S.metric;let html='';
+  Object.keys(D.regions).forEach(reg=>{
+    const sites=Object.values(D.roster).filter(x=>x.region===reg&&siteIn(x.code,S.scope)).map(x=>x.code);if(!sites.length)return;
+    const rst=stats(all.filter(r=>sites.includes(r.site)));const R=D.regions[reg];
+    const tiles=sites.map(s=>({s,st:stats(all.filter(r=>r.site===s))}));
+    const val=(st)=>m==='star'?st.avg:m==='neg'?st.negPct:m==='rate'?st.issueRate:m==='vol'?st.n:null;
+    const rag=(st)=>m==='combined'?siteRag(st):m==='star'?(st.n<5?'na':starRag(st.avg)):m==='neg'?negRag(st.negPct,st.n):m==='rate'?rateRag(st.issueRate,st.n):(st.n>=fleet.n/Math.max(1,Object.keys(D.roster).length)?'green':st.n>=5?'amber':'red');
+    tiles.sort((a,b)=>{const o={red:0,amber:1,green:2,na:3};if(m==='combined')return o[rag(a.st)]-o[rag(b.st)]||(b.st.issueRate||0)-(a.st.issueRate||0);if(m==='star')return (a.st.avg??9)-(b.st.avg??9);if(m==='vol')return a.st.n-b.st.n;return (val(b.st)||0)-(val(a.st)||0);});
+    html+=`<div class="cluster-group"><div class="cluster-head"><span class="cluster-title">${esc(reg)}</span><span class="cluster-am">${esc(R.head)} · DAM ${esc(R.dam)}</span><span class="cluster-score">${rst.n} reviews · <span class="sc-chip ${starRag(rst.avg)}">${rst.avg==null?'–':rst.avg.toFixed(2)}★</span> · ${rst.issues} issues</span></div><div class="heatmap">`;
+    tiles.forEach(({s,st})=>{const R=D.roster[s];const g=rag(st);const small=st.n<5&&m!=='vol';const big=small?(st.n?'n='+st.n:'–'):m==='star'?(st.avg==null?'–':st.avg.toFixed(2)):m==='neg'?(st.n?st.negPct.toFixed(1)+'%':'–'):m==='rate'?(st.issueRate==null?'–':st.issueRate.toFixed(0)):m==='vol'?st.n:(st.issueRate==null?'–':st.issueRate.toFixed(0));
+      const lab=small?'small n':m==='star'?'avg ★':m==='neg'?'≤3★':m==='vol'?'reviews':'per 100';
+      html+=`<div class="tile ${g}" data-site="${s}"><div class="tile-left"><div class="tile-code">${esc(R.name)}</div><div class="tile-name" ${tip(0,`${s} · ${R.gm||'GM tbc'}`)}>${s} · ${esc(R.gm||'GM tbc')}${R.reviews_connected===false?' · no feed':''}</div></div><div class="tile-delta ${g}">${big}<small>${lab}</small></div><div class="tile-metrics"><div class="tile-metric"><b>${st.n}</b>rev</div><div class="tile-metric ${starRag(st.avg)==='red'?'bad':starRag(st.avg)==='amber'?'warn':'good'}"><b>${st.avg==null?'–':st.avg.toFixed(2)}</b>★</div><div class="tile-metric ${negRag(st.negPct,st.n)==='red'?'bad':negRag(st.negPct,st.n)==='amber'?'warn':''}"><b>${st.neg}</b>≤3★</div><div class="tile-metric ${st.issues?'iss':''}"><b>${st.issues}</b>issues</div></div><div class="tile-mix">${MAIN.map(c=>st.cats[c]?`<i style="flex:${st.cats[c]};background:${catCol(c)}"></i>`:'').join('')}</div></div>`;});
+    html+='</div></div>';
+  });
+  $('#heatmap').innerHTML=html||'<div class="muted">No sites in scope.</div>';
+  $$('#heatmap .tile').forEach(el=>el.onclick=()=>openSite(el.dataset.site));
+}
+/* ---------- issues ---------- */
+function renderMix(){
+  const st=stats(rows(S.pkey));
+  const cats=Object.entries(D.taxonomy).map(([c,v])=>({c,label:v.label,owner:v.owner,n:st.cats[c]||0})).sort((a,b)=>b.n-a.n);const mx=Math.max(1,...cats.map(x=>x.n));
+  let html='';
+  cats.forEach(x=>{html+=`<div class="hbar clickable" data-cat="${x.c}"><div><span class="sw" style="background:${catCol(x.c)}"></span><b>${esc(x.label)}</b><div class="owner">${esc(x.owner)}</div></div><div class="trk"><i style="width:${x.n/mx*100}%;background:${catCol(x.c)}"></i></div><div class="n">${x.n}</div></div>`;
+    Object.entries(st.subs).filter(([k])=>k.startsWith(x.c+'/')).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{const sk=k.split('/')[1];html+=`<div class="hbar sub clickable" data-cat="${x.c}" data-sub="${sk}"><div>${esc(D.taxonomy[x.c].subs[sk])}</div><div class="trk"><i style="width:${v/mx*100}%;background:${catCol(x.c)};opacity:.6"></i></div><div class="n">${v}</div></div>`;});});
+  $('#mix').innerHTML=html;
+  $$('#mix .hbar').forEach(el=>el.onclick=()=>goRead({cat:el.dataset.cat,q:el.dataset.sub?D.taxonomy[el.dataset.cat].subs[el.dataset.sub]:''}));
+}
+function renderTrend(){
+  const weeks=periods('week');const endIdx=S.ptype==='week'?weeks.indexOf(S.pkey):weeks.findIndex(w=>periodEnd('week',w)>=periodEnd(S.ptype,S.pkey));const ei=endIdx<0?weeks.length-1:endIdx;const wk=weeks.slice(Math.max(0,ei-12),ei+1);
+  const series=wk.map(w=>{const rs=D.reviews.filter(r=>r.week===w&&siteIn(r.site,S.scope));const s=stats(rs);const o={w,n:s.n,tot:0};[...MAIN,'other'].forEach(c=>{const v=c==='other'?Object.entries(s.cats).filter(([k])=>!MAIN.includes(k)).reduce((a,[,x])=>a+x,0):(s.cats[c]||0);o[c]=s.n?v/s.n*100:0;if(!S.hidden.has(c))o.tot+=o[c];});return o;});
+  const W=560,H=220,L=34,R=8,T=10,B=28;const mx=Math.max(5,...series.map(d=>d.tot))*1.1;
+  const x=i=>L+(i+0.5)*(W-L-R)/series.length,bw=(W-L-R)/series.length*0.62,y=v=>T+(H-T-B)*(1-v/mx);
+  let svg=`<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">`;
+  for(let g=0;g<=4;g++){const v=mx*g/4;svg+=`<line x1="${L}" x2="${W-R}" y1="${y(v)}" y2="${y(v)}" stroke="#e2e8f0" stroke-width="1"/><text x="${L-6}" y="${y(v)+4}" font-size="9" text-anchor="end" fill="#94a3b8">${v.toFixed(0)}</text>`;}
+  series.forEach((d,i)=>{let acc=0;const cx=x(i);const keys=[...MAIN,'other'].filter(c=>!S.hidden.has(c));
+    keys.forEach((c,j)=>{if(!d[c])return;const y0=y(acc),y1=y(acc+d[c]);const last=j===keys.length-1||keys.slice(j+1).every(k=>!d[k]);svg+=`<rect x="${cx-bw/2}" y="${y1}" width="${bw}" height="${Math.max(0,y0-y1-1)}" fill="${CATHEX[c]}" rx="${last?3:0}" ${tip(0,`${weekLabel(d.w)} · ${c==='other'?'Other':D.taxonomy[c].label}: ${d[c].toFixed(1)} per 100 (${d.n} reviews)`)}/>`;acc+=d[c];});
+    if(d.w===S.pkey||(S.ptype!=='week'&&i===series.length-1))svg+=`<rect x="${cx-bw/2-3}" y="${T}" width="${bw+6}" height="${H-T-B}" fill="none" stroke="#E94E1B" stroke-dasharray="3 3" rx="4"/>`;
+    svg+=`<text x="${cx}" y="${H-B+12}" font-size="8.5" text-anchor="middle" fill="#64748b">${d.w.slice(8,10)}/${d.w.slice(5,7)}</text><text x="${cx}" y="${H-B+22}" font-size="8" text-anchor="middle" fill="#94a3b8">${d.n}</text>`;});
+  svg+='</svg>';$('#trend').outerHTML=svg.replace('<svg class="chart"','<svg class="chart" id="trend"');
+  $('#trendLegend').innerHTML=[...MAIN,'other'].map(c=>`<span class="${S.hidden.has(c)?'off':''}" data-c="${c}"><i class="sw" style="background:${CATHEX[c]}"></i>${c==='other'?'Other':esc(D.taxonomy[c].label)}</span>`).join('')+'<span class="muted" style="cursor:default;margin-left:auto">week commencing · reviews beneath · dashed = selected</span>';
+  $$('#trendLegend [data-c]').forEach(el=>el.onclick=()=>{const c=el.dataset.c;if(S.hidden.has(c))S.hidden.delete(c);else S.hidden.add(c);renderTrend();});
+}
+function renderPraise(){
+  const st=stats(rows(S.pkey));const P=Object.entries(D.praise_themes).map(([k,l])=>({k,l,n:st.praise[k]||0})).sort((a,b)=>b.n-a.n);const mx=Math.max(1,...P.map(x=>x.n));
+  $('#praise').innerHTML=P.map(x=>`<div class="hbar clickable" data-q="${esc(x.l)}"><div><b>${esc(x.l)}</b></div><div class="trk"><i style="width:${x.n/mx*100}%;background:var(--green)"></i></div><div class="n">${x.n}</div></div>`).join('');
+  $('#praiseNote').textContent=`${st.wt.toLocaleString()} reviews with text in scope. Service praise ahead of food praise says the brand is being bought for the people; the reverse says the bowl.`;
+}
+/* ---------- dishes / staff ---------- */
+function renderDishes(){
+  const rs=rows(S.pkey);const pos={},neg={},negSites={},posSites={};
+  rs.forEach(r=>r.dishes.forEach(d=>{if(/unspecified|general/.test(d.name))return;if(d.sent==='neg'){neg[d.name]=(neg[d.name]||0)+1;(negSites[d.name]=negSites[d.name]||new Set()).add(r.site);}else if(d.sent==='pos'){pos[d.name]=(pos[d.name]||0)+1;(posSites[d.name]=posSites[d.name]||new Set()).add(r.site);}}));
+  const top=(o,k)=>Object.entries(o).sort((a,b)=>b[1]-a[1]).slice(0,k);const mxN=Math.max(1,...Object.values(neg)),mxP=Math.max(1,...Object.values(pos));
+  const line=(k,v,mx,col,sites,cross)=>`<div class="hbar tight clickable" data-q="${esc(k)}"><div><b>${esc(k)}</b>${cross?` <span class="site-pill" style="color:var(--red);border-color:var(--red-ring);background:var(--red-bg)">${sites.size} sites</span>`:''}<div class="owner">${[...sites].slice(0,4).map(s=>D.roster[s].name).join(', ')}${sites.size>4?` +${sites.size-4}`:''}</div></div><div class="trk"><i style="width:${v/mx*100}%;background:${col}"></i></div><div class="n">${v}</div></div>`;
+  $('#dishes').innerHTML=`<div class="grid g2"><div><div class="panel-head issues">Complained about</div>${top(neg,10).map(([k,v])=>line(k,v,mxN,'var(--red)',negSites[k],negSites[k].size>=3)).join('')||'<div class="muted small">none</div>'}</div><div><div class="panel-head actions">Praised</div>${top(pos,10).map(([k,v])=>line(k,v,mxP,'var(--green)',posSites[k],false)).join('')||'<div class="muted small">none</div>'}</div></div>`;
+  $$('#dishes .hbar').forEach(el=>el.onclick=()=>goRead({q:el.dataset.q}));
+}
+function renderStaff(){
+  const rs=rows(S.pkey);const m={};
+  rs.forEach(r=>r.staff.forEach(s=>{const k=s.name+'|'+r.site;m[k]=m[k]||{name:s.name,site:r.site,pos:0,neg:0};if(s.sent==='neg')m[k].neg++;else m[k].pos++;}));
+  const arr=Object.values(m);const negs=arr.filter(x=>x.neg).sort((a,b)=>b.neg-a.neg);const poss=arr.filter(x=>x.pos).sort((a,b)=>b.pos-a.pos).slice(0,20);const mx=Math.max(1,...poss.map(x=>x.pos));
+  const row=(x,neg)=>`<div class="hbar tight clickable" data-q="${esc(x.name)}" data-site="${x.site}"><div><b>${esc(x.name)}</b> <span class="muted small">${esc(D.roster[x.site].name)}</span></div><div class="trk"><i style="width:${(neg?x.neg:x.pos)/(neg?Math.max(1,...negs.map(z=>z.neg)):mx)*100}%;background:${neg?'var(--red)':'var(--green)'}"></i></div><div class="n">${neg?x.neg:x.pos}${(!neg&&x.neg)?` <span class="muted">/ ${x.neg}−</span>`:''}</div></div>`;
+  $('#staff').innerHTML=(negs.length?`<div class="panel-head issues">Named negatively</div>${negs.map(x=>row(x,true)).join('')}<div style="height:12px"></div>`:'')+`<div class="panel-head actions">Most praised</div>${poss.map(x=>row(x,false)).join('')||'<div class="muted small">no names in scope</div>'}`;
+  $$('#staff .hbar').forEach(el=>el.onclick=()=>goRead({q:el.dataset.q,site:el.dataset.site}));
+}
+/* ---------- timing / kpi ---------- */
+function renderHeat(){
+  const rs=rows(S.pkey).filter(r=>r.dow&&r.hour!=null);const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];const parts=[['Morning','<12',h=>h<12],['Lunch','12–15',h=>h>=12&&h<15],['Afternoon','15–18',h=>h>=15&&h<18],['Evening','18+',h=>h>=18]];
+  const cell={};rs.forEach(r=>{const p=parts.findIndex(x=>x[2](r.hour));const k=r.dow+p;cell[k]=cell[k]||{n:0,neg:0};cell[k].n++;if(r.stars<=3)cell[k].neg++;});
+  let html=`<div class="hm"><div></div>${parts.map(p=>`<div class="h">${p[0]}<br><span class="muted">${p[1]}</span></div>`).join('')}`;
+  days.forEach(d=>{html+=`<div class="r">${d}</div>`;parts.forEach((p,i)=>{const c=cell[d+i]||{n:0,neg:0};const pct=c.n?c.neg/c.n:0;const a=c.n?Math.min(1,0.06+pct*3):0;html+=`<div class="c" style="background:rgba(220,38,38,${a.toFixed(2)});color:${a>0.5?'#fff':'var(--ink)'}" ${tip(0,`${d} ${p[0]}: ${c.neg} negative of ${c.n} reviews received`)}>${c.n?Math.round(pct*100)+'%':'<span class=muted>–</span>'}<div class="small" style="font-weight:500;opacity:.75">${c.n||''}</div></div>`;});});
+  $('#heat').innerHTML=html+'</div><div class="note">Cell = % of reviews received in that slot that were ≤3★, count beneath. Darker = worse.</div>';
+}
+function renderKpix(){
+  const el=$('#kpix');
+  if(S.ptype!=='week'){el.innerHTML='<div class="muted">Switch to the Week view to see reviews beside wage %, hours, covers and SPH.</div>';return;}
+  const k=D.kpis[S.pkey];if(!k){el.innerHTML=`<div class="muted">No weekly KPI file for ${esc(weekLabel(S.pkey))}.</div>`;return;}
+  const pk=prevKey('week',S.pkey),kp=pk?(D.kpis[pk]||{}):{};const rs=rows(S.pkey);
+  const sites=[...new Set(rs.map(r=>r.site))].filter(s=>k[s]).sort((a,b)=>D.roster[a].region.localeCompare(D.roster[b].region)||a.localeCompare(b));
+  const f=(v,d=1,suf='')=>v==null?'<span class="muted">–</span>':(typeof v==='number'?v.toFixed(d):v)+suf;
+  let html=`<table class="x"><thead><tr><th>Site</th><th class="num">Rev</th><th class="num">★</th><th class="num">Issues</th><th class="num">Speed</th><th class="num">Service</th><th class="num">Food</th><th class="num">Wage %</th><th class="num">Hours Δ</th><th class="num">Covers</th><th class="num">SPH £</th><th class="num">Sales vs tgt</th><th class="num">Score</th></tr></thead><tbody>`;
+  sites.forEach(s=>{const st=stats(rs.filter(r=>r.site===s)),x=k[s],p=kp[s];const hd=x.labour_hours&&p&&p.labour_hours?((x.labour_hours/p.labour_hours-1)*100):null;const warn=(st.cats.speed||0)>=2&&hd!=null&&hd<-5;
+    html+=`<tr class="row ${warn?'warn':''}" data-site="${s}"><td><b>${esc(D.roster[s].name)}</b></td><td class="num">${st.n}</td><td class="num"><span class="sc-chip ${starRag(st.avg)}" style="padding:2px 6px">${f(st.avg,2)}</span></td><td class="num">${st.issues}</td><td class="num">${st.cats.speed||''}</td><td class="num">${st.cats.service||''}</td><td class="num">${st.cats.food||''}</td><td class="num ${x.wage_pct>26?'row-delta red':''}">${f(x.wage_pct,1,'%')}</td><td class="num ${hd!=null&&hd<-5?'row-delta amber':''}">${hd==null?'<span class="muted">–</span>':(hd>0?'+':'')+hd.toFixed(0)+'%'}</td><td class="num">${x.covers==null?'–':x.covers.toLocaleString()}</td><td class="num">${f(x.sph,2)}</td><td class="num ${x.var_pct!=null&&x.var_pct<=-10?'row-delta red':''}">${x.var_pct==null?'–':(x.var_pct>0?'+':'')+x.var_pct.toFixed(1)+'%'}</td><td class="num">${x.eff_score!=null?`<span class="sc-chip ${x.eff_rag==='red'?'red':x.eff_rag==='amber'?'amber':'green'}" style="padding:2px 6px" ${tip(0,'Control Centre efficiency score')}>${x.eff_score}</span>`:'<span class="muted">–</span>'}</td></tr>`;});
+  el.innerHTML=html+'</tbody></table><div class="note">Amber row = 2+ speed complaints on a week where labour hours fell more than 5% vs the prior week. Wage % red above 26 (red-light trigger). Score = the Control Centre efficiency score for the same week.</div>';
+  $$('#kpix tr[data-site]').forEach(tr=>tr.onclick=()=>openSite(tr.dataset.site));
+}
+/* ---------- reader ---------- */
+function reviewHTML(r){
+  const R=D.roster[r.site];
+  return `<div class="rv"><div class="meta"><span class="stars">${'★'.repeat(r.stars)}<span class="off">${'★'.repeat(5-r.stars)}</span></span><span class="site" data-site="${r.site}">${esc(R.name)}</span><span>${fmtDate(r.date)}${r.dow?` · ${r.dow} ${String(r.hour).padStart(2,'0')}:00`:''}</span><span class="muted">${esc(r.author||'Anonymous')}</span><span class="site-pill" ${tip(0,r.src==='llm'?'Labels verified by Claude':'Rules only (keyword engine)')}>${r.src==='llm'?'verified':'rules'}</span>${r.lang&&r.lang!=='en'?`<span class="site-pill">${esc(r.lang)}</span>`:''}</div>
+  <div class="chips">${r.issues.map(i=>`<span class="tag" style="background:${catCol(i.cat)}" data-cat="${i.cat}" ${tip(0,i.evidence||'')}>${esc(D.taxonomy[i.cat].subs[i.sub])}</span>`).join('')}${r.praise.map(p=>`<span class="tag pos">${esc(D.praise_themes[p])}</span>`).join('')}${r.dishes.map(d=>`<span class="tag ${d.sent==='neg'?'dishneg':'dish'}" data-q="${esc(d.name)}">${esc(d.name)}</span>`).join('')}${r.staff.map(s=>`<span class="tag ${s.sent==='neg'?'staffneg':'staff'}" data-q="${esc(s.name)}">${esc(s.name)}</span>`).join('')}</div>
+  <div class="txt" style="margin-top:6px">${esc(r.text)}</div>${r.translation?`<div class="tr">${esc(r.translation)}</div>`:''}${r.summary?`<div class="sum">${esc(r.summary)}</div>`:''}</div>`;
+}
+function filtered(){
+  let rs=rows(S.pkey);const f=S.f;
+  if(f.site)rs=rs.filter(r=>r.site===f.site);
+  if(f.stars==='neg')rs=rs.filter(r=>r.stars<=3);else if(f.stars==='but')rs=rs.filter(r=>r.stars>=4&&r.issues.length);else if(f.stars)rs=rs.filter(r=>r.stars===+f.stars);
+  if(f.cat)rs=rs.filter(r=>r.issues.some(i=>i.cat===f.cat));
+  if(f.q){const q=f.q.toLowerCase();rs=rs.filter(r=>(r.text||'').toLowerCase().includes(q)||(r.translation||'').toLowerCase().includes(q)||r.dishes.some(d=>d.name.toLowerCase().includes(q))||r.staff.some(s=>s.name.toLowerCase().includes(q))||(r.author||'').toLowerCase().includes(q)||r.issues.some(i=>D.taxonomy[i.cat].subs[i.sub].toLowerCase().includes(q)));}
+  rs=rs.filter(r=>r.text);
+  rs.sort((a,b)=>a.stars-b.stars||b.issues.length-a.issues.length||(a.date<b.date?1:-1));return rs;
+}
+function renderReader(){
+  const fs=$('#fSite');const scoped=rows(S.pkey);const sites=[...new Set(scoped.map(r=>r.site))].sort();fs.innerHTML='<option value="">All sites in scope</option>'+sites.map(s=>`<option value="${s}" ${s===S.f.site?'selected':''}>${esc(D.roster[s].name)}</option>`).join('');
+  const rs=filtered();const N=rs.length;const show=rs.slice(0,S.readerLimit);
+  $('#tbReader').textContent=scoped.filter(r=>r.stars<=3&&r.text).length;$('#tbReader').className='tb-badge '+(scoped.some(r=>r.stars<=3&&r.text)?'':'zero');
+  $('#readerCount').textContent=`${N.toLocaleString()} review${N===1?'':'s'}${N>show.length?` · showing ${show.length}`:''}`;
+  $('#reader').innerHTML=show.map(reviewHTML).join('')+(N>show.length?`<button class="more" id="more">Show ${Math.min(60,N-show.length)} more</button>`:'');
+  const mb=$('#more');if(mb)mb.onclick=()=>{S.readerLimit+=60;renderReader();};
+  $$('#reader .tag[data-cat]').forEach(el=>el.onclick=()=>goRead({cat:el.dataset.cat}));
+  $$('#reader .tag[data-q]').forEach(el=>el.onclick=()=>goRead({q:el.dataset.q}));
+  $$('#reader .site').forEach(el=>el.onclick=()=>openSite(el.dataset.site));
+}
+/* ---------- site modal ---------- */
+function openSite(s){
+  const R=D.roster[s];const rs=D.reviews.filter(r=>r[S.ptype]===S.pkey&&r.site===s);const st=stats(rs);const pk=prevKey(S.ptype,S.pkey);const ps=pk?stats(D.reviews.filter(r=>r[pk===null?'':S.ptype]===pk&&r.site===s)):null;
+  const g=siteRag(st);
+  $('#mTitle').textContent=`${R.name} · ${s}`;$('#mSub').textContent=`${R.region} · GM ${R.gm||'tbc'} · ${R.head} / ${R.dam} · ${pLabel(S.ptype,S.pkey)}`;
+  const a=(D.annotations||{})[`${S.ptype}|${S.pkey}|site|${s}`];
+  const k=S.ptype==='week'?(D.kpis[S.pkey]||{})[s]:null;
+  const negs=rs.filter(r=>r.stars<=3&&r.text).sort((a,b)=>a.stars-b.stars);const buts=rs.filter(r=>r.stars>=4&&r.issues.length);
+  const staff={};rs.forEach(r=>r.staff.forEach(x=>{staff[x.name]=staff[x.name]||{p:0,n:0};if(x.sent==='neg')staff[x.name].n++;else staff[x.name].p++;}));
+  const top=Object.entries(st.subs).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  let html=`<div class="mstats"><div class="mstat"><div class="l">Reviews</div><div class="v">${st.n}</div><div class="small">${ps?delta(st.n,ps.n,x=>Math.round(x)):''}</div></div><div class="mstat"><div class="l">Avg ★</div><div class="v kpi-value ${starRag(st.avg)}" style="margin:0">${st.avg==null?'–':st.avg.toFixed(2)}</div><div class="small">${ps?delta(st.avg,ps.avg,x=>x.toFixed(2)):''}</div></div><div class="mstat"><div class="l">≤3★</div><div class="v kpi-value ${negRag(st.negPct,st.n)}" style="margin:0">${st.neg}</div><div class="small">${st.n?st.negPct.toFixed(1)+'%':''}</div></div><div class="mstat"><div class="l">Issues</div><div class="v kpi-value ${rateRag(st.issueRate,st.n)}" style="margin:0">${st.issues}</div><div class="small">${st.issueRate==null?'':st.issueRate.toFixed(0)+' per 100'}</div></div><div class="mstat"><div class="l">Status</div><div class="v"><span class="sc-chip ${g}">${g==='na'?'small n':g.toUpperCase()}</span></div><div class="small">${R.reviews_connected===false?'no feed':''}</div></div></div>`;
+  if(k)html+=`<div class="small" style="margin:-6px 0 14px;color:var(--ink-2)">Same week in the Control Centre: wage <b>${k.wage_pct==null?'–':k.wage_pct.toFixed(1)+'%'}</b> · covers <b>${k.covers==null?'–':k.covers.toLocaleString()}</b> · SPH <b>£${k.sph==null?'–':k.sph.toFixed(2)}</b> · sales vs target <b>${k.var_pct==null?'–':(k.var_pct>0?'+':'')+k.var_pct.toFixed(1)+'%'}</b> · efficiency score <b>${k.eff_score==null?'–':k.eff_score}</b>${k.red_light==='red'?' · <span class="row-delta red">RED LIGHT</span>':''}</div>`;
+  html+=`<div class="grid g2"><div><div class="panel-head">Issue mix</div>${stackBar(st.cats,st.issues,14)}<div style="height:8px"></div>${top.map(([kk,v])=>{const [c,sub]=kk.split('/');return `<div class="hbar clickable" data-cat="${c}" data-sub="${sub}" style="grid-template-columns:1fr 60px 30px"><div><span class="sw" style="background:${catCol(c)}"></span>${esc(D.taxonomy[c].subs[sub])}</div><div class="trk"><i style="width:${v/top[0][1]*100}%;background:${catCol(c)}"></i></div><div class="n">${v}</div></div>`;}).join('')||'<div class="muted small">no issues</div>'}</div>
+  <div><div class="panel-head">Named staff</div><div class="chips">${Object.entries(staff).sort((a,b)=>(b[1].p+b[1].n)-(a[1].p+a[1].n)).slice(0,12).map(([n,v])=>`<span class="tag ${v.n?'staffneg':'staff'}" data-q="${esc(n)}">${esc(n)} ${v.p?'+'+v.p:''}${v.n?' −'+v.n:''}</span>`).join('')||'<span class="muted small">none named</span>'}</div>
+  <div class="panel-head" style="margin-top:12px">Read-out</div><div class="readout ${a?'':'empty'}" style="font-size:13px">${a?esc(a.text):'No site read-out for this period (written where a flag fires).'}</div></div></div>`;
+  html+=`<div class="panel-head issues" style="margin-top:16px">Negative reviews · ${negs.length}</div>`+(negs.slice(0,8).map(r=>`<div class="item red"><div class="small muted">${'★'.repeat(r.stars)} · ${fmtDate(r.date)} · ${esc(r.author||'Anonymous')}</div><div class="chips" style="margin:4px 0">${r.issues.map(i=>`<span class="tag" style="background:${catCol(i.cat)}">${esc(D.taxonomy[i.cat].subs[i.sub])}</span>`).join('')}</div>${esc(r.text.length>420?r.text.slice(0,420)+'…':r.text)}${r.summary?`<div class="sum" style="color:var(--maki-orange);font-weight:700;font-size:12px;margin-top:4px">${esc(r.summary)}</div>`:''}</div>`).join('')||'<div class="muted small">None with text this period.</div>');
+  if(buts.length)html+=`<div class="panel-head" style="margin-top:14px;color:var(--amber)">"But" complaints inside 4-5★ · ${buts.length}</div>`+buts.slice(0,5).map(r=>`<div class="item amber"><div class="chips" style="margin-bottom:4px">${r.issues.map(i=>`<span class="tag" style="background:${catCol(i.cat)}">${esc(D.taxonomy[i.cat].subs[i.sub])}</span>`).join('')}</div><span class="small">${esc(r.issues[0].evidence||r.summary||r.text.slice(0,160))}</span></div>`).join('');
+  html+=`<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap"><button class="chip" id="mReadAll">Read all ${st.wt} reviews with text →</button><button class="chip" id="mReadNeg">Negatives only →</button></div>`;
+  $('#mBody').innerHTML=html;$('#modalBg').classList.add('show');
+  $('#mScope').onclick=()=>{closeModal();setScope('site',s);};
+  $('#mReadAll').onclick=()=>{closeModal();setScope('site',s);goRead({});};
+  $('#mReadNeg').onclick=()=>{closeModal();setScope('site',s);goRead({stars:'neg'});};
+  $$('#mBody .hbar').forEach(el=>el.onclick=()=>{closeModal();setScope('site',s);goRead({cat:el.dataset.cat,q:D.taxonomy[el.dataset.cat].subs[el.dataset.sub]});});
+  $$('#mBody .tag[data-q]').forEach(el=>el.onclick=()=>{closeModal();setScope('site',s);goRead({q:el.dataset.q});});
+}
+function closeModal(){$('#modalBg').classList.remove('show');}
+function renderMethod(){
+  const m=D.meta;const c=m.counts||{};
+  $('#method').innerHTML=[
+    ['Source',`Google Reviews workbook, Raw Data tab (gid 284143046). Full lifetime feed per location; ${m.source_rows.toLocaleString()} rows since 20/04/2026, ${m.source_dupes_dropped} duplicate reviewIds dropped. Labels dropped on purpose: ${esc(Object.entries(m.source_dropped_labels||{}).map(([k,v])=>k+' '+v).join(', '))} (Leith is dead, West end / Maki O2 / NQ are non-dashboard, #N/A is a different business).`],
+    ['Not in the feed',esc(Object.entries(m.not_connected||{}).map(([k,v])=>k+': '+v).join(' · '))||'—'],
+    ['Periods','Week = Monday to Sunday by the date the review was RECEIVED. Month and quarter = calendar, same date. Never a rolling window. The page opens on the last complete week; in-progress periods are labelled.'],
+    ['Classification',`Taxonomy v${esc(m.taxonomy_version)}: a keyword engine labels every review with text; ${m.llm_labels_applied.toLocaleString()} reviews (all ≤3★, every 4-5★ carrying a complaint, all with an unmatched theme) were re-read and re-labelled by Claude, which overrides the rules. Reviews marked "rules" carry only keyword labels. A review with no comment (${(c.no_text||0).toLocaleString()}) is counted in the star figures and never guessed.`],
+    ['Counting','Simple counts. One review can carry several issues; each counts once. Issue rate = issues per 100 reviews received (including comment-less ones), comparable across sites of different volume.'],
+    ['Colours','Same palette and RAG grammar as the Control Centre. ★: ≥4.7 green, ≥4.5 amber, else red (the weekly OKR). Negative %: ≤4 green, ≤8 amber. Issues per 100: ≤10 green, ≤20 amber. Under 5 reviews = grey.'],
+    ['Not here','Deliveroo / Uber Eats reviews (run separately). Owner replies (no reply column in the source). Visit date or time (only the received time exists).'],
+    ['Owners','The owner on each category is the default accountable function, shown as a suggestion. Nothing on this page raises a task by itself.'],
+  ].map(([k,v])=>`<b>${k}</b><div>${v}</div>`).join('');
+}
+load().catch(e=>{document.body.insertAdjacentHTML('afterbegin',`<div style="padding:20px;color:#dc2626;font-weight:700">Could not load data/reviews_intel.json: ${esc(e.message)}</div>`);console.error(e);});
+})();
+</script>
+</body>
+</html>

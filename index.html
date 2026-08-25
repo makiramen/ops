@@ -1177,6 +1177,7 @@
     <button class="tabbtn active" data-tab="daily">Daily</button>
     <button class="tabbtn" data-tab="week">This Week</button>
     <button class="tabbtn" data-tab="deliveroo">Deliveroo RAG</button>
+    <button class="tabbtn" data-tab="reviews">Reviews <span class="tb-badge" id="tb-reviews" style="display:none">0</span></button>
     <button class="tabbtn" data-tab="ecbudget">Budget Burn</button>
     <button class="tabbtn" data-tab="redlight">Red Light <span class="tb-badge" id="tb-red">0</span></button>
     <!-- 6-tab trim (2026-06-22): OKRs / Governance / Risk Register / Roadmap tab buttons hidden.
@@ -1586,6 +1587,31 @@
     <div id="rl-deliveroo"></div>
   </div><!-- /tab-deliveroo -->
 
+  <!-- ============ TAB: REVIEWS INTELLIGENCE (Pipe 5c, added 25/08/2026 by patch_reviews_tab.py) ============ -->
+  <div class="tabpanel" id="tab-reviews">
+    <style>
+      #tab-reviews .rv-frame { width:100%; border:0; display:block; min-height:900px; background:transparent; }
+      #tab-reviews .rv-note { font-size:11.5px; color:var(--ink-3); margin:0 0 10px; display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+      #tab-reviews .rv-note a { color:var(--maki-orange); font-weight:700; text-decoration:none; }
+    </style>
+    <div class="rv-note"><span id="rv-status">Reviews Intelligence loads when you open this tab.</span><a href="reviews.html" target="_blank">Open full page ↗</a></div>
+    <iframe class="rv-frame" id="rv-frame" title="Reviews Intelligence" loading="lazy"></iframe>
+    <script>
+    (function(){
+      var frame = document.getElementById('rv-frame'), loaded = false;
+      function wk(){ var s = document.getElementById('week-select'); return s && s.value ? s.value : ''; }
+      function open_(){ if (loaded) return; loaded = true; frame.src = 'reviews.html?embed=1' + (wk() ? '&week=' + encodeURIComponent(wk()) : ''); document.getElementById('rv-status').textContent = 'Reviews Intelligence · week follows the selector above.'; }
+      document.querySelectorAll('.tabbtn[data-tab="reviews"]').forEach(function(b){ b.addEventListener('click', open_); });
+      var ws = document.getElementById('week-select'); if (ws) ws.addEventListener('change', function(){ if (loaded && frame.contentWindow) frame.contentWindow.postMessage({type:'rv-week', week: ws.value}, '*'); });
+      window.addEventListener('message', function(e){ var d = e.data || {}; if (d.type === 'rv-height' && d.h) frame.style.height = (Math.max(900, d.h) + 20) + 'px'; if (d.type === 'rv-scrolltop') window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      fetch('data/reviews_summary.json?cb=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){
+        if (!s) return; var b = document.getElementById('tb-reviews'); var n = (s.red_sites || 0) + (s.food_safety_mentions || 0);
+        if (n > 0) { b.textContent = s.red_sites || s.food_safety_mentions; b.style.display = ''; b.title = (s.red_sites || 0) + ' red site(s), ' + (s.food_safety_mentions || 0) + ' food-safety mention(s), w/c ' + s.week; }
+      }).catch(function(){});
+    })();
+    </script>
+  </div>
+
   <!-- ============ TAB: BUDGET BURN (ported from EC control centre) ============ -->
   <div class="tabpanel" id="tab-ecbudget">
   <div class="ecb-hero" style="background:linear-gradient(135deg,#0E5A30 0%,#1F8A4C 60%,#27A35C 100%)">
@@ -1618,7 +1644,7 @@
   </div>
   <div style="overflow-x:auto"><table class="tbl" id="budgetBurnTbl">
     <thead><tr><th>Site</th><th class="num">Spent Yesterday £</th><th class="num">Weekly Spend £</th><th class="num">Weekly Budget £</th><th style="min-width:130px">Week Usage</th><th class="num">Monthly Spend £</th><th class="num">Month Cap £</th><th style="min-width:130px">Month Pace</th></tr></thead><tbody></tbody></table></div>
-  <div class="section-intro" style="margin-top:10px">Week Usage = spend Sun→selected day vs the HC weekly budget (red &gt;100% · amber &gt;85%). Month Pace = monthly spend vs the month cap (interim: 23% × Mar–May avg revenue; M19, M20, M21 and Maki Nori have no Mar–May history, so their caps are the weekly budget in force × 52/12 — set 25 Aug 2026, reprice when official caps are issued) pro-rated to the selected day (red &gt;110% · amber &gt;100%). Only filed reports count — the ledger starts 9 Jun 2026.</div>
+  <div class="section-intro" style="margin-top:10px">Week Usage = spend Sun→selected day vs the HC weekly budget (red &gt;100% · amber &gt;85%). Month Pace = monthly spend vs the month cap (interim: 23% × Mar–May avg revenue) pro-rated to the selected day (red &gt;110% · amber &gt;100%). Only filed reports count — the ledger starts 9 Jun 2026.</div>
   <div class="delivery-tile" id="dailySpendTile" style="border-top-color:#1F8A4C">
     <h2>Daily Spend Skim · BOH food spend vs budget</h2>
     <div class="tile-sub">From the Mapal <strong>Head Chef Daily Report</strong> emails, parsed each morning. Figures and filing status refresh live from the ledger sheet on every load. <span class="source-chip manual">Mapal Compliance emails</span></div>
@@ -6583,7 +6609,7 @@ function renderBudget(){
     { l:"WTD", n: fmtGBP(gWtd), cls:"" },
     { l:"Weekly budget", n: fmtGBP(gWkB), cls:"green" },
     { l:"MTD", n: fmtGBP(gMtd), cls:"" },
-    { l:"Month caps", n: fmtGBP(gCap), cls:"green" }
+    { l:"June caps", n: fmtGBP(gCap), cls:"green" }
   ];
   document.getElementById("budgetHeroStats").innerHTML = hero.map(h=>`<div class="hstat ${h.cls}"><div class="n" style="font-size:19px">${h.n}</div><div class="l">${h.l}</div></div>`).join("");
   // ---- previous-week like-for-like delta (same number of days into the week) ----
