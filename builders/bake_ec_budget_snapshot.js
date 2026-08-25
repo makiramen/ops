@@ -44,7 +44,7 @@ const vm = require('vm');
 const RAW = 'https://raw.githubusercontent.com/makiramen/ops/main';
 const PINNED = {
   parse:  'ebd2300d55e16c7a2ad7be9ca28b7d2f5314588cb5948698fb71d8986a24a623',
-  apply:  '83d48d390346ff3c40693bf5018483ec6cb11e978d1f52e45f3afa69eb3168d7',
+  apply:  'e30a0b71993a246b96e292e3295f2b590e97dbae4c45f8e26937684855a18768',   // re-pinned 25/08/2026: applySheetRows gained the live_from go-live gate (M21 from 2026-08-24)
 };
 const MARKS = {
   weekSun: [ 'function weekSunISO(dateISO){', '\n' ],
