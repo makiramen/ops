@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-24",
+  "generated_at": "2026-08-25",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-17 \u2013 2026-08-23",
@@ -25,16 +25,16 @@
           "wow_pct": 4.12
         },
         "covers": {
-          "actual": 2827,
+          "actual": 1795,
           "prev": 1725,
-          "wow_abs": 1102,
-          "wow_pct": 63.88
+          "wow_abs": 70,
+          "wow_pct": 4.06
         },
         "sph": {
-          "actual": 13.33,
+          "actual": 21.0,
           "prev": 20.78,
-          "wow_abs": -7.45,
-          "wow_pct": -35.85,
+          "wow_abs": 0.22,
+          "wow_pct": 1.06,
           "label": "Spend Per Head (covers-weighted Avg Spend)"
         },
         "wage_pct": {
@@ -74,7 +74,7 @@
         "week_commencing": "2026-08-17"
       },
       "efficiency_score": {
-        "score": 46,
+        "score": 60,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -93,8 +93,8 @@
           },
           "sph": {
             "weight": 15,
-            "value": 0.0,
-            "basis": "\u00a313.33 vs \u00a322 tgt \u2014 level 0, WoW -35.85% \u2192 mom 0"
+            "value": 76.51,
+            "basis": "\u00a321.00 vs \u00a322 tgt \u2014 level 83, WoW +1.06% \u2192 mom 61"
           },
           "food": {
             "weight": 30,
@@ -144,15 +144,30 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-24."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-25."
       },
       "maintenance": {
-        "source": "maintenance_2026-08-17.json - NOT PULLED for this week.",
-        "status": "not_pulled",
-        "pulled": false,
-        "outstanding_count": null,
-        "tasks": [],
-        "note": "Maintenance NOT PULLED this week - outstanding count is UNKNOWN, not 0."
+        "source": "automation/data/maintenance_2026-08-17.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Walking fridge",
+            "priority": "\u2014",
+            "logged_week": "02/08/2026",
+            "owner": "Ross",
+            "status": "open"
+          },
+          {
+            "task": "Tap in customer bathroom",
+            "priority": "\u2014",
+            "logged_week": "15/08/2026",
+            "owner": "Ross",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
       },
       "issues_solutions": {
         "source": "GM KPI meeting notes \u2014 email pull not built.",
@@ -164,7 +179,6 @@
       "deliveroo": null,
       "gaps": [
         "Stock-take \u2014 no variance entered this week",
-        "Maintenance \u2014 not pulled this week (no maintenance slice); outstanding count is UNKNOWN, not 0",
         "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
       ]
     }

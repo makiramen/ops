@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-24",
+  "generated_at": "2026-08-25",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-17 \u2013 2026-08-23",
@@ -149,15 +149,30 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-24."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-25."
       },
       "maintenance": {
-        "source": "maintenance_2026-08-17.json - NOT PULLED for this week.",
-        "status": "not_pulled",
-        "pulled": false,
-        "outstanding_count": null,
-        "tasks": [],
-        "note": "Maintenance NOT PULLED this week - outstanding count is UNKNOWN, not 0."
+        "source": "automation/data/maintenance_2026-08-17.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Paint on the walls , need white paint as per picture and also black paint on the rest of the walls in the restaurant",
+            "priority": "\u2014",
+            "logged_week": "11/08/2026",
+            "owner": "Ross",
+            "status": "open"
+          },
+          {
+            "task": "The tap in the males toilet is not working properly. Only turns off the water if rotated beyond the tap and if pressed very hard down.",
+            "priority": "\u2014",
+            "logged_week": "11/08/2026",
+            "owner": "Ross",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
       },
       "issues_solutions": {
         "source": "GM KPI meeting notes \u2014 email pull not built.",
@@ -166,11 +181,35 @@
         "items": [],
         "note": "Separate stream; needs the GM-notes email pull wired in."
       },
-      "deliveroo": null,
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-08-23",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": null,
+        "orders": null,
+        "aov": null,
+        "new_customers": null,
+        "rating": 4.38,
+        "open_hours_pct": 83.7,
+        "avg_prep_min": 12.3,
+        "rejection_pct": 6.8,
+        "inaccuracy_pct": 2.3,
+        "rider_wait_5min_pct": 4.9,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "busy_mode_pct": 9.2
+      },
       "gaps": [
-        "Stock-take \u2014 no variance entered this week",
-        "Maintenance \u2014 not pulled this week (no maintenance slice); outstanding count is UNKNOWN, not 0",
-        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+        "Stock-take \u2014 no variance entered this week"
       ]
     }
   }
