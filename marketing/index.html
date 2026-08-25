@@ -192,6 +192,13 @@ th.diagfirst, td.diagfirst { border-left:2px solid #E7E5E4; }
 .adcard .addest { font-size:9px; color:#64748B; margin-top:5px; word-break:break-all; }
 .adcard .adwarn { font-size:9.5px; font-weight:600; color:#9A3412; background:#FFF7ED;
   border-radius:4px; padding:3px 6px; margin-top:5px; display:block; line-height:1.4; }
+/* 25 Aug 2026 — an ad that is switched off must never read as circulating. */
+.adcard.adoff { border-color:#E2E8F0; background:#F8FAFC; opacity:.62; }
+.adcard.adoff img, .adcard.adoff .noimg { filter:grayscale(1); }
+.adcard .adoffchip { font-size:9.5px; font-weight:700; color:#475569; background:#E2E8F0;
+  border-radius:4px; padding:2px 6px; margin-top:6px; display:inline-block; letter-spacing:.02em; }
+.adoffhead { font-size:10.5px; font-weight:600; color:#64748B; margin:12px 0 0; }
+.adoffhead span { font-weight:400; }
 /* --- Add/Remove: clickable rows, history, detail modal (v1.1) --- */
 #matrix-table tr.clickable, #matrix-hist-table tr.clickable { cursor: pointer; }
 #matrix-table tr.clickable:hover td, #matrix-hist-table tr.clickable:hover td { background: #F1F5F9; }
@@ -3400,12 +3407,31 @@ function matrixCreativeHtml(r) {
   var ads = (matrixAdRows || []).filter(function(a) { return a.parent_campaign === r.entity_name; });
   if (!ads.length) return '';
   ads.sort(function(a, b) { return (Number(b.key_metric_1_value) || 0) - (Number(a.key_metric_1_value) || 0); });
+  // 25 AUG 2026 — THE DEFECT MICHAEL REPORTED. These rows cover the last 30
+  // days of spend, and until today nothing asked Meta whether the ad was still
+  // switched on: 11 of 37 ad rows were already dead, and the panel called all
+  // of them circulating. live_status now comes off the sheet — ACTIVE,
+  // CAMPAIGN_<state>, ADSET_<state>, or blank when Meta would not say. Blank
+  // counts as live, because the honest fallback is the old behaviour, never a
+  // "switched off" we cannot evidence.
+  function adIsOff(a) {
+    var st = String(a.live_status || '').trim().toUpperCase();
+    return st !== '' && st !== 'ACTIVE';
+  }
+  function adOffLabel(a) {
+    var st = String(a.live_status || '').trim().toUpperCase();
+    if (st.indexOf('ADSET_') === 0) return 'ad set switched off';
+    if (st.indexOf('CAMPAIGN_') === 0) return 'campaign switched off';
+    return 'switched off';
+  }
+  var adsLive = ads.filter(function(a) { return !adIsOff(a); });
+  var adsOff = ads.filter(adIsOff);
   var baseCounts = {}, baseSeen = {};
   ads.forEach(function(a) {
     var b = adBaseName(a.entity_name);
     baseCounts[b] = (baseCounts[b] || 0) + 1;
   });
-  var cards = ads.map(function(a, i) {
+  function adCard(a, i) {
     var img = a.thumb_url
       ? '<img src="' + escAttr(a.thumb_url) + '" alt="" loading="lazy" ' +
         'onerror="this.style.display=\'none\';this.insertAdjacentHTML(\'afterend\',\'<div class=&quot;noimg&quot;>image expired</div>\')">'
@@ -3433,19 +3459,31 @@ function matrixCreativeHtml(r) {
     var variant = baseCounts[base] > 1
       ? ' <span class="advariant">copy ' + baseSeen[base] + ' of ' + baseCounts[base] + '</span>'
       : (base !== String(a.entity_name).trim() ? ' <span class="advariant">duplicate</span>' : '');
-    return '<div class="adcard">' + img + '<div class="adbody">' +
+    var off = adIsOff(a);
+    return '<div class="adcard' + (off ? ' adoff' : '') + '">' + img + '<div class="adbody">' +
       '<div class="adname"><span class="adnum">AD ' + (i + 1) + '</span>' + escAttr(base) + variant + '</div>' +
       (a.creative_title ? '<div class="adtitle">“' + escAttr(a.creative_title) + '”</div>' : '') +
       (a.cta ? '<div class="adtitle" style="color:#64748B">button: ' + escAttr(a.cta) + '</div>' : '') +
       '<div class="adstats">' + stats.join('') + '</div>' + dest + warn +
+      (off ? '<span class="adoffchip">■ ' + adOffLabel(a) + '</span>' : '') +
       '</div></div>';
-  }).join('');
-  return '<div class="mdl-sec"><h4>What&rsquo;s circulating — ' + ads.length + ' ad' + (ads.length === 1 ? '' : 's') +
-    ' in this campaign, last 30 days</h4>' +
-    '<div class="subtle" style="font-size:11px;margin-bottom:2px">Highest spend first. ' +
+  }
+  var liveCards = adsLive.map(adCard).join('');
+  var offCards = adsOff.map(adCard).join('');
+  var head = adsLive.length
+    ? 'What&rsquo;s circulating — ' + adsLive.length + ' ad' + (adsLive.length === 1 ? '' : 's') + ' live now'
+    : 'What&rsquo;s circulating — nothing. Every ad here is switched off';
+  if (adsOff.length) head += ' · ' + adsOff.length + ' switched off';
+  return '<div class="mdl-sec"><h4>' + head + '</h4>' +
+    '<div class="subtle" style="font-size:11px;margin-bottom:2px">Highest spend first, last 30 days. ' +
     '&ldquo;Copy N of M&rdquo; = the same ad duplicated in Ads Manager — Meta counts each copy separately. ' +
     'The campaign carries the verdict — these are here so you can see what the money bought.</div>' +
-    '<div class="adgrid">' + cards + '</div></div>';
+    (adsLive.length ? '<div class="adgrid">' + liveCards + '</div>' : '') +
+    (adsOff.length
+      ? '<div class="adoffhead">Switched off in Meta — no longer running <span>(still shown because it spent inside the last 30 days, so the numbers above include it)</span></div>' +
+        '<div class="adgrid">' + offCards + '</div>'
+      : '') +
+    '</div>';
 }
 
 function openMatrixModal(r, dRaw, fromHistory, histEntry) {
