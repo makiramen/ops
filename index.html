@@ -2812,6 +2812,22 @@ function applySiteGate(weekCodes){
   SITES_ALL.forEach(s => { if(!SITE_LIVE_FROM[s.code] || present.has(s.code)) SITES.push(s); });
 }
 
+// ===================== SCORE EXEMPTIONS =====================
+// Sites excluded from the efficiency score for named weeks. An exempt site scores
+// N/A: it drops out of its regional average, out of the fleet average and sinks in
+// every score sort, while its raw KPIs still render exactly as filed.
+// M21, w/c 17/08/2026 — opening site. Its score rests on three of six components
+// and the sales component is built on a covers figure under query (736 covers at
+// GBP 10.04 average spend). Michael's call, 26/08/2026: exclude it for this week.
+// To exempt another week, add the Monday key to that site's list. Nothing else.
+const SCORE_EXEMPT = { "M21": ["2026-08-17"] };
+function scoreExemptCodes(){
+  const wk = window.currentWeekKey;
+  if (!wk) return [];
+  return Object.keys(SCORE_EXEMPT).filter(c => (SCORE_EXEMPT[c] || []).indexOf(wk) !== -1);
+}
+function isScoreExempt(code){ return scoreExemptCodes().indexOf(code) !== -1; }
+
 const THEMES = [
   {
     "severity": "warn",
@@ -3671,6 +3687,7 @@ function sphRag(v, code) {
 // Site Efficiency Score — weighted 6-component score, 0–100 nominal (100 = at target)
 // Components: Wage 30%, Food cost 30%, SPH 15% (level + WoW momentum blend), Sales 10% (% + £ gap blend), Weekly ★ 10%, Food variance 5% (±5% green band). Each component hard-capped at 100. Lifetime ★ shown for info only — NOT in score.
 function efficiencyScore(s) {
+  if (isScoreExempt(s.code)) return null;   // week-scoped exemption — see SCORE_EXEMPT
   const m = METRICS[s.code] || {};
   const r = REVIEWS[s.code] || {};
   const wr = weeklyRating(r);
@@ -5085,7 +5102,7 @@ function renderPeopleBoard() {
   const spread = (scored.length >= 2)
     ? `Spread between best and worst region: <strong>${scored[0].score - scored[scored.length - 1].score} points</strong>.`
     : '';
-  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. ${SITES.length}-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>. ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
+  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. ${SITES.length}-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>${scoreExemptCodes().length ? ' <strong>' + scoreExemptCodes().join(', ') + '</strong> ' + (scoreExemptCodes().length > 1 ? 'are' : 'is') + ' exempt from the score this week and excluded from both the regional and the fleet average.' : ''} ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
 
   wrap.innerHTML = header + body + foot;
 }
