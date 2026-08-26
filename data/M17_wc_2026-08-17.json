@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-25",
+  "generated_at": "2026-08-26",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-17 \u2013 2026-08-23",
@@ -134,7 +134,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-25."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-26."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-17.json (AGMM Task List Status). Open items only.",
@@ -164,9 +164,9 @@
         "week_ending": "2026-08-23",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
+        "sales": 1193.72,
+        "orders": 33,
+        "aov": 36.17,
         "new_customers": null,
         "rating": 5.0,
         "open_hours_pct": 99.9,
@@ -183,12 +183,42 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' Total row (Total Order Value = GMV) \u2014 w/c 2026-08-17, invoices dated 2026-08-24, period printed Mon 17 Aug 00:00 - Sun 23 Aug 23:59 UTC. Partial slice: only the three sites the Looker Sales Overview cannot reach (M14, M18) or that had no sales figure at all (M17). The other sites keep their existing weekly-summary source deliberately, so no published figure moves for a source change mid-week. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
       "gaps": [
         "Stock-take \u2014 no variance entered this week"
-      ]
+      ],
+      "notes": {
+        "issues": [
+          "Labour ran higher than the previous week, which the team attributed to staff accumulating hours ahead of the payday cutoff.",
+          "Staffing has thinned out with one kitchen porter leaving and two further staff leaving for university, while a new back of house member is still training on sides.",
+          "The Chinese cooker is still awaiting repair.",
+          "The back door was not being kept secure and the team was reminded it must be locked so it can only be opened from the inside.",
+          "The maintenance log had not been updated to reflect the completed grease trap repair.",
+          "Region-wide (South England): QR code table ordering has been delayed by app problems and is now expected to go live by the end of next week.",
+          "Region-wide (South England): The discounted item element of the current promotion has finished, but the wider sale is understood to run to the end of the month and the end date still needs confirming with marketing.",
+          "Region-wide (South England): A proposal to set separate labour cost targets for front of house and back of house is under management review and has not yet been signed off.",
+          "Region-wide (South England): Customers are ordering extra karaage as a side to replicate a larger chicken dish at lower cost, and the portion size and pricing discrepancy needs resolving centrally."
+        ],
+        "actions": [
+          "Update the maintenance log to reflect that the grease trap has been fixed - Owner: Joselyn (01/09/2026)",
+          "Ensure the back door remains locked at all times so it can only be opened from the inside - Owner: Joselyn (01/09/2026)",
+          "Chase the outstanding Chinese cooker repair through maintenance - Owner: M17 (01/09/2026)",
+          "Continue training the new back of house starter on the sides section - Owner: M17 (01/09/2026)",
+          "Region-wide (South England): Confirm the end date of the current menu sale with the marketing group - Owner: Ziang Lin (01/09/2026)",
+          "Region-wide (South England): Follow up the proposal to separate front of house and back of house labour cost targets with senior management - Owner: Ziang Lin (01/09/2026)",
+          "Region-wide (South England): Raise the karaage portion size and menu pricing discrepancy with Sophie Wang - Owner: Ziang Lin (01/09/2026)"
+        ],
+        "carryover": [
+          "The Chinese cooker repair remains open from previous weeks.",
+          "The grease trap repair record is still being updated from a previously logged job."
+        ],
+        "empty": false,
+        "docId": "1VqUXWVflNCJCToNG6pT-ddG0vN8dQNkYDIV3WdrGT5E",
+        "source": "GM/AM KPI meeting notes 25/08/2026 (South England: Weekly MR London Region KPI Meeting)"
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-25",
+  "generated_at": "2026-08-26",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-17 \u2013 2026-08-23",
@@ -117,16 +117,30 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": null,
-        "new_reviews": null,
-        "star_breakdown": null,
-        "negatives": null,
-        "negative_reviews": [],
+        "week_avg_rating": 4.9536,
+        "new_reviews": 151,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 3,
+          "5": 147
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Nicholas Srai",
+            "text": "Dropping from 5 Stars to 1 Star due to shocking management service.\n\nI originally left a 5-star review after an incredible dinner, but returning Saturday evening almost before close completely ruined this venue for me.\n\nWe stopped by just to give a friend a quick glance inside for a future visit. The doors were open and people were still eating, but the female manager was at the front host desk looking visibly frustrated while sorting something out.\n\nWhen I asked if we could show our friend around, she was extremely rude and hostile. When I clarified we didn't want a table, she shut us down with an awful attitude. The male host actually tried to intervene and say it was fine, but her hostility made us walk away completely disgusted.\n\nWhat makes this so disappointing is that on launch night, this exact same manager was boasting about how welcoming she is and how she treats all her staff \"like her own children.\" The contrast between that fake charm and her actual demeanor was shocking.\n\nTo top it off, chairs had already been stacked on tables all across the dining room while paying customers were still eating, making the place look messy and making guests feel rushed.\n\nGreat food means nothing if management treats returning customers with total disrespect. I won't be back or recommending this place again.",
+            "date": "2026-08-22",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Reviews sheet 1aFGfbGr... per-site 'Maki N -' star tabs (weekly avg rating / counts) + 'Raw Data' tab (negative comment text, rating<=3 + comment). Cumulative venue rating not in sheet (null)."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-26."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-17.json (AGMM Task List Status). Open items only.",
@@ -147,9 +161,16 @@
       "gaps": [
         "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
         "Stock-take \u2014 no variance entered this week",
-        "Reviews \u2014 no week rating in source",
         "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
-      ]
+      ],
+      "notes": {
+        "issues": [],
+        "actions": [],
+        "carryover": [],
+        "empty": true,
+        "docId": "1VqUXWVflNCJCToNG6pT-ddG0vN8dQNkYDIV3WdrGT5E",
+        "source": "GM/AM KPI meeting notes 25/08/2026 (South England: Weekly MR London Region KPI Meeting) - opening site, first traded 21/08/2026, not reviewed in this meeting"
+      }
     }
   }
 }

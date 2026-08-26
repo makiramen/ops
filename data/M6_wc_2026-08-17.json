@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-25",
+  "generated_at": "2026-08-26",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-17 \u2013 2026-08-23",
@@ -62,9 +62,9 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": 4.5,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
           "variance_pct": 2.8,
@@ -146,7 +146,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-25."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-26."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-17.json (AGMM Task List Status). Open items only.",
@@ -198,7 +198,35 @@
         "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
         "busy_mode_pct": 0.0
       },
-      "gaps": []
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Confusion across the team about when VAT and deliveries should be entered into the food spend spreadsheet, which was creating inconsistent figures in the GM report and calculation errors.",
+          "A delivery refund was raised for a missing item and an incorrectly prepared dish.",
+          "A negative review about server conduct was investigated and the staff member was found to have acted professionally, so the complaint was judged a misunderstanding rather than a service failure.",
+          "Maintenance is outstanding on a bench repair and the Chinese cooker is still awaiting replacement.",
+          "Compliance records on the Mapal system are showing red indicators because of a transition in the data collection method."
+        ],
+        "actions": [
+          "Input all deliveries into the food spend spreadsheet on receipt rather than at the point of ordering, so reporting stays consistent - Owner: M6 (01/09/2026)",
+          "Clarify the correct VAT input protocol for the food spend spreadsheet with Matt Jenner - Owner: Ka Ho (01/09/2026)",
+          "Review the delivery refund for the missing item and incorrectly prepared order and challenge it if the evidence supports a claim - Owner: M6 (01/09/2026)",
+          "Monitor the Chinese cooker installation schedule and communicate the status to Ka Ho, giving notice once the new equipment arrives - Owner: M6 (01/09/2026)",
+          "Proceed with the vendor led installation option under which the supplier removes the old cooker and installs the new one, avoiding third party scheduling - Owner: Ka Ho (01/09/2026)",
+          "Complete all overdue Mapal certificates and documentation by the extended Friday deadline - Owner: M6 (28/08/2026)",
+          "Complete any outstanding training courses assigned on Flow for the older sites - Owner: M6 (28/08/2026)",
+          "Move the waste to the designated fire door area and place it outside ready for collection in the morning - Owner: M6 (26/08/2026)",
+          "Verify that the waste is collected by the team in the morning - Owner: Ka Ho (26/08/2026)"
+        ],
+        "carryover": [
+          "Overdue Mapal compliance certificates and training modules remain incomplete, with the deadline extended from Wednesday to Friday.",
+          "A backlog of cardboard waste is still awaiting collection, now arranged for 26/08/2026.",
+          "The Chinese cooker replacement remains outstanding and the installation is still to be scheduled."
+        ],
+        "empty": false,
+        "docId": "19HZauHlFRnyL4lJ7Q3k4NK1o6WyDpHqzVMbujRf0P4g",
+        "source": "GM/AM KPI meeting notes 25/08/2026 (M6 / M8 - Kpi Regional)"
+      }
     }
   }
 }

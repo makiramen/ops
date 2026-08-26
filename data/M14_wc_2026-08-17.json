@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-25",
+  "generated_at": "2026-08-26",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-17 \u2013 2026-08-23",
@@ -62,9 +62,9 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": 0.4,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
           "variance_pct": 4.8,
@@ -138,7 +138,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-25."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-26."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-17.json (AGMM Task List Status). Open items only.",
@@ -175,9 +175,9 @@
         "week_ending": "2026-08-23",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
+        "sales": 695.93,
+        "orders": 21,
+        "aov": 33.14,
         "new_customers": null,
         "rating": 3.33,
         "open_hours_pct": 95.9,
@@ -194,10 +194,37 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' Total row (Total Order Value = GMV) \u2014 w/c 2026-08-17, invoices dated 2026-08-24, period printed Mon 17 Aug 00:00 - Sun 23 Aug 23:59 UTC. Partial slice: only the three sites the Looker Sales Overview cannot reach (M14, M18) or that had no sales figure at all (M17). The other sites keep their existing weekly-summary source deliberately, so no published figure moves for a source change mid-week. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
-      "gaps": []
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Region-wide (North England & Midlands): Delivery performance was poor across the region, with high rider waiting times, missing items and insufficient photographic evidence attached to claims.",
+          "Region-wide (North England & Midlands): The new loyalty system is letting customers stack multiple vouchers on a single tab, and several sites reported display and redemption problems.",
+          "Region-wide (North England & Midlands): Takeaway packaging from China has still not arrived and sites are waiting on it for delivery presentation.",
+          "Region-wide (North England & Midlands): Event food spend continues to sit within site food cost, but the food cost budget will be increased for sites running B2B events.",
+          "The site did not attend the meeting, so its performance review was deferred and will be fed back separately.",
+          "Delivery was flagged as an area of concern, with rider waiting time high and platform opening time low."
+        ],
+        "actions": [
+          "Region-wide (North England & Midlands): Limit loyalty voucher redemption to one voucher per tab and split tabs where a group wants to use several vouchers - Owner: M14 (01/09/2026)",
+          "Region-wide (North England & Midlands): Apply the free ramen discount to the lowest priced ramen on the tab - Owner: M14 (01/09/2026)",
+          "Region-wide (North England & Midlands): Send photos of any loyalty system difficulty to the morning marketing group chat so the back end settings can be investigated - Owner: M14 (01/09/2026)",
+          "Region-wide (North England & Midlands): Capture photographic evidence for every delivery claim and make sure a manager actively monitors the delivery station and driver handovers - Owner: M14 (01/09/2026)",
+          "Region-wide (North England & Midlands): Report delivery technical faults such as tickets failing to print immediately, as the evidence is lost after a day - Owner: M14 (01/09/2026)",
+          "Region-wide (North England & Midlands): Schedule an additional staff member for bank holiday Monday to handle the increased traffic - Owner: M14 (31/08/2026)",
+          "Region-wide (North England & Midlands): Verify and secure sufficient stock levels for the bank holiday - Owner: M14 (31/08/2026)",
+          "Region-wide (North England & Midlands): Confirm with marketing whether multiple voucher redemption can be limited by setting, and report back to the sites - Owner: Amy Tang (01/09/2026)",
+          "Feed the delivery performance review and the regional updates back to the site, which was not present at the meeting - Owner: Amy Tang (26/08/2026)",
+          "Improve delivery rider waiting time and extend platform opening time - Owner: M14 (01/09/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "11f4y9qcnCZ27wsdRlvVZJvKNQ1QozI_iqV8QJ_0Wh-k",
+        "source": "GM/AM KPI meeting notes 25/08/2026 (Maki England KPI meeting - North England & Midlands)"
+      }
     }
   }
 }
