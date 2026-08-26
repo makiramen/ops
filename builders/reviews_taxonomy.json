@@ -1,0 +1,1235 @@
+{
+  "version": "1.2",
+  "updated": "2026-08-25",
+  "notes": [
+    "Rules engine for build_reviews_intel.py. Patterns are case-insensitive regexes run per CLAUSE.",
+    "For reviews <=3 stars every clause is an issue clause. For 4-5 stars only clauses carrying a complaint cue count as issues (a 'but' complaint).",
+    "Add rules here, never in the builder. Bump version when you do; the build records the version it used.",
+    "owner = the default accountable function for the category. The page shows it as a suggested owner, never an automated assignment.",
+    "overrides: patterns that CANCEL a sub-issue match inside the same clause (praise phrased with complaint words: 'not too loud', 'less than 10 minutes', 'amazing attitude'). Applied to 4-5* reviews ONLY; a <=3* review keeps every match so nothing is hidden on a negative."
+  ],
+  "complaint_cues": "\\b(but|however|although|though|unfortunately|except|only (thing|issue|downside|negative|complaint)|downside|shame|wish|could (be|have|do with)|bit (too|slow|cold|pricey|expensive|small|long)|too (slow|long|cold|salty|sweet|small|expensive|pricey|greasy|oily|loud|hot|dark|bland)|not (great|good|the best|amazing|as good|very|hot|warm|fresh|worth|enough|happy|impressed)|wasn'?t|weren'?t|didn'?t|isn'?t|aren'?t|don'?t|doesn'?t|couldn'?t|hadn'?t|never|no one|nobody|slow|cold|lukewarm|waited|wait(ing)? (for|was|time)|forgot|forgotten|wrong|missing|rude|dirty|disappoint|mediocre|average|overpriced|pricey|expensive|small portion|ran out|sold out|hair|let down|lacking|lack of|meh|ok(ay)?( but|,)|underwhelm|poor|bland|greasy|salty|soggy|dry|chewy|tough|undercooked|overcooked|burnt|stale|off\\b|ignored|unfriendly|attitude|charged|service charge|mistake|error|issue|problem|complain)\\b",
+  "categories": {
+    "food": {
+      "label": "Food quality",
+      "owner": "BOH / Executive Chef",
+      "colour": "#c2410c",
+      "subs": {
+        "temperature": {
+          "label": "Food cold / lukewarm",
+          "patterns": [
+            "\\b(cold|lukewarm|luke warm|not (very |that |even )?(hot|warm)|barely warm|gone cold|room temp)\\b(?!.*\\b(drink|beer|water|inside|restaurant|room was|weather|outside|air ?con)\\b)"
+          ],
+          "overrides": [
+            "\\b((cold|iced|ice cold|chilled) (drink|drinks|beer|beers|lager|pint|pints|water|lemonade|tea|brew|sake|coke|soda|noodle salad|soba|udon|ramen option|dish|dishes|starter|starters|plate|plates|side|sides|sushi|sashimi|nigiri|rolls?|edamame|tofu|salad)|nice and hot|piping hot|hot and fresh|served hot|still hot|(not|never|wasn'?t|weren'?t) cold|hiyashi|cold (outside|day|night|weather|evening|winter|morning|out there)|it'?s cold|was cold out|freezing (outside|day|night|cold day)|(come in|came in|get out) (from|of) the cold|cold (brew|drip)|room temp(erature)? (water|sake|drinks?))\\b"
+          ]
+        },
+        "broth": {
+          "label": "Broth / soup",
+          "patterns": [
+            "\\b(broth|soup|stock)\\b.{0,60}\\b(water|thin|bland|salt|oily|greasy|flavou?rless|tasteless|weak|lack|no (depth|flavou?r|taste)|cold|luke|diluted|msg|sweet|off)",
+            "\\b(water|thin|bland|salty|oily|greasy|flavou?rless|tasteless|weak|diluted)\\w*\\b.{0,40}\\b(broth|soup|stock)\\b"
+          ],
+          "overrides": [
+            "\\b(not (bland|watery|thin|salty|oily|greasy|weak)|wasn'?t (bland|watery|thin|salty|oily|greasy|weak|too salty)|(rich|deep|creamy|silky|flavou?rful|flavou?rsome|delicious|tasty|amazing|incredible|perfect|beautiful|lovely|gorgeous|hearty|comforting|umami|complex|well seasoned|well-seasoned|balanced|well balanced) (broth|soup|stock)|(broth|soup|stock) (was|is|had|has) (rich|deep|creamy|silky|flavou?rful|flavou?rsome|delicious|tasty|amazing|incredible|perfect|beautiful|lovely|gorgeous|hearty|comforting|umami|complex|full of|packed with|so much|great|good|nice|really (good|nice|tasty)|lovely and|not too salty|not (bland|watery|thin|salty|oily|greasy|weak)|just right|spot on|on point|bang on|unreal|top|10/10|depth)|not too (salty|sweet|oily|greasy|rich|heavy|thin|watery)|sweet (spot|potato|chilli|chili|soy|miso)|sweet and (sour|spicy|savoury|salty))\\b"
+          ]
+        },
+        "protein": {
+          "label": "Protein (chicken / pork / beef / egg / fish)",
+          "patterns": [
+            "\\b(chicken|pork|beef|steak|chashu|char ?siu|belly|katsu|karaage|prawn|shrimp|salmon|tuna|fish|tofu|egg|tataki|duck)\\b.{0,60}\\b(dry|dried|chewy|tough|rubbery|fatty|fat\\b|gristl|undercook|under cook|raw|pink|overcook|over cook|burnt|cold|bland|tasteless|soggy|greasy|oily|off\\b|smell|not fresh|stringy|hard|frozen|reheat|microwav|small|tiny|thin|slimy)",
+            "\\b(dry|chewy|tough|rubbery|fatty|undercooked|raw|overcooked|burnt|soggy|greasy|slimy|frozen|reheated)\\b.{0,30}\\b(chicken|pork|beef|steak|chashu|belly|katsu|karaage|prawn|salmon|tuna|fish|tofu|egg|duck)\\b"
+          ],
+          "overrides": [
+            "\\b(not (dry|chewy|tough|rubbery|fatty|raw|overcooked|undercooked|greasy|soggy|burnt)|wasn'?t (dry|chewy|tough|rubbery|fatty|raw|overcooked|undercooked|greasy|soggy|burnt)|weren'?t (dry|chewy|tough|rubbery|fatty|raw|overcooked|undercooked|greasy|soggy|burnt)|(perfectly|nicely|well|beautifully) (cooked|done|seared|grilled|fried)|tender|juicy|succulent|melt|not (too |at all )?(dry|chewy|tough|fatty)|the right amount of fat|fat (rendered|melted)|cold (smoked|cut|cuts))\\b"
+          ]
+        },
+        "noodles_rice": {
+          "label": "Noodles / rice",
+          "patterns": [
+            "\\b(noodle|noodles|ramen noodles|rice)\\b.{0,50}\\b(soggy|overcook|over cook|mushy|undercook|under cook|hard|clump|stuck|stodgy|dry|cold|stale|crunchy|gluey|sticky|bland|tasteless|watery|wet)",
+            "\\b(soggy|overcooked|mushy|undercooked|clumpy|stodgy|gluey|stale)\\b.{0,30}\\b(noodle|noodles|rice)\\b"
+          ],
+          "overrides": [
+            "\\b(not (soggy|overcooked|mushy|undercooked|hard|sticky|dry|stodgy)|wasn'?t (soggy|overcooked|mushy|undercooked|hard|sticky|dry|stodgy)|weren'?t (soggy|overcooked|mushy|undercooked|hard|sticky|dry|stodgy)|(perfect|perfectly cooked|al dente|springy|bouncy|nice bite|good bite|great bite|right bite|fresh|firm|silky|delicious|lovely|amazing|great|good|nice|fluffy|well cooked) (noodle|noodles|rice)|(noodle|noodles|rice) (was|were|is|are|had) (perfect|perfectly cooked|al dente|springy|bouncy|a nice bite|a good bite|great|good|nice|lovely|delicious|amazing|fresh|firm|silky|fluffy|well cooked|cooked (perfectly|well|just right)|spot on|on point|bang on|just right)|sticky rice|crispy rice|crunchy (topping|toppings|bits|onion|onions|garlic|chilli|chili|coating|batter|outside|skin|seaweed)|dry (aged|rub|humou?r|humor)|mazemen|mazesoba|abura|tsukemen|dipping)\\b"
+          ]
+        },
+        "hygiene_foreign": {
+          "label": "Foreign object / food safety",
+          "patterns": [
+            "\\b(hair|plastic|insect|fly|bug|mould|mold|mouldy|moldy|food poison|sick after|ill after|stomach|diarrh|vomit|throw(ing)? up|threw up|off\\b.{0,10}(taste|smell)|smelt off|smelled off|gone off|rotten|out of date|unsafe|allerg\\w+ .{0,40}(wrong|ignored|not (taken|listen)|mistake|reaction))"
+          ],
+          "overrides": [
+            "\\b(no (hair|flies|bugs|insects|plastic)|hair (salon|dresser|dressers|cut|colour|color|dye|style|styled|band|tie|clip|net|nets|up|down|back)|(fly|flew|flying) (in|over|from|to|home|back|out|past|by|there|through|down|up|off|abroad)|on the fly|day off|days off|off peak|off-peak|off the (beaten|bill|menu|price|record|charts|scale|cuff|hook|wall|back)|(taken|knocked|£\\d+|money|it|that|them|something|a bit|anything) off|(full|happy|satisfied|content|warm|rumbling|growling) (stomach|belly|tummy)|(stomach|belly|tummy) (is|was|feels|felt) (full|happy|satisfied|content|so full)|sick (of|to death|day|days|leave|note)|sickly|(plastic|plastics) (bag|bags|bottle|bottles|cup|cups|straw|straws|free|-free|chopsticks|cutlery|container|containers|tub|tubs|box|boxes|packaging|wrap|wrapping|chairs|seats|seating|tables|plants|plant|flowers|cover|covers|screen|screens|menu|menus|card|cards|tray|trays|spoon|spoons|fork|forks|lid|lids|packet|packets|wrapper|wrappers|film|surgery)|(bug|bugs) (me|us|him|her|them|out|fix|fixes|free|-free)|(bug|bugged|bugging) (me|us|out|off))\\b"
+          ]
+        },
+        "portion": {
+          "label": "Portion size",
+          "patterns": [
+            "\\b(portion|portions|serving|servings)\\b.{0,40}\\b(small|tiny|little|mean|shrunk|smaller|less|not (enough|big|large)|stingy|meagre|reduced)",
+            "\\b(small|tiny|little|stingy|meagre)\\b.{0,20}\\b(portion|portions|serving|amount)\\b",
+            "\\b(not enough|barely any|hardly any|so little|only (one|two|three|1|2|3) (piece|pieces|slice|slices|prawn|prawns))\\b",
+            "\\b(left|still) hungry\\b"
+          ],
+          "overrides": [
+            "\\b(not (small|tiny|stingy)|weren'?t small|wasn'?t small|(portion|portions|serving|servings) (were|was|are|is) (huge|big|large|massive|generous|good|great|decent|plenty|more than enough|perfect|fine|ok|okay|not small|substantial|filling|hearty|just right)|(huge|big|large|massive|generous|decent|good|great|substantial|hearty|filling) (portion|portions|serving|servings|bowl|bowls)|not (left )?hungry|never (left )?hungry|so full|too full|couldn'?t finish|more than enough|plenty of)\\b"
+          ]
+        },
+        "taste_general": {
+          "label": "Taste / quality (general)",
+          "patterns": [
+            "\\b(bland|tasteless|flavou?rless|no flavou?r|lack(ed|ing|s)? (of )?flavou?r|too salty|very salty|so salty|over ?salted|too sweet|too greasy|greasy|oily|too oily|disappointing food|food was (disappointing|poor|bad|awful|terrible|horrible|mediocre|average|ok|okay|meh|not great|not good|average at best|underwhelming|nothing special)|mediocre|average food|nothing special|not authentic|inauthentic|poor quality|low quality|quality (has )?(dropped|gone down|declined|slipped)|gone downhill|used to be (better|good|great)|not as good as|standards? (have |has )?(dropped|slipped)|worst (ramen|sushi|food|meal)|inedible|couldn'?t (eat|finish)|didn'?t (eat|finish)|sent it back|sent .{0,20} back)\\b"
+          ],
+          "overrides": [
+            "\\b(not (bland|greasy|oily|too salty|salty|tasteless|mediocre|average|nothing special)|wasn'?t (bland|greasy|oily|too salty|salty|mediocre|average)|weren'?t (bland|greasy|oily|salty)|never (bland|greasy|disappoint)|far from (bland|average|mediocre)|anything but (bland|average|mediocre)|(nothing|not) (was|is) (greasy|bland|oily)|not (a )?greasy)\\b"
+          ]
+        },
+        "sushi": {
+          "label": "Sushi quality",
+          "patterns": [
+            "\\b(sushi|sashimi|nigiri|maki|roll|rolls)\\b.{0,60}\\b(warm|not fresh|dry|fell apart|falling apart|fall apart|stale|rice was (hard|dry|warm|mushy|cold)|fishy|smell|tasteless|bland|tiny|small|thin|soggy|old|slimy|watery|rubbery|chewy|frozen)",
+            "\\b(warm|stale|dry|fishy|slimy|not fresh)\\b.{0,20}\\b(sushi|sashimi|nigiri|maki|rolls?)\\b"
+          ],
+          "overrides": [
+            "\\b(not (warm|stale|dry|fishy|slimy)|wasn'?t (warm|stale|dry|fishy|slimy)|weren'?t (warm|stale|dry|fishy|slimy)|(fresh|freshest|delicious|amazing|incredible|beautiful|lovely|gorgeous|perfect|great|good|nice|tasty|stunning|top quality|high quality|well made|expertly made|beautifully made|beautifully presented|generous|huge|big|large) (sushi|sashimi|nigiri|maki|rolls?|salmon|tuna|fish)|(sushi|sashimi|nigiri|maki|rolls?|salmon|tuna|fish) (was|were|is|are|tasted|looked) (so |really |very |incredibly |super |absolutely )?(fresh|delicious|amazing|incredible|beautiful|lovely|gorgeous|perfect|great|good|nice|tasty|stunning|top|quality|on point|spot on|bang on|unreal|10/10|divine|to die for|well made|beautifully|generous|huge|big|large|filling)|warm (welcome|greeting|smile|atmosphere|ambience|ambiance|vibe|hospitality|service|staff|sake|towel|towels|lighting|feel|feeling|day|evening|night|weather|hug|goodbye)|warm and (friendly|welcoming|cosy|cozy|inviting)|dry (humou?r|humor|aged|rub|january|wine|sake|cider|white)|small (plates|bites|selection|menu|place|restaurant|space|venue)|small but (mighty|perfect|cosy|cozy))\\b"
+          ]
+        },
+        "presentation": {
+          "label": "Presentation / plating",
+          "patterns": [
+            "\\b(presentation|plating|plated|looked (a mess|messy|thrown|sloppy|unappetising|unappetizing|nothing like)|thrown together|sloppy|nothing like the (picture|photo|menu))\\b"
+          ]
+        }
+      }
+    },
+    "service": {
+      "label": "Service",
+      "owner": "GM / FOH",
+      "colour": "#1d4ed8",
+      "subs": {
+        "attitude": {
+          "label": "Rude / unfriendly / attitude",
+          "patterns": [
+            "\\b(rude|rudely|unfriendly|unwelcoming|dismissive|attitude|arrogant|condescending|patronis|patroniz|snapp(ed|y)|rolled (her|his|their) eyes|hostile|aggressive|unprofessional|disrespect|racis|sexis|discriminat|shout(ed|ing)|argu(ed|ing|mentative)|miserable|grumpy|moody|sarcastic|stand-?offish|cold (service|staff|welcome|reception)|no smile|not (friendly|welcoming|polite|nice)|made (us|me) feel (unwelcome|uncomfortable|like)|treated (us|me) (like|badly|poorly)|didn'?t care|couldn'?t care less|don'?t care|laughed at)\\b"
+          ],
+          "overrides": [
+            "\\b((great|amazing|good|positive|lovely|wonderful|brilliant|fantastic|nice|best|excellent|friendly|cheerful|can-?do|bubbly|warm|sunny|happy|helpful|professional) attitude|attitude (was|is) (great|amazing|good|lovely|brilliant|fantastic|excellent|spot on|perfect|wonderful|top)|not rude|never rude|wasn'?t rude|weren'?t rude|no attitude|without attitude|cold (brew|beer|drink|drinks|sake|lager|pint|noodles|dish|dishes))\\b"
+          ]
+        },
+        "attention": {
+          "label": "Inattentive / forgotten / had to ask",
+          "patterns": [
+            "\\b(forgot|forgotten|had to (ask|chase|remind|flag|wave|get up|go (up|to the)|find (someone|a waiter|staff)|repeat)|no one (came|checked|asked|took|noticed|around|bothered)|nobody (came|checked|asked|took|noticed|around|bothered)|never (came|checked|asked|returned|came back|got our)|ignored|ignoring|unattended|inattentive|couldn'?t get (anyone'?s |the |their )?attention|trying to get (someone'?s |the |their )?attention|left (waiting|standing|us|me) (at|by|for|there)|no (service|one served|staff around|one to serve)|lack of (attention|service|staff)|understaffed|under-?staffed|short-?staffed|not enough staff|one (member of )?staff|only one (person|waiter|waitress|server|member)|didn'?t (check|come back|ask|bring|offer|return|clear|take (our|the) order)|never (offered|brought)|still waiting for (our|the|my) (drink|drinks|water|order)|didn'?t get (our|my|the) (drink|drinks|water|side|sides))\\b"
+          ],
+          "overrides": [
+            "\\b(never (had to|needed to) (ask|wait|chase)|didn'?t (have to|need to) (ask|wait|chase)|no need to (ask|chase)|before (we|i) (had to|even had to|could) ask|without (us |me )?(having to |needing to )?(ask|asking)|never (felt )?ignored|not ignored|(never|didn'?t) (once )?(felt|feel) (rushed|ignored|forgotten|neglected)|nothing (was )?forgotten|didn'?t forget|never forgot|forgot(ten)? (how|what|about|to mention|to say|the name|his name|her name|their name|to add that|to take a photo|to take pictures|to take a picture|photos?)|had to ask for (the bill|more|seconds|the recipe|a second|another|extra|a box|a doggy))\\b"
+          ]
+        },
+        "billing": {
+          "label": "Bill / charges / service charge",
+          "patterns": [
+            "\\b(overcharg|over-?charg|charged (us|me|for|twice|extra|more|the wrong)|double charged|bill was wrong|wrong bill|bill (error|mistake|incorrect)|service charge|added (a )?(tip|gratuity|charge)|automatic (tip|gratuity|service)|discretionary|didn'?t (get|receive) (a |the )?(refund|receipt)|refund|card (was )?(charged|declined)|extra charge|hidden (charge|cost|fee)|sneaky)\\b"
+          ],
+          "overrides": [
+            "\\b(no service charge|no hidden (charge|charges|cost|costs|fee|fees)|didn'?t (add|charge|even charge|charge us|charge me|charge for|charge extra)|weren'?t charged|wasn'?t charged|not charged|free (refill|refills|of charge|drink|dessert|starter|side|top-?up)|on the house|complimentary|took (it|that|them) off (the|our|my) bill|(removed|deducted|knocked|taken) (it |that |them |£\\d+ )?off (the |our |my )?bill|(gave|offered) (us |me )?(a )?(discount|refund|voucher|free)|refund(ed)? (us|me|it|straight away|immediately|without|no)|discount(ed)? (our|my|the) (bill|meal)|(service charge|tip) (was|is) (optional|removed|taken off|not (added|included|automatic)))\\b"
+          ]
+        },
+        "booking_seating": {
+          "label": "Booking / seating / turned away",
+          "patterns": [
+            "\\b(booking|reservation|reserved|booked)\\b.{0,60}\\b(lost|not (found|honou?red|kept|there|on the system)|no record|ignored|cancel|mess|wrong|given away|still waited|still had to wait)",
+            "\\b(turned (us |me )?away|refused (us |me )?(entry|a table|service|to seat)|wouldn'?t (seat|let us in|serve us|take us)|no tables? (available|free)|told (us|me) (to leave|there was no|it was full|they were full|full)|sat (us|me) (next to|by|near) (the )?(toilet|door|bin|kitchen)|cramped table|squeezed (us|me) in|waiting list)\\b"
+          ],
+          "overrides": [
+            "\\b((booking|reservation|reserved|booked)\\b.{0,60}\\b(easy|simple|quick|straightforward|no (problem|problems|issue|issues|hassle|fuss)|honou?red|ready|waiting for us)|(seated|sat|sat down|got a table) (straight away|right away|immediately|quickly|without|in no time|promptly|within)|(found|got) (us|me) a table|(squeezed|fit|fitted|got) (us|me) in|accommodat|managed to (fit|seat|squeeze)|made (room|space)|found (room|space)|no (booking|reservation) (needed|required|necessary)|walk-?ins? (welcome|accepted|fine|no problem|ok|okay)|(great|good|nice|lovely|perfect|best|cosy|cozy|comfy|comfortable|quiet|window|corner|booth) (table|seat|seats|spot|booth)|(table|seat|seats|booth) (was|were) (great|good|nice|lovely|perfect|comfy|comfortable|ready|waiting|by the window))\\b"
+          ]
+        },
+        "communication": {
+          "label": "Communication / menu knowledge",
+          "patterns": [
+            "\\b(didn'?t (understand|speak|know the menu|know what|explain)|couldn'?t (understand|explain)|language barrier|no english|poor english|broken english|miscommunicat|misunderst|didn'?t listen|not listening|wasn'?t listening|no idea what|didn'?t know (the|what|anything))\\b"
+          ],
+          "overrides": [
+            "\\b((explained|explaining|talked (us|me) through|walked (us|me) through|described|went through) (the|every|each|all|everything|how|what|our|my)|(great|good|excellent|clear|helpful|thorough|patient|perfect|brilliant|amazing) (explanation|explanations|communication|recommendations?|knowledge|advice|guidance|description|descriptions)|knowledgeable|knew (the menu|everything|exactly|what|their stuff)|(understood|understand) (exactly|what|our|my|the)|spoke (great|good|perfect|excellent|fluent) english|no (language|communication) (barrier|barriers|issues|problems)|(patient|patiently|kindly) (explained|explaining|helped|translated))\\b"
+          ]
+        },
+        "manager": {
+          "label": "Manager handling / complaint not resolved",
+          "patterns": [
+            "\\b(manager|management|supervisor|owner)\\b.{0,80}\\b(rude|dismiss|didn'?t care|couldn'?t care|refused|ignored|argu|unhelpful|no apolog|didn'?t apolog|blamed|excuse|useless|walked away|shrugged|not interested|laughed|defensive)",
+            "\\b(no apology|didn'?t apologi[sz]e|never apologi[sz]ed|not even (an apology|sorry)|no one apologi[sz]ed|nothing was done|did nothing|complaint (was )?(ignored|dismissed|not (taken|handled|dealt))|not taken seriously|no compensation|nothing (offered|taken off)|spoke to (the )?manager)\\b"
+          ],
+          "overrides": [
+            "\\b(manager|management|supervisor|owner|boss)\\b.{0,80}\\b(lovely|friendly|welcoming|helpful|attentive|kind|great|amazing|brilliant|fantastic|wonderful|excellent|professional|apologi[sz]ed|sorted|resolved|fixed|handled|dealt with|came over|checked|made sure|went above|took (it|them|that) off|discounted|refunded|offered|complimentary|on the house|free|thank|credit|asset|star|legend|gem|superb|outstanding|nothing (was )?too much|went out of|extra mile|above and beyond|(very|so|really|extremely|incredibly) (nice|good|helpful|friendly|attentive|kind|professional|accommodating|welcoming|polite|lovely))"
+          ]
+        }
+      }
+    },
+    "speed": {
+      "label": "Speed / wait",
+      "owner": "GM (labour / kitchen flow)",
+      "colour": "#b45309",
+      "subs": {
+        "food_wait": {
+          "label": "Long wait for food",
+          "patterns": [
+            "\\b(wait(ed|ing)?|took|take)\\b.{0,25}\\b(\\d{2,3}|forty|fifty|sixty|ninety|twenty|thirty|an hour|1 hour|one hour|2 hours|two hours|over an hour|hour and a half|ages|forever|so long|too long|very long|far too long|a long time|a while|an eternity)\\b",
+            "\\b(slow (service|kitchen|food|to come|to arrive|coming out)|service (was|is) (very |so |really |extremely |painfully |incredibly )?slow|painfully slow|really slow|very slow|so slow|extremely slow|incredibly slow|slowest|long wait|lengthy wait|waited (for )?(ages|forever|so long|too long|a long time|a while|well over)|food took (ages|forever|so long|too long|a while|over)|took (ages|forever|so long|too long|a while|an age|its time|their time)|(nearly|almost|over|more than|about) (an|1|2|two|one) hours? (for|to|wait|before|until)|still (hadn'?t|had not|waiting|no sign)|never (arrived|came|turned up)|delay(ed)?)\\b"
+          ],
+          "overrides": [
+            "\\b(less than|under|within|only (took|waited|about)|no (wait|waiting)|didn'?t (have to )?wait|barely (waited|any wait)|hardly (waited|any wait)|quick|quickly|fast|prompt|worth the wait|straight away|right away|in no time|wait(ed|ing)? (was|time was) (short|minimal|fine|ok|okay|not (long|bad)))\\b"
+          ]
+        },
+        "seating_queue": {
+          "label": "Wait to be seated / queue",
+          "patterns": [
+            "\\b(queue|queued|queuing|queueing|line (was|out)|wait(ed|ing)? (to be|for a|for the) (seated|table|seat)|waited .{0,20} (for a|to get a) table|left standing|stood (at the door|waiting|around)|no one (greeted|welcomed|acknowledged|came to seat)|nobody (greeted|welcomed|acknowledged)|not greeted|not acknowledged|waited at the (door|entrance|front))\\b"
+          ],
+          "overrides": [
+            "\\b(no queue|no wait|didn'?t (have to )?(queue|wait)|(seated|sat|sat down|a table) (straight away|right away|immediately|quickly|in no time)|(seated|sat) within (a )?(minute|minutes|couple|few)|(queue|line) (moved|went|was) (quick|quickly|fast)|worth (the|a) (queue|wait)|(greeted|welcomed|acknowledged) (straight away|immediately|right away|warmly|quickly|as soon as|the moment|the second|instantly|promptly|with a smile|at the door))\\b"
+          ]
+        },
+        "sequencing": {
+          "label": "Order sequencing / staggered dishes",
+          "patterns": [
+            "\\b((came|arrived|served|got (their|our|my)) (out )?(at different times|separately|one at a time|one by one|in stages|before (the|my|our|his|her)|after (the|my|our|his|her)|way before|way after|long before|long after)|(others?|other tables?|people|tables?|group|couple|party) (who )?(came|arrived|sat|ordered|seated) (in )?(after|later|behind)\\b.{0,40}(before|first|got|served|ate|had)|(before|after) (my|our|his|her|their|the) (partner|friend|wife|husband|main|starter|side|sides|drinks?|food)|(starter|starters|sides?|gyoza|edamame|drinks?) (came|arrived) (after|with|at the same time as) (the |our |my )?(main|mains|ramen)|(finished|halfway|half way|done) (eating |our |my |their )?(meal|food|ramen|main|mains)?\\b.{0,40}\\b(before|when|by the time) (the |my |our |his |her |their )?(other|second|drink|drinks|side|sides|starter|main|mains|food)|staggered|not (at the same time|together)|one (dish|meal|bowl|plate) at a time)\\b"
+          ],
+          "overrides": [
+            "\\b(came (out )?(together|at the same time|all at once|in good time|quickly|fast|promptly|in perfect time|perfectly timed|nicely timed|well timed|as expected)|(well|perfectly|nicely|good) (timed|timing|paced|pacing|spaced)|(timing|pacing) (was|is) (perfect|great|good|spot on|excellent|just right)|before (my|our|his|her|their|the) (eyes|very eyes|next visit|trip|flight|train|show|movie|film|gig|concert|game|match|meeting|class|lecture|shift|work)|after (my|our|his|her|their|the) (walk|shopping|show|movie|film|gig|concert|game|match|meeting|class|lecture|shift|work|flight|train|long day|hike|run|gym|swim|tour|day out|visit to|trip to)|(starter|starters|sides?|gyoza|edamame|drinks?) (came|arrived) (quickly|fast|promptly|first|straight away|right away|within|in no time|in minutes)|one of the (best|nicest|greatest|top))\\b"
+          ]
+        },
+        "bill_payment": {
+          "label": "Slow bill / payment",
+          "patterns": [
+            "\\b(wait(ed|ing)?|took|ages|forever|long time)\\b.{0,30}\\b(for the bill|to pay|for the check|to get the bill|to be able to pay|for (our|the|a) receipt|card machine|to settle)",
+            "\\b(bill|check|card machine)\\b.{0,40}\\b(took (ages|forever|so long|a while)|waited|never came|had to (ask|chase)|slow)"
+          ]
+        }
+      }
+    },
+    "value": {
+      "label": "Value / price",
+      "owner": "Ops / Marketing (pricing)",
+      "colour": "#6d28d9",
+      "subs": {
+        "expensive": {
+          "label": "Expensive / overpriced",
+          "patterns": [
+            "\\b(expensive|overpriced|over-?priced|pricey|pricy|steep|rip[- ]?off|ripoff|not worth (the|it)|wasn'?t worth|isn'?t worth|poor value|bad value|not (good|great) value|value for money (was|is)? ?(poor|bad|not)|too much (money|for)|(a lot|too much) for what|price[sd]? (has|have|had) (gone up|increased|risen|jumped)|prices? (are|were|is|was) (high|too high|crazy|ridiculous|extortionate|outrageous|a joke|shocking|steep|not justified)|£\\d+ for (a|one|two|three|that|this)|pay(ing)? (£\\d+|that much|so much|this much) for|daylight robbery|extortion|charged? £\\d+)\\b"
+          ],
+          "overrides": [
+            "\\b(not (too |that |very |overly |at all |particularly |especially )?(expensive|pricey|overpriced|over-?priced|steep)|isn'?t (too |that )?(expensive|pricey)|wasn'?t (too |that )?(expensive|pricey)|worth (every penny|it|the money|the price|every pound|the cost)|reasonabl|good value|great value|excellent value|not bad value|can'?t complain|fair(ly)? priced|affordable|cheap)\\b"
+          ]
+        },
+        "offer_discount": {
+          "label": "Offer / discount / loyalty not honoured",
+          "patterns": [
+            "\\b(discount|voucher|offer|deal|promotion|promo|loyalty|points|student (discount|deal|tuesday)|unidays|totum|app (offer|discount|reward|points)|reward|code|coupon|gift ?card|bottomless)\\b.{0,80}\\b(not (honou?red|accepted|applied|valid|working|available|recognised|allowed|possible)|refused|declined|didn'?t (work|apply|accept|honou?r|allow|give|recognise)|wouldn'?t (accept|apply|honou?r|allow|give)|couldn'?t (use|apply|redeem)|expired|excluded|catch|small print|misleading|false advertis|scam|not as advertised)"
+          ]
+        }
+      }
+    },
+    "cleanliness_ambience": {
+      "label": "Cleanliness / ambience",
+      "owner": "GM / Maintenance",
+      "colour": "#0f766e",
+      "subs": {
+        "dirty": {
+          "label": "Dirty / hygiene of premises",
+          "patterns": [
+            "\\b(dirty|filthy|grubby|grimy|sticky|unclean|not clean|wasn'?t clean|needs? a (clean|good clean|deep clean|wipe)|hygiene|unhygienic|mess(y)?|crumbs|stains?|stained|smell(ed|s|y)? (of|like|bad|awful|terrible|damp|drains|sewage|bins?|fish|old)|stink|stank|toilets? (were|was|are|is)? ?(dirty|filthy|disgusting|gross|awful|terrible|horrible|out of order|broken|blocked|not working|no (toilet|loo) (roll|paper)|smell)|bathroom (was|were|is)? ?(dirty|filthy|disgusting|gross|awful|broken)|(loo|toilet|bathroom)s? .{0,40}(disgusting|dirty|filthy|smell|no (paper|soap)|broken|out of order|flooded)|flies|cockroach|rat|mouse|mice|pest|rodent|bin (was )?overflowing|tables? (not|weren'?t|wasn'?t) (cleaned|wiped|cleared)|left (dirty|uncleared)|dirty (table|tables|cutlery|chopsticks|glass|glasses|plates|bowls|bowl|menu|menus|floor|seats|chairs|toilet|toilets)|(cutlery|chopsticks|glass|glasses|plates?|bowls?|cup|cups|menus?) (was|were|had) (dirty|sticky|greasy|stained|marks|smudge|lipstick|food on|residue)|greasy (table|menu|menus|glass|cutlery)|disgusting)\\b"
+          ],
+          "overrides": [
+            "\\b(never (dirty|filthy)|not dirty|wasn'?t dirty|weren'?t dirty|no mess|spotless|immaculate|very clean|super clean|so clean|really clean|clean and tidy|smell(ed|s)? (amazing|great|incredible|delicious|so good|lovely|wonderful|heavenly|divine|of (fresh|ramen|broth|garlic|ginger|sesame)|like (japan|heaven|home)))\\b"
+          ]
+        },
+        "environment": {
+          "label": "Noise / temperature / comfort / decor",
+          "patterns": [
+            "\\b(too (loud|noisy|hot|cold|dark|cramped|busy|crowded|bright)|so (loud|noisy|hot|cold|dark|cramped|crowded)|very (loud|noisy|hot|cold|dark|cramped|crowded)|music (was |is )?(too |so |very |really )?(loud|blaring|deafening)|deafening|couldn'?t hear|can'?t hear|noisy|(freezing|boiling|sweltering|stuffy|humid|roasting|no air ?con|air ?con(ditioning)? (was )?(broken|off|not working|not on)|no ventilation|(restaurant|place|inside|room|it) was (freezing|boiling|so hot|too hot|so cold|too cold|stuffy|sweltering)|heating (was )?(off|broken|not on|not working))|cramped|uncomfortable (seat|seats|seating|chairs|stools|tables|bench)|(seats|seating|chairs|stools|benches?) (were|was|are|is) (uncomfortable|hard|broken|wobbly|too (low|high|small))|wobbly (table|chair)|broken (chair|table|seat|stool|light|lights|door|lock|hand ?dryer|tap)|(chair|table|seat|door|lock|light|hand ?dryer|tap|sink) (was |is )?broken|dark|dingy|gloomy|dated|tired (looking|decor)|run ?down|shabby|worn|peeling|leak(ing)?|damp|draught|drafty|smell of (smoke|cigarette|weed)|flickering)\\b"
+          ],
+          "overrides": [
+            "\\b(not too (loud|hot|cold|dark|busy|crowded|noisy|bright|cramped)|wasn'?t too (loud|hot|cold|noisy|busy)|weren'?t too (loud|noisy)|not (loud|noisy|cramped|dark|busy) at all|nice and (cool|warm|quiet|cosy|cozy)|spicy|spice|hell|chilli|chili|chilies|heat|burnt|wasabi|curry|sauce|broth|ramen|soup|tea|coffee|food (was|is|came)|served hot|piping|dark (soy|sauce|broth|beer|chocolate|meat))\\b"
+          ]
+        }
+      }
+    },
+    "accuracy": {
+      "label": "Order accuracy",
+      "owner": "GM / BOH (order flow)",
+      "colour": "#be185d",
+      "subs": {
+        "wrong_missing": {
+          "label": "Wrong / missing item",
+          "patterns": [
+            "\\b(wrong (order|dish|item|food|meal|ramen|sushi|drink|drinks|thing|one|table|bowl|roll|rolls|sauce|topping|toppings|noodles|rice|size|flavou?r)|(got|brought|given|received|served|sent|came with|delivered) (us |me |out )?(the )?wrong|not what (i|we) (ordered|asked for|wanted|had)|isn'?t what (i|we) ordered|wasn'?t what (i|we) ordered|didn'?t (get|receive) (what|the|our|my|one of|all of|everything)|missing (item|items|a|an|the|our|my|one|two|half|toppings?|egg|chicken|prawns?|drink|drinks|side|sides|sauce|noodles|rice|dish|dishes|order|part)|(item|items|dish|dishes|side|sides|drink|drinks|egg|toppings?|sauce|starter|starters|order) (was|were|is|are|went|came|turned up) missing|never (got|received|arrived|came) (our|my|the|one of|all)|forgot (our|my|the|to (add|include|put)) (order|dish|side|sides|starter|egg|chicken|toppings?|sauce|noodles|rice|drink|drinks)|left (out|off) (the|our|my|an|a)|substitut|swapped (without|for)|replaced (without|with)|mixed up|mix up|muddled|(order|orders) (was|were|got) (wrong|mixed|muddled|confused|lost)|lost (our|my|the) order|order (was )?(lost|never (placed|went through|reached))|didn'?t (put|send) (the |our |my )?order (through|in)|asked for (no|extra|without|less|more) .{0,30}(still|but|and) (had|came|got|was|were|arrived)|meat in (my|the|a) (veg|vegan|vegetarian)|(vegan|vegetarian|veggie|halal|gluten|dairy|nut|allerg)\\w*.{0,50}(wrong|mistake|not (vegan|vegetarian|halal|gluten|dairy)|contained|had (meat|fish|chicken|pork|egg|nuts|dairy|gluten)|given|served|error))\\b"
+          ],
+          "overrides": [
+            "\\b(nothing (was )?(wrong|missing)|never (had|got|received) (a |the |anything )?(wrong|missing)|no (mistakes|errors|mix-?ups|issues|problems|complaints)|(got|had) (everything|it all) (right|correct|spot on|perfect)|(order|orders) (was|were|came|arrived) (correct|right|perfect|spot on|complete|exactly|as ordered)|can'?t go wrong|couldn'?t go wrong|nothing wrong|not a thing wrong|missing (out|from (my|your) life|this|it already|the point)|(you'?re|you are|your|you'?d be|would be|are) missing out|don'?t miss|not to be missed|what'?s not to)\\b"
+          ]
+        }
+      }
+    },
+    "hours_access": {
+      "label": "Opening hours / door",
+      "owner": "GM / Ops",
+      "colour": "#374151",
+      "subs": {
+        "hours": {
+          "label": "Closed early / refused entry / hours wrong",
+          "patterns": [
+            "\\b(clos(ed|ing|es) (early|at|before|the kitchen|up|down)|kitchen (was |is |had )?(closed|shut|closing)|(shut|closed) (early|at \\d|the doors?|up)|last orders|stopped (serving|taking orders)|not (taking|accepting) (any more |anymore )?(orders|customers|walk-?ins)|turned (us|me) away|refused (us|me) (entry|service)|wouldn'?t let (us|me) in|(opening|open) (hours|times) (are |were |is |was )?(wrong|incorrect|not (right|accurate|updated|correct)|misleading|different)|(google|website|app|sign|door) (says|said|states|stated|shows|showed) (open|closed|\\d)|supposed to be open|meant to be open|should (have been|be) open|(wasn'?t|was not|not) open (when|at|until|despite)|(arrived|got there|turned up|came) (at|before|around) \\d.{0,40}(closed|shut|told|refused|turned)|(\\d{1,2}(:\\d{2})? ?(pm|am)?|\\d{1,2}:\\d{2}).{0,40}\\b(closed|shut|told (us|me) (they|the kitchen|it) (was|were|had)|refused|turned away|not (serving|open))|door (was )?locked|locked (the )?doors?|no (sign|notice) (of|saying|to say)|(shutter|shutters) (down|were down|was down)|closed (with )?no (notice|explanation|sign|warning)|open(ed)? late|wasn'?t open (yet|on time)|didn'?t open (on time|until))\\b"
+          ],
+          "overrides": [
+            "\\b(open (late|until late|till late|late night|early|7 days|every day|all day|on (sunday|monday|christmas|boxing|bank))|late (night )?(opening|hours|dining|eats|food|option|dinner)|(great|good|handy|convenient|useful|nice) (that|to see|it'?s|they'?re|it is|they are) open|glad (it'?s|they'?re|it was|they were) open|(still|luckily|thankfully|happily) open|open when (nothing|nowhere|everywhere|everything|most) else|(kitchen|they) (stayed|stay) open|(kept|keep) the kitchen open|didn'?t (rush|hurry) us|never (felt )?rushed|not rushed|no (rush|rushing|pressure)|held the door|opened the door)\\b"
+          ]
+        }
+      }
+    },
+    "availability": {
+      "label": "Availability / menu",
+      "owner": "GM / Supply chain",
+      "colour": "#065f46",
+      "subs": {
+        "sold_out": {
+          "label": "Sold out / not available / menu cut",
+          "patterns": [
+            "\\b(sold out|ran out|run out|out of (stock|the|chicken|pork|beef|salmon|tuna|prawns?|noodles|rice|eggs?|gyoza|karaage|bao|edamame|mochi|matcha|sake|beer|ice|lemonade|coke|the (dish|item)|most|half|many|several|a lot|everything|all)|not available|unavailable|no longer (available|on the menu|do|serve|sell|have|offer|make|stock)|(taken|took|removed|dropped|gone|disappeared) (off|from) the menu|off the menu|menu (has )?(changed|shrunk|reduced|smaller|been cut|is smaller|got smaller|lost)|(smaller|reduced|limited|shorter|half the) menu|(they|you) (don'?t|no longer|stopped) (do|have|serve|sell|make|offer) (the|it|that|them|my|our)|didn'?t have (any|the|half|most|what)|(nothing|not much|none of) (i|we) wanted (was|were) available|couldn'?t (get|order|have) (the|what|my|our|anything)|(unavailable|none|not on) .{0,20}(despite|even though|but) (the |it'?s |its )?(on the )?menu|discontinued|wasn'?t on the menu (any ?more|anymore)|missed the old|bring back the)\\b"
+          ],
+          "overrides": [
+            "\\b(nothing (was )?(sold out|unavailable)|never (sold out|run out|ran out)|everything (was )?available|always (have|had) (everything|what|stock)|didn'?t have to|(they|you) (don'?t|won'?t) (need|have to|disappoint|regret)|couldn'?t (get|have|order) enough|couldn'?t (fault|complain|ask for|recommend|have asked|be happier|get over|stop)|didn'?t have (a bad|any (complaints|issues|problems)|to wait|much time|a reservation|a booking|high hopes|room|space|the heart|time)|ran out of (time|room|space|words|superlatives)|run out of (time|room|space|words|superlatives)|(bring back|missed the old) .{0,30}(memories|days|vibe))\\b"
+          ]
+        }
+      }
+    },
+    "digital_payment": {
+      "label": "Apps / QR / payment tech",
+      "owner": "Ops / Marketing (systems)",
+      "colour": "#0369a1",
+      "subs": {
+        "tech": {
+          "label": "QR / app / online order / card machine",
+          "patterns": [
+            "\\b(qr (code|ordering|menu|system)|order(ing)? (by|via|through|on|from) (the )?(app|qr|phone|website|tablet|kiosk|screen|table)|(app|website|online (order|ordering|booking|menu)|qr|card machine|card reader|payment (machine|system|terminal)|till|pos|tablet|kiosk|screen|wifi|wi-fi|loyalty app|maki app)\\b.{0,80}\\b(didn'?t work|wasn'?t working|not working|broken|crashed|crash|glitch|kept (crashing|freezing|failing)|froze|frozen|failed|error|down|wouldn'?t (work|load|accept|take|scan|connect)|couldn'?t (order|pay|scan|load|use|connect)|no (signal|wifi|internet|connection)|took (my|our|the) (money|payment) (twice|but)|charged (twice|but)|double (charged|payment)|declined|slow|confusing|clunky|annoying|awkward|impossible|useless|nightmare|hassle|faff))|(cash only|no cash|card only|didn'?t (accept|take) (cash|card|apple pay|amex)|wouldn'?t (accept|take) (cash|card|apple pay|amex)|only (accept|take)s? (cash|card)|have to (order|pay) (on|via|through|by) (the |your )?(app|phone|qr|screen|tablet)|forced to (use|order|download|scan)|made (us|me) (download|use|order (on|via|through)|scan))\\b"
+          ],
+          "overrides": [
+            "\\b((app|website|online (order|ordering|booking)|qr|card machine|payment (system|terminal)|wifi|loyalty app|maki app)\\b.{0,60}\\b(easy|simple|great|works? (well|great|perfectly|a treat)|worked (well|great|perfectly|a treat|fine|first time)|convenient|handy|useful|quick|fast|smooth|seamless|brilliant|good|nice|efficient|straightforward|no (problem|problems|issue|issues|hassle|fuss)|hassle-?free|painless)|(easy|simple|quick|convenient|handy|seamless|smooth|great|brilliant|good|nice|efficient|straightforward|hassle-?free|painless) (app|website|online (order|ordering|booking)|qr|ordering system|payment|to (order|pay|use|book|scan))|(takes?|took|accept(s|ed)?) (cash|card|apple pay|amex|all (cards|payment)|contactless|both)|(cash|card|apple pay|contactless|amex) (accepted|works|worked|is fine|was fine|no problem|ok|okay))\\b"
+          ]
+        }
+      }
+    }
+  },
+  "praise": {
+    "food": {
+      "label": "Food praised",
+      "patterns": [
+        "\\b(delicious|tasty|yummy|flavou?rful|flavou?rsome|(so|really|very|absolutely|incredibly|super|truly|really really) (good|nice|tasty|delicious|yum|fresh|flavou?rful)|amazing|incredible|excellent|fantastic|outstanding|superb|exceptional|perfect(ly)?( cooked| seasoned)?|(best|nicest|tastiest|greatest) (ramen|sushi|food|broth|noodles|gyoza|katsu|meal|bao|karaage|japanese|dumplings|bubble tea|cocktails?|matcha|mochi)|(food|ramen|sushi|broth|noodles|gyoza|katsu|bao|karaage|fish|salmon|tuna|rice|meal|dishes?|everything|starters?|sides?|mains?|dessert|desserts) (was|were|is|are|tasted|tastes|came out|arrived) (so |really |very |absolutely |incredibly |super |truly |just |all )?(good|great|nice|lovely|delicious|tasty|amazing|incredible|excellent|fantastic|fresh|flavou?rful|beautiful|perfect|spot on|on point|banging|bang on|unreal|top notch|first class|superb|outstanding|divine|gorgeous|wonderful|brilliant|fab|fabulous|phenomenal|stunning|heavenly|10/10|10 out of 10)|(rich|deep|hearty|creamy|silky|authentic|umami|generous|huge|big|large|massive|good|great|decent|generous) (broth|flavou?rs?|portions?|portion sizes?|bowls?)|portions? (were|was|are|is) (huge|big|large|massive|generous|good|great|decent|plenty|more than enough|perfect)|fresh(ly made| ingredients| fish| sushi| and hot)?|hot and fresh|cooked (to )?perfection|melt(s|ed)? in (the|your|my) mouth|hit the spot|full of flavou?r|packed with flavou?r|bursting with flavou?r|so much flavou?r|great flavou?rs?|lovely flavou?rs?|authentic|proper (ramen|japanese)|as good as (japan|tokyo)|reminded me of japan|like (in )?japan|moreish|mouth-?watering|scrumptious|heavenly|divine|10/10|10 out of 10|five stars? for the food|food (is|was) (top|great|good|nice|lovely|brilliant|bang on|spot on|on point|unreal|elite|fire|banging))\\b"
+      ]
+    },
+    "service": {
+      "label": "Service praised",
+      "patterns": [
+        "\\b(friendly|welcoming|attentive|helpful|polite|courteous|accommodating|lovely (staff|service|team|people|waiter|waitress|server|guys|girls|lady|man|host|hostess)|(staff|service|team|waiters?|waitress(es)?|servers?|crew|guys|girls|people|host|hostess|everyone|the lady|the man|the girl|the guy) (was|were|is|are|couldn'?t (be|have been)|could not (be|have been)) (so |really |very |extremely |incredibly |super |all |absolutely |always |just )?(friendly|welcoming|attentive|helpful|polite|lovely|amazing|great|wonderful|brilliant|fantastic|excellent|kind|nice|warm|efficient|on it|on the ball|professional|superb|outstanding|accommodating|patient|sweet|charming|delightful|top notch|first class|spot on|bang on|10/10|faultless|impeccable|second to none|the best)|(great|good|excellent|amazing|brilliant|fantastic|wonderful|lovely|top|first class|impeccable|faultless|superb|outstanding|exceptional|efficient|quick|fast|prompt|warm|friendly|attentive|5 star|five star|top notch|second to none|exemplary) (service|staff|team|hospitality|customer service|welcome)|service (was|is) (great|good|excellent|amazing|brilliant|fantastic|wonderful|lovely|top|first class|impeccable|faultless|superb|outstanding|exceptional|efficient|quick|fast|prompt|spot on|on point|bang on|10/10|second to none|perfect)|went (above and beyond|the extra mile|out of (his|her|their) way)|above and beyond|extra mile|looked after (us|me)|took (great |good |such good )?care of (us|me)|made (us|me) feel (welcome|at home|special|comfortable|looked after|very welcome|so welcome)|nothing was too much (trouble|bother)|checked (on|in on) us|always (smiling|happy|attentive)|(smile|smiles|smiley|smiling)|with a smile|couldn'?t do enough|so accommodating|very accommodating|really accommodating|hospitality|warm welcome|greeted (us|me) (warmly|with)|(knowledgeable|knew the menu|explained the menu|recommendations? (were|was) (great|spot on|perfect|good)|recommended|great recommendation))\\b"
+      ]
+    },
+    "speed": {
+      "label": "Quick service praised",
+      "patterns": [
+        "\\b(quick|quickly|fast|prompt(ly)?|speedy|efficient(ly)?|in no time|didn'?t (have to )?wait (long|at all)|no wait(ing)?|came (out )?(really |very |so |super )?(quick|quickly|fast)|(food|drinks|order|everything|service) (was|came|arrived|came out|turned up) (really |very |so |super |incredibly |surprisingly |pretty )?(quick|quickly|fast|prompt|promptly|swift|swiftly|straight away|right away|within minutes|in minutes)|straight away|right away|within minutes|in minutes|swift|rapid|(quick|fast|speedy) (service|turnaround|delivery)|served (quickly|fast|promptly|straight away|within))\\b"
+      ]
+    },
+    "value": {
+      "label": "Value praised",
+      "patterns": [
+        "\\b(good value|great value|excellent value|amazing value|value for money|reasonably priced|reasonable prices?|reasonable|affordable|well priced|fair(ly)? priced|fair prices?|not (too |that |very )?expensive|cheap(er)?|bargain|worth (every penny|the money|the price|it|every pound)|great prices?|good prices?|prices? (are|were|is|was) (good|great|reasonable|fair|decent|fine|ok|okay|very reasonable|really reasonable|not bad|excellent|brilliant|amazing|affordable|low|great value)|decent prices?|(student|lunch|set|meal) (deal|discount|offer|menu) (is|was|were)? ?(great|good|amazing|brilliant|fantastic|excellent|worth|a bargain|generous|unbeatable)|generous (portion|portions|helping|helpings|serving|servings)|big portions? for the price|(for the price|for the money) .{0,30}(great|good|amazing|brilliant|excellent|unbeatable|can'?t (complain|beat|fault|go wrong))|can'?t (beat|fault|complain about|argue with) the (price|prices|value|cost))\\b"
+      ]
+    },
+    "ambience": {
+      "label": "Ambience / cleanliness praised",
+      "patterns": [
+        "\\b((great|good|nice|lovely|cool|fun|buzzing|lively|relaxed|relaxing|chilled|chill|cosy|cozy|warm|welcoming|beautiful|stunning|gorgeous|amazing|wonderful|brilliant|fantastic|vibrant|trendy|cute|pretty|stylish|modern|authentic|japanese|lovely little|calm|peaceful|intimate|inviting|homely|clean and|spotless|immaculate|perfect|really nice|very nice) (atmosphere|ambience|ambiance|vibe|vibes|setting|decor|interior|place|spot|restaurant|environment|surroundings|space|room|little place|little spot|little restaurant|little gem|gem)|(atmosphere|ambience|ambiance|vibe|vibes|decor|interior|setting|environment|place|restaurant|music|lighting) (was|were|is|are) (great|good|nice|lovely|cool|fun|buzzing|lively|relaxed|relaxing|chilled|chill|cosy|cozy|warm|welcoming|beautiful|stunning|gorgeous|amazing|wonderful|brilliant|fantastic|vibrant|trendy|cute|pretty|stylish|modern|authentic|perfect|spot on|on point|lovely and|really nice|very nice|spotless|clean|immaculate)|hidden gem|little gem|a gem|spotless|immaculate|(very|really|so|super|extremely) clean|clean (and|restaurant|place|tables|toilets|throughout|tidy)|well (kept|maintained|presented|decorated|laid out)|beautifully (decorated|designed|presented|lit)|nicely (decorated|designed|done|laid out)|tastefully (decorated|designed|done)|(nice|lovely|good|great|cool|fun|beautiful|stunning) (decor|decoration|design|interior|lighting|music|playlist|art|artwork|mural|murals)|(loved|love|liked|like) the (decor|interior|design|atmosphere|vibe|vibes|ambience|ambiance|setting|music|playlist|lighting|art|artwork|mural|murals|place|space|look|feel)|feels like (japan|tokyo|being in japan)|like (being|stepping) (in|into) (japan|tokyo)|transported)\\b"
+      ]
+    },
+    "return_recommend": {
+      "label": "Will return / recommend",
+      "patterns": [
+        "\\b(will (definitely |100% |certainly |absolutely |surely |for sure |be |defo )?(be )?(back|return|returning|come back|coming back|visit again|go back|going back|recommend|recommending)|(would|will|could|can'?t wait to|can'?t wait to come|looking forward to coming|hope to be|hope to come|plan(ning)? (to|on) (coming|going|returning|being)) (definitely |100% |certainly |absolutely |surely |for sure |defo |to )?(be back|return|come back|go back|visit again|recommend|go again|come again|eat here again|dine here again|be returning|be coming back|be going back)|(highly|definitely|would|strongly|thoroughly|100%|absolutely|totally|really|cannot|can'?t|couldn'?t) (recommend|recommended|recommending)( enough)?|recommend(ed)? (to|for) (anyone|everyone|all|friends|family)|(must|should) (visit|try|go|come|eat here)|a must(-| )?(visit|try|go)|(our|my) (favou?rite|go-?to|regular|usual|weekly|monthly|local|new favou?rite|number one|top)( spot| place| restaurant| ramen| sushi| haunt| choice| lunch spot| dinner spot)?|(favou?rite|go-?to|regular) (spot|place|restaurant|ramen|sushi|haunt|choice|lunch spot|dinner spot|japanese|for ramen|for sushi)|(been|come|coming|visit|visiting|go|going|eat|eating) (here |there )?(many|several|numerous|countless|multiple|loads of|lots of|a few|so many|dozens of|plenty of|too many|\\d+) times|(regular|regulars|frequent|return|returning|repeat|loyal) (customer|customers|visitor|visitors|diner|diners)|(second|third|fourth|fifth|2nd|3rd|4th|5th|umpteenth|another) (visit|time|trip)|(every|each) (time|visit|week|month|weekend)|never (disappoints|disappointed|fails|had a bad)|always (great|good|amazing|lovely|brilliant|fantastic|consistent|excellent|delicious|on point|spot on|a pleasure|a treat|delivers|reliable|welcoming)|consistent(ly)?|never (fails|disappoints)|10/10 would|would (eat|dine|go|come) (here |there )?again|(see|coming) you (soon|again|next)|(will|can'?t wait to) (be |to )?(back|return)|already (planning|booked|thinking about) (my|our|the) next|counting down|(brought|bringing|take|taking|bring|took) (my|our|the) (friends|family|mum|dad|parents|kids|wife|husband|partner|colleagues|team|mates|girlfriend|boyfriend) (here|back|next|to)|(told|telling) (everyone|all my friends|my friends|my family|everyone i know))\\b"
+      ]
+    }
+  },
+  "dishes": {
+    "Tonkotsu ramen": [
+      "tonkotsu",
+      "tonkatsu ramen"
+    ],
+    "Hell Burnt ramen": [
+      "hell ?burnt?",
+      "hellburnt",
+      "hell ?fire",
+      "burnt ramen",
+      "hell ramen"
+    ],
+    "Spicy ramen": [
+      "spicy (miso |chicken |beef |pork |tonkotsu |tan ?tan |kimchi |vegan |seafood |prawn )?ramen",
+      "spicy (broth|soup|noodles|bowl)"
+    ],
+    "Chicken ramen": [
+      "chicken ramen",
+      "tori ?(paitan|ramen)",
+      "paitan"
+    ],
+    "Miso ramen": [
+      "miso ramen",
+      "miso (broth|soup)"
+    ],
+    "Shoyu ramen": [
+      "shoyu"
+    ],
+    "Tantan ramen": [
+      "tan ?tan",
+      "dan ?dan",
+      "tantanmen"
+    ],
+    "Kimchi ramen": [
+      "kimchi ramen",
+      "kimchi (broth|soup|noodles)"
+    ],
+    "Vegan / veg ramen": [
+      "veg(an|etarian|gie)? ramen",
+      "vegan (broth|bowl|option|options|noodles)",
+      "vegetarian (option|options|ramen|bowl)",
+      "tofu ramen",
+      "shiitake"
+    ],
+    "Beef ramen": [
+      "beef ramen",
+      "wagyu",
+      "beef (broth|brisket)",
+      "beef bowl"
+    ],
+    "Seafood / prawn ramen": [
+      "seafood ramen",
+      "prawn ramen",
+      "shrimp ramen",
+      "seafood (broth|bowl)"
+    ],
+    "Curry ramen": [
+      "curry ramen",
+      "curry (broth|noodles)"
+    ],
+    "Black garlic ramen": [
+      "black garlic"
+    ],
+    "Ramen (unspecified)": [
+      "\\bramen\\b",
+      "\\bnoodle soup\\b",
+      "\\bramens\\b"
+    ],
+    "Broth (unspecified)": [
+      "\\bbroth\\b",
+      "\\bsoup\\b"
+    ],
+    "Egg (ajitama)": [
+      "\\b(ajitama|ajitsuke|ramen egg|soft ?boiled egg|jammy egg|marinated egg|the egg|eggs?)\\b"
+    ],
+    "Chashu / pork belly": [
+      "chashu",
+      "char ?siu",
+      "pork belly",
+      "\\bpork\\b"
+    ],
+    "Sushi (general)": [
+      "\\bsushi\\b"
+    ],
+    "Sashimi": [
+      "sashimi"
+    ],
+    "Nigiri": [
+      "nigiri"
+    ],
+    "Maki rolls": [
+      "\\bmaki\\b(?! ?&| and ramen| ramen)",
+      "\\brolls?\\b",
+      "uramaki",
+      "hosomaki",
+      "futomaki",
+      "temaki",
+      "hand ?rolls?"
+    ],
+    "Dragon roll": [
+      "dragon roll",
+      "dragon"
+    ],
+    "California roll": [
+      "california"
+    ],
+    "Rainbow roll": [
+      "rainbow"
+    ],
+    "Salmon": [
+      "\\bsalmon\\b"
+    ],
+    "Tuna": [
+      "\\btuna\\b"
+    ],
+    "Sushi platter / set": [
+      "platter",
+      "sushi (set|box|selection|combo|sharing)",
+      "sharing (platter|board|set)",
+      "boat"
+    ],
+    "Poke bowl": [
+      "poke"
+    ],
+    "Gyoza": [
+      "gyoza",
+      "gyozas",
+      "dumplings?",
+      "potstickers?"
+    ],
+    "Karaage": [
+      "karaage",
+      "kara-age",
+      "kara age",
+      "japanese fried chicken",
+      "fried chicken"
+    ],
+    "Bao buns": [
+      "\\bbao\\b",
+      "baos",
+      "bao buns?",
+      "\\bbuns?\\b"
+    ],
+    "Edamame": [
+      "edamame"
+    ],
+    "Takoyaki": [
+      "takoyaki",
+      "octopus balls?"
+    ],
+    "Chicken katsu": [
+      "chicken katsu",
+      "katsu chicken",
+      "\\bkatsu\\b"
+    ],
+    "Katsu curry": [
+      "katsu curry",
+      "curry katsu",
+      "\\bcurry\\b"
+    ],
+    "Tempura": [
+      "tempura"
+    ],
+    "Prawns / shrimp": [
+      "prawns?",
+      "shrimps?",
+      "ebi"
+    ],
+    "Tataki": [
+      "tataki"
+    ],
+    "Steak": [
+      "\\bsteak\\b",
+      "sirloin",
+      "ribeye"
+    ],
+    "Tofu": [
+      "\\btofu\\b",
+      "agedashi"
+    ],
+    "Chicken wings": [
+      "wings"
+    ],
+    "Spring rolls": [
+      "spring rolls?"
+    ],
+    "Rice bowl / donburi": [
+      "donburi",
+      "rice bowl",
+      "\\bdon\\b",
+      "katsudon",
+      "oyakodon",
+      "gyudon",
+      "teriyaki (bowl|rice|chicken|salmon)",
+      "teriyaki"
+    ],
+    "Bento box": [
+      "bento"
+    ],
+    "Yakitori / skewers": [
+      "yakitori",
+      "skewers?"
+    ],
+    "Seaweed salad / wakame": [
+      "seaweed",
+      "wakame"
+    ],
+    "Miso soup": [
+      "miso soup"
+    ],
+    "Udon / soba / yakisoba": [
+      "udon",
+      "\\bsoba\\b",
+      "yakisoba",
+      "yaki soba"
+    ],
+    "Mochi": [
+      "mochi"
+    ],
+    "Matcha": [
+      "matcha"
+    ],
+    "Bubble tea": [
+      "bubble tea",
+      "boba",
+      "milk tea"
+    ],
+    "Cocktails": [
+      "cocktails?",
+      "xoxo",
+      "margarita",
+      "mojito",
+      "espresso martini",
+      "pornstar",
+      "sake bomb"
+    ],
+    "Sake": [
+      "\\bsake\\b",
+      "\\bsaki\\b"
+    ],
+    "Beer / Asahi / Maki Biru": [
+      "asahi",
+      "kirin",
+      "sapporo",
+      "maki biru",
+      "\\bbiru\\b",
+      "\\bbeers?\\b",
+      "\\bpint\\b"
+    ],
+    "Perfect Ted / energy drink": [
+      "perfect ted",
+      "energy drink"
+    ],
+    "Dessert (general)": [
+      "desserts?",
+      "ice ?cream",
+      "cheesecake",
+      "dorayaki",
+      "brownie",
+      "pudding"
+    ],
+    "Lemonade / soft drinks": [
+      "lemonade",
+      "ramune",
+      "\\bcoke\\b",
+      "soft drinks?",
+      "iced tea",
+      "calpis"
+    ]
+  },
+  "staff_name_patterns": [
+    "\\b(?:served|looked after|greeted|welcomed|helped|hosted|seated|attended)(?: to)? (?:us|me)? ?(?:by|was|were)? ?(?:the )?(?:lovely |amazing |wonderful |brilliant |fantastic |great |friendly |kind |attentive |our |the )?(?:server|waiter|waitress|host|hostess|manager|barman|bartender|bar staff|staff member|lady|girl|guy|man|gentleman)?,? ?(?:called |named |name was |by the name of )?([A-Z][a-zà-ÿ]+(?: [A-Z][a-zà-ÿ]+)?)",
+    "\\b(?:server|waiter|waitress|host|hostess|manager|barman|bartender|chef|sushi chef|lady|girl|guy|man|gentleman|member of staff|staff member)(?:,)? (?:called |named |was |named )?([A-Z][a-zà-ÿ]{2,}(?: [A-Z][a-zà-ÿ]+)?)\\b",
+    "\\b([A-Z][a-zà-ÿ]{2,}(?: [A-Z][a-zà-ÿ]+)?) (?:was|is|were) (?:our|the|a|an|my) (?:server|waiter|waitress|host|hostess|manager|barman|bartender|chef)\\b",
+    "\\b([A-Z][a-zà-ÿ]{2,}(?: and [A-Z][a-zà-ÿ]{2,})?) (?:was|were|is|are) (?:so |very |really |extremely |incredibly |super |absolutely |such a |such an |an? |the )?(?:friendly|attentive|helpful|lovely|amazing|great|wonderful|brilliant|fantastic|excellent|kind|nice|polite|welcoming|awesome|fab|fabulous|superb|outstanding|accommodating|patient|sweet|charming|delightful|star|legend|gem|credit|asset|superstar|hero|diamond|pleasure|joy|angel|rude|unhelpful|dismissive|slow|inattentive|unfriendly|abrupt|arrogant)\\b",
+    "\\b(?:thank(?:s| you)(?: so much| very much| again)?|shout ?out|big shout ?out|special (?:thanks|mention|shout ?out)|kudos|props|credit|well done|hats off|cheers|big up)(?: to| for| goes to)? (?:our |the |to our |to the )?(?:server |waiter |waitress |host |hostess |manager |lovely |amazing |wonderful |brilliant |fantastic |great |friendly |kind |attentive )*([A-Z][a-zà-ÿ]{2,}(?: (?:and|&) [A-Z][a-zà-ÿ]{2,})?)\\b",
+    "\\b(?:ask for|request|recommend asking for)(?: the)? ([A-Z][a-zà-ÿ]{2,})\\b",
+    "\\b([A-Z][a-zà-ÿ]{2,}) (?:looked after|took (?:great |good |such good |excellent )?care of|served|welcomed|greeted|hosted|helped|recommended|suggested|made|went above|went out of|made sure|checked on|checked in on|sorted|dealt with|brought)(?: us| me)?\\b",
+    "\\b(?:our|the) (?:server|waiter|waitress|host|hostess|manager|barman|bartender|chef|guy|girl|lady|man)(?:'s name was| was called| called| named| is| was|,)? ([A-Z][a-zà-ÿ]{2,})\\b"
+  ],
+  "staff_name_stoplist": [
+    "Aberdeen",
+    "Absolutely",
+    "Advisor",
+    "After",
+    "Afternoon",
+    "Afterwards",
+    "Again",
+    "Agedashi",
+    "Ah",
+    "Ajitama",
+    "All",
+    "Already",
+    "Also",
+    "Although",
+    "Always",
+    "Am",
+    "Amazing",
+    "Ambience",
+    "And",
+    "Anyone",
+    "Anything",
+    "Anyway",
+    "Anyways",
+    "App",
+    "April",
+    "Arrived",
+    "Arriving",
+    "Asahi",
+    "Asian",
+    "Ate",
+    "Atmosphere",
+    "August",
+    "Baby",
+    "Baked",
+    "Bao",
+    "Bar",
+    "Barman",
+    "Bartender",
+    "Bath",
+    "Because",
+    "Beef",
+    "Before",
+    "Bento",
+    "Besides",
+    "Best",
+    "Big",
+    "Bill",
+    "Birthday",
+    "Biru",
+    "Bit",
+    "Bitter",
+    "Bland",
+    "Boardwalk",
+    "Boba",
+    "Boiled",
+    "Booked",
+    "Booking",
+    "Booth",
+    "Both",
+    "Boyfriend",
+    "Boys",
+    "Breakfast",
+    "Britain",
+    "British",
+    "Brunch",
+    "Burnt",
+    "Business",
+    "But",
+    "California",
+    "Calpis",
+    "Came",
+    "Card",
+    "Cash",
+    "Chashu",
+    "Cheers",
+    "Chef",
+    "Chefs",
+    "Chewy",
+    "Chicken",
+    "Child",
+    "Children",
+    "Chinese",
+    "Christmas",
+    "Cocktails",
+    "Code",
+    "Cold",
+    "Colleague",
+    "Colleagues",
+    "Collection",
+    "Connection",
+    "Cooked",
+    "Course",
+    "Courses",
+    "Covid",
+    "Creamy",
+    "Crispy",
+    "Crunchy",
+    "Dad",
+    "Date",
+    "Daughter",
+    "Day",
+    "Deal",
+    "Deals",
+    "December",
+    "Decor",
+    "Def",
+    "Definitely",
+    "Defo",
+    "Delicious",
+    "Deliveroo",
+    "Delivery",
+    "Dessert",
+    "Desserts",
+    "Dine",
+    "Dinner",
+    "Discount",
+    "Discounts",
+    "Dish",
+    "Dishes",
+    "Donburi",
+    "Door",
+    "Dorayaki",
+    "Dr",
+    "Dragon",
+    "Drank",
+    "Drink",
+    "Drinking",
+    "Drinks",
+    "Dry",
+    "During",
+    "Each",
+    "Easter",
+    "Eat",
+    "Eating",
+    "Ebi",
+    "Edamame",
+    "Edinburgh",
+    "Eg",
+    "England",
+    "English",
+    "Etc",
+    "Even",
+    "Evening",
+    "Eventually",
+    "Ever",
+    "Every",
+    "Everyone",
+    "Everything",
+    "Excellent",
+    "Experience",
+    "Experiences",
+    "Extremely",
+    "Fairly",
+    "Family",
+    "Father",
+    "February",
+    "Fermented",
+    "Finally",
+    "Fine",
+    "First",
+    "Firstly",
+    "Flavor",
+    "Flavour",
+    "Food",
+    "Fountainbridge",
+    "Fresh",
+    "Friday",
+    "Fried",
+    "Friend",
+    "Friends",
+    "Front",
+    "Furthermore",
+    "Futomaki",
+    "Gentlemen",
+    "Gents",
+    "Genuinely",
+    "Girlfriend",
+    "Girls",
+    "Glasgow",
+    "Good",
+    "Google",
+    "Greasy",
+    "Great",
+    "Grilled",
+    "Group",
+    "Guys",
+    "Gyoza",
+    "Gyudon",
+    "Had",
+    "Haha",
+    "Halloween",
+    "Have",
+    "He",
+    "Hell",
+    "Hence",
+    "Her",
+    "Highly",
+    "Him",
+    "His",
+    "Honestly",
+    "Hope",
+    "Hopefully",
+    "Hosomaki",
+    "Host",
+    "Hostess",
+    "Hot",
+    "Hour",
+    "Hours",
+    "House",
+    "How",
+    "However",
+    "Husband",
+    "Ie",
+    "Ikigai",
+    "Imo",
+    "Indian",
+    "Instagram",
+    "Instead",
+    "Internet",
+    "It",
+    "Italian",
+    "January",
+    "Japan",
+    "Japanese",
+    "Juicy",
+    "July",
+    "June",
+    "Just",
+    "Justeat",
+    "Kabuki",
+    "Karaage",
+    "Katsu",
+    "Katsudon",
+    "Kids",
+    "Kimchi",
+    "Kiosk",
+    "Kirin",
+    "Kitchen",
+    "Korean",
+    "Kudos",
+    "Ladies",
+    "Lakeside",
+    "Last",
+    "Lastly",
+    "Later",
+    "Least",
+    "Leaving",
+    "Leeds",
+    "Left",
+    "Leicester",
+    "Less",
+    "Literally",
+    "Lol",
+    "London",
+    "Lot",
+    "Lots",
+    "Love",
+    "Loved",
+    "Lovely",
+    "Loyalty",
+    "Luckily",
+    "Lunch",
+    "Machine",
+    "Madam",
+    "Main",
+    "Mains",
+    "Maki",
+    "Manager",
+    "Managers",
+    "Manchester",
+    "Many",
+    "March",
+    "Marinated",
+    "Matcha",
+    "May",
+    "Meadowhall",
+    "Meal",
+    "Meals",
+    "Meanwhile",
+    "Meeting",
+    "Menu",
+    "Metrocentre",
+    "Minute",
+    "Minutes",
+    "Miso",
+    "Miss",
+    "Mmm",
+    "Mochi",
+    "Mom",
+    "Moment",
+    "Moments",
+    "Monday",
+    "Month",
+    "More",
+    "Moreover",
+    "Morning",
+    "Most",
+    "Mother",
+    "Mr",
+    "Mrs",
+    "Ms",
+    "Much",
+    "Mum",
+    "Mushy",
+    "Music",
+    "Never",
+    "Nevertheless",
+    "Newcastle",
+    "Next",
+    "Nhs",
+    "Nice",
+    "Nicolson",
+    "Night",
+    "Nigiri",
+    "Ninja",
+    "No",
+    "Nobody",
+    "Nonetheless",
+    "Nori",
+    "Not",
+    "Nothing",
+    "Nottingham",
+    "November",
+    "Now",
+    "October",
+    "Offer",
+    "Offers",
+    "Office",
+    "Often",
+    "Oh",
+    "Oily",
+    "Ok",
+    "Okay",
+    "Omg",
+    "Once",
+    "One",
+    "Online",
+    "Only",
+    "Order",
+    "Ordered",
+    "Orders",
+    "Otherwise",
+    "Our",
+    "Overall",
+    "Overcooked",
+    "Oyakodon",
+    "Paitan",
+    "Partner",
+    "Party",
+    "Perfect",
+    "Phone",
+    "Pickled",
+    "Place",
+    "Plenty",
+    "Pm",
+    "Points",
+    "Poke",
+    "Popped",
+    "Pork",
+    "Portion",
+    "Portions",
+    "Pretty",
+    "Price",
+    "Prices",
+    "Ps",
+    "Qr",
+    "Quality",
+    "Quantity",
+    "Quite",
+    "Rainbow",
+    "Ramen",
+    "Ramune",
+    "Rather",
+    "Raw",
+    "Reader",
+    "Really",
+    "Renfield",
+    "Reservation",
+    "Reserved",
+    "Restaurant",
+    "Reward",
+    "Rewards",
+    "Rich",
+    "Roasted",
+    "Rubbery",
+    "Sadly",
+    "Sake",
+    "Salmon",
+    "Salty",
+    "Sapporo",
+    "Sashimi",
+    "Sat",
+    "Saturday",
+    "Savory",
+    "Savoury",
+    "Scan",
+    "Scotland",
+    "Scottish",
+    "Screen",
+    "Seasoned",
+    "Seat",
+    "Seats",
+    "Second",
+    "Secondly",
+    "Seconds",
+    "Sensei",
+    "September",
+    "Seriously",
+    "Server",
+    "Servers",
+    "Service",
+    "Set",
+    "She",
+    "Shoreditch",
+    "Shout",
+    "Shoyu",
+    "Side",
+    "Sides",
+    "Signal",
+    "Since",
+    "Sir",
+    "Sitting",
+    "Smoked",
+    "Snack",
+    "Snacks",
+    "Soba",
+    "Soft",
+    "Soggy",
+    "Soho",
+    "Some",
+    "Somebody",
+    "Someone",
+    "Something",
+    "Sometimes",
+    "Son",
+    "Soon",
+    "Sour",
+    "Southampton",
+    "Special",
+    "Specials",
+    "Spicy",
+    "Staff",
+    "Standing",
+    "Star",
+    "Stars",
+    "Starter",
+    "Starters",
+    "Steamed",
+    "Still",
+    "Stood",
+    "Stop",
+    "Stopped",
+    "Such",
+    "Sunday",
+    "Super",
+    "Superb",
+    "Sushi",
+    "Sweet",
+    "Table",
+    "Tables",
+    "Tablet",
+    "Takeaway",
+    "Takeout",
+    "Takoyaki",
+    "Tantan",
+    "Taste",
+    "Tbf",
+    "Tbh",
+    "Team",
+    "Ted",
+    "Teen",
+    "Teenager",
+    "Temaki",
+    "Temperature",
+    "Tempura",
+    "Ten",
+    "Tender",
+    "Teriyaki",
+    "Terminal",
+    "Texture",
+    "Thai",
+    "Thank",
+    "Thankfully",
+    "Thanks",
+    "That",
+    "The",
+    "Their",
+    "Them",
+    "Then",
+    "There",
+    "Therefore",
+    "They",
+    "Third",
+    "This",
+    "Though",
+    "Three",
+    "Thursday",
+    "Thus",
+    "Tiktok",
+    "Till",
+    "Time",
+    "Times",
+    "Tip",
+    "Tips",
+    "Today",
+    "Toddler",
+    "Toilet",
+    "Toilets",
+    "Tokyo",
+    "Tomorrow",
+    "Tonight",
+    "Tonkotsu",
+    "Top",
+    "Tori",
+    "Totally",
+    "Tough",
+    "Tried",
+    "Trip",
+    "Tripadvisor",
+    "Truly",
+    "Tuesday",
+    "Tuna",
+    "Twice",
+    "Two",
+    "Uber",
+    "Ubereats",
+    "Udon",
+    "Uk",
+    "Um",
+    "Umami",
+    "Undercooked",
+    "Unfortunately",
+    "Until",
+    "Uramaki",
+    "Us",
+    "Usually",
+    "Valentines",
+    "Very",
+    "Vibe",
+    "Visit",
+    "Visited",
+    "Visiting",
+    "Voucher",
+    "Vouchers",
+    "Vs",
+    "Wagyu",
+    "Waited",
+    "Waiter",
+    "Waiters",
+    "Waiting",
+    "Waitress",
+    "Waitresses",
+    "Wakame",
+    "Walked",
+    "Warm",
+    "Was",
+    "We",
+    "Website",
+    "Wednesday",
+    "Week",
+    "Weekday",
+    "Weekend",
+    "Well",
+    "Went",
+    "Were",
+    "Wet",
+    "What",
+    "When",
+    "Where",
+    "Whether",
+    "Which",
+    "While",
+    "Whilst",
+    "Who",
+    "Why",
+    "Wife",
+    "Wifi",
+    "Will",
+    "Window",
+    "Wish",
+    "Work",
+    "Would",
+    "Wow",
+    "Xoxo",
+    "Yakisoba",
+    "Yakitori",
+    "Year",
+    "Yes",
+    "Yesterday",
+    "Yet",
+    "You",
+    "Yum",
+    "Yummy"
+  ]
+}
