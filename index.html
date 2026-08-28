@@ -1178,6 +1178,7 @@
     <button class="tabbtn" data-tab="week">This Week</button>
     <button class="tabbtn" data-tab="deliveroo">Deliveroo RAG</button>
     <button class="tabbtn" data-tab="reviews">Reviews <span class="tb-badge" id="tb-reviews" style="display:none">0</span></button>
+    <button class="tabbtn" data-tab="broth">Broth <span class="tb-badge" id="tb-broth" style="display:none">0</span></button>
     <button class="tabbtn" data-tab="ecbudget">Budget Burn</button>
     <button class="tabbtn" data-tab="redlight">Red Light <span class="tb-badge" id="tb-red">0</span></button>
     <!-- 6-tab trim (2026-06-22): OKRs / Governance / Risk Register / Roadmap tab buttons hidden.
@@ -1613,6 +1614,151 @@
   </div>
 
   <!-- ============ TAB: BUDGET BURN (ported from EC control centre) ============ -->
+  <!-- ============ BROTH SCORE (inserted 2026-08-28) ============ -->
+  <div class="tabpanel" id="tab-broth">
+  <style>
+  #tab-broth .bh{background:linear-gradient(135deg,#8A2A0C 0%,var(--maki-orange) 55%,var(--maki-orange-soft) 100%);
+    color:#fff;border-radius:var(--radius);padding:20px 24px;margin-bottom:14px}
+  #tab-broth .bh .eyebrow{font-size:11px;text-transform:uppercase;letter-spacing:.1em;opacity:.85}
+  #tab-broth .bh h2{margin:4px 0 6px;font-size:22px;color:#fff}
+  #tab-broth .bh .sub{font-size:12.5px;opacity:.9;line-height:1.5;max-width:900px}
+  #tab-broth .brow{display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;
+    border:1px solid var(--maki-line);border-radius:var(--radius);padding:12px 18px;
+    box-shadow:var(--shadow);margin-bottom:12px}
+  #tab-broth .brow .lbl{font-size:11px;color:var(--maki-muted);text-transform:uppercase;
+    letter-spacing:.08em;font-weight:600}
+  #tab-broth select{min-width:250px;font-size:14px;font-weight:600;padding:7px 12px;
+    border:1px solid var(--maki-line);border-radius:8px;background:#fff;color:var(--maki-ink);cursor:pointer}
+  #tab-broth .base{background:var(--maki-ink);color:#fff;border-radius:var(--radius);
+    padding:16px 20px;margin-bottom:14px}
+  #tab-broth .basegrid{display:grid;grid-template-columns:1.35fr 1fr;gap:22px}
+  @media(max-width:820px){#tab-broth .basegrid{grid-template-columns:1fr}}
+  #tab-broth .basegrid .spec{border-left:1px solid rgba(255,255,255,.16);padding-left:22px}
+  @media(max-width:820px){#tab-broth .basegrid .spec{border-left:0;padding-left:0;
+    border-top:1px solid rgba(255,255,255,.16);padding-top:14px}}
+  #tab-broth .base .lab{font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+    opacity:.6;margin-bottom:9px}
+  #tab-broth .base .u{display:flex;gap:26px;flex-wrap:wrap}
+  #tab-broth .base .k{font-size:11.5px;opacity:.7;text-transform:uppercase;letter-spacing:.05em}
+  #tab-broth .base .n{font-size:30px;font-weight:700;line-height:1.15;font-variant-numeric:tabular-nums}
+  #tab-broth .base .m{font-size:11px;opacity:.6;margin-top:2px}
+  #tab-broth .base .src{font-size:11px;opacity:.55;margin-top:12px;line-height:1.45;
+    border-top:1px solid rgba(255,255,255,.14);padding-top:9px}
+  #tab-broth .bchip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;
+    font-weight:700;vertical-align:5px;margin-left:8px}
+  #tab-broth .bchip.g{background:rgba(16,185,129,.22);color:#6ee7b7}
+  #tab-broth .bchip.a{background:rgba(245,158,11,.22);color:#fcd34d}
+  #tab-broth .bchip.r{background:rgba(239,68,68,.22);color:#fca5a5}
+  #tab-broth .bk{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:10px;margin-bottom:14px}
+  #tab-broth .bk .t{background:#fff;border:1px solid var(--maki-line);border-left:3px solid var(--maki-muted);
+    border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+  #tab-broth .bk .t.g{border-left-color:var(--rag-green,#059669)}
+  #tab-broth .bk .t.a{border-left-color:var(--rag-amber,#d97706)}
+  #tab-broth .bk .t.r{border-left-color:var(--rag-red,#dc2626)}
+  #tab-broth .bk .t.o{border-left-color:var(--maki-orange)}
+  #tab-broth .bk .l{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--maki-muted);font-weight:600}
+  #tab-broth .bk .v{font-size:23px;font-weight:700;margin:3px 0 1px;font-variant-numeric:tabular-nums}
+  #tab-broth .bk .n{font-size:11.5px;color:var(--maki-muted)}
+  #tab-broth .bcard{background:#fff;border:1px solid var(--maki-line);border-radius:var(--radius);
+    box-shadow:var(--shadow);margin-bottom:14px;overflow:hidden}
+  #tab-broth .bcard>.h{padding:12px 16px;border-bottom:1px solid var(--maki-line)}
+  #tab-broth .bcard>.h .t{font-weight:700}
+  #tab-broth .bcard>.h .s{font-size:11.5px;color:var(--maki-muted);margin-top:2px}
+  #tab-broth .bcard>.b{padding:12px 16px;overflow-x:auto}
+  #tab-broth details.bcard>summary{list-style:none;cursor:pointer;padding:12px 16px;
+    display:flex;gap:10px;align-items:baseline;border-bottom:1px solid var(--maki-line)}
+  #tab-broth details.bcard>summary::-webkit-details-marker{display:none}
+  #tab-broth details.bcard>summary::before{content:'';width:0;height:0;flex:none;align-self:center;
+    border-left:5px solid var(--maki-muted);border-top:4px solid transparent;border-bottom:4px solid transparent;
+    transition:transform .12s}
+  #tab-broth details.bcard[open]>summary::before{transform:rotate(90deg)}
+  #tab-broth details.bcard:not([open])>summary{border-bottom:0}
+  #tab-broth table{border-collapse:collapse;width:100%;font-size:12.5px}
+  #tab-broth th{text-align:left;font-weight:600;color:var(--maki-muted);font-size:10.5px;
+    text-transform:uppercase;letter-spacing:.05em;padding:6px 7px;border-bottom:1px solid var(--maki-line);white-space:nowrap}
+  #tab-broth td{padding:5px 7px;border-bottom:1px solid var(--maki-line);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  #tab-broth td.name{font-variant-numeric:normal;font-weight:500}
+  #tab-broth table.heat td{text-align:center;padding:4px 5px;font-size:11.5px}
+  #tab-broth table.heat td.name{text-align:left}
+  #tab-broth tr.spec td{background:var(--maki-orange-bg);font-weight:700;
+    border-bottom:2px solid var(--maki-orange)}
+  #tab-broth tr.reg td{background:#f6f7f9;font-weight:700;font-size:11px;text-transform:uppercase;
+    letter-spacing:.05em;border-top:2px solid var(--maki-line)}
+  #tab-broth tr.reg .dec{font-weight:400;text-transform:none;letter-spacing:0;color:var(--maki-muted)}
+  #tab-broth .code{color:var(--maki-muted);font-weight:700;font-size:11px;margin-right:6px}
+  #tab-broth .miss{color:var(--rag-red,#dc2626);font-weight:700}
+  #tab-broth .chip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;font-weight:700}
+  #tab-broth .chip.g{background:#ecfdf5;color:#059669}
+  #tab-broth .chip.a{background:#fffbeb;color:#d97706}
+  #tab-broth .chip.r{background:#fef2f2;color:#dc2626}
+  #tab-broth .chip.n{background:#f1f5f9;color:#64748b}
+  #tab-broth .pri{display:inline-block;padding:2px 9px;border-radius:5px;font-size:11px;font-weight:800}
+  #tab-broth .pri.P1{background:#fef2f2;color:#dc2626}
+  #tab-broth .pri.P2{background:#fffbeb;color:#d97706}
+  #tab-broth .pri.P3{background:#f1f5f9;color:#64748b}
+  #tab-broth .warn{background:var(--maki-orange-bg);border:1px solid var(--maki-orange-ring);
+    border-radius:var(--radius);padding:12px 16px;font-size:12.5px;line-height:1.55;margin-bottom:14px}
+  #tab-broth details.case{border-bottom:1px solid var(--maki-line)}
+  #tab-broth details.case>summary{list-style:none;cursor:pointer;display:grid;
+    grid-template-columns:36px 200px 84px 1fr 200px;gap:10px;align-items:center;padding:9px 2px;font-size:12.5px}
+  #tab-broth details.case>summary::-webkit-details-marker{display:none}
+  #tab-broth details.case>summary:hover{background:#fafbfd}
+  #tab-broth details.case .hl{font-weight:700}
+  #tab-broth details.case .ow{color:var(--maki-muted);font-size:11.5px}
+  #tab-broth details.case .body{padding:2px 2px 14px 46px;font-size:12.5px;line-height:1.55;
+    color:var(--maki-muted);max-width:940px}
+  #tab-broth details.case .body b{color:var(--maki-ink)}
+  #tab-broth details.case .body p{margin:0 0 6px}
+  @media(max-width:820px){#tab-broth details.case>summary{grid-template-columns:36px 1fr;row-gap:2px}
+    #tab-broth details.case .body{padding-left:2px}}
+  #tab-broth .gh{background:#f6f7f9;font-weight:700;font-size:11px;text-transform:uppercase;
+    letter-spacing:.05em;padding:7px 4px;border-top:2px solid var(--maki-line);
+    border-bottom:1px solid var(--maki-line)}
+  #tab-broth .est{display:flex;gap:12px;align-items:baseline;padding:8px 0;
+    border-bottom:1px solid var(--maki-line);font-size:12.5px;line-height:1.5}
+  #tab-broth .est:last-child{border-bottom:0}
+  #tab-broth .est .ti{font-weight:700;min-width:240px}
+  #tab-broth .est .de{color:var(--maki-muted);flex:1}
+  #tab-broth .estwrap{margin-top:18px;border-top:1px solid var(--maki-line);padding-top:14px}
+  #tab-broth .estwrap h4{margin:0 0 2px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+    color:var(--maki-muted);font-weight:700}
+  #tab-broth .prov{font-size:11px;color:var(--maki-muted);margin-top:8px;line-height:1.45}
+  #tab-broth .sw{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+  #tab-broth .empty{color:var(--maki-muted);font-size:12.5px;padding:14px 0}
+  </style>
+
+  <div class="bh">
+    <div class="eyebrow">BOH food quality · refractometer</div>
+    <h2>Broth score</h2>
+    <div class="sub">Every Chicken and Tonkotsu Broth Check across the estate, scored against the
+      site spec measured after the restaurant adds water. The factory line at the top is the
+      batching form, shown for reference only: it is read after ice at the factory, so it is not
+      on the same scale as a site reading. Rebaked daily, pick a week to look back.</div>
+  </div>
+  <div class="brow">
+    <span class="lbl">Week</span>
+    <select id="brothWeek"></select>
+    <strong id="brothWeekMeta" style="font-size:12.5px;color:var(--maki-muted);font-variant-numeric:tabular-nums"></strong>
+    <span style="margin-left:auto;font-size:11.5px;color:var(--maki-muted)" id="brothStamp"></span>
+  </div>
+  <div id="brothBase"></div>
+  <div class="bk" id="brothKpis"></div>
+  <div class="bcard"><div class="h"><div class="t">Tonkotsu broth by site</div>
+    <div class="s" id="brothHpS"></div></div><div class="b" id="brothHp"></div></div>
+  <div class="bcard"><div class="h"><div class="t">Chicken broth by site</div>
+    <div class="s" id="brothHcS"></div></div><div class="b" id="brothHc"></div></div>
+  <div id="brothWarn"></div>
+  <details class="bcard" open><summary><div><div class="t">Remedial actions</div>
+    <div class="s" id="brothActS"></div></div></summary><div class="b" id="brothAct"></div></details>
+  <details class="bcard"><summary><div><div class="t">Inconsistencies</div>
+    <div class="s" id="brothIncS">exceptions only, by region</div></div></summary>
+    <div class="b" id="brothInc"></div></details>
+  <details class="bcard"><summary><div><div class="t">Deviations Mapal raised</div>
+    <div class="s" id="brothDevS"></div></div></summary><div class="b" id="brothDev"></div></details>
+  </div>
+  <!-- ============ /BROTH SCORE ============ -->
+
   <div class="tabpanel" id="tab-ecbudget">
   <div class="ecb-hero" style="background:linear-gradient(135deg,#0E5A30 0%,#1F8A4C 60%,#27A35C 100%)">
     <div class="ecb-eyebrow">BOH food spend · budget control</div>
@@ -6720,5 +6866,231 @@ function ecbInit(){
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", ecbInit); else ecbInit();
 })();
 </script>
+<!-- ============ BROTH SCORE script (inserted 2026-08-28) ============ -->
+<script>
+(function(){
+  var DIR=(typeof DATA_DIR==='string'?DATA_DIR:'./data/')+'broth/';
+  var $=function(i){return document.getElementById(i)};
+  var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+  var LABEL={chicken:'Chicken',pork:'Tonkotsu'};
+  var UNDER='#fde2e0', IN='#dcf3e6', OVER='#fdeccd';
+  var cache={}, IDX=null;
+
+  function td(v){return '<td>'+(v==null?'-':esc(v))+'</td>'}
+  function tbl(h,rows,cls){return '<table'+(cls?' class="'+cls+'"':'')+'><thead><tr>'+
+    h.map(function(x){return '<th>'+esc(x)+'</th>'}).join('')+'</tr></thead><tbody>'+
+    rows.map(function(r){return '<tr'+(r.cls?' class="'+r.cls+'"':'')+'>'+(r.cells||r).join('')+'</tr>'}).join('')+
+    '</tbody></table>'}
+
+  function boot(){
+    fetch(DIR+'index.json',{cache:'no-store'}).then(function(r){return r.json()}).then(function(ix){
+      IDX=ix;
+      var sel=$('brothWeek'); if(!sel)return;
+      sel.innerHTML=ix.weeks.map(function(w,i){
+        return '<option value="'+w.monday+'">'+esc(w.label)+(w.partial?' · part week':'')+
+          (i===0?' · latest':'')+'</option>'}).join('');
+      sel.addEventListener('change',function(){load(sel.value)});
+      $('brothStamp').textContent='rebaked '+ix.generated_at;
+      if(ix.weeks.length)load(ix.weeks[0].monday);
+    }).catch(function(){ $('brothBase').innerHTML=
+      '<div class="empty">Broth data not published yet. The daily bake writes '+
+      DIR+'index.json and one file per week.</div>' });
+  }
+
+  function load(mon){
+    var w=(IDX.weeks||[]).filter(function(x){return x.monday===mon})[0]; if(!w)return;
+    $('brothWeekMeta').textContent=w.days+' day'+(w.days>1?'s':'')+' · '+w.p1+' P1';
+    if(cache[mon])return render(cache[mon]);
+    fetch(DIR+w.file,{cache:'no-store'}).then(function(r){return r.json()})
+      .then(function(d){cache[mon]=d;render(d)});
+  }
+
+  function render(d){
+    var scores=(d.scores||[]).filter(function(r){return r.scope==='site'});
+    var devs=d.deviations||[], F=d.factory&&d.factory.by_kind, E=d.estate||{};
+
+    if(F){
+      var units=['pork','chicken'].filter(function(k){return F[k]}).map(function(k){var f=F[k];
+        return '<div><div class="k">'+LABEL[k]+'</div><div class="n">'+f.mean.toFixed(2)+
+          (f.consistency!=null?'<span class="bchip '+f.rag+'">'+f.consistency+'</span>':'')+
+          '</div><div class="m">consistency · cv '+f.cv_pct+'% · sd '+f.sd+'</div>'+
+          '<div class="m">'+f.batches+' batches over '+f.days+' days</div></div>'}).join('');
+      var spec=['pork','chicken'].filter(function(k){return d.spec&&d.spec[k]}).map(function(k){
+        var e=E[k], cls=!e?'n':e.in_pct>=95?'g':e.in_pct>=85?'a':'r';
+        return '<div><div class="k">'+LABEL[k]+'</div><div class="n" style="font-size:25px">'+
+          d.spec[k][0].toFixed(1)+' to '+d.spec[k][1].toFixed(1)+
+          (e?'<span class="bchip '+cls+'">'+e.in_pct+'%</span>':'')+'</div>'+
+          '<div class="m">'+(e?e.in_pct+'% of readings inside it':'')+'</div><div class="m">'+
+          (e?((e.under_pct?e.under_pct+'% under':'')+(e.under_pct&&e.over_pct?' · ':'')+
+              (e.over_pct?e.over_pct+'% over':'')||'all in spec'):'')+'</div></div>'}).join('');
+      $('brothBase').innerHTML='<div class="base"><div class="basegrid">'+
+        '<div><div class="lab">Factory line · '+esc(d.factory.loc)+' · after ice</div>'+
+        '<div class="u">'+units+'</div></div>'+
+        '<div class="spec"><div class="lab">Site spec · after water</div><div class="u">'+spec+'</div></div>'+
+        '</div><div class="src"><b>Factory score is consistency only.</b> No factory spec has been '+
+        'set, so it is judged on how tightly it holds its own line, not against a target. Site '+
+        'readings are taken after further dilution, so the two columns are not comparable.</div></div>';
+    }
+
+    function kpi(c,l,v,n){return '<div class="t '+c+'"><div class="l">'+l+'</div><div class="v">'+v+
+      '</div><div class="n">'+n+'</div></div>'}
+    var h='';
+    ['pork','chicken'].forEach(function(k){ if(!E[k])return; var e=E[k];
+      var b=[]; if(e.under_pct)b.push(e.under_pct+'% under'); if(e.over_pct)b.push(e.over_pct+'% over');
+      h+=kpi(e.in_pct>=95?'g':e.in_pct>=85?'a':'r',LABEL[k]+' in spec',e.in_pct+'%',
+        'spec '+e.spec[0]+' to '+e.spec[1]+(b.length?' · '+b.join(', '):''))});
+    ['pork','chicken'].forEach(function(k){ if(!E[k])return; var e=E[k];
+      var off=e.sites_under+e.sites_over;
+      h+=kpi(off?'r':'g','Sites off spec ('+LABEL[k].toLowerCase()+')',off+' of '+e.sites,
+        e.sites_under+' weak, '+e.sites_over+' strong')});
+    h+=kpi(scores.filter(function(r){return r.flatline}).length?'a':'g','Flatlining',
+      scores.filter(function(r){return r.flatline}).length,'identical reading every day');
+    $('brothKpis').innerHTML=h;
+
+    var B=d.mapal_blind;
+    $('brothWarn').innerHTML=(B&&B.missed)?'<div class="warn"><b>Mapal is not enforcing this spec. '+
+      'It catches '+B.flagged+' of '+B.out_of_spec+' out-of-spec readings and misses '+B.missed+
+      ' ('+B.missed_pct+'%).</b> Its comparer flags chicken below '+d.mapal_floor.chicken+
+      ' and tonkotsu below '+d.mapal_floor.pork+' and has no upper limit at all. Setting it to '+
+      d.spec.pork[0]+' to '+d.spec.pork[1]+' on tonkotsu and '+d.spec.chicken[0]+' to '+
+      d.spec.chicken[1]+' on chicken is the highest-value fix here, and it takes minutes.</div>':'';
+
+    heat('brothHp','brothHpS','pork',d,scores);
+    heat('brothHc','brothHcS','chicken',d,scores);
+    actions(d,scores);
+    incons(d,scores);
+
+    $('brothDevS').textContent=devs.length?devs.length+' raised by Mapal, newest first':'none this week';
+    $('brothDev').innerHTML=devs.length?tbl(['Date','Site','Broth','Reading','Status','What'],
+      devs.map(function(x){return ['<td>'+esc(x.d)+'</td>','<td class="name">'+esc(x.loc)+'</td>',
+        '<td>'+(LABEL[x.kind]||'-')+'</td>',td(x.v==null?'none':x.v),
+        '<td><span class="chip '+(x.open?'r':'g')+'">'+esc(x.state)+'</span></td>',
+        '<td class="name">'+esc(x.fix)+'</td>']})):'<div class="empty">No deviations this week.</div>';
+  }
+
+  function heat(host,sub,kind,d,scores){
+    var cs=(d.cells||[]).filter(function(c){return c.kind===kind&&c.scope==='site'});
+    if(!cs.length){$(host).innerHTML='<div class="empty">No '+LABEL[kind]+' checks this week.</div>';
+      $(sub).textContent='';return}
+    var lo=d.spec[kind][0], hi=d.spec[kind][1], REG=d.regions||{};
+    var days=Object.keys(cs.reduce(function(m,c){m[c.d]=1;return m},{})).sort();
+    var by={}; cs.forEach(function(c){(by[c.loc]=by[c.loc]||{})[c.d]=c});
+    var byReg={}; Object.keys(by).forEach(function(s){
+      var sc=scores.filter(function(r){return r.loc===s&&r.kind===kind})[0];
+      (byReg[sc?sc.region:'unmapped']=byReg[sc?sc.region:'unmapped']||[]).push(s)});
+    var order=Object.keys(byReg).sort(function(a,b){
+      return ((REG[a]||{}).order||9)-((REG[b]||{}).order||9)});
+    var rows=[{cls:'spec',cells:['<td class="name">SPEC '+lo+' to '+hi+'</td>']
+      .concat(days.map(function(){return '<td></td>'})).concat(['<td>target</td>'])}];
+    order.forEach(function(rk){
+      var R=REG[rk]||{label:'Unmapped'};
+      rows.push({cls:'reg',cells:['<td colspan="'+(days.length+2)+'">'+esc(R.label)+
+        (R.dec&&R.dec!=='n/a'&&R.dec!=='?'?'<span class="dec"> · DEC '+esc(R.dec)+'</span>':'')+'</td>']});
+      byReg[rk].sort().forEach(function(s){
+        var sc=scores.filter(function(r){return r.loc===s&&r.kind===kind})[0];
+        var vc=sc?(sc.verdict==='in'?'g':sc.verdict==='under'?'r':'a'):'n';
+        rows.push(['<td class="name">'+(sc&&sc.code?'<span class="code">'+esc(sc.code)+'</span>':'')+
+          esc(sc&&sc.site?sc.site:s)+'</td>'].concat(days.map(function(x){
+          var c=by[s][x];
+          if(!c)return '<td style="color:#e2e8f0">-</td>';
+          if(c.v==null)return '<td class="miss" title="no reading">×</td>';
+          return '<td style="background:'+(c.v<lo?UNDER:c.v>hi?OVER:IN)+'" title="'+esc(s)+' '+
+            esc(x)+' · '+c.v+' · '+(c.v<lo?'under':c.v>hi?'over':'in spec')+'">'+c.v+'</td>';
+        })).concat(['<td>'+(sc?'<span class="chip '+vc+'">'+sc.in_spec_pct+'%</span>':'-')+'</td>']));
+      });
+    });
+    $(host).innerHTML=tbl([''].concat(days.map(function(x){return x.slice(5)})).concat(['in spec']),rows,'heat')+
+      '<div class="prov"><span class="sw" style="background:'+UNDER+'"></span>under '+lo+
+      ' <span class="sw" style="background:'+IN+'"></span>in spec '+lo+' to '+hi+
+      ' <span class="sw" style="background:'+OVER+'"></span>over '+hi+
+      ' · × = no reading · measured after the restaurant adds water</div>';
+    $(sub).textContent='spec '+lo+' to '+hi+' after water · '+Object.keys(by).length+' sites, '+days.length+' days';
+  }
+
+  function actions(d,scores){
+    var cases=d.cases||[], acts=d.estate_actions||[];
+    var P={P1:0,P2:0,P3:0}; cases.forEach(function(c){P[c.priority]++});
+    var nesc=cases.filter(function(c){return c.escalated}).length;
+    var bdg=$('tb-broth');
+    if(bdg){ if(P.P1){bdg.textContent=P.P1;bdg.style.display='';bdg.title=P.P1+
+      ' P1 broth case(s) open'+(nesc?', '+nesc+' escalated':'');} else bdg.style.display='none'; }
+    $('brothActS').textContent=P.P1+' now, '+P.P2+' this month, '+P.P3+' to watch'+
+      (nesc?' · '+nesc+' escalated to the EC':'')+' · plus '+acts.length+' estate-wide fixes';
+    var ch='';
+    ['P1','P2','P3'].forEach(function(pr){
+      var mine=cases.filter(function(c){return c.priority===pr}); if(!mine.length)return;
+      ch+='<div class="gh">'+(pr==='P1'?'Now':pr==='P2'?'This month':'Watch only')+' · '+
+        mine.length+' case'+(mine.length>1?'s':'')+'</div>';
+      mine.forEach(function(c){
+        ch+='<details class="case"><summary><span class="pri '+c.priority+'">'+c.priority+'</span>'+
+          '<span>'+(c.code?'<span class="code">'+esc(c.code)+'</span>':'')+esc(c.site||c.loc)+'</span>'+
+          '<span>'+(LABEL[c.kind]||esc(c.kind))+'</span>'+
+          '<span class="hl">'+esc(c.headline)+
+            (c.escalated?'<span class="chip r" style="margin-left:6px">escalated</span>':'')+
+            (c.runs_open>1?'<span class="ow" style="margin-left:6px">open '+c.runs_open+' runs</span>':'')+
+          '</span><span class="ow">'+esc(c.owner)+'</span></summary>'+
+          '<div class="body"><p>'+esc(c.response)+
+            (c.escalated?' <b>'+esc(c.escalation_note||'')+'.</b>':'')+'</p>'+
+          '<p><b>Closed when:</b> '+esc(c.evidence)+'</p><p><b>Signals:</b> '+
+          esc(c.flags.join(', '))+' · mean '+c.mean+' · '+c.in_spec_pct+'% in spec'+
+          (c.under?' · '+c.under+' under':'')+(c.over?' · '+c.over+' over':'')+
+          (c.missed?' · '+c.missed+' missed':'')+'</p></div></details>';
+      });
+    });
+    var ah='';
+    if(acts.length){
+      ah='<div class="estwrap"><h4>Estate-wide fixes</h4>';
+      acts.forEach(function(a){ah+='<div class="est"><span class="pri '+a.priority+'">'+a.priority+
+        '</span><span class="ti">'+esc(a.title)+'</span><span class="de">'+esc(a.do)+'</span>'+
+        '<span class="ow">'+esc(a.owner)+'</span></div>'});
+      ah+='</div>';
+    }
+    var foot='';
+    if(d.escalation)foot+='<div class="prov"><b>Escalation.</b> '+esc(d.escalation.rule)+', which is '+
+      esc(d.escalation.to)+'.</div>';
+    if(d.dormant_note&&d.dormant_rules&&d.dormant_rules.length)
+      foot+='<div class="prov"><b>Dormant at this window length ('+d.dormant_rules.join(', ')+').</b> '+
+        esc(d.dormant_note)+'</div>';
+    $('brothAct').innerHTML=(ch||'<div class="empty">Nothing to action this week.</div>')+ah+foot;
+  }
+
+  function incons(d,scores){
+    var flags=d.flags||[], REG=d.regions||{};
+    if(!flags.length){$('brothInc').innerHTML='<div class="empty">Nothing flagged this week.</div>';
+      $('brothIncS').textContent='nothing flagged';return}
+    var hi=flags.filter(function(f){return f.sev==='high'}).length;
+    var md=flags.filter(function(f){return f.sev==='med'}).length;
+    var fl={}; flags.forEach(function(f){fl[f.loc+'~'+f.kind]=1});
+    $('brothIncS').textContent=flags.length+' flags · '+hi+' high, '+md+' medium, '+
+      (flags.length-hi-md)+' low · '+
+      scores.filter(function(r){return !fl[r.loc+'~'+r.kind]}).length+' of '+scores.length+' lines clean';
+    var rows=[];
+    Object.keys(REG).sort(function(a,b){return REG[a].order-REG[b].order}).forEach(function(rk){
+      var mine=flags.filter(function(f){return f.region===rk}); if(!mine.length)return;
+      rows.push({cls:'reg',cells:['<td colspan="6">'+esc(REG[rk].label)+
+        '<span class="dec"> · DEC '+esc(REG[rk].dec)+' · '+mine.length+' flag'+
+        (mine.length>1?'s':'')+'</span></td>']});
+      mine.forEach(function(f){rows.push([
+        '<td><span class="chip '+(f.sev==='high'?'r':f.sev==='med'?'a':'n')+'">'+f.sev+'</span></td>',
+        '<td class="name">'+(f.code?'<span class="code">'+esc(f.code)+'</span>':'')+esc(f.site||f.loc)+'</td>',
+        '<td>'+(LABEL[f.kind]||esc(f.kind))+'</td>','<td class="name">'+esc(f.type)+'</td>',
+        '<td class="name" style="white-space:normal">'+esc(f.headline)+'</td>',
+        '<td class="name" style="white-space:normal;color:var(--maki-muted);font-size:11.5px">'+
+          esc(f.detail)+'</td>'])});
+    });
+    var html=tbl(['','Site','Broth','Flag','What','Why it matters'],rows);
+    if(d.resolution&&d.resolution.whole_only)html+='<div class="prov"><b>Reading resolution: '+
+      d.resolution.whole_only+' of '+d.resolution.lines+' lines ('+d.resolution.pct+
+      '%) only ever record whole numbers.</b> '+esc(d.resolution.note)+'</div>';
+    $('brothInc').innerHTML=html;
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
+</script>
+<!-- ============ /BROTH SCORE script ============ -->
+
 </body>
 </html>
