@@ -1,0 +1,219 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-31",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-08-24 \u2013 2026-08-30",
+    "commencing": "2026-08-24",
+    "ending": "2026-08-30"
+  },
+  "sites": {
+    "M18": {
+      "code": "M18",
+      "name": "Maki 18",
+      "gm": "Imre Balogh",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 38428.04,
+          "target": 35500.0,
+          "var_pct": 8.25,
+          "prev": 38817.71,
+          "wow_abs": -389.67,
+          "wow_pct": -1.0
+        },
+        "covers": {
+          "actual": 1797,
+          "prev": 1758,
+          "wow_abs": 39,
+          "wow_pct": 2.22
+        },
+        "sph": {
+          "actual": 20.76,
+          "prev": 21.15,
+          "wow_abs": -0.39,
+          "wow_pct": -1.84,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 26.06,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 30.61,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 664.7
+        },
+        "waste": {
+          "actual": 172.34
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-08-24"
+      },
+      "efficiency_score": {
+        "score": 51,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+8.25) + 30% (\u00a3gap +2928 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 65.01,
+            "basis": "\u00a320.76 vs \u00a322 tgt \u2014 level 79, WoW -1.84% \u2192 mom 32"
+          },
+          "food": {
+            "weight": 30,
+            "value": 55.12,
+            "basis": "30.61% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 24.1,
+            "basis": "26.06% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "wage 26.1%",
+          "food 30.6%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.6585,
+        "new_reviews": 41,
+        "star_breakdown": {
+          "1": 0,
+          "2": 3,
+          "3": 1,
+          "4": 3,
+          "5": 34
+        },
+        "negatives": 4,
+        "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "Liuchang MA",
+            "text": "Really disappointing experience. Both bowls of ramen were incredibly salty, and the black garlic oil ramen was overwhelmingly greasy with barely any aroma or flavour. Honestly, it just wasn\u2019t enjoyable to eat.\n\nService wasn\u2019t much better \u2014 the table was sticky and we waited ages just to pay the bill.\n\nSuch a shame, as my first visit here was completely different and I really enjoyed it then.",
+            "date": "2026-08-30",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "James Tester",
+            "text": "Appalling slow and clueless service, eating implements, glasses, water drinks etc all had to be asked for multiple times after being \u2018ignored\u2019 for over half an hour. When food finally came the ramen soup dishes we ordered were not the quality of ramen we expect (eating ramen in restaurants many many times). On the plus side the maki rolls were good. We had a 50% discount code which tempered the disappointment, but had we paid full price I might be leaving a somewhat more scathing review.",
+            "date": "2026-08-29",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Abdallah Aljassmi",
+            "text": "Mid",
+            "date": "2026-08-29",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Alexandra Racheru",
+            "text": "The entrance is like a hallway from a horror video game. There is no one at the upper(street level) entrance at the reception.\nYou walk down into what looks like it can be the beginning of the murder mystery.\nOnce you get downstairs alive, you are greeted quickly by the staff which were nice.\nDuring the entire time we were there the ladies restroom had a paper on the door with a very \u201cprofessional\u201d hand written note: \u201cCleaning in progress\u201d - at a restaurant this should not be out of order for longer than 15 min maximum.\nHowever it did not seem the have anyone cleaning so I pushed the door to enter because I want to wash my hands before eating, surprisingly there was no one cleaning anywhere. There are 6 toilets - 1st one had the door opened full of cleaning supplies in a very disorganised and dirty way, the 2nd & 3rd toilet were both Out of order with yet another very proper hand write note on them.\n\nOut of the other 3 toiles left - 2 were in an unusable state and only 1 was not completely gross and could be used.\n\nThe food was mediocre at best, we were 3 people, we got 3 mains and 1 starter.\nThey did serve the food very quickly- which makes you wonder a bit, however it was basic at best for some classic dishes.\n\nWe paid around 25\u00a3 each and we will not return.\nI do not and will never recommend a place that does not keep their restroom clean.\nUnacceptable for central London!",
+            "date": "2026-08-25",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-24..2026-08-30 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-31."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-08-24.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-08-30",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1063.58,
+        "orders": 34,
+        "aov": 31.28,
+        "new_customers": null,
+        "rating": 4.67,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 13.9,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 2.9,
+        "rider_wait_5min_pct": 14.7,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' Total row (Total Order Value = GMV) \u2014 w/c 2026-08-24, invoices dated 2026-08-31, period printed Mon 24 Aug 00:00 - Sun 30 Aug 23:59 UTC. FULL 6d slice: every AM site with a filed Tax Invoice this week (16 of 17 entities). M20 Southampton has NO invoice filed for this week and NO row in the Looker top-15 Sales Overview, so it has no sales source at all and is deliberately ABSENT, not zero (owner: Junna Nakaya). First build of this week, so no already-published figure moves for this source choice. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
+        "busy_mode_pct": 2.5
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    }
+  }
+}

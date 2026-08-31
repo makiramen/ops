@@ -1,0 +1,214 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-08-31",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-08-24 \u2013 2026-08-30",
+    "commencing": "2026-08-24",
+    "ending": "2026-08-30"
+  },
+  "sites": {
+    "M12": {
+      "code": "M12",
+      "name": "Maki 12",
+      "gm": "Matt Lee",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 30141.04,
+          "target": 34650.0,
+          "var_pct": -13.01,
+          "prev": 28374.68,
+          "wow_abs": 1766.36,
+          "wow_pct": 6.23
+        },
+        "covers": {
+          "actual": 1259,
+          "prev": 1189,
+          "wow_abs": 70,
+          "wow_pct": 5.89
+        },
+        "sph": {
+          "actual": 20.92,
+          "prev": 20.38,
+          "wow_abs": 0.54,
+          "wow_pct": 2.65,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 23.21,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 25.44,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 487.7
+        },
+        "waste": {
+          "actual": 28.89
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": 4.7,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-08-24"
+      },
+      "efficiency_score": {
+        "score": 83,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 88.19,
+            "basis": "70% (100-13.01) + 30% (\u00a3gap -4509 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 80.35,
+            "basis": "\u00a320.92 vs \u00a322 tgt \u2014 level 82, WoW +2.65% \u2192 mom 76"
+          },
+          "food": {
+            "weight": 30,
+            "value": 96.48,
+            "basis": "25.44% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 66.85,
+            "basis": "23.21% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "4.70% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [
+          "weekly_star"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "sales -13.0% vs target",
+          "food 25.4%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 5,
+        "new_reviews": 8,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 8
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-24..2026-08-30 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-31."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-08-24.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 3,
+        "tasks": [
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Look into purchasing a floor buffer to properly deep cleaning flooring {Shared between all sites}",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "Air conditioning is still broken, when it was last checked they said someone would need to come out and find the leak somewhere in the ceiling but it would be hard to find as the Sakura is in the way. The restaurant is suffering now please can we get this fixed asap",
+            "priority": "\u2014",
+            "logged_week": "14/08/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "3 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-08-30",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 3832.09,
+        "orders": 105,
+        "aov": 36.5,
+        "new_customers": null,
+        "rating": 4.55,
+        "open_hours_pct": 97.0,
+        "avg_prep_min": 12.0,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 2.0,
+        "rider_wait_5min_pct": 1.0,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' Total row (Total Order Value = GMV) \u2014 w/c 2026-08-24, invoices dated 2026-08-31, period printed Mon 24 Aug 00:00 - Sun 30 Aug 23:59 UTC. FULL 6d slice: every AM site with a filed Tax Invoice this week (16 of 17 entities). M20 Southampton has NO invoice filed for this week and NO row in the Looker top-15 Sales Overview, so it has no sales source at all and is deliberately ABSENT, not zero (owner: Junna Nakaya). First build of this week, so no already-published figure moves for this source choice. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": []
+    }
+  }
+}
