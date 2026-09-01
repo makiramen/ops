@@ -1681,6 +1681,13 @@
   #tab-broth td.name{font-variant-numeric:normal;font-weight:500}
   #tab-broth table.heat td{text-align:center;padding:4px 5px;font-size:11.5px}
   #tab-broth table.heat td.name{text-align:left}
+  /* the heat table centres its values, so centre the headings and the SPEC row
+     over them too. Left-aligned headings over centred numbers read as a column
+     mismatch. Michael, 01/09/26. The first column is the site name and stays left. */
+  #tab-broth table.heat th{text-align:center}
+  #tab-broth table.heat th:first-child{text-align:left}
+  #tab-broth table.heat tr.spec td{text-align:center}
+  #tab-broth table.heat tr.spec td.name{text-align:left}
   #tab-broth tr.spec td{background:var(--maki-orange-bg);font-weight:700;
     border-bottom:2px solid var(--maki-orange)}
   #tab-broth tr.reg td{background:#f6f7f9;font-weight:700;font-size:11px;text-transform:uppercase;
