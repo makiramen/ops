@@ -1316,7 +1316,7 @@
       <div class="hero-sub"><span id="header-refresh-caption">17 site KPI Report docs + England & EDI/NEW KPI meetings (16 Jun) · 3 clusters · Sourced from the weekly KPI Report folder · refreshed 17 Jun 2026</span></div>
     </div>
     <div class="hero-stats">
-      <div class="stat"><div class="stat-num">17</div><div class="stat-label">Sites</div></div>
+      <div class="stat"><div class="stat-num" id="stat-sites">17</div><div class="stat-label">Sites</div></div>
       <div class="stat red"><div class="stat-num" id="stat-red">1</div><div class="stat-label">Red</div></div>
       <div class="stat amber"><div class="stat-num" id="stat-amber">10</div><div class="stat-label">Amber</div></div>
       <div class="stat green"><div class="stat-num" id="stat-green">6</div><div class="stat-label">Green</div></div>
@@ -1453,7 +1453,8 @@
           let wkTxt = '';
           if(key){ const mon = mondayFromKey(key); const sun = new Date(mon.getTime()+6*86400000);
             wkTxt = ' · week of ' + fmtUKShort(mon) + '–' + fmtUKShort(sun); }
-          el.textContent = `refreshed ${nowTxt}${wkTxt} · 17-site KPI Report pipeline`;
+          const nSites = (typeof SITES !== 'undefined' && SITES) ? SITES.length : 17;
+          el.textContent = `refreshed ${nowTxt}${wkTxt} · ${nSites}-site KPI Report pipeline`;
         } catch(e){ console.warn('caption update failed', e); }
       };
       paintAll();
@@ -4422,6 +4423,7 @@ document.getElementById('stat-red').textContent = stats.red;
 document.getElementById('stat-amber').textContent = stats.amber;
 document.getElementById('stat-green').textContent = stats.green;
 document.getElementById('stat-issues').textContent = stats.issues;
+document.getElementById('stat-sites').textContent = SITES.length;
 
 renderHeatmap();
 renderScorecard();
@@ -5458,6 +5460,7 @@ function repaintAll(){
     const elA=document.getElementById('stat-amber');  if(elA) elA.textContent=stats.amber;
     const elG=document.getElementById('stat-green');  if(elG) elG.textContent=stats.green;
     const elI=document.getElementById('stat-issues'); if(elI) elI.textContent=stats.issues;
+    const elS=document.getElementById('stat-sites');  if(elS) elS.textContent=SITES.length;
   } catch(e){}
   try { if (typeof paintAll === 'function') paintAll(); if (typeof updateWhatMovedSubtitle === 'function') updateWhatMovedSubtitle(); if (typeof updateHeaderCaption === 'function') updateHeaderCaption(); } catch(e) { console.warn('what-moved repaint failed', e); }
 }
