@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-31",
+  "generated_at": "2026-09-01",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-24 \u2013 2026-08-30",
@@ -62,19 +62,19 @@
       },
       "stock_take": {
         "drinks": {
+          "variance_pct": 3.1,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
           "variance_pct": null,
           "target": "\u00b15%",
           "within_band": null
         },
-        "food": {
-          "variance_pct": 4.7,
-          "target": "\u00b15%",
-          "within_band": true
-        },
         "week_commencing": "2026-08-24"
       },
       "efficiency_score": {
-        "score": 83,
+        "score": 82,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -105,15 +105,11 @@
             "weight": 30,
             "value": 66.85,
             "basis": "23.21% vs 21% target, -15/pp over"
-          },
-          "food_var": {
-            "weight": 5,
-            "value": 100,
-            "basis": "4.70% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star"
+          "weekly_star",
+          "food_var"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -141,7 +137,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-24..2026-08-30 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-08-31."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-24..2026-08-30 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-01."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-24.json (AGMM Task List Status). Open items only.",
@@ -204,11 +200,13 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' Total row (Total Order Value = GMV) \u2014 w/c 2026-08-24, invoices dated 2026-08-31, period printed Mon 24 Aug 00:00 - Sun 30 Aug 23:59 UTC. FULL 6d slice: every AM site with a filed Tax Invoice this week (16 of 17 entities). M20 Southampton has NO invoice filed for this week and NO row in the Looker top-15 Sales Overview, so it has no sales source at all and is deliberately ABSENT, not zero (owner: Junna Nakaya). First build of this week, so no already-published figure moves for this source choice. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "source": "Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' Total row (Total Order Value = GMV) \u2014 w/c 2026-08-24, invoices dated 2026-08-31, period printed Mon 24 Aug 00:00 - Sun 30 Aug 23:59 UTC. FULL 6d slice: ALL 17 AM entities with a filed Tax Invoice this week. Every figure re-read from its source PDF and confirmed on the Tue 01/09 authoritative run (17/17 exact). [sales/orders/AOV] + ops from Weekly Summary sheet",
         "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
-      "gaps": []
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
     }
   }
 }
