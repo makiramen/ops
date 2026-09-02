@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-01",
+  "generated_at": "2026-09-02",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-24 \u2013 2026-08-30",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": 24.02,
+          "actual": 25.67,
           "target": 23.0,
           "gated": false
         },
@@ -62,9 +62,9 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": -0.6,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
           "variance_pct": null,
@@ -74,7 +74,7 @@
         "week_commencing": "2026-08-24"
       },
       "efficiency_score": {
-        "score": 75,
+        "score": 73,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -98,8 +98,8 @@
           },
           "food": {
             "weight": 30,
-            "value": 100.0,
-            "basis": "24.02% vs 25% baseline, -8/pp over"
+            "value": 94.64,
+            "basis": "25.67% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -114,8 +114,10 @@
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
-        "status": "green",
-        "triggers": [],
+        "status": "red",
+        "triggers": [
+          "food 25.7%"
+        ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
@@ -170,7 +172,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-24..2026-08-30 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-01."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-24..2026-08-30 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-02."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-24.json (AGMM Task List Status). Open items only.",
