@@ -262,6 +262,14 @@ def main():
             if i["cat"] not in C[0] or i["sub"] not in C[0][i["cat"]]["subs"]:
                 log(f"🔴 review {rid}: unknown taxonomy key {i['cat']}/{i['sub']} — dropped from output"); stats["bad_llm_keys"] += 1
         cl["issues"] = [i for i in cl["issues"] if i["cat"] in C[0] and i["sub"] in C[0][i["cat"]]["subs"]]
+        # 02/09/2026: the same cat/sub twice inside ONE review is one complaint, not two (an M19 review
+        # carried 'environment' twice with two evidence lines and inflated cleanliness 15 -> 16).
+        seen_cs, dd = set(), []
+        for i in cl["issues"]:
+            k = (i["cat"], i["sub"])
+            if k in seen_cs: stats["dup_issue_in_review"] += 1; continue
+            seen_cs.add(k); dd.append(i)
+        cl["issues"] = dd
         wk, mo, q = period_keys(r["d"])
         dow, hour = uk_time(r.get("ct"))
         rec = {"id": rid, "site": r["c"], "stars": r["s"], "date": r["d"], "week": wk, "month": mo, "quarter": q,

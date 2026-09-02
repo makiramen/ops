@@ -166,7 +166,7 @@ body{margin:0;font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"
 .hbar.clickable{cursor:pointer}.hbar.clickable:hover{background:var(--surface-2)}
 .hbar .trk{height:12px;background:var(--line);border-radius:4px;overflow:hidden}
 .hbar .trk i{display:block;height:100%;border-radius:0 4px 4px 0;transition:width .3s}
-.hbar .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.hbar .n{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}.hbar.wide{grid-template-columns:180px 1fr 130px}
 .hbar.tight{grid-template-columns:1fr 80px 36px}
 .hbar.sub{font-size:12.5px;color:var(--ink-2);padding-left:18px}.hbar.sub .trk{height:8px}
 .owner{font-size:11px;color:var(--ink-3);font-weight:600}
@@ -285,7 +285,7 @@ kbd{font:inherit;font-size:10.5px;background:var(--surface-2);border:1px solid v
     <div class="grid g2">
       <div class="card"><h3 id="roTitle">Read-out</h3><div class="sub">Written from the review text for this period and scope. Refreshed by the weekly run.</div><div class="readout" id="readout"></div></div>
       <div>
-        <div class="card"><h3>Service issue or quality issue?</h3><div class="sub">Share of issues by category. Click a bar to read those reviews.</div><div id="splitMini"></div></div>
+        <div class="card"><h3>Service issue or quality issue?</h3><div class="sub">Reviews carrying each issue, then total mentions (one review can carry several). Click a bar to read them.</div><div id="splitMini"></div></div>
         <div class="card"><h3>Top actions</h3><div class="sub">The three flags that matter most. Full list under <b>Actions</b>.</div><div id="flagsTop"></div></div>
       </div>
     </div>
@@ -385,10 +385,10 @@ const rows=(pk,scope)=>{const sc=scope||S.scope;return D.reviews.filter(r=>r[S.p
 function stats(rs){
   const n=rs.length,neg=rs.filter(r=>r.stars<=3).length,wt=rs.filter(r=>r.text).length;
   const avg=n?rs.reduce((a,r)=>a+r.stars,0)/n:null;
-  const cats={},subs={};let issues=0;
-  rs.forEach(r=>r.issues.forEach(i=>{issues++;cats[i.cat]=(cats[i.cat]||0)+1;const k=i.cat+'/'+i.sub;subs[k]=(subs[k]||0)+1;}));
+  const cats={},subs={},catRev={};let issues=0;
+  rs.forEach(r=>{const seen=new Set();r.issues.forEach(i=>{issues++;cats[i.cat]=(cats[i.cat]||0)+1;const k=i.cat+'/'+i.sub;subs[k]=(subs[k]||0)+1;if(!seen.has(i.cat)){seen.add(i.cat);catRev[i.cat]=(catRev[i.cat]||0)+1;}});});
   const praise={};rs.forEach(r=>r.praise.forEach(p=>praise[p]=(praise[p]||0)+1));
-  return {n,neg,wt,avg,cats,subs,issues,praise,negPct:n?neg/n*100:null,issueRate:n?issues/n*100:null};
+  return {n,neg,wt,avg,cats,catRev,subs,issues,praise,negPct:n?neg/n*100:null,issueRate:n?issues/n*100:null};
 }
 const starRag=v=>v==null?'na':v>=OKR?'green':v>=4.5?'amber':'red';
 const negRag=(p,n)=>p==null||n<5?'na':p<=4?'green':p<=8?'amber':'red';
@@ -504,8 +504,8 @@ function stackBar(cats,total,h){
 function renderSplitMini(){
   const st=stats(rows(S.pkey));const q=st.cats.food||0,sv=(st.cats.service||0)+(st.cats.speed||0),rest=st.issues-q-sv;
   let html=st.issues?`<div class="split"><i style="flex:${q};background:var(--c-food)" ${tip(0,'Food quality: '+q)}>${q?Math.round(q/st.issues*100)+'% quality':''}</i><i style="flex:${sv};background:var(--c-service)" ${tip(0,'Service + speed: '+sv)}>${sv?Math.round(sv/st.issues*100)+'% service':''}</i><i style="flex:${rest};background:var(--c-other)" ${tip(0,'Value, cleanliness, accuracy, hours, availability, tech: '+rest)}>${rest?Math.round(rest/st.issues*100)+'% other':''}</i></div>`:'<div class="muted small">No issues logged.</div>';
-  const cats=Object.entries(D.taxonomy).map(([c,v])=>({c,label:v.label,n:st.cats[c]||0})).filter(x=>x.n).sort((a,b)=>b.n-a.n);const mx=Math.max(1,...cats.map(x=>x.n));
-  html+=cats.map(x=>`<div class="hbar clickable" data-cat="${x.c}"><div><span class="sw" style="background:${catCol(x.c)}"></span><b>${esc(x.label)}</b></div><div class="trk"><i style="width:${x.n/mx*100}%;background:${catCol(x.c)}"></i></div><div class="n">${x.n}</div></div>`).join('');
+  const cats=Object.entries(D.taxonomy).map(([c,v])=>({c,label:v.label,n:st.cats[c]||0,rev:st.catRev[c]||0})).filter(x=>x.n).sort((a,b)=>b.n-a.n);const mx=Math.max(1,...cats.map(x=>x.n));
+  html+=cats.map(x=>`<div class="hbar wide clickable" data-cat="${x.c}" ${tip(0,`${x.rev} review${x.rev===1?'':'s'} mention ${x.label.toLowerCase()} · ${x.n} distinct complaint${x.n===1?'':'s'} in total (one review can carry several)`)}><div><span class="sw" style="background:${catCol(x.c)}"></span><b>${esc(x.label)}</b></div><div class="trk"><i style="width:${x.n/mx*100}%;background:${catCol(x.c)}"></i></div><div class="n" style="white-space:nowrap">${x.rev} <span class="muted" style="font-weight:500;font-size:11px">rev · ${x.n} mentions</span></div></div>`).join('');
   $('#splitMini').innerHTML=html;$$('#splitMini .hbar').forEach(el=>el.onclick=()=>goRead({cat:el.dataset.cat}));
 }
 /* ---------- flags ---------- */
