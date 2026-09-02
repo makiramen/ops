@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-08-26",
+  "generated_at": "2026-09-02",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-17 \u2013 2026-08-23",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
+          "actual": 143.55,
           "target": 23.0,
           "gated": false
         },
@@ -54,8 +54,8 @@
         }
       },
       "labour_split": {
-        "split_status": "absent",
-        "days_with_split": 0,
+        "split_status": "filed",
+        "days_with_split": 3,
         "days_present": 3,
         "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
         "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
@@ -74,7 +74,7 @@
         "week_commencing": "2026-08-17"
       },
       "efficiency_score": {
-        "score": 34,
+        "score": 22,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -96,6 +96,11 @@
             "value": 59.0,
             "basis": "\u00a319.54 vs \u00a322 tgt \u2014 level 59"
           },
+          "food": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "143.55% vs 25% baseline, -8/pp over"
+          },
           "wage": {
             "weight": 30,
             "value": 0.0,
@@ -103,7 +108,6 @@
           }
         },
         "components_dropped": [
-          "food",
           "weekly_star",
           "food_var"
         ],
@@ -112,7 +116,8 @@
       "red_light": {
         "status": "red",
         "triggers": [
-          "wage 52.5%"
+          "wage 52.5%",
+          "food 143.6%"
         ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
@@ -140,7 +145,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-01."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-17..2026-08-23 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-02."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-17.json (AGMM Task List Status). Open items only.",
@@ -159,7 +164,6 @@
       },
       "deliveroo": null,
       "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
         "Stock-take \u2014 no variance entered this week",
         "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
       ],
