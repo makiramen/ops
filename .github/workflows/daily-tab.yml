@@ -1,0 +1,78 @@
+name: Daily tab (cash-up + reviews + Reviews Intelligence)
+
+on:
+  schedule:
+    - cron: '15 8,11,15 * * *'     # 12:15 / 15:15 / 19:15 Dubai = 09:15 / 12:15 / 16:15 UK (BST)
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-tab
+  cancel-in-progress: false
+
+jobs:
+  build-and-ship:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: pip install --quiet google-auth requests
+
+      - name: Fetch the two Drive mirrors (twice each, must be byte-identical)
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+        run: python3 builders/fetch_mirrors.py --out /tmp/mirrors
+
+      - name: Build, diff, commit, push
+        id: run
+        env:
+          # A fine-grained PAT (Contents RW on this repo) so the push triggers the Pages build.
+          # Falls back to the job token if the secret is absent.
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          set +e
+          python3 builders/daily_cloud_run.py --repo . \
+            --cashup /tmp/mirrors/cashup_1.csv /tmp/mirrors/cashup_2.csv \
+            --reviews /tmp/mirrors/reviews_1.csv /tmp/mirrors/reviews_2.csv \
+            --report data/daily/run_report.json > /tmp/report.json 2> /tmp/run.err
+          code=$?
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          echo "## Daily tab run (exit $code)" >> "$GITHUB_STEP_SUMMARY"
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          try:
+              R = json.load(open('/tmp/report.json'))
+          except Exception as e:
+              print('no report:', e); raise SystemExit
+          print(f"- day {R['day']} · result: **{R.get('result')}** · pushed: {R.get('pushed')} · commit `{(R.get('commit') or '')[:7]}`")
+          print(f"- gate: {R['cashup'].get('D_gate')}")
+          t = R['cashup'].get('D_totals')
+          if t: print(f"- sales £{t['sales']:,.2f} vs £{t['target']:,.2f} ({t['vs_target_pct']:+}%), covers {t['covers']:,}, avg £{t['avg_spend']}, wage {t['wage_pct']}%, sites {t['sites']}, splits {t['splits']}")
+          w = R.get('intel', {}).get('week_in_progress')
+          if w: print(f"- reviews week in progress w/c {w['week']}: {w['reviews']} reviews, {w['negatives']} neg, {w['avg']}★ over {len(w['days'])} day(s)")
+          for x in R.get('warnings', []): print('- ⚠️', x)
+          PY
+          echo '### stderr tail' >> "$GITHUB_STEP_SUMMARY"; tail -n 25 /tmp/run.err >> "$GITHUB_STEP_SUMMARY"
+          # 0 = shipped or nothing to ship; 11 = D not filed yet (normal at 12:15). Anything else fails the job loudly.
+          if [ "$code" = "0" ] || [ "$code" = "11" ]; then exit 0; else exit "$code"; fi
+
+      - name: Keep the report and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: daily-tab-run-${{ github.run_id }}
+          path: |
+            /tmp/report.json
+            /tmp/run.err
+          retention-days: 14
