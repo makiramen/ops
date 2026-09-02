@@ -1099,14 +1099,14 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
   <section class="rrview" id="rrv-sum" role="tabpanel">
     <div class="alertbar" id="rr-alert" hidden>
       <div><h3 id="rr-alert-h"></h3><p id="rr-alert-p"></p></div>
-      <div><div class="amt" id="rr-alert-v"></div><div class="amtk">Unredeemed offer value</div></div>
+      <div><div class="amt" id="rr-alert-v"></div><div class="amtk" id="rr-alert-k">Unredeemed offer value</div></div>
     </div>
 
     <div class="shead"><span class="n">S1</span><h2>The programme, all time</h2><span class="r" id="rr-since">Since go-live</span></div>
     <div class="kpis" id="rr-kpis"></div>
     <p class="caveat"><b>Counts exclude the four KobasTest vouchers</b> (23 claims, 15 redemptions, 3 internal profiles) and the teddy@ 100,000,000-point seed row. Member count is unique member_id from the MEMBERS sheet; the "real people" figure strips staff and test accounts and merges duplicate-email pairs.</p>
 
-    <div class="shead"><span class="n">S2</span><h2>The one funnel that matters</h2><span class="r">£5 welcome voucher</span></div>
+    <div class="shead"><span class="n">S2</span><h2>The one funnel that matters</h2><span class="r" id="rr-s2-src">£5 welcome voucher</span></div>
     <p class="lede" id="rr-funnel-lede"></p>
     <div class="grid2">
       <div class="card">
@@ -5048,23 +5048,32 @@ var RR_SNAP = {
 // (not null, not an empty array), so a partial _rrAgg() degrades to the
 // snapshot for the keys it has not filled yet rather than blanking them.
 // ---------------------------------------------------------------------
-var RR = null, RR_LIVE_KEYS = [], RR_VIEW = 'sum', RR_D = 0, RR_W = 0;
+var RR = null, RR_LIVE_KEYS = [], RR_SNAP_KEYS = [], RR_BLOCKED = [], RR_VIEW = 'sum', RR_D = 0, RR_W = 0;
 
 function rrMerge() {
   var live = (DATA && DATA.rr) ? DATA.rr : null;
   var out = {}, k;
   for (k in RR_SNAP) { if (RR_SNAP.hasOwnProperty(k)) out[k] = RR_SNAP[k]; }
-  RR_LIVE_KEYS = [];
+  RR_LIVE_KEYS = []; RR_SNAP_KEYS = []; RR_BLOCKED = [];
   if (live) {
     for (k in live) {
       if (!live.hasOwnProperty(k)) continue;
+      if (k === 'generated_at' || k === 'pulled_label' || k === 'blocked') continue;
       var v = live[k];
-      if (v == null) continue;
-      if (Object.prototype.toString.call(v) === '[object Array]' && !v.length) continue;
+      var empty = (v == null) ||
+        (Object.prototype.toString.call(v) === '[object Array]' && !v.length);
+      // A key the API SENT but could not fill is the honest definition of
+      // "still on the snapshot": it tried and failed, so name it. Keys the API
+      // never mentions at all are page furniture (faults, sources, build queue)
+      // and are not claims about freshness, so they stay out of the list.
+      if (empty) { if (RR_SNAP.hasOwnProperty(k)) RR_SNAP_KEYS.push(k); continue; }
       out[k] = v;
-      if (k !== 'generated_at' && k !== 'pulled_label') RR_LIVE_KEYS.push(k);
+      RR_LIVE_KEYS.push(k);
     }
+    // pulled_label is DELIBERATELY not overridden: it labels the snapshot, and
+    // the snapshot is exactly what the stale blocks are still showing.
     if (live.generated_at) out.generated_at = live.generated_at;
+    if (Object.prototype.toString.call(live.blocked) === '[object Array]') RR_BLOCKED = live.blocked;
   }
   return out;
 }
@@ -5125,11 +5134,29 @@ async function loadLoyalty() {
   // provenance stamp — says plainly whether this is live or the snapshot
   var stamp = rrEl('rr-stamp');
   if (RR_LIVE_KEYS.length) {
+    // Never just say "Live". A PARTIAL payload is the normal state here, so the
+    // stamp has to NAME what is still yesterday - the old version hid that
+    // behind a "fewer than 12 blocks" test and went silent the moment the
+    // thirteenth block went live, which is precisely when it mattered.
     stamp.innerHTML = '<b>Live</b> · payload.rr ' + (RR.generated_at || '') +
-      (RR_LIVE_KEYS.length < 12 ? ' · ' + RR_LIVE_KEYS.length + ' of ' + Object.keys(RR_SNAP).length + ' blocks live, rest snapshot' : '');
+      ' · ' + RR_LIVE_KEYS.length + ' block' + (RR_LIVE_KEYS.length === 1 ? '' : 's') + ' live' +
+      (RR_SNAP_KEYS.length
+        ? ' · <b>still ' + RR.pulled_label + ' snapshot: ' + RR_SNAP_KEYS.slice().sort().join(', ') + '</b>'
+        : '');
+    if (RR_BLOCKED.length) stamp.title = RR_BLOCKED.join('\n');
   } else {
     stamp.innerHTML = 'Snapshot · ' + RR.pulled_label + ' · payload.rr not served yet';
   }
+  // The funnel panel carries the loudest number on the tab - the unredeemed
+  // offer value - and it is fed by vouchers/cliff/claim_to_redeem. When those
+  // are stale, say so ON the panel: the stamp alone sits too far from the
+  // number for anyone reading it to connect the two.
+  var stale5 = ['vouchers', 'cliff', 'claim_to_redeem'].filter(function (k) { return RR_LIVE_KEYS.indexOf(k) < 0; });
+  var s2 = rrEl('rr-s2-src');
+  if (s2) s2.textContent = stale5.length ? '£5 welcome voucher · ' + RR.pulled_label + ' snapshot' : '£5 welcome voucher';
+  var ak = rrEl('rr-alert-k');
+  if (ak) ak.textContent = stale5.length ? 'Unredeemed offer value · ' + RR.pulled_label + ' snapshot' : 'Unredeemed offer value';
+
   rrEl('rr-since').textContent = 'Since go-live ' + rrDay(RR.launch_date);
 
   rrSubNav();
@@ -5446,7 +5473,11 @@ function rrBuild() {
   rrEl('rr-provenance').innerHTML = RR_LIVE_KEYS.length
     ? '<b>Live.</b> ' + RR_LIVE_KEYS.length + ' block' + (RR_LIVE_KEYS.length === 1 ? '' : 's') +
       ' served by <span class="mono">payload.rr</span> (' + RR_LIVE_KEYS.slice().sort().join(', ') +
-      '), generated ' + (RR.generated_at || 'unknown') + ', cached 30 minutes server-side. Any block not listed is still the 1 September snapshot.'
+      '), generated ' + (RR.generated_at || 'unknown') + ', cached 30 minutes server-side.' +
+      (RR_SNAP_KEYS.length
+        ? ' <b>Still on the ' + RR.pulled_label + ' snapshot: ' + RR_SNAP_KEYS.slice().sort().join(', ') + '.</b>' +
+          (RR_BLOCKED.length ? ' ' + RR_BLOCKED.join(' ') : '')
+        : ' Every block on this tab is live.')
     : '<b>Snapshot, not a feed.</b> Every number on this tab was pulled on ' + RR.pulled_label +
       ' and is embedded in the page. The moment WebApi serves <span class="mono">payload.rr</span>, each block it fills switches to live on its own and this line names them.';
 }
