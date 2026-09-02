@@ -87,6 +87,7 @@ def main():
     ap.add_argument("--repo", required=True); ap.add_argument("--cashup", nargs="+", required=True)
     ap.add_argument("--reviews", nargs="+", required=True); ap.add_argument("--day")
     ap.add_argument("--no-push", action="store_true"); ap.add_argument("--allow-single-pull", action="store_true")
+    ap.add_argument("--report", help="repo-relative path to write the run report to and ship with the commit (a heartbeat with content)")
     a = ap.parse_args()
     repo = os.path.abspath(a.repo); B = os.path.join(repo, "builders"); DD = os.path.join(repo, "data", "daily")
     tmp = "/tmp/daily_cloud_run"; os.makedirs(tmp, exist_ok=True)
@@ -248,13 +249,24 @@ def main():
         R["cashup"]["D_worst"] = worst[:3]; R["cashup"]["D_best"] = worst[-3:][::-1]
         R["cashup"]["D_wage_over_25"] = sorted([(c, s["labour"]["wage_pct"]) for c, s in dj["sites"].items() if (s["labour"].get("wage_pct") or 0) > 25], key=lambda x: -x[1])
     if not ship:
-        R["result"] = "nothing changed — live is current"; print(json.dumps(R)); return 0
+        R["result"] = "nothing changed — live is current"
+    if a.report:
+        rp = os.path.join(repo, a.report)
+        os.makedirs(os.path.dirname(rp), exist_ok=True)
+        json.dump(R, open(rp, "w"), indent=1)
+        ship.append(a.report)
+    if not ship:
+        print(json.dumps(R)); return 0
 
     # ---------------- COMMIT + PUSH ----------------
     run(["git", "config", "user.name", "maki-nori"], cwd=repo); run(["git", "config", "user.email", "michael@makiramen.com"], cwd=repo)
     run(["git", "add", "--"] + ship, cwd=repo)
     tt = R["cashup"].get("D_totals")
-    head = (f"Daily tab: {D.strftime('%a %d/%m')} cash-up + reviews ({tt['sites']} sites, £{tt['sales']:,.2f}, {tt['covers']:,} covers, wage {tt['wage_pct']}%)"
+    data_ship = [x for x in ship if x != a.report]
+    if not data_ship:
+        head = f"Daily tab run {R['run_at'][11:16]}Z: {R.get('result', 'no data change')} ({D} {'buildable' if R['cashup'].get('D_buildable') else 'not filed yet'})"
+    else:
+        head = (f"Daily tab: {D.strftime('%a %d/%m')} cash-up + reviews ({tt['sites']} sites, £{tt['sales']:,.2f}, {tt['covers']:,} covers, wage {tt['wage_pct']}%)"
             if tt else f"Daily tab: back-fill {', '.join(R['cashup']['built'])} ({D} not filed yet)")
     wip = R["intel"].get("week_in_progress")
     body = ["Cloud-native scheduled run (daily_cloud_run.py). Files: " + ", ".join(ship)]
