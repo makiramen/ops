@@ -250,7 +250,7 @@ kbd{font:inherit;font-size:10.5px;background:var(--surface-2);border:1px solid v
   <span class="maki-brand-chip" id="verchip">v2 · Reviews</span>
   <div class="week-toggle-bar">
     <span class="week-toggle-label">View</span>
-    <button class="week-chip" data-p="week">Week</button><button class="week-chip" data-p="month">Month</button><button class="week-chip" data-p="quarter">Quarter</button>
+    <button class="week-chip" data-p="week">Week</button><button class="week-chip" data-p="month">Month</button><button class="week-chip" data-p="quarter">Quarter</button><button class="week-chip curwk" title="The week in progress, rebuilt on every daily run">This week</button>
     <button class="week-chip nav" id="pPrev" title="Previous period (←)">‹</button>
     <select id="pkey" class="week-select"></select>
     <button class="week-chip nav" id="pNext" title="Next period (→)">›</button>
@@ -258,7 +258,7 @@ kbd{font:inherit;font-size:10.5px;background:var(--surface-2);border:1px solid v
   </div>
 </header>
 <div class="wrap">
-  <div class="embedbar"><span class="week-toggle-label">View</span><button class="week-chip" data-p="week">Week</button><button class="week-chip" data-p="month">Month</button><button class="week-chip" data-p="quarter">Quarter</button><button class="week-chip nav" id="pPrev2" title="Previous period">‹</button><select id="pkey2" class="week-select"></select><button class="week-chip nav" id="pNext2" title="Next period">›</button><span id="inprog2" class="week-past-badge" style="display:none">In progress</span><a class="week-chip" href="reviews.html" target="_blank" style="margin-left:auto;text-decoration:none">Open full page ↗</a></div>
+  <div class="embedbar"><span class="week-toggle-label">View</span><button class="week-chip" data-p="week">Week</button><button class="week-chip" data-p="month">Month</button><button class="week-chip" data-p="quarter">Quarter</button><button class="week-chip curwk" title="The week in progress, rebuilt on every daily run">This week</button><button class="week-chip nav" id="pPrev2" title="Previous period">‹</button><select id="pkey2" class="week-select"></select><button class="week-chip nav" id="pNext2" title="Next period">›</button><span id="inprog2" class="week-past-badge" style="display:none">In progress</span><a class="week-chip" href="reviews.html" target="_blank" style="margin-left:auto;text-decoration:none">Open full page ↗</a></div>
   <div class="hero">
     <div class="hero-inner">
       <div class="eyebrow">Reviews Intelligence · Google</div>
@@ -409,6 +409,7 @@ function init(){
   $('#pkey2').onchange=e=>{S.pkey=e.target.value;S.readerLimit=60;render();};
   $('#pPrev2').onclick=()=>$('#pPrev').click();$('#pNext2').onclick=()=>$('#pNext').click();
   $$('.week-chip[data-p]').forEach(b=>b.onclick=()=>{S.ptype=b.dataset.p;S.pkey=lastComplete(S.ptype);S.readerLimit=60;render();});
+  $$('.week-chip.curwk').forEach(b=>b.onclick=()=>{const w=periods('week').slice(-1)[0];if(!w)return;S.ptype='week';S.pkey=w;S.readerLimit=60;render();});
   $('#pkey').onchange=e=>{S.pkey=e.target.value;S.readerLimit=60;render();};
   $('#pPrev').onclick=()=>{const k=prevKey(S.ptype,S.pkey);if(k){S.pkey=k;render();}};
   $('#pNext').onclick=()=>{const k=nextKey(S.ptype,S.pkey);if(k){S.pkey=k;render();}};
@@ -436,7 +437,8 @@ function render(){
   $$('.week-chip[data-p]').forEach(b=>b.classList.toggle('active',b.dataset.p===S.ptype));
   const opts=periods(S.ptype).slice().reverse().map(k=>`<option value="${k}" ${k===S.pkey?'selected':''}>${esc(pLabel(S.ptype,k))}${isComplete(S.ptype,k)?'':' (to date)'}</option>`).join('');
   $('#pkey').innerHTML=opts;$('#pkey2').innerHTML=opts;
-  ['#inprog','#inprog2'].forEach(id=>{$(id).style.display=isComplete(S.ptype,S.pkey)?'none':'inline-block';$(id).textContent='In progress · to '+fmtDate(D.meta.source_pulled_at.slice(0,10));});
+  const cw=periods('week').slice(-1)[0];$$('.week-chip.curwk').forEach(b=>{b.style.display=(cw&&!isComplete('week',cw))?'':'none';b.classList.toggle('active',S.ptype==='week'&&S.pkey===cw&&!isComplete('week',cw));});
+  ['#inprog','#inprog2'].forEach(id=>{const inp=!isComplete(S.ptype,S.pkey);$(id).style.display=inp?'inline-block':'none';if(inp){const to=D.meta.source_pulled_at.slice(0,10);let days='';if(S.ptype==='week'){const ds=new Set(rows(S.pkey,{type:'fleet'}).map(r=>r.date));days=' · '+ds.size+' of 7 days';}$(id).textContent='In progress'+days+' · to '+fmtDate(to);}});
   $('#pPrev').disabled=$('#pPrev2').disabled=!prevKey(S.ptype,S.pkey);$('#pNext').disabled=$('#pNext2').disabled=!nextKey(S.ptype,S.pkey);
   renderHero();renderCnav();renderTiles();renderReadout();renderSplitMini();renderFlags();renderBoard();renderHeatmap();renderMix();renderTrend();renderPraise();renderDishes();renderStaff();renderHeat();renderKpix();renderReader();renderMethod();
 }
