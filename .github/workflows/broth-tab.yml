@@ -1,0 +1,86 @@
+name: Broth tab (Mapal broth checks + factory refractometer)
+
+# The pipe has three stages. The Mapal broker Apps Script (on michael@makiramen.com, trigger
+# 06:29 BST) is stage one and fills the "Mapal Broker Data" Sheet. THIS is stages two and three:
+# Sheet -> matrices -> data/broth/*.json -> push. Until 03/09/2026 those two only ever ran when a
+# human ran them, which is why the tab silently froze at 26/08 and then again at 31/08.
+#
+# Runs several times through the day on purpose. GitHub's scheduler drops and delays cron (the
+# daily tab's 08:15 slot never fired at all on 02/09, and the other two ran 92 and 210 minutes
+# late), so the answer is more chances, not a cleverer single time. Every run is idempotent: it
+# rewrites the days inside Mapal's rolling 8 day window and commits only if something moved.
+
+on:
+  schedule:
+    - cron: '20 6,8,10,13,17 * * *'   # 10:20 / 12:20 / 14:20 / 17:20 / 21:20 Dubai
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: broth-tab
+  cancel-in-progress: false
+
+jobs:
+  build-and-ship:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: pip install --quiet google-auth requests openpyxl
+
+      - name: Fetch the broker Sheet and the refractometer Sheet
+        env:
+          GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
+        run: python3 builders/broth/fetch_broth_sources.py --out /tmp/broth_src
+
+      - name: Extend the matrices, bake every week, ship the ones the window touches
+        id: run
+        env:
+          # The same fine-grained PAT the daily tab uses, so the push triggers the Pages build.
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          set +e
+          python3 builders/broth/broth_cloud_run.py --repo . \
+            --sources /tmp/broth_src \
+            --report data/broth/run_report.json > /tmp/report.json 2> /tmp/run.err
+          code=$?
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          echo "## Broth tab run (exit $code)" >> "$GITHUB_STEP_SUMMARY"
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          try:
+              R = json.load(open('/tmp/report.json'))
+          except Exception as e:
+              print('no report:', e); raise SystemExit
+          w = R.get('window') or ['?', '?']
+          print(f"- result: **{R.get('result')}** · commit `{(R.get('commit') or '')[:7]}` · pushed: {R.get('pushed')}")
+          print(f"- Mapal window {w[0]} to {w[1]} · {R.get('source_locations')} locations · matrix now {' to '.join(R.get('matrix_after') or ['?','?'])}")
+          h = R.get('headline')
+          if h:
+              print(f"- w/c {h['week']}: {h['days']} day(s), tonkotsu {h['tonkotsu_in']}% in spec, chicken {h['chicken_in']}%, {h['p1']} P1")
+          print(f"- weeks rebuilt: {', '.join(R.get('weeks_rebuilt') or []) or 'none'}")
+          for x in R.get('warnings', []): print('- ⚠️', x)
+          PY
+          echo '### stderr tail' >> "$GITHUB_STEP_SUMMARY"; tail -n 25 /tmp/run.err >> "$GITHUB_STEP_SUMMARY"
+          exit "$code"
+
+      - name: Keep the report and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: broth-tab-run-${{ github.run_id }}
+          path: |
+            /tmp/report.json
+            /tmp/run.err
+          retention-days: 14

@@ -1,8 +1,16 @@
 name: Daily tab (cash-up + reviews + Reviews Intelligence)
 
+# Hourly on purpose, 03/09/2026. Three slots a day was not enough for two separate reasons.
+# 1. GITHUB DROPS AND DELAYS CRON. Of the three scheduled slots on 02/09 the 08:15 one never ran
+#    at all, and the other two started 92 and 210 minutes late. More chances beats a cleverer time.
+# 2. THE SITES FILE THEIR CASH-UP THROUGH THE MORNING. The 07:37Z run found 01/09 "not filed yet";
+#    the 12:47Z run built it. Running every hour means the day ships the hour it becomes
+#    buildable instead of waiting for the next slot, which is what made the tab look a day behind
+#    when Michael checked it around 07:30Z.
+# Every run is idempotent and commits only when something changed, so the extra runs are free.
 on:
   schedule:
-    - cron: '15 8,11,15 * * *'     # 12:15 / 15:15 / 19:15 Dubai = 09:15 / 12:15 / 16:15 UK (BST)
+    - cron: '15 6-18 * * *'       # every hour 10:15 to 22:15 Dubai = 07:15 to 19:15 UK (BST)
   workflow_dispatch: {}
 
 permissions:
