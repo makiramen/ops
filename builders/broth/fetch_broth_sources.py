@@ -14,7 +14,7 @@ csv is not an option here. Reference: reference_sources_and_routes, "Drive xlsx 
 Guards (loud, non-zero exit): auth failure, HTTP != 200, an HTML body (a wrong Google id fails
 SILENTLY at 200 with a "Page not found" page), a missing tab, or a tab with no data rows.
 """
-import argparse, csv, io, json, os, sys
+import argparse, csv, datetime, io, json, os, re, sys
 import requests
 from google.oauth2 import service_account
 from google.auth.transport.requests import Request
@@ -47,6 +47,22 @@ def export_xlsx(tok, fid, label):
     log("%s: %d B xlsx" % (label, len(b)))
     return load_workbook(io.BytesIO(b), read_only=True, data_only=True)
 
+def clean(c):
+    """Two traps this exists for, both found by the first live run on 03/09/2026.
+    1. MAPAL PUTS NON-BREAKING SPACES IN LOCATION NAMES. "Maki\\xa0O2\\xa0Arena" is not
+       "Maki O2 Arena", so it reads as a brand new site and silently forks its own series.
+    2. openpyxl HANDS BACK REAL date OBJECTS for a date-formatted cell, so str() gives
+       "2026-08-31 00:00:00" and every dd/mm/yyyy parser downstream returns None. That blanked
+       the whole factory line and the bake died on an empty mean."""
+    if c is None:
+        return ""
+    if isinstance(c, datetime.datetime):
+        return c.strftime("%Y-%m-%d %H:%M:%S") if (c.hour or c.minute or c.second) else c.strftime("%Y-%m-%d")
+    if isinstance(c, datetime.date):
+        return c.isoformat()
+    return " ".join(str(c).replace("\u00a0", " ").split())
+
+
 def dump(wb, sheet, path, label, required=True):
     if sheet not in wb.sheetnames:
         if not required:
@@ -57,9 +73,9 @@ def dump(wb, sheet, path, label, required=True):
     with open(path, "w", newline="", encoding="utf-8") as f:
         w = csv.writer(f)
         for r in ws.iter_rows(values_only=True):
-            if all(c is None or str(c).strip() == "" for c in r):
+            if all(clean(c) == "" for c in r):
                 continue
-            w.writerow(["" if c is None else str(c).strip() for c in r])
+            w.writerow([clean(c) for c in r])
             rows += 1
     log("%s/%s: %d rows -> %s" % (label, sheet, rows, os.path.basename(path)))
     return rows

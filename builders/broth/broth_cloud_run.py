@@ -54,9 +54,21 @@ def read_matrix_days(path):
     sys.exit("no DAYS: line in %s" % path)
 
 
+def norm_text(s):
+    """Mapal writes NON-BREAKING SPACES into some location names ("Maki\\xa0O2\\xa0Arena"). Left
+    alone they fork a second series for a site that already exists. Found live 03/09/2026."""
+    return " ".join((s or "").replace("\u00a0", " ").split())
+
+
 def norm_date(s):
-    """The refractometer form carries a 0025 / 0026 year typo in its Date column."""
-    m = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{4})$", (s or "").strip())
+    """Two shapes, because the same column arrives differently depending on the route:
+    dd/mm/yyyy from a text cell (with a 0025 / 0026 year typo the form introduced), and
+    yyyy-mm-dd from a real date cell that openpyxl handed back as a date object."""
+    s = (s or "").strip()
+    m = re.match(r"^(\d{4})-(\d{2})-(\d{2})", s)
+    if m:
+        return "%s-%s-%s" % m.groups()
+    m = re.match(r"^(\d{1,2})/(\d{1,2})/(\d{4})$", s)
     if not m:
         return None
     dd, mm, yy = m.groups()
@@ -77,10 +89,10 @@ def load_cells(path, R):
         for r in csv.DictReader(f):
             if (r.get("scope") or "site").strip() != "site":
                 continue
-            loc = (r.get("location") or "").strip()
-            kind = (r.get("kind") or "").strip()
-            day = (r.get("business_day") or "")[:10]
-            if not loc or kind not in KINDS or not re.match(r"^\d{4}-\d{2}-\d{2}$", day):
+            loc = norm_text(r.get("location"))
+            kind = norm_text(r.get("kind")).lower()
+            day = norm_date(r.get("business_day"))
+            if not loc or kind not in KINDS or not day:
                 continue
             if re.search(r"factory", loc, re.I):
                 continue
@@ -167,9 +179,9 @@ def extend_dev(path, devs_csv, window, R):
     if os.path.exists(devs_csv):
         with open(devs_csv, newline="", encoding="utf-8") as f:
             for r in csv.DictReader(f):
-                loc = (r.get("location") or "").strip()
-                kind = (r.get("kind") or "").strip()
-                d = (r.get("date") or "")[:10]
+                loc = norm_text(r.get("location"))
+                kind = norm_text(r.get("kind")).lower()
+                d = norm_date(r.get("date")) or ""
                 if not loc or kind not in KINDS or d not in window or (loc, kind, d) in keys:
                     continue
                 state = "open" if (r.get("open_closed") or "").strip() == "open" else "closed"
@@ -243,9 +255,35 @@ def main():
     before = read_matrix_days(live_m)
     R["matrix_before"] = [before[0], before[-1]]
 
-    days = extend_sites(live_m, cells, set(window), R)
-    extend_dev(live_m, os.path.join(a.sources, "broth_deviations.csv"), set(window), R)
-    extend_factory(fac_m, load_factory(fac_csv, set(window)), days, set(window), R)
+    # GUARD: A PARSE REGRESSION MUST NEVER BLANK A DAY THAT ALREADY HAS DATA. The window is
+    # rewritten wholesale from the feed, so if the feed suddenly parses to nothing (a renamed
+    # column, a date cell that changed type) the matrix would quietly lose real readings and the
+    # tab would render zeros. Compare like for like before writing a byte.
+    wset = set(window)
+    head0 = open(live_m, encoding="utf-8").read().split("DEV:")[0].rstrip("\n").split("\n")
+    d0 = head0[0].split(":", 1)[1].split(",")
+    ix = [i for i, d in enumerate(d0) if d in wset]
+    had = 0
+    for ln in head0[1:]:
+        v = ln.split(":", 1)[1].split(",")
+        had += sum(1 for i in ix if v[i].strip())
+    got = sum(1 for (l, k, d), v in cells.items() if d in wset and v.strip())
+    R["window_values"] = {"committed": had, "feed": got}
+    if had and got < had * 0.8:
+        log("the feed carries %d site values for %s to %s where the committed matrix has %d "
+            "— refusing to blank days" % (got, window[0], window[-1], had))
+        return 3
+
+    fac_agg = load_factory(fac_csv, wset)
+    if not fac_agg:
+        log("the refractometer sheet produced no readings at all for %s to %s — refusing to blank "
+            "the factory line (check the Date column type and the Product Name header)"
+            % (window[0], window[-1]))
+        return 3
+
+    days = extend_sites(live_m, cells, wset, R)
+    extend_dev(live_m, os.path.join(a.sources, "broth_deviations.csv"), wset, R)
+    extend_factory(fac_m, fac_agg, days, wset, R)
     if read_matrix_days(fac_m) != days:
         log("factory DAYS does not match sites DAYS after extending"); return 3
     R["matrix_after"] = [days[0], days[-1]]
