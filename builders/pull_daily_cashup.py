@@ -499,8 +499,12 @@ def main():
         }
         totals["wage_pct"] = (round(totals["labour"] / totals["sales"] * 100.0, 2)
                               if totals["sales"] else None)
-        totals["avg_spend"] = (round(totals["sales"] / totals["covers"], 2)
+        # avg spend over the sites whose covers are known only (a site with covers nulled as
+        # suspect must not inflate the fleet figure with its sales) — 04/09/2026
+        cov_sales = sum(s["sales"]["actual"] or 0 for s in sites.values() if s["covers"])
+        totals["avg_spend"] = (round(cov_sales / totals["covers"], 2)
                                if totals["covers"] else None)
+        totals["covers_missing"] = sorted(c for c, s in sites.items() if not s["covers"]) or None
         payload["totals"] = totals
 
         path = os.path.join(a.out, f"daily_{date_str}.json")
@@ -547,3 +551,4 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+th
