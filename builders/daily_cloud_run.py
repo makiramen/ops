@@ -140,7 +140,12 @@ def main():
                 lo, hi = (30, 50) if code in NORI else (15, 40)
                 if not (lo <= sp <= hi): flags.append(f"{code} £{sp:.2f}/head (band £{lo}-{hi})")
             if not (20 <= fleet <= 26): return False, f"fleet avg spend £{fleet:.2f} outside £20-26 on {dt} (covers still filling?)", fleet, flags
-            if flags: return False, "per-site spend outside band on " + dt + ": " + "; ".join(flags), fleet, flags
+            # 04/09/2026: a per-site spend outside its band no longer holds the WHOLE fleet day back.
+            # 02/09 sat unshipped for two days because M8 (372 covers on £4,021) and M19 (250 on £3,183)
+            # had doubled covers at source. The day now ships with THAT SITE's covers and avg spend
+            # nulled (renders as a dash, flagged in the file) and the fleet avg spend computed over the
+            # sites whose covers are trusted. The next run repairs it once the source is corrected.
+            if flags: return True, "ok, covers suspect on " + dt + ": " + "; ".join(flags), fleet, flags
             return True, "ok", fleet, flags
         return True, "ok (no covers column found)", None, []
 
@@ -156,11 +161,26 @@ def main():
         log("nothing buildable in the cash-up mirror:", why)
         R["cashup"]["result"] = "nothing buildable"; print(json.dumps(R)); raise SystemExit(11)
     keep_dmy = {dmy(dd.isoformat()) for dd in build_dates}
+    # venues whose covers are outside band on each kept day: blank covers + avg spend in the slice so
+    # the builder writes null for them instead of a doubled number, and say so loudly.
+    suspect = {}
+    for dd in build_dates:
+        d_dmy = dmy(dd.isoformat()); _, _, _, fl = buildable(d_dmy)
+        codes = [f.split(" ")[0] for f in fl]
+        if codes:
+            suspect[d_dmy] = {v for v, c in PC.VENUE_TO_CODE.items() if c in codes}
+            R["warnings"].append(f"{dd.isoformat()} covers SUSPECT, nulled for {', '.join(codes)}: " + "; ".join(fl) + " — chase the site's cash-up (covers double-count tell)")
+    R["cashup"]["covers_suspect"] = {k: sorted(PC.VENUE_TO_CODE[v] for v in vs) for k, vs in suspect.items()}
     slice_path = os.path.join(tmp, f"daily_cashup_{D}.csv")
     with open(slice_path, "w", encoding="utf-8", newline="") as fh:
         w = csv.writer(fh); w.writerow(rows[0])
         for r in rows[1:]:
-            if len(r) > idt and r[idt].strip() in keep_dmy: w.writerow(r)
+            if len(r) > idt and r[idt].strip() in keep_dmy:
+                r = list(r)
+                if r[iv].strip() in suspect.get(r[idt].strip(), set()) and icov is not None:
+                    r[icov] = ""
+                    if icov + 1 < len(r): r[icov + 1] = ""
+                w.writerow(r)
     live_index = json.load(open(os.path.join(DD, "daily_index.json")))
     live_ridx = json.load(open(os.path.join(DD, "daily_reviews_index.json")))
     ik = "dates" if "dates" in live_index else "days"
