@@ -1,0 +1,2133 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ops Command</title>
+<!--
+  Ops Command shell - reads baked JSON from data/ops_command/ (Pipe 9).
+  No numbers live in this file. A data refresh is a commit, not a redeploy.
+  Also shipped as the "ops-command" desktop artifact: identical file; the only
+  page that needs the artifact viewer is My day (Gmail/Calendar/Asana via MCP),
+  which degrades gracefully in a plain browser.
+-->
+<style>
+:root{
+  color-scheme:light;
+  /* Maki & Ramen brand palette - same tokens as the AM Control Centre */
+  --maki-orange:#E94E1B; --maki-orange-soft:#F47C24; --maki-orange-bg:#FFF1EA;
+  --bg:#f4f5f9; --card:#ffffff; --ink:#0f172a; --muted:#475569; --faint:#94a3b8;
+  --line:#e2e8f0; --track:#eef1f4;
+  --series:#E94E1B;
+  --g:#059669; --g-bg:#ecfdf5; --r:#dc2626; --r-bg:#fef2f2;
+  --a:#d97706; --a-bg:#fffbeb; --b:#4f46e5; --b-bg:#eef2ff; --n:#64748b; --n-bg:#f1f5f9;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.06);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 18px 60px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+h1{margin:0;font-size:22px;letter-spacing:-.02em}
+h1 b{color:var(--maki-orange)}
+.sub{color:var(--muted);font-size:12.5px;margin-top:3px}
+.meta input[type=date]{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:4px 6px;font-size:12px}
+.meta{color:var(--muted);font-size:12px;text-align:right;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+select,.rl{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer}
+.rl:hover,select:hover{border-color:var(--maki-orange)}
+nav{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--line);margin-bottom:18px}
+nav button{background:none;border:0;border-bottom:2px solid transparent;color:var(--muted);padding:9px 13px;font-size:13.5px;cursor:pointer;font-weight:500}
+nav button:hover{color:var(--ink)}
+nav button[aria-selected="true"]{color:var(--maki-orange);border-bottom-color:var(--maki-orange)}
+.page{display:none}.page.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:11px;overflow:hidden;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-h{padding:13px 15px 11px;border-bottom:1px solid var(--line)}
+.card-h .t{font-weight:650;font-size:14.5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card-h .s{color:var(--muted);font-size:12px;margin-top:2px}
+.card-b{padding:13px 15px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.cols{grid-template-columns:1fr}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:11px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-left-width:3px;border-radius:10px;padding:11px 13px;box-shadow:var(--shadow)}
+.kpi .lb{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.05em}
+.kpi .vl{font-size:26px;font-weight:680;letter-spacing:-.03em;margin:2px 0 1px;font-variant-numeric:tabular-nums}
+.kpi .sb{color:var(--muted);font-size:11.5px}
+.k-g{border-left-color:var(--g)}.k-r{border-left-color:var(--r)}.k-a{border-left-color:var(--a)}
+.k-b{border-left-color:var(--b)}.k-n{border-left-color:var(--n)}.k-o{border-left-color:var(--maki-orange)}
+.sitegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.sitebox{background:var(--card);border:1px solid var(--line);border-left-width:3px;border-left-color:var(--maki-orange);
+  border-radius:10px;padding:10px 12px;cursor:pointer;transition:box-shadow .15s}
+.sitebox:hover{box-shadow:0 2px 8px rgba(15,23,42,.10)}
+.sitebox:hover .lb{color:var(--maki-orange)}
+.sitebox .lb{color:var(--ink);font-size:12.5px;font-weight:620;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sitebox .vl{font-size:19px;font-weight:680;letter-spacing:-.02em;margin:3px 0 1px;font-variant-numeric:tabular-nums}
+.sitebox .sb{color:var(--muted);font-size:11px}
+.splitbar{height:4px;border-radius:2px;background:var(--maki-orange);overflow:hidden;margin-top:6px}
+.splitbar i{display:block;height:100%;background:var(--g)}
+.tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:640;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.t-g{background:var(--g-bg);color:var(--g)}.t-r{background:var(--r-bg);color:var(--r)}
+.t-a{background:var(--a-bg);color:var(--a)}.t-b{background:var(--b-bg);color:var(--b)}.t-n{background:var(--n-bg);color:var(--n)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;padding:0 8px 7px;border-bottom:1px solid var(--line)}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.tot td{font-weight:650;border-top:2px solid var(--line)}
+.brow{display:flex;align-items:center;gap:10px;padding:5px 0}
+.blab{flex:0 0 40%;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.btrack{flex:1;background:var(--track);border-radius:4px;height:15px;position:relative;overflow:hidden}
+.btrack i{display:block;height:100%;border-radius:4px;background:var(--series);min-width:3px;position:relative;z-index:0}
+.btrack u{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--muted);opacity:.55;z-index:1}
+.tgt{color:var(--muted);font-size:11.5px;margin:0 0 6px 40%;padding-left:10px}
+.bval{flex:0 0 68px;text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px;font-weight:600}
+.empty{color:var(--muted);font-size:13px;padding:14px 2px;text-align:center}
+.note{background:var(--b-bg);border:1px solid var(--line);border-left:3px solid var(--b);border-radius:9px;padding:11px 13px;font-size:12.5px;margin-bottom:14px}
+.warn{background:var(--a-bg);border:1px solid var(--line);border-left:3px solid var(--a);border-radius:9px;padding:11px 13px;font-size:12.5px;margin-bottom:14px}
+.err{background:var(--r-bg);border:1px solid var(--line);border-left:3px solid var(--r);border-radius:9px;padding:11px 13px;font-size:12.5px;margin-bottom:14px}
+.note{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--muted);border-radius:9px;padding:11px 13px;font-size:12.5px;margin-bottom:14px;color:var(--muted)}
+.sig{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:flex-start}
+.sig:last-child{border-bottom:0}
+.sig .bod{flex:1;min-width:0}
+.sig .hd{font-weight:620;font-size:13.5px}
+.sig .dt{color:var(--muted);font-size:12.5px;margin-top:2px}
+#tip{position:fixed;pointer-events:none;background:var(--ink);color:#fff;padding:6px 9px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .1s;z-index:99;max-width:280px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.filters .fbtn{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:12px;cursor:pointer;color:var(--muted)}
+.filters .fbtn[aria-pressed="true"]{background:var(--maki-orange-bg);border-color:var(--maki-orange);color:var(--maki-orange);font-weight:600}
+.prov{color:var(--faint);font-size:11px;margin-top:8px}
+/* factory broth score cell - the heatmap's observed-range shading, in a table */
+.fbscore{display:inline-block;min-width:34px;padding:2px 7px;border-radius:5px;font-variant-numeric:tabular-nums}
+/* Grading against the after-ice spec band is a STATUS encoding, not a
+   magnitude one, so it uses this page's status palette rather than the heat
+   ramp - and never colour alone: an out-of-spec cell also carries a ▼/▲ and
+   the row carries a chip saying which bound it missed. */
+.fb-in{background:var(--g-bg);color:var(--g)}
+.fb-out{background:var(--r-bg);color:var(--r);font-weight:650}
+.fb-none{background:var(--n-bg);color:var(--n)}
+.prodspec{color:var(--faint);font-weight:400;font-size:11px}
+/* Site broth heatmap. Ross, 28/08/2026: "make it green if it's within, red if
+   they are not". So every reading is now painted - in spec is GREEN, not the
+   bare surface it used to be. Leaving the calm state unfilled meant a cell
+   that was read and passed looked exactly like a cell nobody had coloured,
+   which is the one thing a quality heatmap must not do.
+   Two ordinal ramps, three steps each, both validated (monotone lightness,
+   adjacent ΔL >= 0.06, light end >= 2:1 on white):
+     green  #10b981 -> #047857 -> #064e3b   deeper = nearer the middle of band
+     red    #f87171 -> #dc2626 -> #991b1b   deeper = further outside it
+   Direction (too thin vs too thick) is carried by the ▼/▲ glyph and the
+   tooltip, not by hue, so red can mean "out" in both directions as asked and
+   the reading still survives greyscale and colourblindness.
+   Stepped, not continuous alpha: continuous would land cells in the 0.78-0.86
+   dead zone where neither dark nor white text clears 4.5:1. Each step below
+   carries the ink colour that clears it - all six are >= 4.8:1. */
+.hi1{background:#10b981;color:var(--ink)}
+.hi2{background:#047857;color:#fff}
+.hi3{background:#064e3b;color:#fff}
+.ho1{background:#f87171;color:var(--ink)}
+.ho2{background:#dc2626;color:#fff}
+.ho3{background:#991b1b;color:#fff}
+.hi1,.hi2,.hi3,.ho1,.ho2,.ho3{font-weight:600}
+.hleg{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:9px;font-size:11px;color:var(--faint)}
+.hleg i{display:inline-block;width:15px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:3px;border:1px solid var(--line)}
+/* a long batch log must not push the rest of the page off the bottom: it
+   scrolls in place, header pinned, with every row still reachable */
+.tscroll{max-height:560px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.tscroll table{margin:0}
+.tscroll thead th{position:sticky;top:0;background:var(--card);z-index:1}
+.foot{color:var(--muted);font-size:11.5px;margin-top:18px;text-align:center}
+code{background:var(--n-bg);border-radius:4px;padding:1px 5px;font-size:12px}
+.heat{border-collapse:separate;border-spacing:2px;margin-top:2px}
+.heat th{padding:2px 4px 6px;font-size:10px;font-weight:500;color:var(--muted);border:0}
+.heat td.hsite{padding:4px 8px 4px 2px;font-size:12px;white-space:nowrap;border:0}
+.heat td.hcell,.heat td.hblank,.heat td.hmiss{padding:0;text-align:center;font-size:11px;
+  font-variant-numeric:tabular-nums;border-radius:4px;min-width:28px;width:28px;height:24px;
+  border:1px solid var(--line)}
+.heat td.hblank{background:var(--track);color:var(--faint)}
+/* mandatory-compliance heatmap: shrink-wrap the site column so the module
+   cells share the card's full width (9 wide columns, unlike broth's 14) */
+#tr-heat td.hsite{width:1%}
+#tr-heat td.hcell,#tr-heat td.hblank{min-width:46px;height:26px}
+#tr-heat td.hcell{color:var(--ink);font-weight:600}
+.heat td.hmiss{background:repeating-linear-gradient(45deg,var(--r-bg),var(--r-bg) 3px,#fff 3px,#fff 6px);
+  color:var(--r);font-weight:700;border-color:var(--r)}
+.brow.clk,tr.clk{cursor:pointer}
+.brow.clk:hover .blab,tr.clk:hover td{color:var(--maki-orange)}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:60;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal-ov.on{display:flex}
+.modal{background:var(--card);border-radius:12px;max-width:760px;width:100%;max-height:82vh;overflow:auto;box-shadow:var(--shadow)}
+.modal-h{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--card)}
+.modal-h .t{font-weight:650;font-size:15px}
+.modal-x{background:none;border:0;font-size:22px;cursor:pointer;color:var(--muted);line-height:1;padding:2px 8px}
+.modal-x:hover{color:var(--ink)}
+.modal-b{padding:8px 16px 16px}
+</style></head><body>
+<div id="tip"></div>
+<div class="modal-ov" id="task-modal-ov"><div class="modal">
+  <div class="modal-h"><div class="t" id="task-modal-t">Site</div><button class="modal-x" id="task-modal-x" aria-label="Close">&times;</button></div>
+  <div class="modal-b" id="task-modal-b"></div>
+</div></div>
+<div class="wrap">
+<div class="top">
+  <div><h1><b>Maki &amp; Ramen</b> · Ops Command</h1>
+    <div class="sub">Baked daily from the Neon warehouse · shell carries no numbers</div></div>
+  <div class="meta">
+    <span>pull <b id="m-pull">—</b></span>
+    <span class="filters" style="margin:0" id="range-btns" title="Filters by when things actually happened — form answer dates and module completion dates, not ETL pull dates">
+      <button class="fbtn" aria-pressed="true" data-r="all">All</button>
+      <button class="fbtn" aria-pressed="false" data-r="7">7 days</button>
+      <button class="fbtn" aria-pressed="false" data-r="30">30 days</button>
+      <button class="fbtn" aria-pressed="false" data-r="90">90 days</button>
+    </span>
+    <input type="date" id="d-from" title="From (event date)"><input type="date" id="d-to" title="To (event date)">
+    <select id="daysel" title="Roll back to an earlier day's snapshot"></select>
+    <button class="rl" onclick="location.reload()">Reload</button>
+  </div>
+</div>
+<div id="banner"></div>
+<nav id="nav"></nav>
+
+<div class="page on" id="p-over">
+  <div class="kpis" id="kpis"></div>
+  <div class="card"><div class="card-h"><div class="t">Needs attention</div>
+    <div class="s">Every signal carries its basis — hover to see how it was derived · these are current-state figures, not sliced by the date range filter (the filter applies inside each tab, to submission/answer/completion dates — never pull dates)</div></div>
+    <div class="card-b" id="signals"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Known gaps in this pull</div>
+    <div class="s">Named explicitly by the builder — never silent zeros</div></div>
+    <div class="card-b" id="gaps"></div></div>
+</div>
+
+<div class="page" id="p-train">
+  <div class="filters" id="tr-mode"></div>
+  <div class="filters" id="tr-filter"></div>
+  <div class="kpis" id="tr-kpis"></div>
+  <div class="card" id="tr-heat-card"><div class="card-h"><div class="t">Mandatory compliance — site × module</div>
+    <div class="s" id="tr-heat-sub"></div></div>
+    <div class="card-b" id="tr-heat"></div></div>
+  <div class="card" id="tr-bars-card"><div class="card-h"><div class="t">Module completion by site</div>
+    <div class="s" id="tr-sub"></div></div>
+    <div class="card-b" id="tr-bars"></div></div>
+  <div class="card"><div class="card-h"><div class="t" id="tr-comp-t">Completions per week</div>
+    <div class="s" id="tr-comp-sub">By completion date — the range filter above slices these</div></div>
+    <div class="card-b" id="tr-comp"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Detail <button class="fbtn" id="tr-csv" type="button">⇣ CSV</button></div>
+    <div class="s" id="tr-tbl-sub">Overdue is a flag on top of a state — it overlaps In progress and Not started</div></div>
+    <div class="card-b" id="tr-tbl"></div></div>
+</div>
+
+<div class="page" id="p-comp">
+  <div class="cols">
+    <div class="card"><div class="card-h"><div class="t">Form completion</div>
+      <div class="s">GetCompliant forms · completed vs ongoing · current state, not sliced by the date range above</div></div>
+      <div class="card-b" id="fc-bars"></div></div>
+    <div class="card"><div class="card-h"><div class="t">Open deviations by form</div>
+      <div class="s">Unresolved items raised through forms · current state, not sliced by the date range above</div></div>
+      <div class="card-b" id="dv-bars"></div></div>
+  </div>
+  <div class="card"><div class="card-h"><div class="t">Form answers in range</div>
+    <div class="s" id="fa-sub">By answer date — history accumulates from 13 Aug 2026</div></div>
+    <div class="card-b" id="fa-sum"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Scheduled tasks by area</div>
+    <div class="s">Checklist areas · overdue deviations highlighted</div></div>
+    <div class="card-b" id="mt-tbl"></div></div>
+</div>
+
+<div class="page" id="p-tasks">
+  <div id="tk-note"></div>
+  <div class="kpis" id="tk-kpis"></div>
+  <div class="card"><div class="card-h"><div class="t">Scheduled task completion — on time, by site</div>
+    <div class="s">GC Scheduled Task Answers · On time ÷ (On time + Missed) · event-dated on each task's due date, sliced by the range above · click a site for its task detail</div></div>
+    <div class="card-b" id="tk-bars"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Detail</div>
+    <div class="s">Click a row to view that site's scheduled tasks — due date, answer, and on-time status</div></div>
+    <div class="card-b" id="tk-tbl"></div></div>
+</div>
+
+<div class="page" id="p-maint">
+  <div id="maint-note"></div>
+  <div class="kpis" id="maint-kpis"></div>
+  <div class="card"><div class="card-h"><div class="t">Maintenance tasks — outstanding &amp; ongoing, by site</div>
+    <div class="s">Lincoln's maintenance/repair tracker · outstanding + ongoing tasks in range · click a site for task detail</div></div>
+    <div class="card-b" id="maint-bars"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Detail</div>
+    <div class="s">Site, outstanding/ongoing vs resolved counts, status</div></div>
+    <div class="card-b" id="maint-tbl"></div></div>
+</div>
+
+<div class="page" id="p-qual">
+  <div id="qual-note"></div>
+  <div class="kpis" id="qual-kpis"></div>
+  <div class="note">Two different measurements sit on this page. The <b>factory</b> cards are the factory's own refractometer readings of the batch it produced &mdash; the score is the reading taken <b>after</b> ice is added, graded against its product's spec (tonkotsu 8&ndash;9, chicken 5&ndash;6). The <b>site</b> cards below are GetCompliant broth checks of broth <b>as served</b>, graded against their own site spec (chicken 6&plusmn;1, tonkotsu 6&ndash;7). Same instrument, different moment in the broth's life — which is why the two sets of numbers are different and neither band transfers to the other. They are shown separately and never averaged into one another.</div>
+  <div class="card"><div class="card-h"><div class="t">Factory broth score &mdash; by product</div>
+    <div class="s" id="fb-prod-sub">Median after-ice reading per product · refractometer form, factory production batches</div></div>
+    <div class="card-b" id="fb-prod"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Factory broth score &mdash; by batch</div>
+    <div class="s" id="fb-tbl-sub">Every batch with an after-ice reading, newest first</div></div>
+    <div class="card-b" id="fb-tbl"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Chicken Broth Check — by site</div>
+    <div class="s" id="qh-chicken-sub">GC Scheduled Task Answers · graded against the site spec, out-of-spec cells shaded by how far out</div></div>
+    <div class="card-b" id="qh-chicken"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Tonkotsu Broth Check — by site</div>
+    <div class="s" id="qh-tonkotsu-sub">Same grading rule as above, tonkotsu readings only</div></div>
+    <div class="card-b" id="qh-tonkotsu"></div></div>
+  <div class="cols">
+    <div class="card"><div class="card-h"><div class="t">Check discipline</div>
+      <div class="s">% of checks with a numeric reading vs total attempted, per site, in range</div></div>
+      <div class="card-b" id="qh-disc"></div></div>
+    <div class="card"><div class="card-h"><div class="t">Open quality deviations</div>
+      <div class="s">IsOpenDeviation on a broth check, newest first</div></div>
+      <div class="card-b" id="qh-dev"></div></div>
+  </div>
+</div>
+
+<div class="page" id="p-supp">
+  <div class="kpis" id="supp-kpis"></div>
+  <div class="card"><div class="card-h"><div class="t">Projected spend this week — by site &amp; supplier</div>
+    <div class="s" id="fa-aging-sub">Kobas Outstanding Stock Orders · orders due this Mon–Sun, by target delivery date · click a site for its supplier breakdown · a projection, not a confirmed spend figure (see note)</div></div>
+    <div class="card-b" id="fa-aging"></div></div>
+  <div class="card"><div class="card-h"><div class="t">By supplier</div>
+    <div class="s" id="sup-tot-sub">Total spend, lines ordered and deliveries per supplier &middot; same orders as the card above, grouped by supplier rather than site</div></div>
+    <div class="card-b">
+      <div class="filters" id="sup-tot-toggle"></div>
+      <div id="sup-tot-warn"></div>
+      <div id="sup-tot"></div>
+    </div></div>
+  <div class="card"><div class="card-h"><div class="t">Supplier OTIF &mdash; monthly</div>
+    <div class="s" id="otif-sub">Issue-free delivery rate per supplier &middot; deliveries from Kobas order confirmations vs issues filed in the same month</div></div>
+    <div class="card-b" id="otif-tbl"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Rises that have stuck</div>
+    <div class="s" id="ps-sub">Price went up and has not moved since &middot; the ones to renegotiate or reprice &middot; open a row for its full price history</div></div>
+    <div class="card-b" id="ps-tbl"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Prices that keep moving</div>
+    <div class="s" id="pf-sub">Up and back down across several reports &middot; a quoted price you cannot plan a margin on &middot; open a row for its full price history</div></div>
+    <div class="card-b" id="pf-tbl"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Price change watch</div>
+    <div class="s" id="pw-sub">Kobas ingredient price report · no supplier/site field in source, shown standalone · newest report, not sliced by the date range above</div></div>
+    <div class="card-b" id="pw-tbl"></div></div>
+</div>
+
+<div class="page" id="p-supi">
+  <div id="sq-note"></div>
+  <div class="kpis" id="sq-kpis"></div>
+  <div class="filters" id="sq-toggle"></div>
+  <div class="cols">
+    <div class="card"><div class="card-h"><div class="t">By supplier</div>
+      <div class="s" id="sq-sup-sub">From the form's own “Supplier?” answer, plus a text search of form answers when unanswered · click a supplier for its full profile</div></div>
+      <div class="card-b" id="sq-sup"></div></div>
+    <div class="card"><div class="card-h"><div class="t">By site</div>
+      <div class="s" id="sq-site-sub">Click a site for its issues — date, supplier, days open</div></div>
+      <div class="card-b" id="sq-site"></div></div>
+  </div>
+  <div class="card"><div class="card-h"><div class="t">Issues per week</div>
+    <div class="s" id="sq-trend-sub">Weekly counts by supplier · history accumulates from 13 Aug 2026</div></div>
+    <div class="card-b" id="sq-trend"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Issue nature (keyword heuristic)</div>
+    <div class="s" id="sq-cat-sub">Bucketed from each issue's free-text answer — not an official taxonomy</div></div>
+    <div class="card-b" id="sq-cat"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Form backlog</div>
+    <div class="s">Every delivery or supplier form with its completed / raised / open counts — form-level backlog from GC Forms Overview, a different basis from the per-issue rows above · current state, not sliced by the date range</div></div>
+    <div class="card-b" id="sq-forms"></div></div>
+</div>
+
+<div class="page" id="p-cross">
+  <div class="note">Cross-referencing quality and supply, by site and event date. <b>This is coincidence, not causation</b> — a broth deviation and a supplier issue at the same site within a few days is a place to look first, not proof of a link. Join key is site + date; site names differ across systems, so a hand-built alias map bridges GetCompliant and Kobas naming (see basis below).</div>
+  <div class="card"><div class="card-h"><div class="t">Broth deviations with a nearby supplier issue</div>
+    <div class="s" id="cr-sub">Same site, supplier issue within ±3 days of the broth deviation, by event date</div></div>
+    <div class="card-b" id="cr-coin"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Combined timeline by site</div>
+    <div class="s">Every mapped broth deviation and supplier issue, in range, most recent first</div></div>
+    <div class="card-b" id="cr-timeline"></div></div>
+</div>
+
+<div class="page" id="p-sites">
+  <div class="filters" id="hc-filter"></div>
+  <div class="card"><div class="card-h"><div class="t">Headcount by site</div>
+    <div class="s" id="hc-sub">Flow roster, branch names resolved</div></div>
+    <div class="card-b" id="hc-bars"></div></div>
+  <div class="card"><div class="card-h"><div class="t">Site directory</div>
+    <div class="s">GetCompliant locations · active and paused</div></div>
+    <div class="card-b" id="sd-tbl"></div></div>
+</div>
+
+<div class="page" id="p-feeds">
+  <div class="card"><div class="card-h"><div class="t">Feed health <span id="b-fh"></span></div>
+    <div class="s">Measured against Postgres, the system of record — the legacy sheet status is not a health signal</div></div>
+    <div class="card-b" id="fh-tbl"></div></div>
+</div>
+
+<div class="page" id="p-day">
+  <div id="day-note"></div>
+  <div id="conn"></div>
+  <div class="cols">
+    <div class="card"><div class="card-h"><div class="t">Inbox signal <span id="b-mail"></span></div>
+      <div class="s">Supplier + maintenance threads, last 10 days</div></div>
+      <div class="card-b" id="d-mail"></div></div>
+    <div class="card"><div class="card-h"><div class="t">Next 7 days</div>
+      <div class="s">Your calendar</div></div>
+      <div class="card-b" id="d-cal"></div></div>
+  </div>
+  <div class="card"><div class="card-h"><div class="t">Your open tasks</div>
+    <div class="s">Asana, soonest due first</div></div>
+    <div class="card-b" id="d-asana"></div></div>
+</div>
+
+<div class="prov" id="prov"></div>
+<div class="foot" id="foot"></div>
+</div>
+<script>
+/* ------------ data plane: baked JSON on GitHub Pages ------------ */
+// Canonical first; the fork's Pages second (serves identical data until PR #1
+// merges into makiramen/ops, then the first entry simply wins).
+const BASES = window.OPS_BASE ? [window.OPS_BASE]
+  : location.hostname.endsWith('github.io') ? ['../data/ops_command/']
+  : ['https://makiramen.github.io/ops/data/ops_command/',
+     'https://makimanc.github.io/ops/data/ops_command/'];
+let BASE = BASES[0];
+const cb = () => '?cb=' + Date.now();   // hard-learned: a cached response served a day-old answer 29/07/2026
+const TARGET = 90;
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtN=v=>v==null?'—':Number(v).toLocaleString('en-GB');
+
+const PAGES=[['p-over','Overview'],['p-train','Training'],['p-comp','Compliance'],
+  ['p-tasks','Task Completion'],['p-maint','Maintenance'],
+  ['p-qual','Quality & Broth'],['p-supp','Supply & Fulfilment'],['p-supi','Supplier Issues'],
+  ['p-cross','Cross-Reference'],['p-sites','Sites'],['p-feeds','Feeds'],['p-day','My day']];
+$('nav').innerHTML=PAGES.map(([id,lb],i)=>`<button role="tab" aria-selected="${i===0}" data-p="${id}">${lb}</button>`).join('');
+$('nav').addEventListener('click',e=>{
+  const b=e.target.closest('button[data-p]'); if(!b) return;
+  [...$('nav').children].forEach(x=>x.setAttribute('aria-selected',x===b));
+  PAGES.forEach(([id])=>$(id).classList.toggle('on',id===b.dataset.p));
+  window.scrollTo(0,0);
+});
+
+const tip=$('tip');
+function hover(el,txt){
+  el.addEventListener('mousemove',e=>{tip.textContent=txt;tip.style.opacity=1;
+    tip.style.left=Math.min(e.clientX+13,innerWidth-tip.offsetWidth-8)+'px';tip.style.top=(e.clientY+16)+'px';});
+  el.addEventListener('mouseleave',()=>tip.style.opacity=0);
+}
+function bars(host,items,fmt,target){
+  const el=$(host); if(!items.length){el.innerHTML='<div class="empty">Nothing to show</div>';return;}
+  const max=Math.max(...items.map(i=>i.v),target||1,1);
+  const tk=target?`<u style="left:${target/max*100}%"></u>`:'';
+  el.innerHTML=(target?`<div class="tgt">Target ${target}%</div>`:'')+items.map(i=>
+    `<div class="brow" data-t="${esc(i.tip||'')}"><div class="blab" title="${esc(i.k)}">${esc(i.k)}</div>
+     <div class="btrack">${tk}<i style="width:${Math.max(1.5,i.v/max*100)}%"></i></div>
+     <div class="bval">${fmt?fmt(i):fmtN(i.v)}</div></div>`).join('');
+  [...el.querySelectorAll('.brow')].forEach(r=>{if(r.dataset.t) hover(r,r.dataset.t);});
+}
+function table(host,cols,rows,empty){
+  const el=$(host);
+  if(!rows.length){el.innerHTML=`<div class="empty">${esc(empty||'Nothing to show')}</div>`;return;}
+  el.innerHTML='<table><thead><tr>'+cols.map(c=>`<th class="${c.n?'n':''}">${esc(c.h)}</th>`).join('')+
+    '</tr></thead><tbody>'+rows.map(r=>`<tr class="${r._tot?'tot':''}">`+cols.map((c,i)=>
+    `<td class="${c.n?'n':''}">${c.raw?r[i]:esc(r[i]??'—')}</td>`).join('')+'</tr>').join('')+'</tbody></table>';
+}
+function siteBoxes(host,items,empty){
+  const el=$(host);
+  if(!items.length){el.innerHTML=`<div class="empty">${esc(empty||'Nothing to show')}</div>`;return;}
+  el.innerHTML='<div class="sitegrid">'+items.map(i=>{
+    const hasSplit=i.delivered!=null;
+    const pct=hasSplit&&i.value>0?Math.max(0,Math.min(100,i.delivered/i.value*100)):0;
+    const bar=hasSplit?`<div class="splitbar"><i style="width:${pct}%"></i></div>`:'';
+    const deliveredNote=hasSplit&&i.delivered>0?' · £'+fmtN(Math.round(i.delivered))+' delivered':'';
+    /* i.sub lets a caller state the subline itself (26/08/2026 - the spend
+       card counts order LINES there, the default counts suppliers). */
+    const sub=i.sub!=null?esc(i.sub)
+      :`${fmtN(i.orders)} order${i.orders===1?'':'s'} · ${fmtN(i.suppliers)} supplier${i.suppliers===1?'':'s'}${deliveredNote}`;
+    return `<div class="sitebox clk" data-site="${esc(i.site)}"><div class="lb" title="${esc(i.site)}">${esc(i.site)}</div>`+
+    `<div class="vl">£${fmtN(Math.round(i.value))}</div>`+
+    `<div class="sb">${sub}</div>`+
+    bar+'</div>';
+  }).join('')+'</div>';
+}
+/* ---- monthly supplier OTIF (26/08/2026) --------------------------------
+   Ross's definition, locked: deliveries in the month vs issues filed in the
+   same month, per supplier. This is an ISSUE-FREE-DELIVERY RATE, not a
+   measured on-time-in-full - nothing here observes whether a delivery
+   actually arrived on time or complete, only whether somebody filed an issue
+   against that supplier that month. The note under the table says so every
+   time it renders, and August says more (issue history starts mid-month).
+   A snapshot baked before this block existed gets an explicit "predates"
+   empty state - never a table of zeros. */
+let OTIF_MONTH=null;
+function monthLabel(m){
+  const MN=['January','February','March','April','May','June','July',
+            'August','September','October','November','December'];
+  const p=String(m||'').split('-');
+  return (p.length===2&&MN[+p[1]-1])?MN[+p[1]-1]+' '+p[0]:String(m||'—');
+}
+function renderOtif(){
+  const el=$('otif-tbl'); if(!el) return;
+  const o=(SNAP&&SNAP.supply&&SNAP.supply.otif)||null;
+  const months=(o&&o.months)||[];
+  const sub=$('otif-sub');
+  if(!months.length){
+    el.innerHTML='<div class="empty">'+esc(o
+      ? 'No monthly OTIF data in this snapshot — the Kobas Orders feed had not landed when it was baked.'
+      : 'This snapshot predates the monthly OTIF data.')+'</div>';
+    if(sub) sub.textContent='Issue-free delivery rate per supplier · unavailable in this snapshot';
+    return;
+  }
+  const keys=months.map(m=>m.month);
+  if(!OTIF_MONTH||keys.indexOf(OTIF_MONTH)<0) OTIF_MONTH=keys[keys.length-1];
+  const idx=keys.indexOf(OTIF_MONTH);
+  const cur=months[idx], prev=idx>0?months[idx-1]:null;
+  const prevMap={}; if(prev)(prev.suppliers||[]).forEach(r=>{prevMap[r.supplier]=r;});
+  const rows=(cur.suppliers||[]).slice();
+  const pctTxt=v=>v==null?'—':Number(v).toFixed(1)+'%';
+  /* direction is carried by the glyph AND the word, never by colour alone */
+  const deltaCell=r=>{
+    if(!prev) return '—';
+    const p=prevMap[r.supplier];
+    if(!p||p.otif_pct==null||r.otif_pct==null) return '—';
+    const d=Math.round((r.otif_pct-p.otif_pct)*10)/10;
+    if(d===0) return '▬ level';
+    return (d>0?'▲ up ':'▼ down ')+Math.abs(d).toFixed(1)+' pts';
+  };
+  const selHtml='<div style="margin:0 0 10px">'+
+    '<label for="otif-month" style="font-size:12.5px;opacity:.85;margin-right:6px">Month</label>'+
+    '<select id="otif-month" title="Choose a month">'+
+    keys.map(k=>`<option value="${esc(k)}"${k===OTIF_MONTH?' selected':''}>${esc(monthLabel(k))}</option>`).join('')+
+    '</select></div>';
+  const body=rows.length
+    ? '<table><thead><tr><th>Supplier</th><th class="n">Deliveries</th><th class="n">Issues</th>'+
+      '<th class="n">OTIF %</th><th>vs '+esc(prev?monthLabel(prev.month):'previous month')+'</th></tr></thead><tbody>'+
+      rows.map(r=>`<tr><td>${esc(r.supplier||'—')}</td><td class="n">${fmtN(r.deliveries)}</td>`+
+        `<td class="n">${fmtN(r.issues)}</td><td class="n">${esc(pctTxt(r.otif_pct))}</td>`+
+        `<td>${esc(deltaCell(r))}</td></tr>`).join('')+
+      `<tr class="tot"><td>All suppliers</td><td class="n">${fmtN(cur.deliveries)}</td>`+
+      `<td class="n">${fmtN(cur.issues)}</td><td class="n">${esc(pctTxt(cur.otif_pct))}</td><td></td></tr>`+
+      '</tbody></table>'
+    : '<div class="empty">No deliveries or issues recorded in '+esc(monthLabel(cur.month))+'.</div>';
+  const augNote=(cur.month===(o.first_month||'2026-08'))
+    ? ' ⚠ '+esc(monthLabel(cur.month))+' is not comparable with later months: delivery counts cover the whole month but issue history only begins '+
+      esc(o.issues_history_start||'13 Aug 2026')+', so its OTIF is flattered.'
+    : '';
+  const unatt=(cur.unattributed_issues||0)>0
+    ? ' · '+fmtN(cur.unattributed_issues)+' issue'+(cur.unattributed_issues===1?'':'s')+
+      ' that month named no supplier and are excluded from the rows above (they are on the Supplier Issues tab)'
+    : '';
+  el.innerHTML=selHtml+body+
+    '<div class="prov">'+esc(o.note||'')+unatt+'</div>'+
+    (o.basis?'<div class="prov">'+esc(o.basis)+'</div>':'')+
+    (augNote?'<div class="prov" style="color:var(--a)">'+augNote+'</div>':'');
+  if(sub) sub.textContent='Issue-free delivery rate per supplier · '+monthLabel(cur.month)+
+    ' · deliveries from Kobas order confirmations vs issues filed in the same month · not a measured on-time-in-full';
+  const ms=$('otif-month');
+  if(ms) ms.onchange=()=>{OTIF_MONTH=ms.value;renderOtif();};
+}
+function chip(kind,word){
+  const ic={g:'✓',a:'▲',r:'●',n:'–',b:'ℹ'}[kind]||'';
+  return `<span class="tag t-${kind}">${ic} ${esc(word)}</span>`;
+}
+function openModal(title,bodyHtml){
+  $('task-modal-t').textContent=title;
+  $('task-modal-b').innerHTML=bodyHtml;
+  $('task-modal-ov').classList.add('on');
+}
+function openTaskModal(site){
+  const tk=(SNAP&&SNAP.tasks)||{};
+  const info=(tk.drilldown||{})[site];
+  if(!info||!info.tasks||!info.tasks.length){
+    openModal(site,'<div class="empty">No scheduled tasks recorded for this site in this pull.</div>');
+    return;
+  }
+  /* sliced by each task's own due date (never pull date) — same rule as every
+     other drill-down in this shell */
+  const rows=info.tasks.filter(t=>inEV(t.d));
+  if(!rows.length){
+    const cap=info.truncated
+      ? ` The server only holds the ${fmtN(info.tasks.length)} most recent of ${fmtN(info.total)} — an older range may include tasks not loaded here.`
+      : '';
+    openModal(site,`<div class="empty">No scheduled tasks for this site due in ${esc(evLabel())}.${cap}</div>`);
+    return;
+  }
+  const html='<table><thead><tr><th>Due</th><th>Task</th><th>Answer</th><th>Status</th></tr></thead><tbody>'+
+    rows.map(t=>`<tr><td>${esc((t.due||'').replace('T',' ').slice(0,16))}</td><td>${esc(t.task||'—')}</td>`+
+      `<td>${esc(t.answer??'—')}</td><td>${t.late?chip('r','Missed'):chip('g','On time')}</td></tr>`).join('')+
+    '</tbody></table><div class="prov">'+
+    rows.length+' of '+fmtN(info.total)+' scheduled task'+(info.total===1?'':'s')+' due in '+esc(evLabel())+
+    (info.truncated?` (server holds the ${fmtN(info.tasks.length)} most recent of ${fmtN(info.total)} total — older ones aren't available to filter)`:'')+
+    '</div>';
+  openModal(site,html);
+}
+/* ---- Supplier Issues helpers (18/08/2026) ---- */
+const ESC_DAYS=7;                       // Ross's escalation threshold: an issue open >7 days
+const supNameOf=i=>i.supplier||'Unattributed';
+function dOpen(i){                      // days an OPEN issue has been open (null for closed / undated)
+  if(!i||!i.open||!i.d) return null;
+  const n=Math.floor((Date.now()-new Date(i.d+'T00:00:00Z'))/864e5);
+  return n<0?0:n;
+}
+const issueChip=i=>{const n=dOpen(i);
+  return i.open?(n!=null&&n>ESC_DAYS?chip('r','Escalate'):chip('a','Open')):chip('g','Closed');};
+function weekOf(d){                     // Monday of the week containing an ISO date
+  const dt=new Date(d+'T00:00:00Z'); if(isNaN(dt)) return null;
+  dt.setUTCDate(dt.getUTCDate()-((dt.getUTCDay()+6)%7));
+  return dt.toISOString().slice(0,10);
+}
+/* Categorical series palette for the weekly trend — the dataviz reference
+   palette, fixed slot order (never cycled), validated with
+   scripts/validate_palette.js: adjacent CVD ΔE 9.1, normal-vision ΔE 19.6,
+   all PASS on the light surface. Contrast WARN on slots 3–5 → relief is the
+   line-end direct labels + legend + tooltips. */
+const SQ_COLORS=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4'];
+let SQ_MODE='open';                     // open-first by default (Ross's direction)
+function gotoPage(id){const b=[...$('nav').children].find(x=>x.dataset.p===id); if(b) b.click();}
+function openSiteIssuesModal(site){
+  const sup=(SNAP&&SNAP.suppliers)||{};
+  const rows=(sup.issues||[]).filter(i=>(i.site||'(no site)')===site && inEV(i.d)).slice()
+    .sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  if(!rows.length){
+    openModal(site,'<div class="empty">No supplier issue form answers recorded for this site in this pull.</div>');
+    return;
+  }
+  const html='<table><thead><tr><th>Issue date</th><th>Supplier</th><th>Form</th><th>Issue</th><th class="n">Days open</th><th>Status</th></tr></thead><tbody>'+
+    rows.map(i=>{const n=dOpen(i);
+      return `<tr><td>${esc(i.d||'—')}</td><td>${esc(supNameOf(i))}</td>`+
+      `<td>${esc(i.form||'—')}</td><td>${esc(i.issue_text||'—')}</td>`+
+      `<td class="n">${n==null?'—':fmtN(n)}</td><td>${issueChip(i)}</td></tr>`;}).join('')+
+    '</tbody></table><div class="prov">'+fmtN(rows.length)+' issue form answer'+(rows.length===1?'':'s')+
+    ' · escalate = open more than '+ESC_DAYS+' days · '+esc(sup.issues_basis||'')+'</div>';
+  openModal(site,html);
+}
+function openSupplierProfileModal(name){
+  const sup=(SNAP&&SNAP.suppliers)||{};
+  const rows=(sup.issues||[]).filter(i=>supNameOf(i)===name && inEV(i.d)).slice()
+    .sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  const open=rows.filter(r=>r.open);
+  const esc7=open.filter(r=>(dOpen(r)??-1)>ESC_DAYS).length;
+  const sites=new Set(rows.map(r=>r.site).filter(Boolean));
+  const ws=((SNAP&&SNAP.supply&&SNAP.supply.week_spend)||[]).filter(w=>w.supplier_canon===name)
+    .slice().sort((a,b)=>(b.value_gbp||0)-(a.value_gbp||0));
+  const spendTot=ws.reduce((s,w)=>s+(w.value_gbp||0),0);
+  const wk=(SNAP&&SNAP.supply&&SNAP.supply.week_start&&SNAP.supply.week_end)
+    ? SNAP.supply.week_start+' – '+SNAP.supply.week_end : 'this Mon–Sun';
+  const stat=(l,v,sb)=>`<div class="kpi k-o" style="padding:8px 11px"><div class="lb">${esc(l)}</div>`+
+    `<div class="vl" style="font-size:20px">${v}</div><div class="sb">${esc(sb||'')}</div></div>`;
+  let html='<div class="kpis" style="margin:10px 0 6px;grid-template-columns:repeat(auto-fit,minmax(118px,1fr))">'+
+    stat('Open',fmtN(open.length))+stat('Escalated',fmtN(esc7),'open >'+ESC_DAYS+' days')+
+    stat('In range',fmtN(rows.length))+stat('Sites',fmtN(sites.size))+
+    stat('£ due this week',ws.length?'£'+fmtN(Math.round(spendTot)):'—')+'</div>';
+  if(rows.length){
+    html+='<table><thead><tr><th>Date</th><th>Site</th><th>Issue</th><th class="n">Days open</th><th>Status</th></tr></thead><tbody>'+
+      rows.map(i=>{const n=dOpen(i);
+        return `<tr><td>${esc(i.d||'—')}</td><td>${esc(i.site||'—')}</td><td>${esc(i.issue_text||i.form||'—')}</td>`+
+        `<td class="n">${n==null?'—':fmtN(n)}</td><td>${issueChip(i)}</td></tr>`;}).join('')+
+      '</tbody></table>';
+  } else {
+    html+='<div class="empty">No issues for this supplier dated in '+esc(evLabel())+'.</div>';
+  }
+  if(ws.length){
+    html+='<div style="font-weight:650;font-size:13.5px;margin:14px 0 6px">Projected spend, '+esc(wk)+'</div>'+
+      '<table><thead><tr><th>Site</th><th class="n">Orders</th><th class="n">£ projected</th></tr></thead><tbody>'+
+      ws.map(w=>`<tr><td>${esc(w.site||'—')}</td><td class="n">${fmtN(w.orders)}</td>`+
+        `<td class="n">£${fmtN(Math.round(w.value_gbp||0))}</td></tr>`).join('')+
+      '</tbody></table><div class="prov">'+
+      ((SNAP&&SNAP.supply&&SNAP.supply.week_spend_source)==='order_emails'
+        ? 'orders as placed, from Kobas order confirmation emails — not a confirmed delivered figure'
+        : 'a projection from outstanding orders, not a confirmed spend figure')+'</div>';
+  } else {
+    html+='<div class="prov" style="margin-top:12px">No orders due this week are attributed to this supplier'+
+      (name==='Unattributed'?'':' (older snapshots predate the supplier join)')+'.</div>';
+  }
+  /* monthly OTIF for this supplier, restricted to the months the event-date
+     range touches (26/08/2026). A month counts as in range if ANY of its days
+     is - a range that ends mid-month still shows that month, labelled. */
+  const otifB=(SNAP&&SNAP.supply&&SNAP.supply.otif)||null;
+  const monthOverlapsRange=m=>{
+    const first=m+'-01';
+    const y=+m.slice(0,4), mo=+m.slice(5,7);
+    const last=new Date(Date.UTC(y,mo,0)).toISOString().slice(0,10);
+    return (!EV.t||first<=EV.t)&&(!EV.f||last>=EV.f);
+  };
+  if(otifB&&(otifB.months||[]).length){
+    const mrows=(otifB.months||[]).filter(m=>monthOverlapsRange(m.month))
+      .map(m=>({month:m.month,r:(m.suppliers||[]).find(x=>x.supplier===name)||null}))
+      .filter(x=>x.r);
+    html+='<div style="font-weight:650;font-size:13.5px;margin:14px 0 6px">OTIF by month</div>';
+    html+=mrows.length
+      ? '<table><thead><tr><th>Month</th><th class="n">Deliveries</th><th class="n">Issues</th><th class="n">OTIF %</th></tr></thead><tbody>'+
+        mrows.map(x=>`<tr><td>${esc(monthLabel(x.month))}</td><td class="n">${fmtN(x.r.deliveries)}</td>`+
+          `<td class="n">${fmtN(x.r.issues)}</td>`+
+          `<td class="n">${x.r.otif_pct==null?'—':Number(x.r.otif_pct).toFixed(1)+'%'}</td></tr>`).join('')+
+        '</tbody></table><div class="prov">'+esc(otifB.note||'')+'</div>'
+      : '<div class="empty">No deliveries or issues recorded for this supplier in the months this range touches.</div>';
+  } else {
+    html+='<div class="prov" style="margin-top:12px">Monthly OTIF is not in this snapshot.</div>';
+  }
+  html+='<div class="prov">Ingredient price changes carry no supplier field in the source report, so they cannot be shown per supplier — see Price change watch on Supply &amp; Fulfilment.</div>'+
+    '<div class="prov">'+esc(sup.issues_basis||'')+' · '+esc(evLabel())+'</div>';
+  openModal(name,html);
+}
+function drawIssueTrend(set){
+  /* Weekly issue counts as a small line chart — top suppliers + Unattributed,
+     fixed slot colours (SQ_COLORS, validated — see comment there), legend +
+     line-end direct labels + per-point tooltips so identity is never colour
+     alone. One axis. Caps are disclosed in the subtitle, never silent. */
+  const el=$('sq-trend'), sub=$('sq-trend-sub');
+  const pts=set.filter(i=>i.d&&weekOf(i.d));
+  if(!pts.length){
+    el.innerHTML='<div class="empty">No issues dated in this range</div>';
+    sub.textContent='Weekly counts by supplier · history accumulates from 13 Aug 2026';
+    return;
+  }
+  const weeks=[...new Set(pts.map(i=>weekOf(i.d)))].sort();
+  const totals={};
+  pts.forEach(i=>{const k=supNameOf(i);totals[k]=(totals[k]||0)+1;});
+  const ranked=Object.entries(totals).sort((a,b)=>b[1]-a[1]).map(([k])=>k);
+  let names=ranked.slice(0,5);
+  if(ranked.includes('Unattributed')&&!names.includes('Unattributed'))
+    names=names.slice(0,4).concat('Unattributed');
+  const cnt={}; names.forEach(n=>cnt[n]=weeks.map(()=>0));
+  let plotted=0;
+  pts.forEach(i=>{const k=supNameOf(i);
+    if(cnt[k]!==undefined){cnt[k][weeks.indexOf(weekOf(i.d))]++;plotted++;}});
+  const ymax=Math.max(1,...names.map(n=>Math.max(...cnt[n])));
+  const W=720,H=210,L=30,R=124,T=10,B=26;
+  const X=i=>weeks.length>1?L+(W-L-R)*i/(weeks.length-1):L+(W-L-R)/2;
+  const Y=v=>T+(H-T-B)*(1-v/ymax);
+  const step=Math.max(1,Math.ceil(ymax/4));
+  let grid='';
+  for(let v=0;v<=ymax;v+=step)
+    grid+=`<line x1="${L}" y1="${Y(v).toFixed(1)}" x2="${W-R}" y2="${Y(v).toFixed(1)}" stroke="var(--line)" stroke-width="1"/>`+
+      `<text x="${L-6}" y="${(Y(v)+3).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--faint)">${v}</text>`;
+  const wkLab=w=>new Date(w+'T00:00:00Z').toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+  const xlab=weeks.map((w,i)=>`<text x="${X(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(wkLab(w))}</text>`).join('');
+  const ends=names.map((n,si)=>({si,y:Y(cnt[n][weeks.length-1])})).sort((a,b)=>a.y-b.y);
+  for(let i=1;i<ends.length;i++) if(ends[i].y-ends[i-1].y<14) ends[i].y=ends[i-1].y+14;
+  /* keep nudged labels inside the plot: shift the stack up if it overflows the bottom */
+  const yFloor=H-B-4, yCeil=T+4;
+  const over=ends.length?ends[ends.length-1].y-yFloor:0;
+  if(over>0) ends.forEach(e=>{e.y-=over;});
+  ends.forEach(e=>{if(e.y<yCeil)e.y=yCeil;});
+  let series='';
+  names.forEach((n,si)=>{
+    const col=SQ_COLORS[si%SQ_COLORS.length];
+    if(weeks.length>1){
+      const path=cnt[n].map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(' ');
+      series+=`<path d="${path}" fill="none" stroke="${col}" stroke-width="2"/>`;
+    }
+    cnt[n].forEach((v,i)=>{
+      series+=`<circle cx="${X(i).toFixed(1)}" cy="${Y(v).toFixed(1)}" r="4" fill="${col}" stroke="var(--card)" stroke-width="2" data-t="${esc(n)} — ${v} issue${v===1?'':'s'}, week of ${esc(wkLab(weeks[i]))}"/>`;});
+    const e=ends.find(x=>x.si===si);
+    series+=`<circle cx="${W-R+8}" cy="${e.y.toFixed(1)}" r="4" fill="${col}"/>`+
+      `<text x="${W-R+16}" y="${(e.y+3.5).toFixed(1)}" font-size="11" fill="var(--ink)">${esc(n.length>16?n.slice(0,15)+'…':n)}</text>`;
+  });
+  const legend='<div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:6px">'+names.map((n,si)=>
+    `<span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted)"><i style="width:9px;height:9px;border-radius:50%;background:${SQ_COLORS[si%SQ_COLORS.length]};display:inline-block"></i>${esc(n)}</span>`).join('')+'</div>';
+  el.innerHTML=legend+`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="Supplier issues per week">${grid}${xlab}${series}</svg>`;
+  [...el.querySelectorAll('circle[data-t]')].forEach(c=>hover(c,c.dataset.t));
+  sub.textContent=plotted+' of '+pts.length+' issue(s) across '+weeks.length+' week'+(weeks.length===1?'':'s')+' (Mon-start)'+
+    (ranked.length>names.length?' · showing top '+names.length+' of '+ranked.length+' suppliers — the rest are in the tables above':'')+
+    ' · history accumulates from 13 Aug 2026';
+}
+function openTrainingModal(site,mandOnly){
+  const outstanding=(SNAP&&SNAP.training&&SNAP.training.outstanding)||[];
+  const rows=outstanding.filter(o=>o.site===site&&(!mandOnly||o.mand)).slice()
+    .sort((a,b)=>(a.due?0:1)-(b.due?0:1)||(a.due||'').localeCompare(b.due||''));
+  const title=site+(mandOnly?' — mandatory compliance':'');
+  if(!rows.length){
+    openModal(title,'<div class="empty">No outstanding '+(mandOnly?'mandatory compliance ':'')+
+      'training recorded for this site in this pull.</div>');
+    return;
+  }
+  const statusChip=o=>o.overdue?chip('r','Overdue'):
+    /In Progress/.test(o.status||'')?chip('a','In progress'):chip('n','Not started');
+  const html='<table><thead><tr><th>Person</th><th>Module</th><th>Status</th><th>Due</th></tr></thead><tbody>'+
+    rows.map(o=>`<tr><td>${esc(o.person||'(unnamed)')}</td><td>${esc(o.module||'—')}</td>`+
+      `<td>${statusChip(o)}</td><td>${esc(o.due||'—')}</td></tr>`).join('')+
+    '</tbody></table><div class="prov">'+fmtN(rows.length)+' outstanding '+(mandOnly?'mandatory ':'')+'module'+(rows.length===1?'':'s')+
+    ' · '+fmtN(rows.filter(o=>o.overdue).length)+' overdue · sorted by due date, soonest first · current state, not sliced by the date range above</div>';
+  openModal(title,html);
+}
+/* Cell drill-down: the people at one site who owe one specific mandatory
+   module (Ross, 18 Aug 2026) — the 6th consumer of the shared openModal. */
+function openMandCellModal(site,mod){
+  const outstanding=(SNAP&&SNAP.training&&SNAP.training.outstanding)||[];
+  const cells=(SNAP&&SNAP.training&&SNAP.training.mandatory&&SNAP.training.mandatory.cells)||[];
+  const cell=cells.find(c=>c.site===site&&c.module===mod);
+  const rows=outstanding.filter(o=>o.site===site&&(o.module||'').trim()===mod).slice()
+    .sort((a,b)=>(a.due?0:1)-(b.due?0:1)||(a.due||'').localeCompare(b.due||''));
+  const title=site+' — '+mod;
+  const ctx=cell?fmtN(cell.complete)+' of '+fmtN(cell.assigned)+' assigned people complete':'no assignment data';
+  if(!rows.length){
+    openModal(title,'<div class="empty">'+(cell&&cell.assigned&&cell.complete>=cell.assigned
+      ?'Everyone assigned this module here has completed it ('+esc(ctx)+').'
+      :'Nobody at this site currently owes this module in this pull.')+'</div>');
+    return;
+  }
+  const statusChip=o=>o.overdue?chip('r','Overdue'):
+    /In Progress/.test(o.status||'')?chip('a','In progress'):chip('n','Not started');
+  const html='<table><thead><tr><th>Person</th><th>Status</th><th>Due</th></tr></thead><tbody>'+
+    rows.map(o=>`<tr><td>${esc(o.person||'(unnamed)')}</td><td>${statusChip(o)}</td><td>${esc(o.due||'—')}</td></tr>`).join('')+
+    '</tbody></table><div class="prov">'+fmtN(rows.length)+' outstanding · '+
+    fmtN(rows.filter(o=>o.overdue).length)+' overdue · '+esc(ctx)+
+    ' · sorted by due date, soonest first · current state, not sliced by the date range above</div>';
+  openModal(title,html);
+}
+function openWeekSpendModal(site){
+  const weekSpend=(SNAP&&SNAP.supply&&SNAP.supply.week_spend)||[];
+  const rows=weekSpend.filter(f=>f.site===site).slice().sort((a,b)=>(b.value_gbp||0)-(a.value_gbp||0));
+  if(!rows.length){
+    openModal(site,'<div class="empty">No orders due this week for this site in this pull.</div>');
+    return;
+  }
+  const tot=rows.reduce((s,f)=>s+(f.value_gbp||0),0);
+  const ord=rows.reduce((s,f)=>s+(f.orders||0),0);
+  const wk=(SNAP.supply&&SNAP.supply.week_start&&SNAP.supply.week_end)
+    ? SNAP.supply.week_start+' – '+SNAP.supply.week_end : 'this Mon–Sun';
+  const isLive=(SNAP.supply&&SNAP.supply.week_spend_source)==='order_emails';
+
+  if(!isLive){
+    /* fallback shape: exactly today's card - no delivered/pending split on
+       this source, so none is shown or invented (24/08/2026) */
+    const html='<table><thead><tr><th>Supplier</th><th class="n">Orders</th><th class="n">£ projected</th></tr></thead><tbody>'+
+      rows.map(f=>`<tr><td>${esc(f.supplier||'—')}</td><td class="n">${fmtN(f.orders)}</td>`+
+        `<td class="n">£${fmtN(Math.round(f.value_gbp||0))}</td></tr>`).join('')+
+      '</tbody></table><div class="prov">£'+fmtN(Math.round(tot))+' across '+fmtN(ord)+' order'+(ord===1?'':'s')+
+      ' · orders due '+esc(wk)+' (target delivery date) · a projection, not a confirmed spend figure</div>';
+    openModal(site,html);
+    return;
+  }
+
+  /* 26/08/2026: the order-confirmation emails carry no delivered status, so
+     the delivered/pending split that the retired pending-orders feed
+     supported is GONE rather than guessed at. Items and lines take its
+     place - both are real numbers off the order itself. */
+  const items=rows.reduce((s,f)=>s+(f.items||0),0);
+  const lines=rows.reduce((s,f)=>s+(f.lines||0),0);
+  const kpi=(c,l,v,sb)=>`<div class="kpi k-${c}"><div class="lb">${esc(l)}</div><div class="vl">${v}</div><div class="sb">${esc(sb)}</div></div>`;
+  const chips='<div class="kpis" style="margin:2px 0 12px;grid-template-columns:repeat(auto-fit,minmax(118px,1fr))">'+
+    kpi('o','Total','£'+fmtN(Math.round(tot)),fmtN(ord)+' order'+(ord===1?'':'s'))+
+    kpi('o','Items ordered',fmtN(items),fmtN(lines)+' order line'+(lines===1?'':'s'))+
+    kpi('b','Suppliers',fmtN(rows.length),'')+
+    '</div>';
+  const supTable='<div style="font-weight:650;font-size:13.5px;margin:4px 0 6px">By supplier</div>'+
+    '<table><thead><tr><th>Supplier</th><th class="n">Orders</th><th class="n">Items</th><th class="n">Lines</th><th class="n">£ total</th></tr></thead><tbody>'+
+    rows.map(f=>`<tr><td>${esc(f.supplier||'—')}</td><td class="n">${fmtN(f.orders)}</td>`+
+      `<td class="n">${fmtN(f.items)}</td><td class="n">${fmtN(f.lines)}</td>`+
+      `<td class="n">£${fmtN(Math.round(f.value_gbp||0))}</td></tr>`).join('')+
+    '</tbody></table>';
+  const drillAll=((SNAP.supply&&SNAP.supply.week_drill)||[]).filter(o=>o.site===site)
+    .slice().sort((a,b)=>(a.d||'').localeCompare(b.d||'')||(b.value_gbp||0)-(a.value_gbp||0));
+  const orderTable=drillAll.length
+    ? '<div style="font-weight:650;font-size:13.5px;margin:14px 0 6px">Every order</div>'+
+      '<table><thead><tr><th>Order no.</th><th>Supplier</th><th>Delivery date</th><th class="n">Lines</th><th class="n">Items</th><th class="n">£</th><th>Placed by</th></tr></thead><tbody>'+
+      drillAll.map(o=>`<tr><td>${esc(o.order_no||'—')}</td><td>${esc(o.supplier||'—')}</td><td>${esc(o.d||'—')}</td>`+
+        `<td class="n">${fmtN(o.lines)}</td><td class="n">${fmtN(o.items)}</td>`+
+        `<td class="n">£${fmtN(Math.round(o.value_gbp||0))}</td>`+
+        `<td>${esc(o.staff||'—')}</td></tr>`).join('')+
+      '</tbody></table>'
+    : '<div class="empty" style="margin-top:14px">Per-order detail unavailable for this site this pull.</div>';
+  const capNote=(SNAP.supply&&SNAP.supply.week_drill_truncated)
+    ? ' · the week-wide order list is capped at 400 rows ('+fmtN(SNAP.supply.week_drill_total||0)+
+      ' orders due this week in total) - some orders for busy sites may be missing from the table above'
+    : '';
+  const basis=(SNAP.supply&&SNAP.supply.week_spend_basis)||'';
+  openModal(site,chips+supTable+orderTable+'<div class="prov">'+esc(basis)+capNote+'</div>');
+}
+function openMaintModal(site){
+  const maint=(SNAP&&SNAP.maintenance)||{};
+  const rows=(maint.tasks||[]).filter(t=>t.site===site && inEV(t.d)).slice()
+    .sort((a,b)=>(b.d||'').localeCompare(a.d||''));
+  if(!rows.length){
+    openModal(site,`<div class="empty">No maintenance tasks recorded for this site in ${esc(evLabel())}.</div>`);
+    return;
+  }
+  const html='<table><thead><tr><th>Date</th><th>Issue</th><th>Update</th><th>Status</th></tr></thead><tbody>'+
+    rows.map(t=>`<tr><td>${esc(t.d||'—')}</td><td>${esc(t.issue||'—')}</td>`+
+      `<td>${esc(t.comment||'—')}</td><td>${t.status==='ongoing'?chip('a','Outstanding/Ongoing'):chip('g','Resolved')}</td></tr>`).join('')+
+    '</tbody></table><div class="prov">'+fmtN(rows.length)+' maintenance task'+(rows.length===1?'':'s')+' in '+esc(evLabel())+'</div>';
+  openModal(site,html);
+}
+$('task-modal-x').onclick=()=>$('task-modal-ov').classList.remove('on');
+$('task-modal-ov').onclick=e=>{if(e.target.id==='task-modal-ov') $('task-modal-ov').classList.remove('on');};
+document.addEventListener('keydown',e=>{if(e.key==='Escape') $('task-modal-ov').classList.remove('on');});
+/* Training-tab state (Ross, 18 Aug 2026): the analyst view counts ONLY
+   mandatory compliance modules; TR_MODE survives re-renders so a date-range
+   change doesn't kick the user off the All-modules view. MAND_TARGET is 95
+   for statutory compliance specifically — deliberately stricter than the
+   dashboard-wide TARGET of 90. */
+let TR_MODE='mand', TR_KIND='all';
+const MAND_TARGET=95;
+const MOD_SHORT={
+  'COSHH: Working With Hazardous Substances - UK':'COSHH',
+  'First Aid Awareness':'First Aid',
+  'Health and Safety Level 2':'H&S L2',
+  'Food Safety Level 2':'Food Safety L2',
+  'Food Allergens':'Allergens',
+  'Fire Safety Awareness':'Fire Safety',
+  'Licensing Scotland':'Lic. Scot',
+  'Licensing England & Wales':'Lic. E&W',
+  'MRSOS Training Module':'MRSOS'};
+const modeFilter=(host,onchange)=>{
+  const modes=[['mand','Mandatory compliance'],['all','All modules']];
+  $(host).innerHTML='<span style="color:var(--muted);font-size:12px">View:</span>'+
+    modes.map(([k,l])=>`<button class="fbtn" aria-pressed="${k===TR_MODE}" data-k="${k}">${l}</button>`).join('');
+  $(host).addEventListener('click',e=>{
+    const b=e.target.closest('.fbtn'); if(!b) return;
+    [...$(host).querySelectorAll('.fbtn')].forEach(x=>x.setAttribute('aria-pressed',x===b));
+    onchange(b.dataset.k);
+  });
+};
+/* ⇣ CSV — person-level outstanding list for whatever is currently shown
+   (mandatory-only unless the All-modules toggle is on; region filter
+   honoured). Pure client-side; wired once, reads state at click time. */
+$('tr-csv').addEventListener('click',e=>{
+  e.stopPropagation();
+  const out=(SNAP&&SNAP.training&&SNAP.training.outstanding)||[];
+  const rows=out.filter(o=>(TR_MODE!=='mand'||o.mand)&&(TR_KIND==='all'||regionOf(o.site)===TR_KIND));
+  const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+  const csv='site,person,module,status,due\n'+
+    rows.map(o=>[o.site,o.person,o.module,o.status,o.due||''].map(q).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=(TR_MODE==='mand'?'mandatory':'all')+'_training_outstanding_'+(TR_KIND!=='all'?TR_KIND+'_':'')+((SNAP&&SNAP.pull_date)||'latest')+'.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+});
+/* Show filter = AM REGION split (Ross, 18 Aug 2026 — replaced the old
+   site-type split). The site→region map is baked by the builder
+   (snap.site_regions, single source of truth); a site missing from it shows
+   under All only and the builder names it in gaps. */
+const REGION_LB={scotland:'Scotland',north:'North England',south:'South England'};
+/* NBSP normalisation matters: some Flow branch names (e.g. 'Maki O2 Arena')
+   use U+00A0, while the builder map uses plain spaces — found live 18/08. */
+const regionOf=site=>((SNAP&&SNAP.site_regions)||{})[String(site||'').replace(/\u00a0/g,' ').trim()]||null;
+const regionFilter=(host,onchange)=>{
+  const kinds=[['all','All'],['scotland','Scotland'],['north','North England'],['south','South England']];
+  $(host).innerHTML='<span style="color:var(--muted);font-size:12px">Show:</span>'+
+    kinds.map(([k,l],i)=>`<button class="fbtn" aria-pressed="${i===0}" data-k="${k}">${l}</button>`).join('');
+  $(host).addEventListener('click',e=>{
+    const b=e.target.closest('.fbtn'); if(!b) return;
+    [...$(host).querySelectorAll('.fbtn')].forEach(x=>x.setAttribute('aria-pressed',x===b));
+    onchange(b.dataset.k);
+  });
+};
+
+/* ------------ staleness banner: schedule-aware via the verifier ------------
+   The old banner cried wolf on every quiet day (>1.5-day-old snapshot =
+   "the bake may have failed"), because it didn't know the schedule. It now
+   reads the daily verifier's verdict (health_latest.json, committed by
+   ops_verify.yml, chained to the daily bake) and only goes red when verification actually
+   FAILED; a legit no-new-data day renders as a neutral note. If the
+   verifier itself goes quiet for >30h, that is its own amber - silence is
+   only healthy while the checker is provably alive. */
+let HEALTH=null;
+async function fetchHealth(){
+  try{
+    const r=await fetch(BASE+'health_latest.json'+cb(),{cache:'no-store'});
+    if(r.ok) HEALTH=await r.json();
+  }catch(e){/* no verdict published yet - bannerHtml degrades gracefully */}
+}
+function bannerHtml(snap){
+  const ageDays=(Date.now()-new Date(snap.generated_at))/864e5;
+  const isLatest=!IDX||!IDX.latest||IDX.latest===snap.pull_date;
+  if(HEALTH&&HEALTH.generated_at){
+    const hAge=(Date.now()-new Date(HEALTH.generated_at))/864e5;
+    if(hAge>1.25) return `<div class="warn"><b>The data verifier hasn't reported since ${esc(HEALTH.generated_at)}.</b> Its run may have stopped — check the ETL repo's Actions tab.</div>`;
+    if(HEALTH.overall==='red'){
+      const f=(HEALTH.criticals&&HEALTH.criticals[0])||{};
+      const n=(HEALTH.counts&&HEALTH.counts.criticals)||'?';
+      return `<div class="err"><b>Data verification FAILED (${esc(HEALTH.verified_date||'')}):</b> ${esc((f.feed?f.feed+' — ':'')+(f.detail||''))}${n>1?` (+${n-1} more critical)`:''} — check the ops repo's Actions tab.</div>`;
+    }
+    if(HEALTH.overall==='amber'){
+      const n=(HEALTH.counts&&HEALTH.counts.warnings)||'?';
+      return `<div class="warn"><b>Data verified with ${n} warning(s)</b> (${esc(HEALTH.verified_date||'')}) — nothing critical; details in the verifier's health_latest.json.</div>`;
+    }
+    if(isLatest&&HEALTH.verified_date&&snap.pull_date&&snap.pull_date<HEALTH.verified_date){
+      return `<div class="note">No new data since ${esc(snap.pull_date)} — expected, and verified healthy at ${esc(HEALTH.generated_at)}.</div>`;
+    }
+    return '';
+  }
+  /* No verifier verdict available (pre-deploy, or fetch failed): stay
+     quiet unless the snapshot is properly old - and say the verdict is
+     missing rather than guessing the bake failed. */
+  if(isLatest&&ageDays>2.5) return `<div class="warn"><b>This snapshot is ${Math.floor(ageDays)} days old</b> (generated ${esc(snap.generated_at)}) and no verifier verdict is available — check the ops repo's Actions tab.</div>`;
+  return '';
+}
+
+/* ------------ render from a structured snapshot ------------ */
+let SNAP=null;
+/* Which period the by-supplier card is showing. Survives a re-render so a
+   refresh does not silently snap the reader back to the week. */
+let SUP_TOT_MODE='week';
+function renderSupTotals(){
+  const sup=(SNAP&&SNAP.supply)||{};
+  const all=SUP_TOT_MODE==='all';
+  const rowsIn=(all?sup.supplier_totals_all:sup.supplier_totals)||[];
+  const meta=sup.supplier_totals_all_meta||null;
+  const basis=all?sup.supplier_totals_all_basis:sup.supplier_totals_basis;
+  const isLive=sup.week_spend_source==='order_emails';
+  const wk=(sup.week_start&&sup.week_end)?sup.week_start+' – '+sup.week_end:'this Mon–Sun';
+  if($('sup-tot-sub')) $('sup-tot-sub').textContent=
+    'Total spend, lines ordered and deliveries per supplier · '+
+    (all
+      ? (meta?('every order captured, '+meta.first_delivery+' – '+meta.last_delivery)
+             :'every order captured')
+      : wk)+
+    (isLive
+      ? ' · a delivery is one site on one day, so two orders arriving together count once'
+      : ' · fallback source: no line, item or delivery detail available');
+  /* The caveat is the point of offering this period at all, so it sits ABOVE
+     the table, not in the provenance line under it where it would be read
+     after the numbers rather than before them. */
+  const warn=$('sup-tot-warn');
+  if(warn){
+    if(all&&meta){
+      const pw=(meta.partial_weeks||[]);
+      warn.innerHTML='<div class="prov" style="color:var(--a);border-left:3px solid var(--a);'+
+        'padding-left:8px;margin-bottom:10px">⚠ <b>Not a complete trading history.</b> '+
+        'The Kobas Orders feed is a rolling 14-day window over order-confirmation emails, '+
+        'so it knows nothing before its first captured email ('+esc(meta.coverage_start||'—')+'). '+
+        'With the longest observed order-to-delivery lead being '+fmtN(meta.max_lead_days)+
+        ' day(s), deliveries are only fully covered from <b>'+esc(meta.complete_from||'—')+
+        '</b> onward.'+
+        (pw.length?'<br>'+pw.length+' of '+fmtN(meta.weeks)+' week(s) are not comparable '+
+          'like for like: '+pw.map(w=>esc(w.w)+' ('+esc(w.why)+')').join('; ')+'.':'')+
+        '<br>Spend here is <b>ordered</b>, not invoiced, and these are scheduled deliveries — '+
+        'a confirmation email says a delivery was booked, never that it turned up.</div>';
+    } else warn.innerHTML='';
+  }
+  if(!rowsIn.length){
+    table('sup-tot',[{h:'Supplier'}],[],
+      all?'No orders captured in this snapshot':'No orders due this week in this pull');
+  } else {
+    const gbp=v=>'£'+fmtN(Math.round(v||0));
+    const tSpend=rowsIn.reduce((a,r)=>a+(r.value_gbp||0),0);
+    /* Sum the nullable columns only where a value exists, so a fallback bake
+       shows an em dash in the totals row instead of a confident 0. */
+    const sumOrNull=k=>rowsIn.some(r=>r[k]!=null)
+      ? rowsIn.reduce((a,r)=>a+(r[k]||0),0) : null;
+    /* table() escapes every cell itself unless the column is raw, so these are
+       plain values - passing esc() here would double-encode a supplier name
+       containing & or '. */
+    const rows=rowsIn.map(r=>[
+      r.supplier||'—',
+      gbp(r.value_gbp),
+      tSpend>0?(r.value_gbp/tSpend*100).toFixed(1)+'%':'—',
+      fmtN(r.orders), fmtN(r.deliveries), fmtN(r.lines), fmtN(r.items), fmtN(r.sites)]);
+    const tot=['Total', gbp(tSpend), tSpend>0?'100.0%':'—',
+      fmtN(sumOrNull('orders')), fmtN(sumOrNull('deliveries')),
+      fmtN(sumOrNull('lines')), fmtN(sumOrNull('items')), '—'];
+    tot._tot=1;
+    table('sup-tot',[{h:'Supplier'},{h:'£ spend',n:1},{h:'Share',n:1},
+      {h:'Orders',n:1},{h:'Deliveries',n:1},{h:'Lines',n:1},{h:'Items',n:1},
+      {h:'Sites',n:1}],rows.concat([tot]),'');
+  }
+  if(basis) $('sup-tot').insertAdjacentHTML('beforeend',
+    '<div class="prov">'+esc(basis)+'</div>');
+}
+function render(snap){
+  SNAP=snap;
+  const kpi=(c,l,v,sb)=>`<div class="kpi k-${c}"><div class="lb">${esc(l)}</div><div class="vl">${v}</div><div class="sb">${esc(sb)}</div></div>`;
+  $('m-pull').textContent=snap.pull_date||'—';
+  $('prov').textContent='source: '+(snap.source||'')+' · generated '+(snap.generated_at||'');
+  $('foot').textContent='Ops Command · schema '+(snap.schema_version||'?')+' · Postgres is the system of record.';
+
+  $('banner').innerHTML=bannerHtml(snap);
+
+  /* training — mandatory compliance is the default analyst view (Ross, 18 Aug
+     2026); the All-modules toggle restores the pre-redesign tab exactly. */
+  const trAll=(snap.training&&snap.training.sites)||[];
+  const trSrc=(snap.training&&snap.training.source_feed)||'';
+  const mand=(snap.training&&snap.training.mandatory)||{};
+  const drawTrainTab=()=>{
+    const kind=TR_KIND, mode=TR_MODE;
+    $('tr-heat-card').style.display=mode==='mand'?'':'none';
+    $('tr-kpis').style.display=mode==='mand'?'':'none';
+    $('tr-bars-card').style.display=mode==='mand'?'none':'';
+    if(mode==='mand') drawMand(kind); else drawTrain(kind);
+    drawComp(mode);
+  };
+  const drawTrain=kind=>{
+    const rows=trAll.filter(r=>kind==='all'||regionOf(r.site)===kind);
+    const mods=rows.reduce((s,r)=>s+(r.modules||0),0), comp=rows.reduce((s,r)=>s+(r.complete||0),0);
+    $('tr-sub').textContent=rows.length+' sites · '+fmtN(mods)+' module assignments · source '+trSrc+' · sorted worst first · click a site for outstanding training · current state, not sliced by the date range above';
+    bars('tr-bars',rows.map(r=>({k:r.site,v:r.pct_complete||0,
+      tip:`${r.site} — ${fmtN(r.complete)} of ${fmtN(r.modules)} complete, ${fmtN(r.overdue)} overdue, ${fmtN(r.people)} people · click for detail`})),
+      i=>i.v+'%',TARGET);
+    [...document.querySelectorAll('#tr-bars .brow')].forEach((el,i)=>{
+      const r=rows[i]; if(!r) return;
+      el.classList.add('clk'); el.addEventListener('click',()=>openTrainingModal(r.site));
+    });
+    $('tr-tbl-sub').textContent='Overdue is a flag on top of a state — it overlaps In progress and Not started';
+    const body=rows.map(r=>{
+      const p=r.pct_complete||0, ratio=r.modules?(r.overdue||0)/r.modules:0;
+      return [r.site,r.people,r.modules,r.complete,p+'%',r.overdue,r.not_started,
+        (p>=TARGET&&!r.overdue)?chip('g','On track'):(p<70||ratio>=0.15)?chip('r','At risk'):chip('a','Behind')];});
+    if(rows.length>1){
+      const t=[kind==='all'?'All sites':REGION_LB[kind]||kind,
+        rows.reduce((s,r)=>s+(r.people||0),0),mods,comp,(mods?Math.round(100*comp/mods):0)+'%',
+        rows.reduce((s,r)=>s+(r.overdue||0),0),rows.reduce((s,r)=>s+(r.not_started||0),0),''];
+      t._tot=true; body.push(t);
+    }
+    table('tr-tbl',[{h:'Site'},{h:'People',n:1},{h:'Modules',n:1},{h:'Complete',n:1},
+      {h:'Complete %',n:1},{h:'Overdue',n:1},{h:'Not started',n:1},{h:'Status',raw:1}],body,
+      trAll.length?'':'Waiting on the 03:00 deep pull — '+((snap.gaps||[]).find(g=>/trainee_id/.test(g))||''));
+    [...document.querySelectorAll('#tr-tbl tbody tr')].forEach((tr,i)=>{
+      const r=rows[i]; if(!r) return;
+      tr.classList.add('clk'); tr.addEventListener('click',()=>openTrainingModal(r.site));
+    });
+  };
+  const drawMand=kind=>{
+    const kpi=(c,l,v,sb)=>`<div class="kpi k-${c}"><div class="lb">${esc(l)}</div><div class="vl">${v}</div><div class="sb">${esc(sb)}</div></div>`;
+    const allSites=(mand.sites||[]), modules=(mand.modules||[]), cells=(mand.cells||[]);
+    if(!allSites.length){
+      $('tr-kpis').innerHTML='';
+      $('tr-heat').innerHTML='<div class="empty">This snapshot predates the mandatory-compliance block — it appears on the next Pipe 9 bake.</div>';
+      $('tr-heat-sub').textContent='';
+      table('tr-tbl',[{h:'Site'}],[],'Waiting on the next bake for mandatory-compliance figures.');
+      return;
+    }
+    const rows=allSites.filter(r=>kind==='all'||regionOf(r.site)===kind);
+    const cellMap={}; cells.forEach(c=>{cellMap[c.site+'|'+c.module]=c;});
+    const asg=rows.reduce((s,r)=>s+(r.assigned||0),0), comp=rows.reduce((s,r)=>s+(r.complete||0),0);
+    const pOvd=rows.reduce((s,r)=>s+(r.people_overdue||0),0);
+    const pct=asg?Math.round(100*comp/asg):null;
+    const worstSite=rows.filter(r=>r.pct!=null).sort((a,b)=>a.pct-b.pct)[0];
+    const modAgg=modules.map(mn=>{
+      let a=0,c=0; rows.forEach(r=>{const x=cellMap[r.site+'|'+mn]; if(x){a+=x.assigned||0;c+=x.complete||0;}});
+      return {mn,a,c,pct:a?Math.round(100*c/a):null};
+    }).filter(m=>m.a>0);
+    const worstMod=modAgg.slice().sort((a,b)=>(a.pct??999)-(b.pct??999))[0];
+    $('tr-kpis').innerHTML=
+      kpi(pct==null?'n':pct>=MAND_TARGET?'g':pct>=70?'a':'r','Mandatory complete',
+        pct==null?'—':pct+'%',fmtN(comp)+' of '+fmtN(asg)+' assignments · target '+MAND_TARGET+'%')+
+      kpi(pOvd>0?'r':'g','People overdue',fmtN(pOvd),'people with ≥1 overdue mandatory module')+
+      kpi(worstSite&&worstSite.pct<70?'r':'a','Worst site',worstSite?esc(worstSite.site):'—',
+        worstSite?(worstSite.pct+'% · '+fmtN(worstSite.people_overdue)+' people overdue'):'')+
+      kpi(worstMod&&worstMod.pct<70?'r':'a','Worst module',worstMod?esc(MOD_SHORT[worstMod.mn]||worstMod.mn):'—',
+        worstMod?(worstMod.pct+'% complete '+(kind==='all'?'company-wide':'in '+(REGION_LB[kind]||kind))):'');
+    /* heatmap: rows = sites worst-first, cols = mandatory modules; colour =
+       % of assigned people complete vs the 95% target; '—' = nobody at the
+       site is assigned that module (region-fit, never a penalty). */
+    const heatCol=p=>p>=MAND_TARGET?`rgba(5,150,105,${(0.18+0.5*(p-MAND_TARGET)/(100-MAND_TARGET)).toFixed(2)})`
+      :p>=70?`rgba(217,119,6,${(0.14+0.4*(1-(p-70)/(MAND_TARGET-70))).toFixed(2)})`
+      :`rgba(220,38,38,${(0.16+0.5*(1-p/70)).toFixed(2)})`;
+    let html='<div style="overflow-x:auto"><table class="heat"><thead><tr><th></th>'+
+      modules.map(mn=>`<th title="${esc(mn)}">${esc(MOD_SHORT[mn]||mn)}</th>`).join('')+'</tr></thead><tbody>';
+    rows.forEach(r=>{
+      html+='<tr><td class="hsite clk" data-site="'+esc(r.site)+'">'+esc(r.site)+'</td>'+modules.map(mn=>{
+        const c=cellMap[r.site+'|'+mn];
+        if(!c||!c.assigned) return '<td class="hblank" title="'+esc(r.site)+' — nobody assigned '+esc(mn)+'">—</td>';
+        const p=Math.round(100*(c.complete||0)/c.assigned);
+        return `<td class="hcell clk" data-site="${esc(r.site)}" data-mod="${esc(mn)}" style="background:${heatCol(p)}" `+
+          `title="${esc(r.site)} — ${esc(mn)}: ${fmtN(c.complete)} of ${fmtN(c.assigned)} complete (${p}%), ${fmtN(c.overdue)} overdue · click for the people">${p}</td>`;
+      }).join('')+'</tr>';
+    });
+    html+='</tbody></table></div><div class="prov">Cell = % of assigned people complete · green ≥'+MAND_TARGET+
+      '%, amber 70–'+(MAND_TARGET-1)+'%, red &lt;70% · — = nobody assigned (e.g. the other region\'s licensing module) · click a cell for the exact people, a site name for its full list</div>';
+    $('tr-heat').innerHTML=html;
+    $('tr-heat-sub').textContent=rows.length+' sites × '+modules.length+' mandatory modules · sorted worst site first · source '+trSrc+' · current state, not sliced by the date range above';
+    [...document.querySelectorAll('#tr-heat td.hcell')].forEach(td=>
+      td.addEventListener('click',()=>openMandCellModal(td.dataset.site,td.dataset.mod)));
+    [...document.querySelectorAll('#tr-heat td.hsite')].forEach(td=>
+      td.addEventListener('click',()=>openTrainingModal(td.dataset.site,true)));
+    $('tr-tbl-sub').textContent='Mandatory compliance modules only · people overdue = people with ≥1 overdue mandatory module · click a site for its people';
+    const body=rows.map(r=>{
+      const p=r.pct==null?0:r.pct;
+      return [r.site,r.people,r.assigned,r.complete,(r.pct==null?'—':r.pct+'%'),r.people_overdue,
+        (p>=MAND_TARGET&&!r.people_overdue)?chip('g','On track'):(p<70||r.people_overdue>=3)?chip('r','At risk'):chip('a','Behind')];});
+    if(rows.length>1){
+      const t=[kind==='all'?'All sites':REGION_LB[kind]||kind,rows.reduce((s,r)=>s+(r.people||0),0),
+        asg,comp,(pct==null?'—':pct+'%'),pOvd,''];
+      t._tot=true; body.push(t);
+    }
+    table('tr-tbl',[{h:'Site'},{h:'People',n:1},{h:'Assigned',n:1},{h:'Complete',n:1},
+      {h:'Complete %',n:1},{h:'People overdue',n:1},{h:'Status',raw:1}],body);
+    [...document.querySelectorAll('#tr-tbl tbody tr')].forEach((tr,i)=>{
+      const r=rows[i]; if(!r) return;
+      tr.classList.add('clk'); tr.addEventListener('click',()=>openTrainingModal(r.site,true));
+    });
+  };
+  /* completions per WEEK sliced by the COMPLETION date (never pull date);
+     mandatory-only in the default view via the baked nm counter. */
+  const drawComp=mode=>{
+    const compAll=(snap.training&&snap.training.completions)||[];
+    const isMand=mode==='mand';
+    $('tr-comp-t').textContent=isMand?'Mandatory completions per week':'Completions per week (all modules)';
+    if(!compAll.length){
+      $('tr-comp').innerHTML='<div class="empty">This snapshot predates completion-date data — it appears on the next bake (needs the Pipe 9 warehouse run).</div>';
+      $('tr-comp-sub').textContent='By completion date — the range filter above slices these'; return;
+    }
+    if(isMand&&compAll.every(c=>c.nm==null)){
+      $('tr-comp').innerHTML='<div class="empty">This snapshot predates the mandatory-completions counter — the trend appears on the next Pipe 9 bake.</div>';
+      $('tr-comp-sub').textContent='By completion date — the range filter above slices these'; return;
+    }
+    const compIn=compAll.filter(c=>inEV(c.d)&&(TR_KIND==='all'||regionOf(c.site)===TR_KIND));
+    const byWeek={};
+    compIn.forEach(c=>{const w=weekOf(c.d); if(!w) return;
+      byWeek[w]=(byWeek[w]||0)+(isMand?(c.nm||0):(c.n||0));});
+    const weeks=Object.keys(byWeek).sort();
+    const tot=weeks.reduce((s,w)=>s+byWeek[w],0);
+    $('tr-comp-sub').textContent=fmtN(tot)+(isMand?' mandatory':'')+' modules completed'+
+      (TR_KIND==='all'?'':' in '+(REGION_LB[TR_KIND]||TR_KIND))+' · weekly (Mon-start) · completion dates '+evLabel();
+    if(!weeks.length){$('tr-comp').innerHTML='<div class="empty">No'+(isMand?' mandatory':'')+' modules completed in this range</div>';return;}
+    const W=860,H=200,PL=40,PB=26,PT=12,PR=14;
+    const maxV=Math.max(...weeks.map(w=>byWeek[w]),1);
+    const x=i=>weeks.length===1?PL+(W-PL-PR)/2:PL+(W-PL-PR)*i/(weeks.length-1);
+    const y=v=>H-PB-(H-PB-PT)*v/maxV;
+    const step=Math.max(1,Math.ceil(weeks.length/8));
+    const grid=[0,.5,1].map(f=>{const v=Math.round(maxV*f);
+      return `<line x1="${PL}" y1="${y(v)}" x2="${W-PR}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`+
+        `<text x="${PL-6}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--muted)">${v}</text>`;}).join('');
+    const xlab=weeks.map((w,i)=>i%step?'':`<text x="${x(i)}" y="${H-8}" text-anchor="middle" font-size="10" fill="var(--muted)">${esc(w.slice(5))}</text>`).join('');
+    const line='<polyline fill="none" stroke="var(--maki-orange)" stroke-width="2" points="'+
+      weeks.map((w,i)=>x(i)+','+y(byWeek[w])).join(' ')+'"/>';
+    const dots=weeks.map((w,i)=>`<circle cx="${x(i)}" cy="${y(byWeek[w])}" r="3.4" fill="var(--maki-orange)" data-t="wk ${esc(w)} — ${fmtN(byWeek[w])}${isMand?' mandatory':''} completions"/>`).join('');
+    $('tr-comp').innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;display:block" role="img" aria-label="${isMand?'Mandatory training':'Training'} completions per week">${grid}${xlab}${line}${dots}</svg>`;
+    [...$('tr-comp').querySelectorAll('circle[data-t]')].forEach(c=>hover(c,c.dataset.t));
+  };
+  modeFilter('tr-mode',m=>{TR_MODE=m;drawTrainTab();});
+  regionFilter('tr-filter',k=>{TR_KIND=k;drawTrainTab();});
+  TR_KIND='all'; drawTrainTab();
+
+  /* compliance */
+  const forms=(snap.compliance&&snap.compliance.forms)||[];
+  bars('fc-bars',forms.filter(f=>f.pct_complete!=null)
+    .sort((a,b)=>b.pct_complete-a.pct_complete).slice(0,18)
+    .map(f=>({k:f.form,v:f.pct_complete,
+      tip:`${f.form} — ${fmtN(f.completed)} completed, ${fmtN(f.ongoing)} ongoing, ${fmtN(f.open)} open deviations`})),
+    i=>i.v+'%');
+  bars('dv-bars',forms.filter(f=>(f.open||0)>0).sort((a,b)=>b.open-a.open).slice(0,18)
+    .map(f=>({k:f.form,v:f.open,tip:`${f.form} — ${fmtN(f.open)} open of ${fmtN(f.deviations)} raised`})));
+  const areas=(snap.compliance&&snap.compliance.areas)||[];
+  table('mt-tbl',[{h:'Area'},{h:'Tasks',n:1},{h:'Overdue',n:1},{h:'Paused',n:1},{h:'Procedures',n:1},{h:'Status',raw:1}],
+    areas.map(a=>[a.area,a.tasks,a.overdue,a.paused,a.procedures,
+      a.overdue>0?chip('r','Overdue'):chip('g','Clear')]));
+  /* form answers sliced by the ANSWER date (never pull date) */
+  const abdAll=(snap.compliance&&snap.compliance.answers_by_day)||[];
+  const abd=abdAll.filter(a=>inEV(a.d));
+  if(abdAll.length){
+    const aTot=abd.reduce((s,a)=>s+(a.answers||0),0), dTot=abd.reduce((s,a)=>s+(a.deviations||0),0);
+    $('fa-sub').textContent='Answer dates '+evLabel()+' · deviations are answers flagged at entry';
+    $('fa-sum').innerHTML=abd.length
+      ? '<table><thead><tr><th>Date</th><th class="n">Answers</th><th class="n">Deviations</th></tr></thead><tbody>'+
+        abd.slice().reverse().slice(0,31).map(a=>`<tr><td>${esc(a.d)}</td><td class="n">${fmtN(a.answers)}</td><td class="n">${fmtN(a.deviations)}</td></tr>`).join('')+
+        `</tbody><tfoot><tr><td><b>Total in range</b></td><td class="n"><b>${fmtN(aTot)}</b></td><td class="n"><b>${fmtN(dTot)}</b></td></tr></tfoot></table>`
+      : '<div class="empty">No form answers dated in this range</div>';
+  } else {
+    $('fa-sum').innerHTML='<div class="empty">This snapshot predates answer-date data — it appears on the next bake.</div>';
+  }
+
+  /* scheduled task completion — on time, by site (event-dated on DueDateTime,
+     sliced by the range filter above like every other event-dated card) */
+  const tk=snap.tasks||{};
+  const tkCellsAll=tk.cells||[];
+  const tkCells=tkCellsAll.filter(c=>inEV(c.d));
+  const tkAgg={};
+  tkCells.forEach(c=>{
+    const a=tkAgg[c.site]=tkAgg[c.site]||{on_time:0,missed:0};
+    a.on_time+=c.on_time||0; a.missed+=c.missed||0;
+  });
+  const tkSites=Object.entries(tkAgg).map(([site,a])=>{
+    const tot=a.on_time+a.missed;
+    return {site,on_time:a.on_time,missed:a.missed,
+      pct_on_time:tot?Math.round(1000*a.on_time/tot)/10:null};
+  }).sort((a,b)=>(a.pct_on_time??0)-(b.pct_on_time??0));
+  $('tk-note').innerHTML=tkCellsAll.length?'':'<div class="empty">No scheduled-task data in this pull.</div>';
+  bars('tk-bars',tkSites.map(r=>({k:r.site,v:r.pct_on_time??0,raw:r.pct_on_time,
+    tip:`${r.site} — ${fmtN(r.on_time)} on time of ${fmtN(r.on_time+r.missed)} scheduled tasks in range · click for detail`})),
+    i=>i.raw==null?'—':i.raw+'%',TARGET);
+  [...document.querySelectorAll('#tk-bars .brow')].forEach((el,i)=>{
+    const r=tkSites[i]; if(!r) return;
+    el.classList.add('clk'); el.addEventListener('click',()=>openTaskModal(r.site));
+  });
+  if(tk.basis) $('tk-bars').insertAdjacentHTML('beforeend','<div class="prov">'+esc(tk.basis)+' · '+esc(evLabel())+'</div>');
+  table('tk-tbl',[{h:'Site'},{h:'On time',n:1},{h:'Missed',n:1},{h:'On-time %',n:1},{h:'Status',raw:1}],
+    tkSites.map(r=>[r.site,fmtN(r.on_time),fmtN(r.missed),
+      r.pct_on_time!=null?r.pct_on_time+'%':'—',
+      r.pct_on_time==null?chip('n','No data'):r.pct_on_time>=TARGET?chip('g','On track'):
+        r.pct_on_time>=70?chip('a','Behind'):chip('r','At risk')]),
+    'No scheduled tasks dated in this range');
+  [...document.querySelectorAll('#tk-tbl tbody tr')].forEach((tr,i)=>{
+    const r=tkSites[i]; if(!r) return;
+    tr.classList.add('clk'); tr.addEventListener('click',()=>openTaskModal(r.site));
+  });
+  const tkTot=tkSites.reduce((s,r)=>s+r.on_time+r.missed,0);
+  const tkOnTime=tkSites.reduce((s,r)=>s+r.on_time,0);
+  const tkPct=tkTot?Math.round(100*tkOnTime/tkTot):null;
+  const tkRanked=tkSites.filter(r=>r.pct_on_time!=null).sort((a,b)=>a.pct_on_time-b.pct_on_time);
+  const tkWorst=tkRanked[0];
+  $('tk-kpis').innerHTML=
+    kpi(tkPct==null?'n':tkPct>=TARGET?'g':tkPct>=70?'a':'r','On-time completion',
+        tkPct==null?'—':tkPct+'%',tkTot?fmtN(tkOnTime)+' of '+fmtN(tkTot)+' scheduled tasks on time':'no data in this range')+
+    kpi('o','Sites tracked',fmtN(tkSites.length),'with a scheduled task in range')+
+    kpi('o','Missed',fmtN(tkSites.reduce((s,r)=>s+r.missed,0)),'not registered by their due time, across all sites')+
+    kpi(tkWorst?(tkWorst.pct_on_time<70?'r':'a'):'n','Lowest site',
+        tkWorst?tkWorst.pct_on_time+'%':'—',tkWorst?tkWorst.site:'no data in this range');
+
+  /* maintenance tasks — outstanding & ongoing, by site (event-dated on the
+     sheet's own Date column, sliced by the range above like every other
+     event-dated card; sourced from Lincoln's Google Sheet, NOT the Neon
+     warehouse or Pipe 9 — see basis/gaps for freshness and how it refreshes) */
+  const maint=snap.maintenance||{};
+  $('maint-note').innerHTML=(maint.gaps&&maint.gaps.length)
+    ?'<div class="warn"><b>Read this first.</b> '+maint.gaps.map(esc).join(' · ')+'</div>':'';
+  const maintTasksAll=maint.tasks||[];
+  const maintTasks=maintTasksAll.filter(t=>inEV(t.d));
+  const maintAgg={};
+  maintTasks.forEach(t=>{
+    const a=maintAgg[t.site]=maintAgg[t.site]||{ongoing:0,done:0};
+    if(t.status==='ongoing') a.ongoing++;
+    else if(t.status==='done') a.done++;
+  });
+  const maintSites=Object.entries(maintAgg).map(([site,a])=>({site,ongoing:a.ongoing,done:a.done}))
+    .sort((a,b)=>(b.ongoing-a.ongoing)||(b.done-a.done));
+  bars('maint-bars',maintSites.map(r=>({k:r.site,v:r.ongoing,
+    tip:`${r.site} — ${fmtN(r.ongoing)} outstanding/ongoing, ${fmtN(r.done)} resolved in range · click for detail`})),
+    i=>fmtN(i.v));
+  [...document.querySelectorAll('#maint-bars .brow')].forEach((el,i)=>{
+    const r=maintSites[i]; if(!r) return;
+    el.classList.add('clk'); el.addEventListener('click',()=>openMaintModal(r.site));
+  });
+  if(maint.basis) $('maint-bars').insertAdjacentHTML('beforeend','<div class="prov">'+esc(maint.basis)+' · '+esc(evLabel())+
+    (maint.source_as_of?' · sheet as of '+esc(maint.source_as_of):'')+'</div>');
+  table('maint-tbl',[{h:'Site'},{h:'Outstanding/Ongoing',n:1},{h:'Resolved',n:1},{h:'Status',raw:1}],
+    maintSites.map(r=>[r.site,fmtN(r.ongoing),fmtN(r.done),
+      r.ongoing===0?chip('g','Clear'):r.ongoing>=3?chip('r','Needs attention'):chip('a','In progress')]),
+    'No maintenance tasks dated in this range');
+  [...document.querySelectorAll('#maint-tbl tbody tr')].forEach((tr,i)=>{
+    const r=maintSites[i]; if(!r) return;
+    tr.classList.add('clk'); tr.addEventListener('click',()=>openMaintModal(r.site));
+  });
+  const maintOngoingTot=maintSites.reduce((s,r)=>s+r.ongoing,0);
+  const maintDoneTot=maintSites.reduce((s,r)=>s+r.done,0);
+  const maintOngoingList=maintTasks.filter(t=>t.status==='ongoing').slice().sort((a,b)=>(a.d||'').localeCompare(b.d||''));
+  const maintOldest=maintOngoingList[0];
+  $('maint-kpis').innerHTML=
+    kpi(maintOngoingTot===0?'g':maintOngoingTot>=8?'r':'a','Outstanding/ongoing',fmtN(maintOngoingTot),'maintenance tasks not yet resolved, in range')+
+    kpi('o','Sites affected',fmtN(maintSites.filter(r=>r.ongoing>0).length),'with an outstanding/ongoing task in range')+
+    kpi('o','Resolved',fmtN(maintDoneTot),'marked done, in range')+
+    kpi(maintOldest?'a':'n','Oldest open',maintOldest?maintOldest.d:'—',maintOldest?maintOldest.site:'no open tasks in range');
+
+  /* ---- Supplier Issues tab (18/08/2026) ----
+     The issue cards that used to live on Supply & Fulfilment moved here
+     wholesale, rebuilt as two side-by-side clickable tables (by supplier /
+     by site), open-first with 7-day aging escalation, a weekly trend, the
+     issue-nature bars, and the form-level backlog table. Sliced by the
+     ANSWER date (never pull date), like every event-dated card. */
+  const sup=snap.suppliers||{};
+  const issuesAll=sup.issues||[];
+  const issues=issuesAll.filter(i=>inEV(i.d));
+  $('sq-note').innerHTML=(sup.note?`<div class="warn"><b>Read this first.</b> ${esc(sup.note)}</div>`:'')+
+    (!issuesAll.length&&!sup.answered_source
+      ?'<div class="empty"><b>This snapshot predates the answers feed.</b> <code>GC Form Task Answers</code> first landed 13 Aug 2026; later snapshots carry per-issue supplier attribution.</div>':'');
+  const sqOpen=issues.filter(i=>i.open);
+  const sqEsc=sqOpen.filter(i=>(dOpen(i)??-1)>ESC_DAYS);
+  $('sq-kpis').innerHTML=
+    kpi(sqEsc.length?'r':sqOpen.length?'a':'g','Open issues',fmtN(sqOpen.length),'unresolved · answer dates '+evLabel())+
+    kpi(sqEsc.length?'r':'g','Escalated',fmtN(sqEsc.length),'open more than '+ESC_DAYS+' days')+
+    kpi('o','Logged in range',fmtN(issues.length),'open + closed · answer dates '+evLabel())+
+    kpi('o','Suppliers affected',fmtN(new Set(sqOpen.map(supNameOf)).size),'with an open issue in range');
+  const rowChip=r=>r.oldest!=null&&r.oldest>ESC_DAYS?chip('r','Escalate'):r.open>0?chip('a','Open'):chip('g','Clear');
+  const drawSQ=()=>{
+    const set=SQ_MODE==='open'?sqOpen:issues;
+    /* by supplier — answered + text-matched attribution merged (each row still
+       carries `attribution` in the data for the evidence trail) */
+    const bs={};
+    set.forEach(i=>{const k=supNameOf(i);
+      const a=bs[k]=bs[k]||{total:0,open:0,sites:new Set(),oldest:null};
+      a.total++;
+      if(i.open){a.open++;const n=dOpen(i);if(n!=null&&(a.oldest==null||n>a.oldest))a.oldest=n;}
+      if(i.site)a.sites.add(i.site);});
+    const supRows=Object.entries(bs).map(([name,a])=>({name,total:a.total,open:a.open,sites:a.sites.size,oldest:a.oldest}))
+      .sort((a,b)=>b.open-a.open||b.total-a.total);
+    table('sq-sup',[{h:'Supplier'},{h:'Open',n:1},{h:'Issues',n:1},{h:'Sites',n:1},{h:'Status',raw:1}],
+      supRows.map(r=>[r.name,fmtN(r.open),fmtN(r.total),fmtN(r.sites),rowChip(r)]),
+      SQ_MODE==='open'?'No open supplier issues in this range':'No supplier issues dated in this range');
+    [...document.querySelectorAll('#sq-sup tbody tr')].forEach((tr,i)=>{
+      const r=supRows[i]; if(!r) return;
+      tr.classList.add('clk'); tr.addEventListener('click',()=>openSupplierProfileModal(r.name));
+    });
+    $('sq-sup-sub').textContent=supRows.length+' supplier(s) · '+set.length+' issue(s) '+
+      (SQ_MODE==='open'?'open':'in range')+' · answer dates '+evLabel()+
+      ' · Escalate = an issue open more than '+ESC_DAYS+' days · click a supplier for its full profile';
+    /* by site */
+    const st={};
+    set.forEach(i=>{const k=i.site||'(no site)';
+      const a=st[k]=st[k]||{total:0,open:0,sups:new Set(),oldest:null};
+      a.total++;
+      if(i.open){a.open++;const n=dOpen(i);if(n!=null&&(a.oldest==null||n>a.oldest))a.oldest=n;}
+      a.sups.add(supNameOf(i));});
+    const siteRows=Object.entries(st).map(([site,a])=>({site,total:a.total,open:a.open,sups:a.sups.size,oldest:a.oldest}))
+      .sort((a,b)=>b.open-a.open||b.total-a.total);
+    table('sq-site',[{h:'Site'},{h:'Open',n:1},{h:'Issues',n:1},{h:'Suppliers',n:1},{h:'Status',raw:1}],
+      siteRows.map(r=>[r.site,fmtN(r.open),fmtN(r.total),fmtN(r.sups),rowChip(r)]),
+      SQ_MODE==='open'?'No open supplier issues in this range':'No supplier issues dated in this range');
+    [...document.querySelectorAll('#sq-site tbody tr')].forEach((tr,i)=>{
+      const r=siteRows[i]; if(!r) return;
+      tr.classList.add('clk'); tr.addEventListener('click',()=>openSiteIssuesModal(r.site));
+    });
+    $('sq-site-sub').textContent=siteRows.length+' site(s) · click a site for its issues — date, supplier, days open';
+    /* weekly trend */
+    drawIssueTrend(set);
+    /* issue nature (keyword heuristic), from the same toggled + range-filtered set */
+    const catAgg={};
+    set.forEach(i=>{const k=i.category||'other'; catAgg[k]=(catAgg[k]||0)+1;});
+    bars('sq-cat',Object.entries(catAgg).sort((a,b)=>b[1]-a[1]).map(([k,v])=>({k,v})));
+    $('sq-cat-sub').textContent=(sup.issue_categories_basis||'Bucketed from each issue’s free-text answer — not an official taxonomy')+
+      ' · '+set.length+' issue(s) '+(SQ_MODE==='open'?'open':'in range');
+  };
+  $('sq-toggle').innerHTML='<span style="color:var(--muted);font-size:12px">Show:</span>'+
+    [['open','Open issues'],['all','All in range']].map(([k,l])=>
+      `<button class="fbtn" aria-pressed="${k===SQ_MODE}" data-k="${k}">${l}</button>`).join('');
+  $('sq-toggle').onclick=e=>{const b=e.target.closest('.fbtn'); if(!b) return;
+    SQ_MODE=b.dataset.k;
+    [...$('sq-toggle').querySelectorAll('.fbtn')].forEach(x=>x.setAttribute('aria-pressed',String(x.dataset.k===SQ_MODE)));
+    drawSQ();};
+  drawSQ();
+  /* form backlog (form-level counts from GC Forms Overview — current state) */
+  table('sq-forms',[{h:'Supplier'},{h:'Form'},{h:'Completed',n:1},{h:'Raised',n:1},{h:'Open',n:1},{h:'Status',raw:1}],
+    (sup.forms||[]).map(f=>[f.supplier,f.form,f.completed,f.raised,f.open,
+      (f.open||0)>=20?chip('r','Escalate'):(f.open||0)>0?chip('a','Open'):chip('g','Clear')]));
+
+  /* supply: projected spend this week (by site & supplier) + price watch */
+  const weekSpend=(snap.supply&&snap.supply.week_spend)||[];
+  const weekStart=(snap.supply&&snap.supply.week_start)||'', weekEnd=(snap.supply&&snap.supply.week_end)||'';
+  const weekSource=(snap.supply&&snap.supply.week_spend_source)||'weekly_report_fallback';
+  const weekTotals=(snap.supply&&snap.supply.week_totals)||null;
+  const isLiveSpend=weekSource==='order_emails'&&!!weekTotals;
+  /* subtitle: 24/08/2026 - the email feed and the weekly-report fallback
+     carry different guarantees, so each gets its own wording rather than
+     one caption stretched to cover both. 26/08/2026: the email source has
+     no delivered/pending split, so the caption no longer promises one. */
+  if($('fa-aging-sub')) $('fa-aging-sub').textContent=isLiveSpend
+    ? 'Kobas order confirmation emails · parsed daily · orders as placed, by delivery date, so the weekly figure builds through the week · click a site for its supplier breakdown'
+    : weekSource==='unavailable'
+    ? 'No source for projected spend in this bake · the Kobas order-confirmation feed is absent and the weekly outstanding-orders report is stale or carries nothing due this week · see the note below'
+    : 'Kobas Outstanding Stock Orders · orders due '+
+      (weekStart&&weekEnd?weekStart+' – '+weekEnd:'this Mon–Sun')+
+      ' (target delivery date) · click a site for its supplier breakdown · a projection, not a confirmed spend figure (see note)';
+  const siteAgg={};
+  weekSpend.forEach(f=>{
+    const s=siteAgg[f.site]||(siteAgg[f.site]={value:0,orders:0,lines:0,items:0,suppliers:new Set()});
+    s.value+=(f.value_gbp||0); s.orders+=(f.orders||0); s.suppliers.add(f.supplier);
+    s.lines+=(f.lines||0); s.items+=(f.items||0);
+  });
+  const siteBoxRows=Object.entries(siteAgg)
+    .map(([site,v])=>({site,value:v.value,orders:v.orders,suppliers:v.suppliers.size,
+      /* no split bar: nothing in this source knows what has been delivered */
+      delivered:null,
+      sub:isLiveSpend
+        ? fmtN(v.orders)+' order'+(v.orders===1?'':'s')+' · '+fmtN(v.lines)+' line'+(v.lines===1?'':'s')
+        : null}))
+    .sort((a,b)=>b.value-a.value);
+  siteBoxes('fa-aging',siteBoxRows,'No orders due this week in this pull');
+  [...document.querySelectorAll('#fa-aging .sitebox')].forEach(b=>
+    b.addEventListener('click',()=>openWeekSpendModal(b.dataset.site)));
+  if(snap.supply&&snap.supply.week_spend_basis)
+    $('fa-aging').insertAdjacentHTML('beforeend','<div class="prov">'+esc(snap.supply.week_spend_basis)+'</div>');
+  /* the gap note is the one place a source problem (missing/unparsable
+     live feed, stale pull) surfaces directly under the card - never
+     silently swallowed */
+  const supplyGaps=(snap.gaps||[]).filter(g=>/kobas orders|kobas order emails|kobas pending orders/i.test(g));
+  if(supplyGaps.length)
+    $('fa-aging').insertAdjacentHTML('beforeend',
+      supplyGaps.map(g=>'<div class="prov" style="color:var(--a)">⚠ '+esc(g)+'</div>').join(''));
+  /* by supplier: orders grouped by supplier rather than site, in either the
+     page's week or everything the feed has captured. Deliveries is distinct
+     site+delivery-date, not an order count - see the basis under the table. */
+  const hasAllTime=!!((snap.supply&&snap.supply.supplier_totals_all)||[]).length;
+  if($('sup-tot-toggle')) $('sup-tot-toggle').innerHTML=hasAllTime
+    ? '<span style="color:var(--muted);font-size:12px">Period:</span>'+
+      [['week','This week'],['all','All time']].map(([k,l])=>
+        `<button class="fbtn" aria-pressed="${k===SUP_TOT_MODE}" data-k="${k}">${l}</button>`).join('')
+    : '';
+  if($('sup-tot-toggle')) $('sup-tot-toggle').onclick=e=>{
+    const b=e.target.closest('.fbtn'); if(!b) return;
+    SUP_TOT_MODE=b.dataset.k;
+    [...$('sup-tot-toggle').querySelectorAll('.fbtn')].forEach(x=>
+      x.setAttribute('aria-pressed',String(x.dataset.k===SUP_TOT_MODE)));
+    renderSupTotals();
+  };
+  if(!hasAllTime) SUP_TOT_MODE='week';   /* nothing to switch to */
+  renderSupTotals();
+  /* Ross, 01/09/2026: two flags off the price report - a rise that has stuck,
+     and a price that will not settle. Both read the same pill vocabulary the
+     factory broth cards use, so a red pill means the same thing on every page,
+     and both carry a number in the text as well as the colour. */
+  const psup=snap.supply||{}, pth=psup.price_thresholds||{};
+  /* Ross, 02/09/2026: open a flagged item and see the working - every change
+     event behind the headline number, and each supplier's price point.
+     THE SUPPLIER HALF IS DATA-GATED AND TODAY IT IS EMPTY. The price report
+     carries no supplier column (see price_supplier_basis in the snapshot), so
+     rather than render an empty table that reads like a bug, the panel says
+     what is missing and what would fill it. The bake already reads a supplier
+     column if one ever appears, so this lights up on its own. */
+  /* Takes the ROW, not an id. An item can be flagged by more than one card
+     (settled and flux are not mutually exclusive), so ids are not unique
+     across the three lists and a find() would open whichever list was
+     concatenated first. The click handler already has the row in hand. */
+  function openPriceItemModal(r){
+    if(!r) return;
+    const title=(r.item||'—')+(r.pack?' · '+r.pack:'');
+    const arrow=d=>d>0?'<span class="fbscore fb-out">▲</span>'
+      :d<0?'<span class="fbscore fb-in">▼</span>':'—';
+    const trail=(r.trail||[]).slice().reverse();
+    const hist=trail.length
+      ? '<table><thead><tr><th>Report</th><th class="n">Was</th><th class="n">Became</th>'+
+        '<th class="n">Move</th><th>Dir</th></tr></thead><tbody>'+
+        trail.map(t=>`<tr><td>${esc(t.d)}</td><td class="n">${money(t.old)}</td>`+
+          `<td class="n">${money(t.new)}</td>`+
+          `<td class="n">${t.pct!=null?(t.pct>0?'+':'')+t.pct.toFixed(1)+'%':'—'}</td>`+
+          `<td>${arrow(t.dir)}</td></tr>`).join('')+'</tbody></table>'
+      : '<div class="empty">No change events recorded for this pack.</div>';
+    const sups=r.suppliers||[];
+    const supTbl=sups.length
+      ? '<table><thead><tr><th>Supplier</th><th class="n">Latest price</th>'+
+        '<th>Last changed</th><th class="n">Changes</th><th>Dir</th></tr></thead><tbody>'+
+        sups.map(v=>`<tr><td>${esc(v.supplier)}</td><td class="n">${money(v.price)}</td>`+
+          `<td>${esc(v.last_change||'—')}</td><td class="n">${v.changes}</td>`+
+          `<td>${arrow(v.dir)}</td></tr>`).join('')+'</tbody></table>'+
+        '<div class="prov">'+esc('Only suppliers that CHANGED a price appear here — the '+
+          'report is a log of changes, so a supplier holding a steady quote is absent. '+
+          'This is who moved, not a full price comparison across the supply base.')+'</div>'
+      : '<div class="empty">'+esc('No supplier on this feed. The Kobas Weekly Ingredient '+
+          'Price Changes report carries seven columns — Parent ID, Ingredient Name, Pack '+
+          'Size, Unit Volume, Measurement, Old Price, New Price — and no supplier. The '+
+          'ETL keeps every column the sheet has, so nothing is being dropped in transit; '+
+          'the reports that do name a supplier carry order and invoice totals with no '+
+          'ingredient or unit price, so they cannot be joined to this. Add a Supplier '+
+          'column to the price report in Kobas and this table fills itself in.')+'</div>';
+    openModal(title,
+      '<div class="sub">Each supplier’s price point</div>'+supTbl+
+      '<div class="sub" style="margin-top:14px">Every change on record</div>'+hist+
+      '<div class="prov">'+esc('Now '+ (r.new_price!=null?'£'+r.new_price.toFixed(2):'—')+
+        (r.pct_change!=null?' · last move '+(r.pct_change>0?'+':'')+r.pct_change.toFixed(1)+'%':'')+
+        ' · '+(r.changes||0)+' change event(s) across '+(r.reports||0)+' report(s)'+
+        (r.since?' · latest '+r.since:'')+
+        '. An item is one PACK of one ingredient, so two packs of the same ingredient are '+
+        'two rows. Events within one report are ordered by row only — the report has no '+
+        'per-event timestamp.')+'</div>');
+  }
+  const money=v=>v==null?'—':'£'+v.toFixed(2);
+  const settled=psup.price_settled||[];
+  /* Two packs of one ingredient are two items, and without the pack shown the
+     card lists "Sweet potatoes" twice at different prices and looks broken. */
+  const itemCell=r=>esc(r.item||'—')+(r.pack?' <span class="prodspec">'+esc(r.pack)+'</span>':'');
+  table('ps-tbl',[{h:'Item',raw:1},{h:'Was',n:1},{h:'Now',n:1},{h:'Rise',n:1,raw:1},
+                  {h:'Since'},{h:'Held',n:1}],
+    settled.map(r=>[itemCell(r),money(r.old_price),money(r.new_price),
+      '<span class="fbscore fb-out">+'+r.pct_change.toFixed(1)+'%</span>',
+      r.since,r.age_days+'d']),
+    'No rise has held for '+(pth.settled_days||14)+
+      ' days yet — either prices are still moving, or there is not that much report history.');
+  /* Same idiom as every other drill-down in this shell: render, then mark the
+     rows clickable in index order. */
+  [...$('ps-tbl').querySelectorAll('tbody tr')].forEach((tr,ix)=>{
+    const r=settled[ix]; if(!r) return;
+    tr.classList.add('clk');
+    tr.addEventListener('click',()=>openPriceItemModal(r));
+  });
+  {
+    const n=psup.price_newest_report, reps=(psup.price_reports||[]).length;
+    const ev=settled.length?Math.min(...settled.map(r=>r.held_days)):null;
+    $('ps-tbl').insertAdjacentHTML('beforeend','<div class="prov">'+
+      esc(settled.length+' item(s) whose most recent change was a rise at least '+
+      (pth.settled_days||14)+' days ago, with no later report changing them again. '+
+      '"Held" is calendar days since the rise; the reports evidence it only as far as the '+
+      'newest one ('+(n||'none')+'), which is why a row can be older than its evidence'+
+      (ev!=null?' — the thinnest evidence here is '+ev+' days':'')+'. Built from '+reps+
+      ' distinct report(s), deduped by content because the weekly report is pulled daily.')+
+      '</div>');
+  }
+  const flux=psup.price_flux||[];
+  const nFlagged=flux.filter(r=>r.suspect).length;
+  table('pf-tbl',[{h:'Item',raw:1},{h:'Range',n:1},{h:'Swing',n:1},{h:'Changes',n:1},
+                  {h:'Reversals',n:1},{h:'Reports',n:1},{h:'Now',n:1}],
+    flux.map(r=>[itemCell(r)+(r.suspect?' <span class="fbscore fb-none" title="one of '+
+        'this item\u2019s moves is bigger than a price change plausibly is \u2014 '+
+        'likely a pack or unit re-spec">check data</span>':''),
+      money(r.low)+'–'+money(r.high),
+      r.swing_pct!=null?r.swing_pct.toFixed(1)+'%':'—',
+      r.changes,r.reversals,r.reports,money(r.new_price)]),
+    'No ingredient has changed direction '+(pth.flux_reversals||2)+
+    '+ times across '+(pth.flux_reports||2)+'+ reports.');
+  [...$('pf-tbl').querySelectorAll('tbody tr')].forEach((tr,ix)=>{
+    const r=flux[ix]; if(!r) return;
+    tr.classList.add('clk');
+    tr.addEventListener('click',()=>openPriceItemModal(r));
+  });
+  $('pf-tbl').insertAdjacentHTML('beforeend','<div class="prov">'+
+    esc(flux.length+' item(s) that changed in at least '+(pth.flux_reports||2)+
+    ' distinct reports and reversed direction at least '+(pth.flux_reversals||2)+
+    ' times. "Changes" counts every change event, and one report can carry several for '+
+    'the same item — the report is a log of changes, not a daily price, and it has no '+
+    'per-event timestamp, so events within one report are ordered only by row. An item is '+
+    'one PACK of one ingredient, because a parent ingredient can hold several packs and '+
+    'treating them as one would read two packs as one price bouncing.'+
+    (nFlagged?' '+nFlagged+' row(s) are marked "check data": one of their moves is too '+
+      'big to be a price change (a pack or unit re-spec, or a keying slip), so they sort '+
+      'last rather than leading a list meant for supplier conversations.':''))+'</div>');
+  const priceRows=(snap.supply&&snap.supply.price_watch)||[];
+  table('pw-tbl',[{h:'Ingredient'},{h:'Old £',n:1},{h:'New £',n:1},{h:'Change',n:1}],
+    priceRows.map(p=>[p.ingredient,p.old_price!=null?p.old_price.toFixed(2):'—',
+      p.new_price!=null?p.new_price.toFixed(2):'—',
+      p.pct_change!=null?(p.pct_change>0?'+':'')+p.pct_change+'%':(p.is_new?'new':'—')]),
+    'No price-change data in this pull');
+  if(snap.supply&&snap.supply.price_watch_basis)
+    $('pw-tbl').insertAdjacentHTML('beforeend','<div class="prov">'+esc(snap.supply.price_watch_basis)+'</div>');
+  const weekTotal=weekSpend.reduce((s,f)=>s+(f.value_gbp||0),0);
+  const weekOrders=weekSpend.reduce((s,f)=>s+(f.orders||0),0);
+  const bySiteTot={}, bySupTot={};
+  weekSpend.forEach(f=>{
+    bySiteTot[f.site]=(bySiteTot[f.site]||0)+(f.value_gbp||0);
+    bySupTot[f.supplier]=(bySupTot[f.supplier]||0)+(f.value_gbp||0);
+  });
+  const topSite=Object.entries(bySiteTot).sort((a,b)=>b[1]-a[1])[0];
+  const topSup=Object.entries(bySupTot).sort((a,b)=>b[1]-a[1])[0];
+  /* OTIF this month: the weighted whole-estate figure the builder already
+     computed for the latest month - never recomputed here from the table,
+     so the tile and the table can never disagree (26/08/2026). */
+  const otifB=(snap.supply&&snap.supply.otif)||null;
+  const otifNow=(otifB&&(otifB.months||[]).length)?otifB.months[otifB.months.length-1]:null;
+  const otifTile=otifNow&&otifNow.otif_pct!=null
+    ? kpi('o','OTIF this month',Number(otifNow.otif_pct).toFixed(1)+'%',
+        monthLabel(otifNow.month)+' · '+fmtN(otifNow.deliveries)+' deliveries · '+fmtN(otifNow.issues)+' issues')
+    : kpi('n','OTIF this month','—',otifB?'no deliveries recorded this month':'not in this snapshot');
+  if(isLiveSpend){
+    /* email feed: total · items ordered · OTIF · top supplier · issues
+       logged. No delivered/pending split exists on this source - see the
+       note in bake_ops_command.py - so none is shown or invented. */
+    $('supp-kpis').innerHTML=
+      kpi('o','Projected spend this week','£'+Math.round(weekTotals.value_gbp).toLocaleString('en-GB'),
+          fmtN(weekTotals.orders)+' order'+(weekTotals.orders===1?'':'s')+(weekStart&&weekEnd?' · '+weekStart+' – '+weekEnd:''))+
+      kpi('o','Items ordered this week',fmtN(weekTotals.items),
+          fmtN(weekTotals.lines)+' order line'+(weekTotals.lines===1?'':'s'))+
+      otifTile+
+      kpi(topSup?'b':'n','Top supplier this week',topSup?topSup[0]:'—',
+          topSup?'£'+Math.round(topSup[1]).toLocaleString('en-GB'):'no orders due this week')+
+      kpi('o','Issues logged',fmtN(issues.length),'answer dates '+evLabel()+' · click for the Supplier Issues tab');
+  } else if(weekSource==='unavailable'){
+    /* NO SOURCE AT ALL. The fallback branch below sums week_spend, so an
+       empty list renders "£0 · 0 orders" in the ordinary tone - a confident
+       figure, indistinguishable from a real one, for a week that may hold
+       six figures of orders. An em dash in the muted tone is the truth.
+       (03/09/2026, after the weekly outstanding-orders report stopped being
+       sent on 18/08 and nothing noticed for a fortnight.) */
+    $('supp-kpis').innerHTML=
+      kpi('n','Projected spend this week','—','no source in this bake — not zero')+
+      kpi('n','Items ordered this week','—','no source in this bake')+
+      otifTile+
+      kpi('n','Top supplier this week','—','no source in this bake')+
+      kpi('o','Issues logged',fmtN(issues.length),'answer dates '+evLabel()+' · click for the Supplier Issues tab');
+  } else {
+    /* fallback shape: exactly today's card, unchanged - no delivered/
+       pending split exists on this source, so none is shown or invented */
+    $('supp-kpis').innerHTML=
+      kpi('o','Projected spend this week','£'+Math.round(weekTotal).toLocaleString('en-GB'),
+          fmtN(weekOrders)+' order'+(weekOrders===1?'':'s')+(weekStart&&weekEnd?' · '+weekStart+' – '+weekEnd:''))+
+      kpi('n','Items ordered this week','—','no line or item counts in the fallback source')+
+      otifTile+
+      kpi(topSup?'o':'n','Top supplier this week',topSup?topSup[0]:'—',
+          topSup?'£'+Math.round(topSup[1]).toLocaleString('en-GB'):'no orders due this week')+
+      kpi('o','Issues logged',fmtN(issues.length),'answer dates '+evLabel()+' · click for the Supplier Issues tab');
+  }
+  renderOtif();
+  /* the Issues KPI is the click-through to the dedicated tab (18/08/2026) */
+  const supTiles=$('supp-kpis').children, supLast=supTiles[supTiles.length-1];
+  if(supLast){supLast.style.cursor='pointer';supLast.addEventListener('click',()=>gotoPage('p-supi'));}
+
+  /* factory broth score (27/08/2026): the refractometer form, by batch.
+     Ross's definition, locked: the SCORE IS THE AFTER-ICE READING. Before-ice
+     rides along in the table because the pair is only meaningful together, but
+     it is never the score and never averaged with it. These are factory
+     production batches - a different measurement from the per-site checks
+     below, on a different scale, so the two never share a card or an axis.
+     A snapshot baked before this block existed gets an explicit "predates"
+     empty state, never a table of zeros. */
+  const fbBlock=(snap.quality&&snap.quality.factory)||null;
+  const fbAll=(fbBlock&&fbBlock.readings)||[];
+  const fbIn=fbAll.filter(r=>inEV(r.d));
+  const fbVals=fbIn.map(r=>r.score).filter(v=>v!=null).sort((a,b)=>a-b);
+  /* The colour is now a GRADE against the after-ice spec band Ross set on
+     27/08/2026 (tonkotsu 8-9, chicken 5-6), not a shading of the observed
+     range. That is a better encoding for a simpler reason than aesthetics: a
+     range scale answers "how does this batch compare with the others", and the
+     question the factory actually asks is "did this batch meet spec". It also
+     takes the sting out of a mis-keyed 87 - a fixed band cannot be stretched
+     by one bad number the way min-to-max was.
+     The MEDIAN stays the headline for the same reason it became one: five
+     keying slips in 1,461 would drag a mean and cannot move a midpoint. */
+  const fbPct=q=>{ if(!fbVals.length) return null;
+    const i=(fbVals.length-1)*q, lo=Math.floor(i), hi=Math.ceil(i);
+    return lo===hi?fbVals[lo]:fbVals[lo]+(fbVals[hi]-fbVals[lo])*(i-lo); };
+  const fbAvg=fbPct(0.5);
+  const fbMin=fbVals.length?fbVals[0]:null, fbMax=fbVals.length?fbVals[fbVals.length-1]:null;
+  const fbSuspect=fbIn.filter(r=>r.suspect).length;
+  const fbGraded=fbIn.filter(r=>r.grade);
+  const fbInSpec=fbGraded.filter(r=>r.grade==='in').length;
+  const fbSpecPct=fbGraded.length?100*fbInSpec/fbGraded.length:null;
+  const fbUngraded=fbIn.length-fbGraded.length;
+  const fbBandTxt=r=>r.band?r.band[0]+'–'+r.band[1]:null;
+  /* Rendered from the snapshot's own band map, never hard-coded here: the
+     spec lives in the builder with the rest of the classification, so
+     changing it is a bake, not a shell deploy. */
+  const bandsTxt=Object.entries((fbBlock&&fbBlock.bands)||{})
+    .map(([k,v])=>k.replace(/ Broth$/,'')+' '+v[0]+'–'+v[1]).join(', ');
+  const fbBatches=new Set(fbIn.map(r=>r.batch||'(no batch)')).size;
+  const fbLegacy='This snapshot predates the factory broth score - rebake to populate it.';
+  /* colour scaled to the observed range, exactly as the site heatmaps are:
+     the source records no after-ice target band, so a red/green scale would be
+     inventing one. */
+  /* The score cell: state in the colour, the direction in a glyph, and the
+     bound it missed in words on the row. Any one of the three read on its own
+     tells you the same thing. */
+  function fbCell(r){
+    const band=fbBandTxt(r);
+    if(!r.grade) return '<span class="fbscore fb-none" title="'+esc(r.product||'this product')+
+      ' has no after-ice band, so this reading is not graded">'+esc(r.score)+'</span>';
+    const ok=r.grade==='in';
+    const glyph=ok?'':(r.grade==='low'?' ▼':' ▲');
+    const tip=esc(r.product||'')+' spec '+band+' after ice — '+
+      (ok?'in spec':r.grade==='low'?'below spec':'above spec');
+    return '<span class="fbscore '+(ok?'fb-in':'fb-out')+'" title="'+tip+'">'+
+      esc(r.score)+glyph+'</span>';
+  }
+  if(!fbBlock){
+    $('fb-prod').innerHTML='<div class="empty">'+fbLegacy+'</div>';
+    $('fb-tbl').innerHTML='<div class="empty">'+fbLegacy+'</div>';
+    $('fb-prod-sub').textContent='Not in this snapshot';
+    $('fb-tbl-sub').textContent='Not in this snapshot';
+  } else {
+    const prodAgg={};
+    fbIn.forEach(r=>{
+      const k=r.product||'(no product named)';
+      const a=prodAgg[k]=prodAgg[k]||{vals:[],batches:new Set(),band:r.band,graded:0,inSpec:0};
+      a.vals.push(r.score); a.batches.add(r.batch||'(no batch)');
+      if(r.grade){ a.graded++; if(r.grade==='in') a.inSpec++; }
+    });
+    const med=v=>{const s=v.slice().sort((a,b)=>a-b),m=s.length>>1;
+      return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+    const prodRows=Object.entries(prodAgg).map(([k,a])=>{
+      const pct=a.graded?100*a.inSpec/a.graded:null;
+      return {k,v:+med(a.vals).toFixed(2),pct,band:a.band,
+        tip:`${k} — ${a.vals.length} reading${a.vals.length===1?'':'s'} across `+
+            `${a.batches.size} batch${a.batches.size===1?'':'es'}, `+
+            `after-ice ${Math.min(...a.vals)}–${Math.max(...a.vals)}`+
+            (a.band?`, spec ${a.band[0]}–${a.band[1]}, ${a.inSpec} of ${a.graded} in spec`
+                   :', no spec band for this product')};
+    }).sort((a,b)=>b.v-a.v);
+    if(!prodRows.length){
+      $('fb-prod').innerHTML='<div class="empty">'+(fbAll.length
+        ?'No factory batches scored in '+esc(evLabel())
+        :'No factory broth readings in this snapshot yet')+'</div>';
+    } else bars('fb-prod',prodRows,i=>i.v.toFixed(1)+
+      (i.band?'  <span class="prodspec">'+i.band[0]+'–'+i.band[1]+' · '+
+        i.pct.toFixed(0)+'% in spec</span>':'  <span class="prodspec">no band</span>'));
+    /* insertAdjacentHTML, not innerHTML+= : reassigning innerHTML reserialises
+       the bars and silently drops the hover listeners bars() just attached. */
+    if(prodRows.length) $('fb-prod').insertAdjacentHTML('beforeend',
+      '<div class="prov">Median after-ice reading per product in '+esc(evLabel())+
+      ' · the spec each is graded against sits beside it. The median is a midpoint, not a pass mark: a product can sit mid-band and still have batches out of spec on both sides, which is what the per-batch table below is for.</div>');
+    $('fb-prod-sub').textContent=prodRows.length
+      ? prodRows.length+' product(s) · '+fbIn.length+' reading(s) · '+evLabel()
+      : 'No factory readings in '+evLabel();
+    table('fb-tbl',[{h:'Date'},{h:'Batch'},{h:'Product'},{h:'After ice',n:1,raw:1},
+        {h:'Before ice',n:1},{h:'Notes',raw:1}],
+      fbIn.map(r=>[r.d,r.batch||'—',r.product||'—',
+        fbCell(r),
+        r.before==null?'—':r.before,
+        (r.grade==='low'?chip('r','Below spec ('+r.band[0]+')'):'')+
+        (r.grade==='high'?chip('r','Above spec ('+r.band[1]+')'):'')+
+        (!r.grade?chip('n','No band for this product'):'')+
+        (r.suspect?chip('a','Check this reading'):'')+
+        (r.repeat?chip('b','2nd reading this day'):'')+
+        (r.date_source==='timestamp'?chip('n','Dated from submission'):'')]),
+      fbAll.length?'No factory batches scored in '+evLabel():
+        'No factory broth readings in this snapshot yet - the "'+
+        esc((fbBlock.source_feed)||'Factory Broth Readings')+'" feed has not landed.');
+    /* 190+ batches is a normal year of production, and an unbounded table
+       would push the per-site cards below it off the bottom of the page. It
+       scrolls rather than truncating: nothing is hidden, so the disclosure
+       line below still describes every row. */
+    const fbTable=$('fb-tbl').querySelector('table');
+    if(fbTable&&fbIn.length>25) fbTable.outerHTML='<div class="tscroll">'+fbTable.outerHTML+'</div>';
+    const ex=fbBlock.excluded||{};
+    const exBits=[];
+    if(ex.no_after_ice) exBits.push(fmtN(ex.no_after_ice)+' with no after-ice reading (the form gained that question on 13/08/2025)');
+    if(ex.non_numeric)  exBits.push(fmtN(ex.non_numeric)+' whose after-ice answer is not a number');
+    if(ex.undated)      exBits.push(fmtN(ex.undated)+' that neither the form date nor the submission timestamp could date');
+    const exText=[];
+    if(exBits.length) exText.push('excluded from the score: '+exBits.join('; ')+
+      ' — counted, never scored as zero');
+    if(fbSuspect) exText.push(fmtN(fbSuspect)+' reading(s) flagged "check this reading": outside a third to three times the median, so a missed decimal point or a percent-formatted cell rather than a batch that missed spec. Still shown, still graded and still counted — the row is what gets it fixed at source');
+    if(fbIn.length) $('fb-tbl').insertAdjacentHTML('beforeend','<div class="prov">'+
+      fmtN(fbIn.length)+' reading(s) across '+fmtN(fbBatches)+' batch(es) in '+esc(evLabel())+
+      ' · graded against the after-ice spec: '+esc(bandsTxt||'no bands set')+
+      (fbGraded.length?' · '+fmtN(fbInSpec)+' of '+fmtN(fbGraded.length)+' in spec ('+
+        fbSpecPct.toFixed(1)+'%), '+fmtN(fbGraded.filter(r=>r.grade==='low').length)+
+        ' below and '+fmtN(fbGraded.filter(r=>r.grade==='high').length)+' above':'')+
+      (fbUngraded?' · '+fmtN(fbUngraded)+' not graded (no band for that product)':'')+
+      ' · observed after-ice range '+fbMin+'–'+fbMax+
+      (exText.length?' · '+esc(exText.join(' · ')):'')+
+      (fbBlock.truncated?' · the snapshot carries the '+fmtN(fbAll.length)+' most recent of '+fmtN(fbBlock.scored)+' scored readings, so an older range may be incomplete':'')+
+      '</div>');
+    $('fb-tbl-sub').textContent=fbIn.length
+      ? fmtN(fbIn.length)+' reading(s), '+fmtN(fbBatches)+' batch(es) · after-ice score graded against spec'+
+        (bandsTxt?' ('+bandsTxt+')':'')+' · '+evLabel()
+      : 'Score = the reading after adding ice, graded against spec · '+evLabel();
+  }
+
+  /* quality: broth heatmaps, discipline, deviations */
+  const brothCells=(snap.quality&&snap.quality.broth&&snap.quality.broth.cells)||[];
+  const brothDevAll=(snap.quality&&snap.quality.broth&&snap.quality.broth.deviations)||[];
+  $('qual-note').innerHTML=brothCells.length?'':
+    '<div class="empty">No per-site broth-check data in this pull yet (the factory cards below have their own source).</div>';
+  /* Every graded reading gets a colour - green inside the band, red outside.
+     OUT: how far past the bound, in Brix. Absolute distance, not a fraction of
+     the band: the bands are different widths (chicken 2.0, tonkotsu 1.0) and
+     half a Brix point out is the same problem in either.
+     IN: how near the middle of the band, as a fraction of its half-width -
+     here it HAS to be relative, because "0.3 off centre" means comfortable in
+     a 2.0-wide band and borderline in a 1.0-wide one. Deepest green is dead
+     centre; the lightest is in spec but sitting on a bound, which is the
+     site-chicken finding this page used to have to state in words.
+     A cell with no band or no reading is not graded and stays neutral - it is
+     never painted green, because "we did not check" must not read as "pass". */
+  const heatClass=c=>{
+    if(!c.grade) return 'hcell';
+    if(c.grade!=='in') return 'hcell ho'+(c.miss>1?3:c.miss>0.5?2:1);
+    if(!c.band) return 'hcell';
+    const half=(c.band[1]-c.band[0])/2, mid=(c.band[0]+c.band[1])/2;
+    const central=half>0?1-Math.abs(c.value-mid)/half:1;
+    return 'hcell hi'+(central>=0.66?3:central>=0.33?2:1);
+  };
+  function drawHeat(host,subHost,kind,label){
+    const inRange=brothCells.filter(c=>c.kind===kind&&inEV(c.d));
+    const days=[...new Set(inRange.map(c=>c.d))].sort();
+    if(!days.length){ $(host).innerHTML='<div class="empty">No '+label+' broth checks dated in this range</div>';
+      $(subHost).textContent='0 days in range · '+evLabel(); return; }
+    const bySite={}; inRange.forEach(c=>{(bySite[c.site]=bySite[c.site]||{})[c.d]=c;});
+    const sites=Object.keys(bySite).sort();
+    const vals=inRange.filter(c=>c.value!=null).map(c=>c.value);
+    const min=vals.length?Math.min(...vals):0, max=vals.length?Math.max(...vals):1;
+    const band=(snap.quality&&snap.quality.broth&&snap.quality.broth.bands||{})[kind];
+    const graded=inRange.filter(c=>c.grade);
+    const nLow=graded.filter(c=>c.grade==='low').length;
+    const nHigh=graded.filter(c=>c.grade==='high').length;
+    const nIn=graded.filter(c=>c.grade==='in').length;
+    let html='<div style="overflow-x:auto"><table class="heat"><thead><tr><th></th>'+
+      days.map(d=>`<th>${esc(d.slice(5))}</th>`).join('')+'</tr></thead><tbody>';
+    sites.forEach(s=>{
+      html+='<tr><td class="hsite">'+esc(s)+'</td>'+days.map(d=>{
+        const c=bySite[s][d];
+        if(!c) return '<td class="hblank">—</td>';
+        if(c.value==null) return `<td class="hmiss" title="${esc(s)} ${esc(d)} — not registered on time">×</td>`;
+        /* An out-of-band cell says so three ways: hue for direction, depth for
+           how far, and a glyph - so it survives being read in greyscale. */
+        const glyph=c.grade==='low'?' ▼':c.grade==='high'?' ▲':'';
+        const tip=c.grade&&c.band
+          ? `${s} ${d} — ${c.value}, spec ${c.band[0]}–${c.band[1]} — `+
+            (c.grade==='in'?'in spec':`${c.miss} ${c.grade==='low'?'below':'above'} spec`)
+          : `${s} ${d} — ${c.value}`;
+        return `<td class="${heatClass(c)}" title="${esc(tip)}">${c.value}${glyph}</td>`;
+      }).join('')+'</tr>';
+    });
+    html+='</tbody></table></div>';
+    if(band) html+='<div class="hleg">'+
+      '<span><i class="hi1"></i><i class="hi2"></i><i class="hi3"></i>in spec '+
+        band[0]+'–'+band[1]+' — deeper is nearer the middle</span>'+
+      '<span><i class="ho1"></i><i class="ho2"></i><i class="ho3"></i>out of spec — '+
+        'deeper is further out · ▼ below, ▲ above</span>'+
+      '<span><i style="background:var(--track)"></i>× not registered on time</span>'+
+      '</div>';
+    /* Where the IN-spec readings sit inside the band is invisible in a scale
+       that only paints misses - and it is a real finding here: site chicken
+       never once reaches the middle of its 5-7 band. Stated in words, because
+       a third colour ramp for "in spec but hugging a bound" would be a
+       margin nobody has specified. */
+    const sorted=vals.slice().sort((a,b)=>a-b);
+    const med=sorted.length?(sorted.length%2?sorted[sorted.length>>1]
+      :(sorted[(sorted.length>>1)-1]+sorted[sorted.length>>1])/2):null;
+    const hug=band&&med!=null&&(med-band[0]<=(band[1]-band[0])*0.2)?' — the middle of the range sits on the LOWER bound, so these sites are in spec but only just'
+      :band&&med!=null&&(band[1]-med<=(band[1]-band[0])*0.2)?' — the middle of the range sits on the UPPER bound, so these sites are in spec but only just':'';
+    html+='<div class="prov">'+sites.length+' site(s) · '+days.length+
+      ' day(s) in range · observed '+(vals.length?(Math.min(...vals)+'–'+Math.max(...vals)):'—')+
+      (med!=null?', median '+(+med.toFixed(2)):'')+
+      (band?' against a '+band[0]+'–'+band[1]+' spec · '+fmtN(nIn)+' of '+fmtN(graded.length)+
+        ' in spec ('+(graded.length?(100*nIn/graded.length).toFixed(1):'—')+'%), '+
+        fmtN(nLow)+' below and '+fmtN(nHigh)+' above'
+       :' · no spec band for this check, so cells are left uncoloured')+
+      ' · red steps are half a Brix point out, then one, then more; green steps '+
+      'are how near the middle of the band the reading sits'+esc(hug)+'</div>';
+    $(host).innerHTML=html;
+    $(subHost).textContent=days.length+' day(s), '+sites.length+' site(s)'+
+      (band?' · spec '+band[0]+'–'+band[1]+', '+fmtN(nLow+nHigh)+' out of spec':'')+
+      ' · '+evLabel();
+  }
+  drawHeat('qh-chicken','qh-chicken-sub','chicken','chicken');
+  drawHeat('qh-tonkotsu','qh-tonkotsu-sub','tonkotsu','tonkotsu');
+  const brothInRange=brothCells.filter(c=>inEV(c.d));
+  const discBySite={};
+  brothInRange.forEach(c=>{
+    const a=discBySite[c.site]=discBySite[c.site]||{checks:0,missed:0};
+    a.checks+=c.checks||0; a.missed+=c.checks_missed||0;
+  });
+  bars('qh-disc',Object.entries(discBySite).map(([k,v])=>({k,
+      v:v.checks?Math.round(100*(v.checks-v.missed)/v.checks):0,
+      tip:`${k} — ${v.checks-v.missed} of ${v.checks} checks registered on time`}))
+    .sort((a,b)=>a.v-b.v),i=>i.v+'%');
+  const brothDev=brothDevAll.filter(d=>inEV(d.d));
+  table('qh-dev',[{h:'Date'},{h:'Site'},{h:'Check'},{h:'Reading'},{h:'Status',raw:1}],
+    brothDev.slice().sort((a,b)=>b.d.localeCompare(a.d)).map(d=>
+      [d.d,d.site,d.kind,d.value??'not registered',d.open?chip('a','Open'):chip('g','Closed')]),
+    brothDevAll.length?'No quality deviations dated in this range':'No quality deviations in this snapshot');
+  const chickenN=brothInRange.filter(c=>c.kind==='chicken'&&c.value!=null).length;
+  const tonkN=brothInRange.filter(c=>c.kind==='tonkotsu'&&c.value!=null).length;
+  const totChecks=brothInRange.reduce((s,c)=>s+(c.checks||0),0), totMissed=brothInRange.reduce((s,c)=>s+(c.checks_missed||0),0);
+  const disc=totChecks?Math.round(100*(totChecks-totMissed)/totChecks):null;
+  const devOpenQ=brothDev.filter(d=>d.open).length;
+  $('qual-kpis').innerHTML=
+    kpi('o','Factory batches scored',fbBlock?fmtN(fbBatches):'—',
+        fbBlock?'after-ice readings, in range':'not in this snapshot')+
+    kpi('o','Factory readings in spec',fbSpecPct==null?'—':fbSpecPct.toFixed(1)+'%',
+        fbSpecPct==null?'no graded readings in range'
+          :fmtN(fbInSpec)+' of '+fmtN(fbGraded.length)+' after-ice readings within spec')+
+    kpi('n','Median factory score',fbAvg==null?'—':fbAvg.toFixed(1),
+        fbAvg==null?'no factory readings in range':'after-ice midpoint · a mis-keyed 87 cannot move it')+
+    kpi('o','Chicken checks',fmtN(chickenN),'in range, numeric readings')+
+    kpi('o','Tonkotsu checks',fmtN(tonkN),'in range, numeric readings')+
+    kpi(disc==null?'n':disc>=90?'g':disc>=75?'a':'r','Check discipline',disc==null?'—':disc+'%',
+        'checks with a numeric reading, in range')+
+    kpi(devOpenQ?'a':'g','Open quality deviations',fmtN(devOpenQ),'IsOpenDeviation on a broth check');
+
+  /* cross-reference */
+  const cross=snap.cross_ref||{};
+  const aliasLabel=k=>(cross.site_aliases&&cross.site_aliases[k]&&cross.site_aliases[k].label)||k;
+  const coinAll=cross.coincidences||[];
+  const coin=coinAll.filter(c=>inEV(c.broth_date));
+  $('cr-sub').textContent=coinAll.length
+    ?coin.length+' of '+coinAll.length+' in range · '+evLabel()
+    :'Same site, supplier issue within ±3 days of the broth deviation, by event date';
+  if(coin.length){
+    $('cr-coin').innerHTML=coin.map(c=>`<div class="sig"><div class="bod">
+      <div class="hd">${esc(aliasLabel(c.site_key||''))||esc(c.site)} — ${esc(c.broth_detail)} on ${esc(c.broth_date)}</div>
+      <div class="dt">${c.supplier_issues.map(si=>esc(si.d)+': '+esc(si.detail)).join('<br>')}</div></div></div>`).join('');
+  } else {
+    $('cr-coin').innerHTML=coinAll.length
+      ?'<div class="empty">No coincidences dated in this range</div>'
+      :'<div class="empty">No broth deviation and supplier issue landed at the same site within 3 days in this snapshot — a genuinely small-n absence, worth re-checking as more history accumulates.</div>';
+  }
+  if(cross.basis) $('cr-coin').insertAdjacentHTML('beforeend','<div class="prov">'+esc(cross.basis)+'</div>');
+  const evAll=(cross.events||[]).filter(e=>inEV(e.d));
+  const evSorted=evAll.slice().sort((a,b)=>b.d.localeCompare(a.d));
+  table('cr-timeline',[{h:'Date'},{h:'Site'},{h:'Kind',raw:1},{h:'Detail'}],
+    evSorted.slice(0,60).map(e=>[e.d,aliasLabel(e.site_key),
+      e.kind==='broth_deviation'?chip('r','Broth'):chip('a','Supplier'),e.detail]),
+    'No mapped events dated in this range');
+  if(evSorted.length>60) $('cr-timeline').insertAdjacentHTML('beforeend',
+    '<div class="prov">showing newest 60 of '+evSorted.length+'</div>');
+
+  /* sites */
+  const hcAll=(snap.sites&&snap.sites.headcount)||[];
+  const drawHc=kind=>{
+    const rows=hcAll.filter(r=>kind==='all'||regionOf(r.site)===kind);
+    $('hc-sub').textContent=rows.length+' sites · '+fmtN(rows.reduce((s,r)=>s+(r.people||0),0))+' people · Flow roster, branch names resolved · current roster, not sliced by the date range above';
+    bars('hc-bars',rows.map(r=>({k:r.site,v:r.people||0,tip:`${r.site} — ${fmtN(r.people)} on the roster (${r.site_type})`})));
+  };
+  regionFilter('hc-filter',drawHc); drawHc('all');
+  const hcMap={}; hcAll.forEach(r=>hcMap[(r.site||'').toLowerCase()]=r.people);
+  table('sd-tbl',[{h:'Site'},{h:'Headcount',n:1},{h:'Groups'},{h:'State',raw:1}],
+    ((snap.sites&&snap.sites.directory)||[]).map(d=>[d.site,
+      hcMap[(d.site||'').toLowerCase()]??'—',d.groups||'—',
+      d.paused?chip('a','Paused'):d.active?chip('g','Active'):chip('n','Inactive')]));
+
+  /* feeds */
+  const fh=snap.feed_health||[];
+  const bad=fh.filter(r=>['MISSING','STALE'].includes(r.verdict)).length;
+  $('b-fh').innerHTML=bad?chip('r',bad+' need attention'):chip('g','all healthy');
+  table('fh-tbl',[{h:'Feed'},{h:'Rows',n:1},{h:'Latest pull'},{h:'Age (days)',n:1},{h:'Verdict',raw:1}],
+    fh.map(r=>[r.feed,fmtN(r.rows),r.latest_pull||'—',r.age_days??'—',
+      chip(r.verdict==='OK'?'g':r.verdict==='WATCH'?'a':r.verdict==='EMPTY'?'n':'r',r.verdict)]));
+
+  /* overview */
+  const s=snap.summary||{};
+  const mods=trAll.reduce((x,r)=>x+(r.modules||0),0), comp=trAll.reduce((x,r)=>x+(r.complete||0),0);
+  const trPct=mods?Math.round(100*comp/mods):null;
+  const supOpen=(sup.totals||[]).length?sup.totals.reduce((x,t)=>x+(t.open||0),0):null;
+  const devOpen=forms.length?forms.reduce((x,f)=>x+(f.open||0),0):null;
+  $('kpis').innerHTML=
+    kpi('o','Employees',fmtN(s.employees),'on the Flow roster')+
+    kpi(trPct==null?'n':trPct>=TARGET?'g':trPct>=70?'a':'r','Training complete',
+        trPct==null?'—':trPct+'%',trPct==null?'waiting on the deep pull':fmtN(comp)+' of '+fmtN(mods)+' modules')+
+    kpi(supOpen==null?'n':supOpen>10?'r':supOpen?'a':'g','Open supplier issues',
+        supOpen==null?'—':fmtN(supOpen),
+        supOpen==null?'no data in this pull':'target is 10 or fewer per month')+
+    kpi(devOpen==null?'n':devOpen?'a':'g','Open deviations',devOpen==null?'—':fmtN(devOpen),
+        devOpen==null?'no data in this pull':'all forms, unresolved')+
+    kpi(s.feeds_missing?'r':'g','Feeds missing',fmtN(s.feeds_missing),'expected but absent from Postgres')+
+    kpi('g','Feeds healthy',fmtN(s.feeds_ok),'fresh in the warehouse');
+  $('signals').innerHTML=(snap.signals||[]).length?(snap.signals||[]).map(g=>
+    `<div class="sig" data-t="basis: ${esc(g.basis||'')}">${chip(g.severity==='red'?'r':g.severity==='amber'?'a':'b',
+      g.severity==='red'?'Escalate':g.severity==='amber'?'Review':'Note')}
+     <div class="bod"><div class="hd">${esc(g.text)}</div><div class="dt">${esc(g.basis||'')}</div></div></div>`).join('')
+    :'<div class="empty">Nothing flagged on this pull</div>';
+  $('gaps').innerHTML=(snap.gaps||[]).length?(snap.gaps||[]).map(g=>
+    `<div class="sig">${chip('n','Gap')}<div class="bod"><div class="dt" style="margin-top:2px">${esc(g)}</div></div></div>`).join('')
+    :'<div class="empty">No gaps declared</div>';
+}
+
+async function loadSnap(date){
+  const r=await fetch(BASE+'snapshot_'+date+'.json'+cb(),{cache:'no-store'});
+  if(!r.ok) throw new Error('snapshot_'+date+'.json → HTTP '+r.status);
+  SNAP=await r.json(); render(SNAP);
+}
+async function fetchIndex(){
+  let lastErr;
+  for(const b of BASES){
+    try{
+      const r=await fetch(b+'snapshot_index.json'+cb(),{cache:'no-store'});
+      if(r.ok){ BASE=b; return await r.json(); }
+      lastErr=new Error('HTTP '+r.status+' from '+b);
+    }catch(e){ lastErr=e; }
+  }
+  throw lastErr||new Error('no data source reachable');
+}
+let IDX=null, EV={f:null,t:null};
+/* The range filters EVENT dates — when a form was answered, when a module was
+   completed — never pull dates. The snapshot dropdown is a separate roll-back. */
+function calcEV(){
+  const f=$('d-from').value, t=$('d-to').value;
+  if(f||t){ EV={f:f||null,t:t||null}; return; }
+  const mode=[...$('range-btns').children].find(b=>b.getAttribute('aria-pressed')==='true')?.dataset.r||'all';
+  if(mode==='all'){ EV={f:null,t:null}; return; }
+  EV={f:new Date(Date.now()-(+mode)*864e5).toISOString().slice(0,10), t:null};
+}
+const inEV=d=>!!d&&(!EV.f||d>=EV.f)&&(!EV.t||d<=EV.t);
+const evLabel=()=>(EV.f||EV.t)?((EV.f||'start')+' → '+(EV.t||'today')):'all recorded dates';
+function applyRange(){ calcEV(); if(SNAP) render(SNAP); }
+async function boot(){
+  try{
+    IDX=await fetchIndex();
+    const ds=(IDX.dates||[]);
+    $('daysel').innerHTML=ds.map(d=>`<option value="${d}">${d}</option>`).join('');
+    $('daysel').onchange=e=>loadSnap(e.target.value).catch(er=>$('banner').innerHTML=`<div class="err">${esc(er.message)}</div>`);
+    $('range-btns').addEventListener('click',e=>{
+      const b=e.target.closest('.fbtn'); if(!b) return;
+      [...$('range-btns').children].forEach(x=>x.setAttribute('aria-pressed',x===b));
+      $('d-from').value=''; $('d-to').value='';
+      applyRange();
+    });
+    $('d-from').onchange=$('d-to').onchange=()=>{
+      [...$('range-btns').children].forEach(x=>x.setAttribute('aria-pressed','false'));
+      applyRange();
+    };
+    calcEV();
+    if(!ds.length) throw new Error('snapshot index is empty');
+    await fetchHealth();   // verifier verdict for the banner (BASE is set by fetchIndex)
+    await loadSnap(ds[0]);
+  }catch(e){
+    $('banner').innerHTML=`<div class="err"><b>Could not load the baked data.</b> ${esc(e.message||e)}<br>
+      Expected <code>${esc(BASE)}snapshot_index.json</code> — if this is a fresh deploy, give GitHub Pages a minute.</div>`;
+  }
+  loadDay().catch(()=>null);
+}
+
+/* ------------ My day: the one live page (MCP; degrades gracefully) ------------ */
+const MAIL='mcp__598036e9-89ad-45a1-8ef2-b85a1f625af1__search_threads';
+const CAL='mcp__d7c8cd5b-a2a7-42b7-95b5-71789965a6d2__list_events';
+const ASANA='mcp__3534415d-a90c-44e8-a60a-c8f5fc6fb5dc__get_my_tasks';
+const CONN={};
+function isPermErr(e){return /allowlist|not permitted|permission|denied|not granted|unauthori/i.test(String(e&&e.message||e));}
+function mcp(tool,args){
+  if(!window.cowork||typeof window.cowork.callMcpTool!=='function')
+    return Promise.reject(new Error('no-viewer'));
+  return Promise.race([window.cowork.callMcpTool(tool,args),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('Timed out after 120s')),120000))]);
+}
+function arr(raw,depth){
+  depth=depth||0;
+  if(raw==null||depth>6) return null;
+  if(Array.isArray(raw)) return raw;
+  if(typeof raw==='string'){const t=raw.trim();
+    if(t.startsWith('[')||t.startsWith('{')){try{return arr(JSON.parse(t),depth+1);}catch(e){return null;}}
+    return null;}
+  if(typeof raw==='object'){
+    for(const k of ['threads','messages','items','events','tasks','results','records','value'])
+      if(Array.isArray(raw[k])) return raw[k];
+    if(Array.isArray(raw.content))
+      for(const c of raw.content)
+        if(c&&typeof c.text==='string'){const r=arr(c.text,depth+1); if(r) return r;}
+    for(const k of ['data','result','body','content','response'])
+      if(raw[k]!=null&&raw[k]!==raw){const r=arr(raw[k],depth+1); if(r) return r;}
+    return null;
+  }
+  return null;
+}
+const shapeOf=r=>{try{
+  if(Array.isArray(r)) return 'array['+r.length+']';
+  if(r&&typeof r==='object') return 'object{'+Object.keys(r).slice(0,8).join(', ')+'}';
+  if(typeof r==='string') return 'string: '+r.slice(0,80);
+  return typeof r;}catch(e){return 'unknown';}};
+const unparsed=(what,raw)=>`<div class="warn"><b>${what} replied, but no list could be read from it.</b><br>`+
+  `Shape received: <code>${esc(shapeOf(raw))}</code><br>`+
+  `<span style="opacity:.75">A parsing gap, not a permissions problem — the call succeeded.</span></div>`;
+
+async function loadDay(){
+  if(!window.cowork||typeof window.cowork.callMcpTool!=='function'){
+    $('day-note').innerHTML='<div class="note"><b>This page is live-only.</b> Gmail, Calendar and Asana are personal and real-time, '+
+      'so they are never baked into the public repo. Open this dashboard from the Artifacts view in the Claude desktop app to see them; '+
+      'the other six pages work everywhere.</div>';
+    ['d-mail','d-cal','d-asana'].forEach(id=>$(id).innerHTML='<div class="empty">Not available in a plain browser</div>');
+    return;
+  }
+  const since=new Date(Date.now()-10*864e5).toISOString().slice(0,10).replace(/-/g,'/');
+  const now=new Date(), wk=new Date(Date.now()+7*864e5);
+  const [mailR,calR,asaR]=await Promise.allSettled([
+    mcp(MAIL,{q:`after:${since} (supplier OR delivery OR maintenance OR order OR invoice OR Lynas)`,maxResults:25}),
+    mcp(CAL,{timeMin:now.toISOString(),timeMax:wk.toISOString(),maxResults:25}),
+    mcp(ASANA,{completed_since:'now'})]);
+  CONN.mail=mailR.status==='fulfilled'?'ok':(isPermErr(mailR.reason)?'blocked':'error');
+  CONN.cal=calR.status==='fulfilled'?'ok':(isPermErr(calR.reason)?'blocked':'error');
+  CONN.asana=asaR.status==='fulfilled'?'ok':(isPermErr(asaR.reason)?'blocked':'error');
+  $('conn').innerHTML='<div class="card"><div class="card-h"><div class="t">Connector access</div>'+
+    '<div class="s">Granted once at artifact creation — this artifact is never updated, so grants stick</div></div>'+
+    '<div class="card-b"><div class="chips">'+[['Gmail','mail'],['Google Calendar','cal'],['Asana','asana']].map(([n,k])=>
+      chip(CONN[k]==='ok'?'g':CONN[k]==='blocked'?'a':'r',n+' · '+(CONN[k]==='ok'?'ok':CONN[k]==='blocked'?'not granted':'error'))).join('')+
+    '</div></div></div>';
+  const pick=(o,ks)=>{for(const k of ks) if(o&&o[k]!=null) return o[k]; return null;};
+
+  if(mailR.status==='fulfilled'){
+    const raw=arr(mailR.value);
+    if(raw===null){$('d-mail').innerHTML=unparsed('Gmail',mailR.value);$('b-mail').innerHTML=chip('a','unreadable');}
+    else{
+      const th=raw.map(t=>({subj:String(pick(t,['subject','title'])||'(no subject)'),
+        from:String(pick(t,['from','sender'])||''),snip:String(pick(t,['snippet','preview'])||'')}))
+        .map(t=>({...t,hot:/urgent|asap|fail|broken|missing|short|late|complaint|closure/i.test(t.subj+' '+t.snip)}))
+        .sort((a,b)=>b.hot-a.hot);
+      $('b-mail').innerHTML=chip(th.some(t=>t.hot)?'a':'n',th.length+' threads');
+      $('d-mail').innerHTML=th.length?th.slice(0,14).map(t=>
+        `<div class="sig"><div class="bod">${chip(t.hot?'r':'b',t.hot?'Urgent':'Ops')}
+          <div class="hd" style="margin-top:4px">${esc(t.subj.slice(0,90))}</div>
+          <div class="dt">${esc(t.from.replace(/<[^>]+>/g,'').slice(0,40))} — ${esc(t.snip.slice(0,90))}</div></div></div>`).join('')
+        :'<div class="empty">No supplier or maintenance signal</div>';
+    }
+  } else $('d-mail').innerHTML=`<div class="err">${mailR.reason&&mailR.reason.message==='no-viewer'?'Not available in a plain browser':'Gmail unavailable'}</div>`;
+
+  if(calR.status==='fulfilled'){
+    const evs=arr(calR.value);
+    if(evs===null) $('d-cal').innerHTML=unparsed('Google Calendar',calR.value);
+    else $('d-cal').innerHTML=evs.length?evs.slice(0,14).map(ev=>{
+      const st=pick(ev,['start','startTime'])||{}, iso=typeof st==='string'?st:(st.dateTime||st.date||'');
+      const d=new Date(iso), allDay=!!(st&&st.date&&!st.dateTime);
+      return `<div class="sig"><div class="bod"><div class="hd">${esc(String(ev.summary||ev.title||'(no title)').slice(0,60))}</div>
+        <div class="dt">${isNaN(d)?'':d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})}
+        ${allDay?'· all day':(isNaN(d)?'':'· '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}))}</div></div></div>`;
+    }).join(''):'<div class="empty">Nothing scheduled</div>';
+  } else $('d-cal').innerHTML=`<div class="err">${calR.reason&&calR.reason.message==='no-viewer'?'Not available in a plain browser':'Calendar unavailable'}</div>`;
+
+  if(asaR.status==='fulfilled'){
+    const ts=arr(asaR.value);
+    if(ts===null) $('d-asana').innerHTML=unparsed('Asana',asaR.value);
+    else $('d-asana').innerHTML=ts.length?ts.slice(0,25).map(t=>{
+      const due=String(pick(t,['due_on','due_at','dueOn'])||'');
+      const late=due&&new Date(due)<new Date(new Date().toDateString());
+      return `<div class="sig">${late?chip('r','Overdue'):chip('n',due||'no date')}
+        <div class="bod"><div class="hd">${esc(String(t.name||t.title||'(untitled)').slice(0,110))}</div></div></div>`;
+    }).join(''):'<div class="empty">No open tasks</div>';
+  } else $('d-asana').innerHTML=`<div class="err">${asaR.reason&&asaR.reason.message==='no-viewer'?'Not available in a plain browser':'Asana unavailable'}</div>`;
+}
+boot();
+</script></body></html>

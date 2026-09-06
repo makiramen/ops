@@ -1,0 +1,578 @@
+{
+ "version": 1,
+ "calibrated": "2026-08-18",
+ "notes": "Single home for the ops data system's expectations. One entry per feed the ETL is meant to land in Neon Postgres (etl_feed_rows). status=expected feeds are verified daily by verify.yml (MakiManc/ops) and their fetch failures turn the ETL run red (etl_receipt.py in MakiManc/maki-hospitality-etl). status=known_broken feeds never alert - flip the field to expected the day the underlying fetch is fixed. min_rows floors are deliberately generous (~40% of the 14-day minimum observed at calibration); the verifier's row-count band check self-calibrates against a trailing median on top of this. A feed missing from this manifest raises a warning (check 5) and its fetch failure turns the run red - new feeds must be added here or fly blind. A feed the ETL no longer pulls must be REMOVED from here, or check 1 reports it as never having landed forever: the four Mapal Easilys feeds (Supplier Orders, Smart Delivery, Smart Yield, Invoices To Receive) went on 27/08/2026 when Ross confirmed the business does not use Easilys. STATUS TIERS: 'expected' = something downstream reads it, so a fetch failure or a short pull FAILS the ETL run and can go critical in the verifier. 'best_effort' (added 28/08/2026) = wanted and fully verified when it lands, but read by nothing, so a fetch failure or short pull is a WARNING and never turns a run red - it exists because a feed that is working, useful and unread had to be filed either as an incident or as not-checked-at-all, and neither was true. 'known_broken' = does not work; not verified at all. 03/09/2026: the three weekly Kobas email reports carry cadence_days 8, not 1. Every feed here was declared daily, so a weekly report was critical on 'expected today' for 12 of 13 days while the one report that had genuinely stopped looked no different from the two that were fine. 8 rather than 7 tolerates a few hours of send drift.",
+ "feeds": [
+  {
+   "name": "Deep Flow Branch Resources",
+   "workflow": "deep-pull",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 10372,
+   "median_rows_at_calibration": 25930,
+   "status": "expected"
+  },
+  {
+   "name": "Deep Flow Certificates",
+   "workflow": "deep-pull",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1005,
+   "median_rows_at_calibration": 2550,
+   "status": "expected"
+  },
+  {
+   "name": "Deep Flow Courses",
+   "workflow": "deep-pull",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 574,
+   "median_rows_at_calibration": 1440,
+   "status": "expected"
+  },
+  {
+   "name": "Deep Flow Modules",
+   "workflow": "deep-pull",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1879,
+   "median_rows_at_calibration": 4710,
+   "status": "expected",
+   "event_date_field": "module_completed_date",
+   "event_fresh_days": 21,
+   "event_date_format": "uk"
+  },
+  {
+   "name": "Deep Flow Profile XT",
+   "workflow": "deep-pull",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 183,
+   "median_rows_at_calibration": 458,
+   "status": "expected"
+  },
+  {
+   "name": "Deep Run Log",
+   "workflow": "deep-pull",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "median_rows_at_calibration": 1,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Appraisals",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 268,
+   "median_rows_at_calibration": 674,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Branch Resources",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 917,
+   "median_rows_at_calibration": 2312,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Branches",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 10,
+   "median_rows_at_calibration": 25,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Certificates",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 64,
+   "median_rows_at_calibration": 225,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Courses",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 46,
+   "median_rows_at_calibration": 127,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Departments",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 4,
+   "median_rows_at_calibration": 11,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Modules",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 150,
+   "median_rows_at_calibration": 404,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Profile XT",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 12,
+   "median_rows_at_calibration": 40,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Trainees",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 268,
+   "median_rows_at_calibration": 673,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Trainees Ext",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 268,
+   "median_rows_at_calibration": 673,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Trainees ReadOnly",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 344,
+   "median_rows_at_calibration": 863,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Training",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 362,
+   "median_rows_at_calibration": 925,
+   "status": "expected"
+  },
+  {
+   "name": "Flow Workbooks",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 268,
+   "median_rows_at_calibration": 674,
+   "status": "expected"
+  },
+  {
+   "name": "GC Central Areas",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 12,
+   "median_rows_at_calibration": 33,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Central Form Tasks",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 5018,
+   "median_rows_at_calibration": 12576,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Central Module Tasks",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 116,
+   "median_rows_at_calibration": 293,
+   "status": "expected"
+  },
+  {
+   "name": "GC Deviations (prev day)",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "median_rows_at_calibration": 6,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Form Task Answers",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 723,
+   "median_rows_at_calibration": 1910,
+   "status": "expected",
+   "event_date_field": "AnsweredDateTime",
+   "event_fresh_days": 4
+  },
+  {
+   "name": "GC Form Task Answers (prev day)",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 58,
+   "median_rows_at_calibration": 196,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Forms",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 29,
+   "median_rows_at_calibration": 74,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Forms Overview",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 166,
+   "median_rows_at_calibration": 422,
+   "status": "expected"
+  },
+  {
+   "name": "GC Local Procedures",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 230,
+   "median_rows_at_calibration": 575,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Location Groups",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 5,
+   "median_rows_at_calibration": 13,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Locations",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 10,
+   "median_rows_at_calibration": 25,
+   "status": "expected"
+  },
+  {
+   "name": "GC Modules",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 2,
+   "median_rows_at_calibration": 6,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Procedure Details",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 3,
+   "median_rows_at_calibration": 55,
+   "status": "best_effort",
+   "note": "Re-floored 16 -> 3 on 27/08/2026. The feed is a per-procedure fan-out and only some procedures have details, so its row count swings hard: 61, 55, 42, 44, 16, 46, 7, 61, 11 across the nine pulls in the archive. A floor of 16 sat ABOVE the observed minimum of 7 and fired 'feed_below_floor' on an 11-row pull that was perfectly healthy - a red run for normal variance. 3 is ~40% of the observed minimum, which is the rule the rest of this file's floors follow. best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Procedures",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 10,
+   "median_rows_at_calibration": 25,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Procedures Refactor",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 10,
+   "median_rows_at_calibration": 25,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Processes",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 14,
+   "median_rows_at_calibration": 37,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Scheduled Task Answers",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 14546,
+   "median_rows_at_calibration": 36622,
+   "status": "expected",
+   "event_date_field": "AnsweredDateTime",
+   "event_fresh_days": 2
+  },
+  {
+   "name": "GC Scheduled Task Answers (prev day)",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1795,
+   "median_rows_at_calibration": 4584,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Users",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 486,
+   "median_rows_at_calibration": 1219,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC Waste Module Settings",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 2,
+   "median_rows_at_calibration": 5,
+   "status": "best_effort",
+   "note": "best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "Kobas Orders",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 40,
+   "median_rows_at_calibration": 97,
+   "status": "expected",
+   "event_date_field": "Delivery Date ISO",
+   "event_fresh_days": 3,
+   "note": "Recalibrated 26/08/2026: the window widened from 2 days to 14, so a healthy pull now holds roughly 97 orders rather than 24. Floor set from 76 confirmations observed over 11 days (~7/day); weekends are thin but the 14-day window smooths that out. Re-check against the trailing 7-day median once more suppliers are enabled for order-by-email in Kobas - the count rises as coverage grows."
+  },
+  {
+   "name": "Kobas Report - Daily EPoS Item Recipes Report",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1031,
+   "median_rows_at_calibration": 2584,
+   "status": "expected"
+  },
+  {
+   "name": "Kobas Report - Daily Stock Batch Recipes Report",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 284,
+   "median_rows_at_calibration": 711,
+   "status": "expected"
+  },
+  {
+   "name": "Kobas Report - Maki Ramen - Weekly Outstanding Stock Orders Report",
+   "workflow": "daily-export",
+   "cadence_days": 8,
+   "pulls_weekends": true,
+   "min_rows": 398,
+   "median_rows_at_calibration": 995,
+   "status": "expected",
+   "event_date_field": "Order Placed",
+   "event_fresh_days": 10
+  },
+  {
+   "name": "Kobas Report - Maki and Ramen - Weekly Stock Check Edits Report",
+   "workflow": "daily-export",
+   "cadence_days": 8,
+   "pulls_weekends": true,
+   "min_rows": 695,
+   "median_rows_at_calibration": 2034,
+   "status": "expected",
+   "event_fresh_days": 10,
+   "event_date_field": "Edit Date/Time"
+  },
+  {
+   "name": "Kobas Report - Weekly Ingredient Price Changes Report",
+   "workflow": "daily-export",
+   "cadence_days": 8,
+   "pulls_weekends": true,
+   "min_rows": 56,
+   "median_rows_at_calibration": 141,
+   "status": "expected"
+  },
+  {
+   "name": "Supplier Issues",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "median_rows_at_calibration": 4,
+   "status": "expected"
+  },
+  {
+   "name": "Mapal Equipment",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "Mapal credentials - Phase 4"
+  },
+  {
+   "name": "Mapal Interventions",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "Mapal credentials - Phase 4"
+  },
+  {
+   "name": "Mapal Renewal Plans",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "Mapal credentials - Phase 4"
+  },
+  {
+   "name": "Flow Bookings Calendar",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "fetch fails daily; cause not yet investigated"
+  },
+  {
+   "name": "GC Local Module Tasks",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "fetch fails daily; cause not yet investigated"
+  },
+  {
+   "name": "GC Local Module Tasks v2",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "fetch fails daily; cause not yet investigated"
+  },
+  {
+   "name": "GC Deviations",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "fetch fails daily; the (prev day) variant works"
+  },
+  {
+   "name": "GC Waste Registered",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "fetch fails daily; cause not yet investigated"
+  },
+  {
+   "name": "GC Waste Registered (prev day)",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "fetch fails daily"
+  },
+  {
+   "name": "GC Location Changelog",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 1,
+   "status": "known_broken",
+   "note": "fetch fails daily; cause not yet investigated"
+  },
+  {
+   "name": "Factory Broth Readings",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 100,
+   "median_rows_at_calibration": null,
+   "status": "expected",
+   "note": "The factory refractometer form's responses, pulled whole every day (factory_broth.py in the ETL repo), so the row count is the form's entire history and only ever grows - roughly +3 a day. min_rows is a floor set BEFORE the feed's first landing, not a calibration: it is there to catch a wiped or wrong tab, and should be re-floored against a fortnight of real pulls. The verifier's 0.5x-3x band self-calibrates on the trailing median regardless."
+  },
+  {
+   "name": "GC Locations Changelog",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 0,
+   "median_rows_at_calibration": 0,
+   "status": "best_effort",
+   "note": "NOT the same feed as 'GC Location Changelog' (singular), which is the per-location fan-out and is known_broken. This one is the date-ranged 'locations-changelog' endpoint, and it was missing from this manifest entirely until 27/08/2026 - so every run where it hit a 429 was classed 'fetch failed and feed is NOT in the manifest', the hardest red the receipt has, for a feed nobody had ever declared. It fetches most days and has returned 0 rows on every one of them, so min_rows is 0 deliberately: a floor on a feed with no rows to floor would be noise. The entry exists so its fetch failures are classified rather than treated as an undeclared feed. best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC DAP Logged Data",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 0,
+   "status": "best_effort",
+   "note": "pulled by the GetCompliant block since it went in but missing from this manifest until 28/08/2026, which is why a failed pull went hard-red as 'feed is NOT in the manifest'. Floor is 0 because 0 rows is all this feed has ever returned - a floor above that is a standing false red. best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  },
+  {
+   "name": "GC DAP Logged Data (prev day)",
+   "workflow": "daily-export",
+   "cadence_days": 1,
+   "pulls_weekends": true,
+   "min_rows": 0,
+   "status": "best_effort",
+   "note": "pulled by the GetCompliant block since it went in but missing from this manifest until 28/08/2026, which is why a failed pull went hard-red as 'feed is NOT in the manifest'. Floor is 0 because 0 rows is all this feed has ever returned - a floor above that is a standing false red. best_effort from 28/08/2026: no dashboard, answer pack or KPI tab reads this feed, so a pull the GetCompliant quota squeezes out is a warning, not an incident. Still pulled daily and still verified when it lands. See GetCompliantClient.DAILY_TABS for what is read."
+  }
+ ]
+}
