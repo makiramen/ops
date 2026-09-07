@@ -117,12 +117,154 @@ ul.tick li b{color:var(--ink);font-weight:650}
 .grp{border-left:2px solid var(--grid);padding-left:14px;margin:14px 0}
 .small{font-size:12.5px;color:var(--muted)}
 @media print{nav.tabs{display:none}section.pane{display:block!important;page-break-before:always}}
+
+/* ===== Consolidation tab (added 7 Sep 2026) ===== */
+:root{--cs:#E2641B;--cs-wash:rgba(226,100,27,.12);--cs-deep:rgba(226,100,27,.34);--cs-amber:#C98A12;--cs-amber-w:rgba(201,138,18,.15);
+ --cs-blue:#2F5F8F;--cs-blue-w:rgba(47,95,143,.13);--cs-freeze:rgba(82,81,78,.10);--cs-wk:40px;--cs-lane:226px}
+:root[data-theme="dark"]{--cs:#FF8340;--cs-wash:rgba(255,131,64,.16);--cs-deep:rgba(255,131,64,.4);--cs-amber:#E0A62E;--cs-amber-w:rgba(224,166,46,.18);--cs-blue:#6F9BC9;--cs-blue-w:rgba(111,155,201,.18);--cs-freeze:rgba(255,255,255,.06)}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])){--cs:#FF8340;--cs-wash:rgba(255,131,64,.16);--cs-deep:rgba(255,131,64,.4);--cs-amber:#E0A62E;--cs-amber-w:rgba(224,166,46,.18);--cs-blue:#6F9BC9;--cs-blue-w:rgba(111,155,201,.18);--cs-freeze:rgba(255,255,255,.06)}}
+.cs-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.cs-land{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:20px}
+.cs-land .l{border-left:3px solid var(--cs);padding:2px 0 2px 16px}
+.cs-land .k{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:650}
+.cs-land .d{font-size:30px;font-weight:700;letter-spacing:-.025em;line-height:1.1;margin:2px 0}
+.cs-land .t{font-size:13.5px;color:var(--ink2)}
+.cs-land .cd{font-size:12px;color:var(--cs);font-weight:650;margin-top:4px}
+.cs-phases{display:grid;grid-template-columns:2fr 6fr 6fr 3fr 5fr;gap:4px}
+@media(max-width:820px){.cs-phases{grid-template-columns:1fr 1fr}}
+.cs-ph{background:var(--surface);border:1px solid var(--ring);border-top:4px solid var(--dim);border-radius:0 0 10px 10px;padding:12px 12px 14px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:transform .12s}
+.cs-ph:hover{transform:translateY(-2px)}
+.cs-ph.sel{box-shadow:inset 0 0 0 2px var(--cs)}
+.cs-ph.p0{border-top-color:var(--crit)}.cs-ph.p1{border-top-color:var(--warn)}.cs-ph.p2{border-top-color:var(--cs)}.cs-ph.p3{border-top-color:var(--muted)}.cs-ph.p4{border-top-color:var(--good)}
+.cs-ph .id{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:650}
+.cs-ph .nm{font-weight:700;font-size:15.5px;line-height:1.15;letter-spacing:-.01em}
+.cs-ph .dt{font-size:11.5px;color:var(--ink2)}
+.cs-ph .bar{height:6px;background:var(--grid);border-radius:3px;overflow:hidden;margin-top:auto}
+.cs-ph .bar i{display:block;height:100%;background:var(--good);width:0}
+.cs-ph .n{font-size:12px;color:var(--ink2);margin-top:4px}
+.cs-ph .n b{color:var(--ink)}
+.cs-gates{display:grid;grid-template-columns:repeat(6,1fr);gap:2px;background:var(--grid);border:1px solid var(--grid);border-radius:10px;overflow:hidden}
+@media(max-width:900px){.cs-gates{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.cs-gates{grid-template-columns:repeat(2,1fr)}}
+.cs-g{background:var(--surface);padding:14px 14px 16px;display:flex;flex-direction:column;gap:6px;cursor:pointer}
+.cs-g:hover{background:var(--cs-wash)}
+.cs-g.sel{box-shadow:inset 0 0 0 2px var(--cs)}
+.cs-g .id{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--muted);line-height:1}
+.cs-g.hot .id{color:var(--cs)}
+.cs-g .nm{font-weight:650;font-size:14px;line-height:1.25}
+.cs-g .dt{font-size:12px;color:var(--ink2)}
+.cs-g .rel{font-size:12.5px;color:var(--ink2);line-height:1.35}
+.cs-g .cd{font-size:12px;font-weight:650;margin-top:auto}
+.cs-chain{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:16px 18px 18px;margin-bottom:14px}
+.cs-chain h4{margin:0 0 12px;font-size:15px;font-weight:650}
+.cs-chain h4 span{font-size:11px;color:var(--muted);font-weight:650;letter-spacing:.08em;text-transform:uppercase;margin-left:10px}
+.cs-steps{display:flex;align-items:stretch;overflow-x:auto;padding-bottom:4px}
+.cs-step{flex:0 0 auto;min-width:120px;padding:9px 12px;border:1px solid var(--grid);background:var(--page);border-radius:8px;display:flex;flex-direction:column;gap:2px}
+.cs-step .d{font-size:11px;color:var(--cs);font-weight:650}
+.cs-step .l{font-size:13px;font-weight:650;line-height:1.2}
+.cs-step .o{font-size:10.5px;color:var(--muted)}
+.cs-step.g{background:var(--cs);border-color:var(--cs);color:#fff}
+.cs-step.g .d,.cs-step.g .o{color:rgba(255,255,255,.82)}
+.cs-step.done{opacity:.55}
+.cs-arr{flex:0 0 auto;width:22px;display:flex;align-items:center;justify-content:center;color:var(--muted)}
+.cs-chain p{margin:12px 0 0;font-size:13.5px;color:var(--ink2);max-width:82ch}
+.cs-chain p b{color:var(--ink)}
+.cs-tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.cs-tools select,.cs-tools input,.cs-tools button{font:inherit;font-size:13px;padding:6px 10px;border:1px solid var(--axis);border-radius:8px;background:var(--surface);color:var(--ink)}
+.cs-tools button{cursor:pointer}
+.cs-tools button.on{background:var(--cs);border-color:var(--cs);color:#fff}
+.cs-tools .sp{flex:1}
+.cs-tools .cnt{font-size:12.5px;color:var(--muted)}
+.cs-scroller{overflow-x:auto;border:1px solid var(--ring);background:var(--surface);border-radius:12px}
+.cs-chart{min-width:calc(var(--cs-lane) + 22*var(--cs-wk));position:relative}
+.cs-months,.cs-weeks,.cs-lane,.cs-gaterow{display:grid;grid-template-columns:var(--cs-lane) repeat(22,var(--cs-wk))}
+.cs-months{border-bottom:1px solid var(--grid)}
+.cs-months .c{grid-row:1;font-weight:650;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);padding:11px 0 8px 10px;border-left:1px solid var(--grid)}
+.cs-months .s{grid-column:1;padding:11px 14px 8px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:650}
+.cs-weeks{border-bottom:1px solid var(--axis)}
+.cs-weeks .w{font-size:10px;color:var(--muted);text-align:center;padding:4px 0 5px;border-left:1px solid var(--grid)}
+.cs-weeks .w.now{color:var(--crit);font-weight:700}
+.cs-gaterow{height:22px;border-bottom:1px solid var(--grid)}
+.cs-gaterow .gl{grid-row:1;font-size:10.5px;font-weight:700;color:var(--cs);padding:3px 0 0 4px;white-space:nowrap}
+.cs-gaterow .fl{grid-row:1;font-size:9.5px;color:var(--muted);text-align:center;padding-top:4px;letter-spacing:.08em;text-transform:uppercase;font-weight:650}
+.cs-group{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--cs);padding:13px 14px 5px;border-top:1px solid var(--grid);background:var(--page);font-weight:700}
+.cs-lane{border-top:1px solid var(--grid);align-items:center;min-height:34px}
+.cs-lane.hide,.cs-group.hide{display:none}
+.cs-lane .nm{padding:6px 12px 6px 14px;font-size:13.5px;line-height:1.25;border-right:1px solid var(--grid);align-self:stretch;display:flex;flex-direction:column;justify-content:center;cursor:pointer}
+.cs-lane .nm:hover{background:var(--cs-wash)}
+.cs-lane .nm span{font-size:10.5px;color:var(--muted);margin-top:1px}
+.cs-bar{grid-row:1;height:16px;border-radius:3px;margin:0 2px;position:relative;z-index:2;display:flex;align-items:center;padding:0 7px;font-size:10px;white-space:nowrap;overflow:hidden;cursor:default}
+.cs-bar.food{background:var(--cs-wash);border-left:3px solid var(--cs);color:var(--cs)}
+.cs-bar.done{background:rgba(12,163,12,.13);border-left:3px solid var(--good);color:#046b04}
+.cs-bar.crit{background:rgba(208,59,59,.12);border-left:3px solid var(--crit);color:#9c1f1f}
+.cs-bar.std{background:var(--page);border-left:3px solid var(--axis);color:var(--ink2)}
+.cs-bar.key{background:var(--cs-amber-w);border-left:3px solid var(--cs-amber);color:var(--cs-amber)}
+.cs-bar.me{background:var(--cs-blue-w);border-left:3px solid var(--cs-blue);color:var(--cs-blue)}
+:root[data-theme="dark"] .cs-bar.done{color:#4cd44c}:root[data-theme="dark"] .cs-bar.crit{color:#f08080}
+@media(prefers-color-scheme:dark){:root:where(:not([data-theme="light"])) .cs-bar.done{color:#4cd44c}:root:where(:not([data-theme="light"])) .cs-bar.crit{color:#f08080}}
+.cs-ms{grid-row:1;height:16px;z-index:3;display:flex;align-items:center;gap:6px;padding-left:2px;font-size:10px;color:var(--cs);white-space:nowrap;font-weight:650}
+.cs-dia{width:11px;height:11px;background:var(--cs);transform:rotate(45deg);flex:0 0 auto}
+.cs-ov{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;display:grid;grid-template-columns:var(--cs-lane) repeat(22,var(--cs-wk))}
+.cs-fr{grid-row:1;background:var(--cs-freeze);z-index:1}
+.cs-gline{grid-row:1;border-left:1.5px dashed var(--cs);opacity:.55;z-index:4}
+.cs-today{grid-row:1;border-left:2px solid var(--crit);opacity:.65;z-index:4}
+.cs-legend{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:12px;font-size:11.5px;color:var(--ink2)}
+.cs-legend i{display:inline-block;width:22px;height:9px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.cs-split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.cs-split{grid-template-columns:1fr}}
+.cs-panel{background:var(--surface);border:1px solid var(--ring);border-radius:14px;padding:18px 20px 20px}
+.cs-panel .sub{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--cs);font-weight:700;margin:0 0 4px}
+.cs-panel h4{margin:0 0 10px;font-size:18px;font-weight:650;letter-spacing:-.015em}
+.cs-panel ul{margin:0;padding:0;list-style:none;display:grid;gap:6px}
+.cs-panel li{font-size:14px;color:var(--ink2);padding-left:14px;position:relative;line-height:1.4}
+.cs-panel li::before{content:"";position:absolute;left:0;top:9px;width:6px;height:6px;background:var(--cs);border-radius:1px}
+.cs-panel.no li::before{background:var(--crit)}.cs-panel.yes li::before{background:var(--good)}
+.cs-panel li b{color:var(--ink);font-weight:600}
+.cs-matrix{overflow-x:auto}
+.cs-matrix table{border-collapse:collapse;width:100%;font-size:13.5px}
+.cs-matrix th{font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:650;text-align:center;padding:0 6px 8px;border-bottom:1px solid var(--grid)}
+.cs-matrix th:first-child{text-align:left;padding-left:0}
+.cs-matrix td{padding:0;border-bottom:1px solid var(--grid);text-align:center;font-variant-numeric:tabular-nums;font-size:12.5px}
+.cs-matrix td:first-child{text-align:left;padding:8px 12px 8px 0;white-space:nowrap;font-size:14px}
+.cs-matrix td:first-child span{font-size:10.5px;color:var(--muted);display:block}
+.cs-matrix td.c div{height:36px;display:flex;align-items:center;justify-content:center;margin:1px;border-radius:4px;cursor:pointer;color:var(--ink2)}
+.cs-matrix td.c div:hover{outline:2px solid var(--cs)}
+.cs-matrix td.tot{font-weight:650;color:var(--ink);border-left:1px solid var(--axis);padding:0 8px}
+.cs-h1{background:var(--cs-wash)}.cs-h2{background:var(--cs-deep);color:var(--ink)!important}.cs-h3{background:var(--cs);color:#fff!important}
+.cs-acts{border:1px solid var(--ring);border-radius:12px;background:var(--surface);overflow:hidden}
+.cs-act{display:grid;grid-template-columns:28px 64px 1fr 190px 84px 64px;gap:10px;align-items:center;padding:8px 14px;border-bottom:1px solid var(--grid);font-size:13.5px}
+.cs-act:last-child{border-bottom:none}
+.cs-act.done .a{text-decoration:line-through;color:var(--muted)}
+.cs-act.due{background:rgba(250,178,25,.08)}
+.cs-act.late{background:rgba(208,59,59,.07)}
+.cs-act .id{font-size:11px;color:var(--muted);font-weight:650}
+.cs-act .o{font-size:12.5px;color:var(--ink2)}
+.cs-act .by{font-size:12.5px;color:var(--ink2);text-align:right;white-space:nowrap}
+.cs-act .g{font-size:10.5px;font-weight:700;color:var(--cs);text-align:right}
+.cs-act input{width:16px;height:16px;accent-color:var(--cs);cursor:pointer}
+.cs-act .ph{display:none}
+.cs-acthead{display:grid;grid-template-columns:28px 64px 1fr 190px 84px 64px;gap:10px;padding:8px 14px;background:var(--page);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:650;border-bottom:1px solid var(--grid)}
+.cs-acthead .r{text-align:right}
+.cs-phasehead{padding:10px 14px 6px;background:var(--page);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--cs);font-weight:700;border-bottom:1px solid var(--grid);display:flex;justify-content:space-between}
+.cs-phasehead span{color:var(--muted);font-weight:650;letter-spacing:0;text-transform:none;font-size:12px}
+@media(max-width:760px){.cs-act,.cs-acthead{grid-template-columns:24px 1fr 70px}.cs-act .id,.cs-act .o,.cs-act .g,.cs-acthead .h-id,.cs-acthead .h-o,.cs-acthead .h-g{display:none}}
+.cs-owners{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:2px;background:var(--grid);border:1px solid var(--grid);border-radius:10px;overflow:hidden}
+.cs-own{background:var(--surface);padding:13px 16px;cursor:pointer}
+.cs-own:hover{background:var(--cs-wash)}
+.cs-own .who{font-weight:700;font-size:14.5px;margin-bottom:5px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.cs-own .who span{font-size:10.5px;color:var(--muted);font-weight:650;text-align:right}
+.cs-own ul{margin:0;padding:0;list-style:none;display:grid;gap:3px}
+.cs-own li{font-size:13px;color:var(--ink2);line-height:1.35}
+.cs-own li b{color:var(--ink);font-weight:600}
+.cs-toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--page);padding:9px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:50}
+.cs-toast.on{opacity:1}
 </style>
 </head><body>
 <header><div class="hd">
 <div>
 <h1>Area Management — 2027 Operating Pack</h1>
 <p>Making Charter v2.5 executable · Baseline 17 Aug 2026 → stable 1 Jan 2027 · Michael Salvador, COO</p>
+<p class="small" style="margin-top:6px">Updated 7 September 2026: the group consolidation programme (six gates, two landing dates, 101 actions) now lives on the <b>Consolidation</b> tab, signed off with Teddy. Q3 GM and AGM Suitability Reviews are on the <b>Q3 reviews &amp; PIPs</b> tab.</p>
 <p class="small" style="margin-top:6px">Updated 6 September 2026 with the Q3 GM and AGM Suitability Reviews: 12 GM forms, 11 AGM forms, four cases and a dated runway. See the <b>Q3 reviews &amp; PIPs</b> tab.</p>
 </div>
 <div class="hdbtns">
@@ -135,6 +277,7 @@ ul.tick li b{color:var(--ink);font-weight:650}
 
 <nav class="tabs">
 <a href="#roadmap">Roadmap</a>
+<a href="#consolidation">Consolidation to 1 Jan / 1 Feb</a>
 <a href="#b2b">B2B</a>
 <a href="#targets">Targets &amp; hit rate</a>
 <a href="#succession">Structure &amp; succession</a>
@@ -903,6 +1046,124 @@ ul.tick li b{color:var(--ink);font-weight:650}
 <p class="say">Q2 named five ready-now successors. Q3 confirms four of them on the new form and adds nothing: <b>Wayne Chen 4.40 and Kai Chau Leung 3.60 at M9, Nabina Poon 4.00 at M7, Cameron Muir 4.00 at M15</b>, with Jessie Hong 3.60 at M1 subject to her visa position. <b>M9 Manchester is still a GM vacancy with two ready AGMs sitting behind it and it is still the cheapest win in the company.</b> Filling it before the four processes open also demonstrates, on the record, that the programme promotes as well as exits.</p>
 
 </section>
+<section class="pane" id="p-consolidation">
+
+<div class="answer">
+<p class="lede">The consolidation programme, signed off with Teddy on 7 September, lands the group on one system in two steps. <b>1 January 2027</b> is the operating business: broth and protein specs, one service standard, seven B2B lists on one schema, one promotion framework, automated reporting, the 2027 OKRs, bonus and budget. <b>1 February 2027</b> is the customer layer: the new menu and the new website on the agreed brand. January is the kitchen, February is the customer. Six gates sit between here and there, and two of them are open today.</p>
+<div class="cs-land">
+  <div class="l"><div class="k">G5 · Operating business</div><div class="d">1 Jan 2027</div><div class="t">Specs, service, B2B, promotions, reporting, OKRs, bonus and budget live on one system</div><div class="cd" data-cd="2027-01-01"></div></div>
+  <div class="l"><div class="k">G6 · Customer layer</div><div class="d">1 Feb 2027</div><div class="t">New menu in every site and the website live on one member record</div><div class="cd" data-cd="2027-02-01"></div></div>
+</div>
+</div>
+
+<h2>Five phases</h2>
+<p class="say">Widths are proportional to weeks. The bar is how many of that phase's dated actions are ticked off in the list at the bottom of this tab. Click a phase to filter the action list.</p>
+<div class="cs-phases" id="cs-phases"></div>
+
+<h2>Six gates</h2>
+<p class="say">Nothing behind a gate moves until it clears. Click a gate to see only the actions that serve it. <b>G2 is the one that matters this week</b>: roughly 332 B2B leads, four agreed Birmingham discounts, 17 freshers events and every promotion in the plan end at a till button that does not exist.</p>
+<div class="cs-gates" id="cs-gates"></div>
+
+<h2>Two critical paths</h2>
+<p class="say">Each is a chain. A week lost anywhere on the chain is a week lost at the end, and there is no third landing date. Steps go quiet once their date has passed.</p>
+<div class="cs-chain">
+  <h4>The menu chain <span>G3 to G6</span></h4>
+  <div class="cs-steps" id="cs-chain1"></div>
+  <p>The website rides this chain because it carries the online menu: <b>brief w/c 2 Nov, build to 8 Jan, UAT w/c 18 Jan, live 1 Feb.</b> A brand decision after 30 October pushes the print lock into the freeze and the menu out of February.</p>
+</div>
+<div class="cs-chain">
+  <h4>The promotion chain <span>G2 to G5</span></h4>
+  <div class="cs-steps" id="cs-chain2"></div>
+  <p>The mechanic set is menu agnostic, so it goes live on the old menu on 1 January and carries straight over on 1 February. <b>Every week G2 slips, the pilot loses a week</b> and January runs on an untested mechanic.</p>
+</div>
+
+<h2>The flow, week by week</h2>
+<p class="say">Twenty-two weeks, week commencing. Dashed lines are gates, the red line is today, the shaded block is the Christmas freeze. Blue lanes are Michael's alone. Filter by owner or type, and click a lane name to pull its actions up in the list below.</p>
+<div class="cs-tools">
+  <select id="cs-owner"><option value="">Every owner</option></select>
+  <button type="button" data-type="crit">Red lights</button>
+  <button type="button" data-type="key">Critical paths</button>
+  <button type="button" data-type="food">Food and product</button>
+  <button type="button" data-type="me">Michael only</button>
+  <span class="sp"></span>
+  <span class="cnt" id="cs-lanecount"></span>
+</div>
+<div class="cs-scroller"><div class="cs-chart" id="cs-chart"></div></div>
+<div class="cs-legend">
+  <span><i style="background:rgba(12,163,12,.13);border-left:3px solid var(--good)"></i>Cleared</span>
+  <span><i style="background:rgba(208,59,59,.12);border-left:3px solid var(--crit)"></i>Red light</span>
+  <span><i style="background:var(--cs-wash);border-left:3px solid var(--cs)"></i>Food and product</span>
+  <span><i style="background:var(--cs-amber-w);border-left:3px solid var(--cs-amber)"></i>On a critical path</span>
+  <span><i style="background:var(--cs-blue-w);border-left:3px solid var(--cs-blue)"></i>Michael only</span>
+  <span><i style="background:var(--page);border-left:3px solid var(--axis)"></i>Standing work</span>
+  <span><span class="cs-dia" style="display:inline-block;width:9px;height:9px;margin-right:9px;vertical-align:middle"></span>Milestone</span>
+</div>
+
+<h2>The rule that makes the dates hold</h2>
+<div class="cs-split">
+  <div class="cs-panel"><div class="sub">1 January · G5</div><h4>January is the kitchen</h4><ul>
+    <li><b>28 day halal beef, 0.3 to 0.4 cm cut, non electric slicer</b> (Ross)</li>
+    <li><b>Chicken sous vide, cha siu from Harro</b> (Ross)</li>
+    <li><b>Squid spec, broth spec</b> (Sophie)</li>
+    <li><b>Broth centralised in the factory, new costing</b> (Ross)</li>
+    <li>JFC to Lynas repricing, pork into Dunster's, beef to Lynas</li>
+    <li>Service standard, retraining, weekly audit</li>
+    <li>Seven B2B lists on one schema, discounts in Kobas</li>
+    <li>Promotion calendars in three regions</li>
+    <li>Automated reporting and alerts</li>
+    <li>OKRs, bonus distribution, 2027 budget in force</li></ul></div>
+  <div class="cs-panel"><div class="sub">1 February · G6</div><h4>February is the customer</h4><ul>
+    <li><b>Menu names</b>, including whatever the pork to chicken broth conversion is called</li>
+    <li><b>Items in and out</b>, the tail, Seafood Hell Ramen, soba sauce</li>
+    <li><b>Prices</b> (closed 4 Dec, printed, live 1 Feb)</li>
+    <li>The brand as the customer sees it: menu, website, print</li>
+    <li>The website and the online menu, on one member record</li>
+    <li>Kobas, Deliveroo and online menus rebuilt for 1 Feb</li>
+    <li>Wagyu Ramen, London, after 1 Feb on the new menu</li></ul></div>
+</div>
+<div class="cs-split" style="margin-top:16px">
+  <div class="cs-panel yes"><div class="sub">16 to 31 December</div><h4>Runs through the freeze</h4><ul>
+    <li>Print run (off site, touches nothing at a site)</li><li>Regional Q1 promotion calendars (desk work, by 18 Dec)</li><li>Automation built and tested in the cloud, not deployed</li><li>Festive B2B activations booked in September</li><li>G5 readiness check, 28 Dec</li></ul></div>
+  <div class="cs-panel no"><div class="sub">16 to 31 December</div><h4>Does not run through the freeze</h4><ul>
+    <li>Any Kobas change</li><li>Any spec or supplier change at site (specs live 30 Nov, two weeks bedding)</li><li>Any menu change or insert</li><li>Any training launch (retraining 100% by 18 Dec)</li><li>Any new B2B activation, any website deployment</li></ul></div>
+</div>
+
+<h2>Who carries what</h2>
+<p class="say">Dated actions per person per phase, counting everyone named on an action. Click a cell to filter the list.</p>
+<div class="card cs-matrix"><table><thead><tr><th>Person</th><th>P0 Red lights</th><th>P1 Decide</th><th>P2 Build</th><th>P3 Freeze</th><th>P4 Stabilise</th><th>Total</th><th>Done</th></tr></thead><tbody id="cs-matrix"></tbody></table></div>
+
+<h2>Owners, confirmed 7 September</h2>
+<div class="cs-owners" id="cs-owners">
+  <div class="cs-own" data-owner="Ross"><div class="who">Ross Ward <span>Ops</span></div><ul><li><b>Beef</b>: 28 day halal, cut, slicer, Lynas consolidation</li><li><b>Cha siu</b> from Harro · <b>Chicken</b> sous vide</li><li><b>Broth centralisation</b> and the updated costing</li><li>JFC to Lynas repricing · Pork into Dunster's</li><li><b>Retraining content</b> (Hanna tracks in Mapal)</li><li>Reporting and automation, with Michael</li></ul></div>
+  <div class="cs-own" data-owner="Sophie"><div class="who">Sophie Wang <span>EC</span></div><ul><li><b>Squid</b> spec · <b>Broth</b> spec, darkness, conversion</li><li>Product judgement on the menu analysis</li><li>Costings and allergen matrix, with Monica</li><li>Menu training pack and two week rollout</li><li>London EC hire, with Hanna</li></ul></div>
+  <div class="cs-own" data-owner="Becca"><div class="who">Becca Cuthbertson <span>Marketing</span></div><ul><li>Freshers and the Ramen Royalty fix</li><li>Brand evidence: survey and the October feedback calls</li><li><b>Print</b> and distribution to sites</li><li><b>Website</b>, one member record</li><li>Promotion framework, with Inka</li></ul></div>
+  <div class="cs-own" data-owner="Georgie"><div class="who">Georgie Riddle <span>Marketing</span></div><ul><li><b>Menu design</b>: draft w/c 16 Nov, second w/c 30 Nov, lock 11 Dec</li><li>Artwork to printer 14 Dec</li><li>Menu training pack, with Sophie</li></ul></div>
+  <div class="cs-own" data-owner="Inka"><div class="who">Inka Cheung <span>AM · North and Midlands</span></div><ul><li><b>Promotion framework</b>, with Becca</li><li><b>Promotion pilot</b>, four weeks from 2 Nov</li><li>Rollout pack 11 Dec</li><li>Birmingham B2B tracker, reconciled to one truth</li></ul></div>
+  <div class="cs-own" data-owner="Lincoln"><div class="who">Lincoln <span>AM · South</span></div><ul><li><b>Service standard rollout</b>, estate wide: South 5 Oct, North 19 Oct, Scotland 2 Nov</li><li>Success measure agreed with Michael by 25 Sep</li><li>London events, freshers with Becca</li></ul></div>
+  <div class="cs-own" data-owner="Ka Ho"><div class="who">Ka Ho <span>AM · Scotland and Newcastle</span></div><ul><li><b>Edinburgh and Glasgow B2B</b>, built on the Aberdeen model by 18 Sep</li><li>All of Scotland B2B, Aberdeen already live</li><li>Scotland Q1 promotion calendar</li></ul></div>
+  <div class="cs-own" data-owner="Matthew"><div class="who">Matthew Jenner <span>BDM</span></div><ul><li><b>G2 Kobas activation</b>, 19 Sep</li><li>Seven lists to one schema, London list from draft to live</li><li>Christmas markets, festive activations</li><li>Kobas menu rebuild for 1 Feb</li></ul></div>
+  <div class="cs-own" data-owner="Hanna"><div class="who">Hanna Awang <span>HR</span></div><ul><li>Cull and rehire process, with legal</li><li><b>Retraining in Mapal</b>: load 24 Oct, live 31 Oct, 100% by 18 Dec</li><li>GM gaps, London EC hire</li></ul></div>
+  <div class="cs-own" data-owner="Michael"><div class="who">Michael Salvador <span>COO · nobody else touches these</span></div><ul><li><b>2027 OKR sets</b>: draft 31 Oct, agreed 14 Nov, cascaded w/c 7 Dec</li><li><b>Bonus distribution</b>: four tiers, pot doubled, approved 28 Nov</li><li><b>Admin x Marketing 2027 budget</b>: draft 31 Oct, locked 11 Dec</li><li>Menu analysis, architecture, G5 and G6 readiness checks</li></ul></div>
+</div>
+
+<h2>All 101 actions</h2>
+<p class="say">Every dated action in the plan. Tick them off as they land (ticks stay in this browser). Amber rows are due inside seven days, red rows are past their date and unticked. <b>Copy for Asana</b> puts the filtered rows on the clipboard as tab separated text: name, assignee, due date, section.</p>
+<div class="cs-tools">
+  <input type="search" id="cs-q" placeholder="Search actions" style="min-width:200px">
+  <select id="cs-fphase"><option value="">Every phase</option><option value="P0">P0 Red lights</option><option value="P1">P1 Decide</option><option value="P2">P2 Build</option><option value="P3">P3 Freeze and print</option><option value="P4">P4 Stabilise</option></select>
+  <select id="cs-fowner"><option value="">Every owner</option></select>
+  <select id="cs-fgate"><option value="">Every gate</option><option>G2</option><option>G3</option><option>G4</option><option>G5</option><option>G6</option><option>Post G6</option></select>
+  <button type="button" id="cs-fopen">Open only</button>
+  <button type="button" id="cs-clear">Clear filters</button>
+  <span class="sp"></span>
+  <span class="cnt" id="cs-count"></span>
+  <button type="button" id="cs-copy">Copy for Asana</button>
+</div>
+<div class="cs-acts" id="cs-acts"></div>
+<p class="small" style="margin-top:12px">Full text, the 22 item decision register and the assumptions live in the project document “Consolidation Plan to January 2027”, v3, 7 September 2026. Phase 4 goes into Asana after Michael confirms it.</p>
+<div class="cs-toast" id="cs-toast"></div>
+</section>
+
 <footer>
 <b>Area Management — 2027 Operating Pack</b> · built 17 August 2026 · Michael Salvador, COO.
 Extends the Area Manager Role Charter v2.5 (effective September 2026 payroll) and the AM Operational Manual v1.0.
@@ -921,7 +1182,7 @@ Data caveats carry through from the tracker: M17, M18, M19, M20 and Maki Nori ha
 
 <script>
 (function(){
-  var panes = ['roadmap','b2b','targets','succession','review','foh','quality','exit','pip'];
+  var panes = ['roadmap','consolidation','b2b','targets','succession','review','foh','quality','exit','pip'];
   var links = Array.prototype.slice.call(document.querySelectorAll('nav.tabs a'));
   function show(name){
     if(panes.indexOf(name) === -1){ name = panes[0]; }
@@ -948,6 +1209,306 @@ Data caveats carry through from the tracker: M17, M18, M19, M20 and Maki Nori ha
       document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
     });
   }
+})();
+</script>
+<script>
+(function(){
+  var CS_ACTIONS=[["P0.01","Freshers QR mechanic tested end to end with evidence, go / no go","Becca, Lincoln","9 Sep","G2"],["P0.02","Ramen Royalty 400 errors on member creation fixed","Becca","11 Sep","G2"],["P0.03","Activation memos and named staffing rotas for all 17 freshers events, site owner, cost and reach on the nine London and South events, UCL contacted","Becca, Lincoln","11 Sep","G2"],["P0.04","Kobas discount buttons built and tested at the six MASTER CRM sites","Matthew Jenner","12 Sep","G2"],["P0.05","Cull list confirmed, HR and legal process signed off before any action","Michael, Hanna, legal","11 Sep","G5"],["P0.06","Item level sales pull commissioned, 1 Jan 2026 to date, all sites, 6 and 12 month views","Sophie, Kobas","11 Sep","G4"],["P0.07","Whole estate food stock take chase, 0 of 20 filed","AMs","11 Sep","G5"],["P0.08","Decision 1: scope of the JFC to Lynas repricing","Michael, Ross","14 Sep","G5"],["P0.09","Decision 19: name the seventh B2B list","Michael, Matthew","14 Sep","G5"],["P0.10","Edinburgh and Glasgow B2B lists built on the Aberdeen model","Ka Ho","18 Sep","G5"],["P0.11","London B2B Target List promoted from draft to live","Matthew Jenner","18 Sep","G5"],["P0.12","All seven B2B lists migrated to one schema (owner, status, next action date, value), Birmingham reconciled to the M21 tracker","Matthew Jenner, Inka","19 Sep","G5"],["P0.13","Twelve round table names picked, dates and locations set, agendas sent","Michael","18 Sep","G5"],["P0.14","Control Centre weekly refresh recreated as a local scheduled task on the Mac","Michael, Claude","30 Sep","G5"],["P0.15","G2: agreed discounts live in Kobas at all sites","Matthew Jenner","19 Sep","G2"],["P1.01","Decision 8: brand survey closed or second wave","Michael, Becca","21 Sep","G3"],["P1.02","Brand survey final read out issued","Becca, Michael","25 Sep","G3"],["P1.03","Service standard success measure agreed with Lincoln","Michael, Lincoln","25 Sep","G5"],["P1.04","Decision 15: non electrical beef slicer options researched and specified","Ross","25 Sep","G5"],["P1.05","Menu consolidation analysis complete, tail identified, Seafood Hell Ramen checked","Michael with Claude, Sophie","25 Sep","G4"],["P1.06","Decision 9: feedback call recruitment route, question set, attendees","Michael, Becca","28 Sep","G3"],["P1.07","Round table A (service) and B (food quality) held, outputs written up","Michael","2 Oct","G5"],["P1.08","JFC to Lynas repricing executed, JFC credit note closed","Ross, Monica","30 Sep","G5"],["P1.09","Decision 2: beef to Lynas, and who prices it","Michael, Ross","30 Sep","G5"],["P1.10","Christmas markets (Newcastle, Sunderland) booked","Matthew Jenner, Óisín","30 Sep","G5"],["P1.11","Ramen darkness confirmed as intended or drift","Sophie","30 Sep","G5"],["P1.12","Decisions 17 and 18: automation priority order and alert route","Michael, Ross","30 Sep","G5"],["P1.13","Online customer feedback calls run (w/c 5, 12, 19 Oct), 15 to 20 across three regions","Becca, Michael","23 Oct","G3"],["P1.14","Service rollout, South England","Lincoln","w/c 5 Oct","G5"],["P1.15","Decisions 12 and 13: website scope and one member record","Michael, Becca","5 Oct","G6"],["P1.16","Decision 3: chicken sous vide at factory or site","Michael, Ross","9 Oct","G5"],["P1.17","Protein specs locked and issued: beef, cha siu, chicken (Ross); squid, broth (Sophie). 28 day requirement to AP Jess","Ross, Sophie","9 Oct","G5"],["P1.18","Freshers post event read out: members created, redemptions, cost per member","Becca","9 Oct","G5"],["P1.19","Promotion framework agreed: mechanic set, ceilings, Kobas buttons, calendar template, measure. Decision 14 on budget","Inka, Becca","16 Oct","G5"],["P1.20","Untouched B2B leads followed up: Newcastle, Birmingham, Leeds","Óisín, Inka, Amy","16 Oct","G5"],["P1.21","Retraining content built","Ross","17 Oct","G5"],["P1.22","Service rollout, North England and Midlands","Lincoln with Inka","w/c 19 Oct","G5"],["P1.23","Retraining loaded to Mapal","Hanna","24 Oct","G5"],["P1.24","Feedback calls read out, combined brand evidence pack issued","Becca, Michael","26 Oct","G3"],["P1.25","Automation items 2, 3, 4 live: stock flag report, B2B roll up, sales feed","Ross, Claude","30 Oct","G5"],["P1.26","G3: brand direction signed off by Teddy. Decisions 6, 7, 16","Michael, Teddy, Becca","30 Oct","G3"],["P1.27","Retraining live in Mapal","Hanna","31 Oct","G5"],["P1.28","Pork into Dunster's Farm, no price increase","Ross","31 Oct","G5"],["P1.29","Six pipeline sites on a single status view. Decision 22","Property, Ops","31 Oct","G5"],["P1.30","London EC hire closed, five GM gaps closed","Sophie, Hanna","31 Oct","G5"],["P1.31","2027 OKR sets drafted. Decision 21","Michael","31 Oct","G5"],["P1.32","Admin x Marketing 2027 budget drafted, HR versus Marketing and BD split","Michael","31 Oct","G5"],["P2.01","Menu architecture workshop held","Michael, Sophie, Teddy","w/c 2 Nov","G4"],["P2.02","Website brief issued against the brand","Becca","w/c 2 Nov","G6"],["P2.03","Promotion pilot live, North England and Midlands, four weeks","Inka","2 Nov","G5"],["P2.04","Service rollout, Scotland and Newcastle","Lincoln with Ka Ho","w/c 2 Nov","G5"],["P2.05","Weekly service audit running at every site","Ka Ho, Inka, Lincoln","9 Nov","G5"],["P2.06","Website build starts, member record integration specified","Becca","9 Nov","G6"],["P2.07","Menu architecture signed off. Decisions 4, 5, 10, 11","Michael, Teddy","13 Nov","G4"],["P2.08","New suppliers and specs onboarded at Lynas and Harro","Ross","13 Nov","G5"],["P2.09","2027 OKR sets agreed with Teddy","Michael","14 Nov","G5"],["P2.10","Bonus distribution model drafted","Michael","14 Nov","G5"],["P2.11","Menu design first draft","Georgie","w/c 16 Nov","G4"],["P2.12","Costings and allergen matrix built","Sophie, Monica","4 Dec","G4"],["P2.13","Automation items 5, 6, 7 live: promo performance, breakage, alerts","Ross, Claude","27 Nov","G5"],["P2.14","Bonus distribution approved. Budget signed off in principle","Michael, Teddy","28 Nov","G5"],["P2.15","Protein specs live in every kitchen","Ross, Sophie, ECs","30 Nov","G5"],["P2.16","Menu design second draft","Georgie","w/c 30 Nov","G4"],["P2.17","Promotion pilot reviewed, mechanics fixed","Inka, Becca, Michael","4 Dec","G5"],["P2.18","Pricing signed off, costings and allergens closed","Michael, Teddy, Monica","4 Dec","G4"],["P2.19","Print supplier confirmed, quantities per site, proof schedule. Decision 20","Becca","9 Dec","G4"],["P2.20","Bonus distribution communicated. OKRs cascaded","Michael","w/c 7 Dec","G5"],["P2.21","Steak Tataki hero push live on the locked spec","Becca, AMs","w/c 7 Dec","G5"],["P2.22","G4: menu design locked","Michael, Teddy","11 Dec","G4"],["P2.23","Promotion rollout pack issued to three regions","Inka, Becca","11 Dec","G5"],["P2.24","Budget locked","Michael","11 Dec","G5"],["P2.25","Known data issues in 15.3 closed: wage targets, Maki Nori target, issues feed, SPH basis","Ross, Michael","11 Dec","G5"],["P3.01","Artwork to printer","Georgie, Becca","14 Dec","G6"],["P3.02","OKR tracking view live in the Control Centre","Michael, Claude","15 Dec","G5"],["P3.03","Festive B2B activations live","Matthew Jenner","16 Dec","G5"],["P3.04","Print proof approved","Becca, Michael","18 Dec","G6"],["P3.05","Retraining 100% complete in Mapal","Hanna, AMs","18 Dec","G5"],["P3.06","Regional Q1 promotion calendars built to the template","Ka Ho, Inka, Lincoln","18 Dec","G5"],["P3.07","Print run","Becca","31 Dec","G6"],["P3.08","G5 readiness check against section 2.1","Michael","28 Dec","G5"],["P3.09","G5: operating business live","All","1 Jan","G5"],["P4.01","Weekly stabilisation review: red lights, promo redemption and discount cost, B2B value, spec adherence, service audit scores","Michael, AMs","Every Monday from 4 Jan","G6"],["P4.02","Promotion calendars running in all three regions, first fortnight read out","Cluster AMs, Becca","15 Jan","G6"],["P4.03","OKR first reporting cycle through the Control Centre","Michael","15 Jan","G6"],["P4.04","Printed menus delivered to Becca / warehouse","Becca","8 Jan","G6"],["P4.05","Website build complete","Becca","8 Jan","G6"],["P4.06","Menus distributed to regions","Becca, Ross","w/c 11 Jan","G6"],["P4.07","Website staging review","Becca, Michael","w/c 11 Jan","G6"],["P4.08","Website content freeze","Becca","15 Jan","G6"],["P4.09","New menu training pack issued","Sophie, Georgie","15 Jan","G6"],["P4.10","Menus at every site","Becca, AMs","w/c 18 Jan","G6"],["P4.11","Menu training, two weeks, every site","Sophie, ECs, AMs","29 Jan","G6"],["P4.12","Website UAT","Becca","w/c 18 Jan","G6"],["P4.13","Kobas menu and pricing rebuild for 1 Feb, tested at every site","Matthew Jenner, Sophie","27 Jan","G6"],["P4.14","Deliveroo and online menus rebuilt for 1 Feb","Becca, Matthew","27 Jan","G6"],["P4.15","G6 readiness check against section 2.2","Michael","25 Jan","G6"],["P4.16","Old menu retired at close of trading","AMs","31 Jan","G6"],["P4.17","G6: new menu live in every site, website live","All","1 Feb","G6"],["P4.18","First fortnight on the new menu: item mix versus the architecture forecast, stockouts, food cost","Michael, Sophie","15 Feb","Post G6"],["P4.19","Wagyu Ramen launch plan on the new menu (spec, costing, theatre, site, PR)","Sophie, Becca","28 Feb","Post G6"],["P4.20","Consolidation programme closed, handover to business as usual reporting","Michael, Teddy","28 Feb","Post G6"]];
+  var MON={Sep:8,Oct:9,Nov:10,Dec:11,Jan:0,Feb:1};
+  function pd(s){var m=/(\d+)\s+(Sep|Oct|Nov|Dec|Jan|Feb)/.exec(s); if(!m) return null; var mo=MON[m[2]]; return new Date(mo<8?2027:2026,mo,+m[1]);}
+  var W0=new Date(2026,8,7); var TODAY=new Date(); TODAY.setHours(0,0,0,0);
+  var DAY=86400000;
+  function wk(d){return Math.floor((d-W0)/(7*DAY))+1;}
+  var todayWk=Math.min(22,Math.max(0,wk(TODAY)));
+  function days(iso){var d=new Date(iso+'T00:00:00'); return Math.round((d-TODAY)/DAY);}
+  function cdText(n){return n>0?n+' days to go':n===0?'Today':(-n)+' days ago';}
+  document.querySelectorAll('.cs-land .cd').forEach(function(e){e.textContent=cdText(days(e.getAttribute('data-cd')));});
+
+  var PH=[
+    ['P0','Red lights','7 to 19 Sep','Already late. Ends when G2 clears.','p0'],
+    ['P1','Decide','20 Sep to 30 Oct','Analysis lands, feedback calls run, brand decided. Nothing to design or print.','p1'],
+    ['P2','Build','1 Nov to 11 Dec','Nothing new added. Build, test, lock. Ends at the print gate.','p2'],
+    ['P3','Freeze and print','12 to 31 Dec','Christmas protected. Print and desk work only.','p3'],
+    ['P4','Stabilise and land the menu','1 Jan to 1 Feb','Operating business beds in. Menus to sites w/c 18 Jan. Goes into Asana later.','p4']];
+  var GT=[
+    ['G1','Broth dilution and factory test','Cleared 4 Sep · Ross','Releases repricing, specs, broth centralisation','2026-09-04',true],
+    ['G2','Kobas activation layer','19 Sep · Matthew','Releases B2B, freshers, every promotion','2026-09-19',false],
+    ['G3','Brand direction','30 Oct · Teddy','Releases menu design, website, print, signage','2026-10-30',false],
+    ['G4','Menu print lock','11 Dec · Michael, Teddy','Releases the print run. Last point the menu can change','2026-12-11',false],
+    ['G5','Operating landing','1 Jan · Michael','Readiness check 28 Dec','2027-01-01',false],
+    ['G6','Menu and website landing','1 Feb · Becca, Georgie, Sophie','Readiness check 25 Jan. Old menu retired 31 Jan','2027-02-01',false]];
+  var C1=[['w/c 21 Sep','Sales analysis','Michael, Sophie','2026-09-25'],['5 to 23 Oct','Feedback calls','Becca, Michael','2026-10-23'],['30 Oct','G3 Brand decision','Teddy','2026-10-30','g'],['13 Nov','Architecture agreed','Michael, Teddy','2026-11-13'],['16 Nov to 4 Dec','Design, costings, pricing','Georgie, Sophie, Monica','2026-12-04'],['11 Dec','G4 Print lock','Michael, Teddy','2026-12-11','g'],['16 to 31 Dec','Print run','Becca','2026-12-31'],['w/c 18 Jan','Menus at sites, training','Becca, Sophie, AMs','2027-01-29'],['1 Feb','G6 Live','All','2027-02-01','g']];
+  var C2=[['19 Sep','G2 Kobas live','Matthew','2026-09-19','g'],['by 16 Oct','Framework agreed','Inka, Becca','2026-10-16'],['2 to 29 Nov','Pilot, North and Midlands','Inka','2026-11-29'],['4 Dec','Review and fix','Inka, Becca, Michael','2026-12-04'],['11 Dec','Rollout pack','Inka, Becca','2026-12-11'],['18 Dec','Regional Q1 calendars','Ka Ho, Inka, Lincoln','2026-12-18'],['1 Jan','G5 Live, three regions','Cluster AMs','2027-01-01','g']];
+  var WEEKS=['7','14','21','28','5','12','19','26','2','9','16','23','30','7','14','21','28','4','11','18','25','1'];
+  var MONTHS=[['September',1,4],['October',5,4],['November',9,5],['December',14,4],['January',18,4],['February',22,1]];
+  var GL=[[3,'G2 · 19 Sep'],[9,'G3 · 30 Oct'],[15,'G4 · 11 Dec'],[18,'G5 · 1 Jan'],[22,'G6 · 1 Feb']];
+  var ROWS=[
+   {g:'Food and product'},
+   {n:'Broth gate',o:'Ross Ward',q:'broth',b:[[1,1,'done','G1 cleared 4 Sep']]},
+   {n:'JFC to Lynas repricing',o:'Ross · Monica',q:'JFC',b:[[1,4,'food','Executed by 30 Sep']]},
+   {n:'Beef, cha siu, chicken specs',o:'Ross Ward',q:'specs',b:[[1,5,'food','Lock 9 Oct · 28d · 0.3 to 0.4cm · sous vide · Harro']]},
+   {n:'Squid and broth spec',o:'Sophie Wang',q:'broth',b:[[1,5,'food','Lock 9 Oct · darkness by 30 Sep']]},
+   {n:'Broth centralised, new costing',o:'Ross Ward',q:'broth',b:[[2,8,'food','Factory · costing signed off']]},
+   {n:"Pork into Dunster's Farm",o:'Ross Ward',q:'Dunster',b:[[4,5,'food','No price increase · 31 Oct']]},
+   {n:'Suppliers onboarded',o:'Ross Ward',q:'onboarded',b:[[6,5,'food','Lynas · Harro · 13 Nov']]},
+   {n:'Specs live in kitchens',o:'Ross · Sophie · ECs',q:'kitchen',b:[[11,3,'food','Live 30 Nov'],[14,2,'std','Bedding in']]},
+   {n:'Steak Tataki push',o:'Becca · AMs',q:'Tataki',b:[[14,9,'std','On the locked spec']]},
+   {n:'Wagyu London launch',o:'Sophie · Becca',q:'Wagyu',b:[[22,1,'key','After 1 Feb']]},
+   {g:'Service and people'},
+   {n:'Cull and rehire',o:'Michael · Hanna · legal',q:'cull',b:[[1,5,'crit','Legal sign off first']]},
+   {n:'Round tables',o:'Michael',q:'round table',b:[[4,1,'key','Service · food']]},
+   {n:'Service standard rollout',o:'Lincoln',q:'service',b:[[3,1,'std','Measure'],[5,2,'key','South'],[7,2,'key','North'],[9,2,'key','Scotland'],[11,7,'std','Weekly audit, every site']]},
+   {n:'Retraining',o:'Ross builds · Hanna tracks',q:'retraining',b:[[3,5,'std','Content 17 Oct'],[8,1,'key','Mapal live 31 Oct'],[9,7,'std','100% by 18 Dec']]},
+   {n:'GM gaps and London EC',o:'Sophie · Hanna',q:'GM gaps',b:[[1,8,'std','5 of 20 sites · closed 31 Oct']]},
+   {g:'Revenue and activation'},
+   {n:'Kobas activation',o:'Matthew Jenner',q:'Kobas',b:[[1,2,'crit','G2 · blocking B2B, freshers, promos']]},
+   {n:'Seven lists to one schema',o:'Matthew Jenner',q:'B2B',b:[[1,2,'crit','~332 leads · Birmingham reconciled']]},
+   {n:'Edinburgh and Glasgow lists',o:'Ka Ho',q:'Edinburgh',b:[[2,1,'crit','Aberdeen model']]},
+   {n:'Follow up the untouched',o:'Óisín · Inka · Amy',q:'untouched',b:[[3,4,'std','Newcastle 47 · Birmingham 23 · Leeds 14']]},
+   {n:'Freshers 2026',o:'Becca · Lincoln',q:'freshers',b:[[1,4,'crit','17 events · QR unproven'],[5,1,'std','Read out']]},
+   {n:'Christmas markets',o:'Matthew · Óisín',q:'Christmas',b:[[3,2,'key','Booked by 30 Sep'],[15,3,'std','Festive live']]},
+   {n:'Weekly B2B roll up',o:'Matthew Jenner',q:'roll up',b:[[5,18,'std','Owner · date · value · one group number']]},
+   {g:'Brand, menu and web'},
+   {n:'Menu sales analysis',o:'Michael · Sophie',q:'analysis',b:[[1,3,'key','6 and 12 month · tail']]},
+   {n:'Survey close and read out',o:'Becca · Michael',q:'survey',b:[[3,1,'key','1,210']]},
+   {n:'Online feedback calls',o:'Becca · Michael',q:'feedback call',b:[[5,3,'key','15 to 20 calls'],[8,1,'key','Evidence pack 26 Oct']]},
+   {n:'Brand decision',o:'Teddy · Michael',q:'brand',b:[[8,1,'ms','G3 · 30 Oct']]},
+   {n:'Menu architecture',o:'Michael · Sophie · Teddy',q:'architecture',b:[[9,2,'key','Workshop · agreed 13 Nov']]},
+   {n:'Menu design',o:'Georgie Riddle',q:'menu design',b:[[11,4,'key','Draft 1 · draft 2 · lock 11 Dec']]},
+   {n:'Costings, allergens, pricing',o:'Sophie · Monica · Michael',q:'costings',b:[[11,3,'std','Closed 4 Dec']]},
+   {n:'Print',o:'Becca',q:'print',b:[[14,1,'std','Supplier'],[15,1,'key','Artwork · proof'],[16,2,'key','Print run']]},
+   {n:'Menus to sites',o:'Becca · Ross',q:'menus',b:[[18,2,'std','Delivered · distributed'],[20,1,'ms','At sites w/c 18 Jan']]},
+   {n:'Menu training',o:'Sophie · ECs · AMs',q:'training',b:[[20,2,'std','Two weeks · old menu retired 31 Jan']]},
+   {n:'Website',o:'Becca',q:'website',b:[[5,1,'std','Scope'],[9,1,'std','Brief'],[10,9,'key','Build to 8 Jan'],[19,2,'std','Staging · UAT']]},
+   {g:'Promotions'},
+   {n:'Framework',o:'Inka · Becca',q:'framework',b:[[5,2,'key','Mechanic set · by 16 Oct']]},
+   {n:'Pilot',o:'Inka',q:'pilot',b:[[9,4,'key','North England and Midlands']]},
+   {n:'Review and rollout pack',o:'Inka · Becca · Michael',q:'rollout pack',b:[[13,2,'key','Fix · pack 11 Dec']]},
+   {n:'Regional Q1 calendars',o:'Ka Ho · Inka · Lincoln',q:'calendars',b:[[15,1,'std','By 18 Dec'],[18,5,'std','Live, three regions']]},
+   {g:'Systems and reporting'},
+   {n:'Local scheduler on the Mac',o:'Michael · Claude',q:'scheduled task',b:[[1,4,'crit','Nine cloud runs failed']]},
+   {n:'Stock flag · B2B roll up · sales feed',o:'Ross · Claude',q:'Automation items',b:[[4,5,'std','Live by 30 Oct']]},
+   {n:'Promo · breakage · alerts',o:'Ross · Claude',q:'Automation items',b:[[12,2,'std','Live by 27 Nov']]},
+   {n:'Known data issues closed',o:'Ross · Michael',q:'data issues',b:[[10,5,'std','Wage targets · Nori · SPH basis']]},
+   {n:'OKR view in Control Centre',o:'Michael · Claude',q:'OKR tracking',b:[[14,2,'std','By 15 Dec']]},
+   {g:'Money and measures · Michael only'},
+   {n:'2027 OKR sets',o:'Michael',q:'OKR',b:[[4,5,'me','Draft 31 Oct'],[10,1,'me','Agreed 14 Nov'],[14,1,'me','Cascade']]},
+   {n:'Bonus distribution',o:'Michael',q:'bonus',b:[[9,2,'me','Model 14 Nov'],[13,1,'me','Approved'],[14,1,'me','Told']]},
+   {n:'Admin x Marketing 2027 budget',o:'Michael',q:'budget',b:[[4,5,'me','Draft 31 Oct'],[13,1,'me','Signed'],[14,1,'me','Locked']]},
+   {g:'Estate'},
+   {n:'Six pipeline sites to one view',o:'Property · Ops',q:'pipeline',b:[[1,8,'std','Single line status · 31 Oct']]},
+   {n:'Food stock take chase',o:'AMs',q:'stock take',b:[[1,1,'crit','0 of 20']]},
+   {g:'Stabilise'},
+   {n:'Weekly stabilisation review',o:'Michael · AMs',q:'stabilisation',b:[[18,5,'key','Every Monday']]},
+   {n:'Kobas, Deliveroo, online menus',o:'Matthew · Sophie · Becca',q:'rebuilt',b:[[20,2,'key','Rebuilt for 1 Feb']]},
+   {n:'Readiness checks',o:'Michael',q:'readiness',b:[[17,1,'ms','G5 · 28 Dec'],[21,1,'ms','G6 · 25 Jan']]}
+  ];
+
+  // ---- state ----
+  var doneKey='cs_done_v3'; var done={};
+  try{done=JSON.parse(localStorage.getItem(doneKey)||'{}');}catch(e){done={};}
+  function saveDone(){try{localStorage.setItem(doneKey,JSON.stringify(done));}catch(e){}}
+  var F={q:'',phase:'',owner:'',gate:'',open:false};
+  var toastEl=document.getElementById('cs-toast'), toastT;
+  function toast(m){toastEl.textContent=m;toastEl.classList.add('on');clearTimeout(toastT);toastT=setTimeout(function(){toastEl.classList.remove('on');},1800);}
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+  function actDate(a){return pd(a[3]);}
+  function phaseOf(a){return a[0].slice(0,2);}
+  var PEOPLE=['Michael','Becca','Ross','Sophie','Inka','Matthew','Lincoln','Teddy','Hanna','Georgie','Ka Ho','Monica','Claude','AMs','Óisín','Amy','ECs'];
+  var LABEL={Michael:'Michael Salvador|COO',Becca:'Becca Cuthbertson|Marketing',Ross:'Ross Ward|Ops',Sophie:'Sophie Wang|EC',Inka:'Inka Cheung|AM North and Midlands',Matthew:'Matthew Jenner|BDM',Lincoln:'Lincoln|AM South',Teddy:'Teddy Lee|CEO sign off',Hanna:'Hanna Awang|HR',Georgie:'Georgie Riddle|Menu design','Ka Ho':'Ka Ho|AM Scotland and Newcastle',Monica:'Monica Lee|Finance',Claude:'Claude|Automation',AMs:'AMs, all clusters|',Óisín:'Óisín Darragh|Newcastle',Amy:'Amy Tang|North',ECs:'ECs|Kitchens'};
+  function hasOwner(a,p){return a[2].indexOf(p)!==-1;}
+
+  // ---- phases ----
+  function renderPhases(){
+    var h='';
+    PH.forEach(function(p){
+      var all=CS_ACTIONS.filter(function(a){return phaseOf(a)===p[0];});
+      var d=all.filter(function(a){return done[a[0]];}).length;
+      var pct=all.length?Math.round(100*d/all.length):0;
+      h+='<div class="cs-ph '+p[4]+(F.phase===p[0]?' sel':'')+'" data-ph="'+p[0]+'"><div class="id">Phase '+p[0].slice(1)+'</div><div class="nm">'+p[1]+'</div><div class="dt">'+p[2]+'</div><div class="n">'+p[3]+'</div><div class="bar"><i style="width:'+pct+'%"></i></div><div class="n"><b>'+d+' of '+all.length+'</b> done</div></div>';
+    });
+    document.getElementById('cs-phases').innerHTML=h;
+  }
+  document.getElementById('cs-phases').addEventListener('click',function(e){
+    var el=e.target.closest('.cs-ph'); if(!el) return;
+    F.phase=F.phase===el.getAttribute('data-ph')?'':el.getAttribute('data-ph');
+    document.getElementById('cs-fphase').value=F.phase; renderAll(); scrollTo('cs-acts');
+  });
+
+  // ---- gates ----
+  function renderGates(){
+    var h='';
+    GT.forEach(function(g){
+      var n=days(g[4]); var pill,cd;
+      if(g[5]){pill='<span class="chip c-good">Cleared</span>';cd='';}
+      else if(n<0){pill='<span class="chip c-crit">Overdue</span>';cd='<div class="cd" style="color:var(--crit)">'+(-n)+' days past date, not cleared</div>';}
+      else if(n<=14){pill='<span class="chip c-crit">Open · '+n+' days</span>';cd='';}
+      else if(n<=60){pill='<span class="chip c-warn">Open · '+n+' days</span>';cd='';}
+      else {pill='<span class="chip" style="background:var(--page);border-color:var(--grid);color:var(--ink2)">'+n+' days</span>';cd='';}
+      var hot=!g[5]&&n<=60;
+      h+='<div class="cs-g'+(hot?' hot':'')+(F.gate===g[0]?' sel':'')+'" data-g="'+g[0]+'"><div class="id">'+g[0]+'</div><div class="nm">'+g[1]+'</div><div class="dt">'+g[2]+'</div><div class="rel">'+g[3]+'</div>'+cd+'<div class="cd">'+pill+'</div></div>';
+    });
+    document.getElementById('cs-gates').innerHTML=h;
+  }
+  document.getElementById('cs-gates').addEventListener('click',function(e){
+    var el=e.target.closest('.cs-g'); if(!el) return; var g=el.getAttribute('data-g'); if(g==='G1') return;
+    F.gate=F.gate===g?'':g; document.getElementById('cs-fgate').value=F.gate; renderAll(); scrollTo('cs-acts');
+  });
+
+  // ---- chains ----
+  function chain(id,steps){
+    var h='';
+    steps.forEach(function(s,i){
+      var past=days(s[3])<0;
+      h+='<div class="cs-step'+(s[4]==='g'?' g':'')+(past?' done':'')+'"><div class="d">'+s[0]+'</div><div class="l">'+s[1]+'</div><div class="o">'+s[2]+'</div></div>';
+      if(i<steps.length-1) h+='<div class="cs-arr">→</div>';
+    });
+    document.getElementById(id).innerHTML=h;
+  }
+  chain('cs-chain1',C1); chain('cs-chain2',C2);
+
+  // ---- swimlane ----
+  var laneOwner='', laneType='';
+  var CLS={done:'done',crit:'crit',food:'food',key:'key',std:'std',me:'me'};
+  function renderChart(){
+    var chart=document.getElementById('cs-chart');
+    var h='<div class="cs-months"><div class="s">Week commencing</div>';
+    MONTHS.forEach(function(m){h+='<div class="c" style="grid-column:'+(m[1]+1)+'/span '+m[2]+'">'+m[0]+'</div>';});
+    h+='</div><div class="cs-weeks"><div></div>';
+    WEEKS.forEach(function(w,i){h+='<div class="w'+(i+1===todayWk?' now':'')+'">'+w+'</div>';});
+    h+='</div><div class="cs-gaterow">';
+    GL.forEach(function(g){h+='<div class="gl" style="grid-column:'+(g[0]+1)+'/span 3">'+g[1]+'</div>';});
+    h+='<div class="fl" style="grid-column:16/span 3">Freeze</div></div>';
+    var shown=0, groupOpen=false, groupHtml='', total=0;
+    function flush(){ if(groupOpen){ h+=groupHtml; } groupHtml=''; groupOpen=false; }
+    ROWS.forEach(function(r){
+      if(r.g){ flush(); groupHtml='<div class="cs-group">'+r.g+'</div>'; return; }
+      total++;
+      var ok=(!laneOwner||r.o.indexOf(laneOwner)!==-1)&&(!laneType||r.b.some(function(b){return b[2]===laneType;}));
+      if(!ok) return;
+      shown++; groupOpen=true;
+      groupHtml+='<div class="cs-lane"><div class="nm" data-q="'+esc(r.q)+'" title="Show these actions in the list">'+esc(r.n)+'<span>'+esc(r.o)+'</span></div>';
+      r.b.forEach(function(b){
+        if(b[2]==='ms') groupHtml+='<div class="cs-ms" style="grid-column:'+(b[0]+1)+'/span 3"><div class="cs-dia"></div>'+esc(b[3])+'</div>';
+        else groupHtml+='<div class="cs-bar '+CLS[b[2]]+'" style="grid-column:'+(b[0]+1)+'/span '+b[1]+'" title="'+esc(r.n)+' · '+esc(b[3])+'">'+esc(b[3])+'</div>';
+      });
+      groupHtml+='</div>';
+    });
+    flush();
+    h+='<div class="cs-ov"><div class="cs-fr" style="grid-column:16/span 3"></div>';
+    if(todayWk>=1&&todayWk<=22) h+='<div class="cs-today" style="grid-column:'+(todayWk+1)+'/span 1"></div>';
+    GL.forEach(function(g){h+='<div class="cs-gline" style="grid-column:'+(g[0]+1)+'/span 1"></div>';});
+    h+='</div>';
+    chart.innerHTML=h;
+    chart.querySelector('.cs-ov').style.height=chart.offsetHeight+'px';
+    document.getElementById('cs-lanecount').textContent=shown+' of '+total+' lanes';
+  }
+  var ownerSel=document.getElementById('cs-owner');
+  var laneOwners=[]; ROWS.forEach(function(r){ if(r.o) r.o.split(' · ').forEach(function(o){o=o.replace(/ builds| tracks| Ward| Wang| Jenner| Riddle| Cheung/g,''); if(laneOwners.indexOf(o)===-1) laneOwners.push(o);}); });
+  laneOwners.sort().forEach(function(o){ownerSel.insertAdjacentHTML('beforeend','<option>'+esc(o)+'</option>');});
+  ownerSel.addEventListener('change',function(){laneOwner=this.value;renderChart();});
+  document.querySelectorAll('.cs-tools button[data-type]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var t=this.getAttribute('data-type'); laneType=laneType===t?'':t;
+      document.querySelectorAll('.cs-tools button[data-type]').forEach(function(x){x.classList.toggle('on',x.getAttribute('data-type')===laneType);});
+      renderChart();
+    });
+  });
+  document.getElementById('cs-chart').addEventListener('click',function(e){
+    var el=e.target.closest('.nm'); if(!el) return;
+    F.q=el.getAttribute('data-q'); document.getElementById('cs-q').value=F.q; F.phase='';F.owner='';F.gate='';
+    document.getElementById('cs-fphase').value='';document.getElementById('cs-fowner').value='';document.getElementById('cs-fgate').value='';
+    renderAll(); scrollTo('cs-acts');
+  });
+
+  // ---- matrix ----
+  function renderMatrix(){
+    var h='';
+    PEOPLE.forEach(function(p){
+      var counts=[0,0,0,0,0], tot=0, dn=0;
+      CS_ACTIONS.forEach(function(a){ if(hasOwner(a,p)){ counts[+a[0][1]]++; tot++; if(done[a[0]]) dn++; } });
+      if(!tot) return;
+      var lb=LABEL[p].split('|');
+      var r='<td>'+esc(lb[0])+'<span>'+esc(lb[1])+'</span></td>';
+      counts.forEach(function(v,i){ var c=v===0?'':v<=3?'cs-h1':v<=7?'cs-h2':'cs-h3'; r+='<td class="c"><div class="'+c+'" data-p="'+esc(p)+'" data-ph="P'+i+'">'+(v||'')+'</div></td>'; });
+      r+='<td class="tot">'+tot+'</td><td class="tot" style="color:var(--good)">'+dn+'</td>';
+      h+='<tr>'+r+'</tr>';
+    });
+    document.getElementById('cs-matrix').innerHTML=h;
+  }
+  document.getElementById('cs-matrix').addEventListener('click',function(e){
+    var el=e.target.closest('div[data-p]'); if(!el||!el.textContent) return;
+    F.owner=el.getAttribute('data-p'); F.phase=el.getAttribute('data-ph'); F.q='';F.gate='';
+    document.getElementById('cs-fowner').value=F.owner; document.getElementById('cs-fphase').value=F.phase; document.getElementById('cs-q').value=''; document.getElementById('cs-fgate').value='';
+    renderAll(); scrollTo('cs-acts');
+  });
+  document.getElementById('cs-owners').addEventListener('click',function(e){
+    var el=e.target.closest('.cs-own'); if(!el) return;
+    F.owner=el.getAttribute('data-owner'); F.phase='';F.q='';F.gate='';
+    document.getElementById('cs-fowner').value=F.owner; document.getElementById('cs-fphase').value=''; document.getElementById('cs-q').value=''; document.getElementById('cs-fgate').value='';
+    renderAll(); scrollTo('cs-acts');
+  });
+
+  // ---- actions ----
+  var fo=document.getElementById('cs-fowner');
+  PEOPLE.forEach(function(p){fo.insertAdjacentHTML('beforeend','<option value="'+esc(p)+'">'+esc(LABEL[p].split('|')[0])+'</option>');});
+  function filtered(){
+    var q=F.q.toLowerCase();
+    return CS_ACTIONS.filter(function(a){
+      if(F.phase&&phaseOf(a)!==F.phase) return false;
+      if(F.owner&&!hasOwner(a,F.owner)) return false;
+      if(F.gate&&a[4]!==F.gate) return false;
+      if(F.open&&done[a[0]]) return false;
+      if(q&&(a[1]+' '+a[2]+' '+a[0]+' '+a[3]).toLowerCase().indexOf(q)===-1) return false;
+      return true;
+    });
+  }
+  function renderActs(){
+    var list=filtered(); var h='<div class="cs-acthead"><div></div><div class="h-id">ID</div><div>Action</div><div class="h-o">Owner</div><div class="r">By</div><div class="r h-g">Gate</div></div>';
+    var lastPh='';
+    list.forEach(function(a){
+      var ph=phaseOf(a);
+      if(ph!==lastPh){ var p=PH[+ph[1]]; h+='<div class="cs-phasehead">Phase '+ph[1]+' · '+p[1]+'<span>'+p[2]+'</span></div>'; lastPh=ph; }
+      var d=actDate(a); var n=d?Math.round((d-TODAY)/DAY):null; var isDone=!!done[a[0]];
+      var cls=isDone?'done':(n!==null&&n<0?'late':(n!==null&&n<=7?'due':''));
+      h+='<div class="cs-act '+cls+'" data-id="'+a[0]+'"><input type="checkbox"'+(isDone?' checked':'')+' aria-label="Done"><div class="id">'+a[0]+'</div><div class="a">'+esc(a[1])+'</div><div class="o">'+esc(a[2])+'</div><div class="by">'+esc(a[3])+'</div><div class="g">'+esc(a[4])+'</div></div>';
+    });
+    if(!list.length) h+='<div class="cs-act"><div></div><div></div><div class="a" style="color:var(--muted)">Nothing matches these filters.</div></div>';
+    document.getElementById('cs-acts').innerHTML=h;
+    var dn=list.filter(function(a){return done[a[0]];}).length;
+    document.getElementById('cs-count').textContent=list.length+' of '+CS_ACTIONS.length+' actions · '+dn+' done';
+  }
+  document.getElementById('cs-acts').addEventListener('change',function(e){
+    if(e.target.type!=='checkbox') return;
+    var id=e.target.closest('.cs-act').getAttribute('data-id');
+    if(e.target.checked) done[id]=1; else delete done[id];
+    saveDone(); renderAll();
+  });
+  document.getElementById('cs-q').addEventListener('input',function(){F.q=this.value;renderActs();});
+  document.getElementById('cs-fphase').addEventListener('change',function(){F.phase=this.value;renderAll();});
+  fo.addEventListener('change',function(){F.owner=this.value;renderAll();});
+  document.getElementById('cs-fgate').addEventListener('change',function(){F.gate=this.value;renderAll();});
+  document.getElementById('cs-fopen').addEventListener('click',function(){F.open=!F.open;this.classList.toggle('on',F.open);renderActs();});
+  document.getElementById('cs-clear').addEventListener('click',function(){
+    F={q:'',phase:'',owner:'',gate:'',open:false};
+    document.getElementById('cs-q').value='';document.getElementById('cs-fphase').value='';fo.value='';document.getElementById('cs-fgate').value='';
+    document.getElementById('cs-fopen').classList.remove('on'); renderAll();
+  });
+  document.getElementById('cs-copy').addEventListener('click',function(){
+    var rows=filtered().map(function(a){
+      var d=actDate(a); var iso=d?d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2):'';
+      var p=PH[+a[0][1]];
+      return [a[0]+' '+a[1],a[2],iso,'Phase '+a[0][1]+' '+p[1],a[4]].join('\t');
+    });
+    var txt='Name\tAssignee\tDue date\tSection\tGate\n'+rows.join('\n');
+    function ok(){toast(rows.length+' actions copied, tab separated');}
+    if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(ok,function(){fallback();});}else fallback();
+    function fallback(){var t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');ok();}catch(e){toast('Copy blocked by the browser');}document.body.removeChild(t);}
+  });
+  function scrollTo(id){var el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'});}
+  function renderAll(){renderPhases();renderGates();renderMatrix();renderActs();}
+  renderAll(); renderChart();
+  window.addEventListener('resize',function(){var c=document.getElementById('cs-chart');var o=c.querySelector('.cs-ov');if(o)o.style.height=c.offsetHeight+'px';});
 })();
 </script>
 </body></html>
