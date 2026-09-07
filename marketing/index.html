@@ -475,6 +475,9 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
   text-transform: uppercase; color: #92400E; background: #FEF3C7; border-radius: 5px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
 #tab-influencer .slicenote { font-size: 12px; color: #475569; background: #F8FAFC; border: 1px dashed #CBD5E1;
   border-radius: 8px; padding: 10px 12px; line-height: 1.55; margin-top: 6px; }
+#tab-influencer .reconnote { font-size: 12px; color: #475569; background: #FFF8F3; border: 1px solid #F3D9C4;
+  border-left: 3px solid #D9540E; border-radius: 8px; padding: 11px 13px; line-height: 1.6; margin: 6px 0 18px; }
+#tab-influencer .reconnote b { color: #0F172A; }
 #tab-influencer .emptyslice { font-size: 13px; color: #475569; background: #F8FAFC; border: 1px dashed #CBD5E1;
   border-radius: 10px; padding: 26px 18px; text-align: center; line-height: 1.6; }
 #tab-influencer .emptyslice b { color: #0F172A; }
@@ -888,6 +891,9 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
   </h2>
   <div class="foldbody hidden" id="fold-mix">
     <div class="lede" id="mixLede"></div>
+    <h2 style="font-size:11px;margin:0 0 6px">Where the pieces came from</h2>
+    <table id="srcTable"></table>
+    <div class="reconnote" id="srcNote"></div>
     <div class="grid2">
       <div>
         <h2 style="font-size:11px;margin-bottom:6px">Content mix of comped visits</h2>
@@ -896,7 +902,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
         <table id="weekTable"></table>
       </div>
       <div>
-        <h2 style="font-size:11px;margin-bottom:6px">Top creators by content delivered</h2>
+        <h2 style="font-size:11px;margin-bottom:6px">Top creators by content delivered<span id="topBadge"></span></h2>
         <table id="topTable"></table>
         <h2 style="font-size:11px;margin:16px 0 6px">Sites named in threads</h2>
         <table id="siteTable"></table>
@@ -5223,6 +5229,49 @@ function wireMatrixModal() {
     const median = a => a.length ? (a.length % 2 ? a[(a.length - 1) / 2] : (a[a.length / 2 - 1] + a[a.length / 2]) / 2) : 0;
     const r1 = v => Math.round(v * 10) / 10;
 
+    /* ── CONTENT PIECES: counted on the THREAD columns, not on DM_RAW ───────
+       agg.tags counts every story/reel/post share that appeared in the inbox,
+       INCLUDING the ones our own staff and brand accounts posted. Michael's,
+       Georgie's and Teddy's reels are not influencer content, and counting them
+       inflated the headline. The master's story_tags/reel_tags/post_tags columns
+       are already scoped to a thread, so summing them over EXTERNAL threads
+       gives creator pieces only — and, unlike agg, it slices by week and region.
+       agg.tags is kept as `inbox_pieces` and shown as the reconciliation line. */
+    const pTot = r => num(r.story_tags) + num(r.reel_tags) + num(r.post_tags);
+    const sumCol = (rows, k) => rows.reduce((t, r) => t + num(r[k]), 0);
+    const crStory = sumCol(EXT, 'story_tags'), crReel = sumCol(EXT, 'reel_tags'), crPost = sumCol(EXT, 'post_tags');
+    const stStory = sumCol(INT, 'story_tags'), stReel = sumCol(INT, 'reel_tags'), stPost = sumCol(INT, 'post_tags');
+    const crPieces = crStory + crReel + crPost;
+    const staffPieces = stStory + stReel + stPost;
+    const staffWho = INT.filter(m => pTot(m) > 0)
+      .sort((a, b) => pTot(b) - pTot(a))
+      .map(m => (m.name || m.handle) + ' ' + pTot(m));
+
+    /* Three mutually exclusive origins. They sum to crPieces, always. */
+    const srcA = [], srcB = [], srcC = [];
+    EXT.forEach(m => {
+      if (m.visit_resolved === 'TRUE') srcA.push(m);
+      else if (m.invited) srcB.push(m);
+      else srcC.push(m);
+    });
+    const srcRow = (label, rows, note) => ({
+      label, note,
+      threads: rows.length,
+      creators: rows.filter(m => pTot(m) > 0).length,
+      story: sumCol(rows, 'story_tags'), reel: sumCol(rows, 'reel_tags'), post: sumCol(rows, 'post_tags'),
+      n: rows.reduce((t, m) => t + pTot(m), 0)
+    });
+    const sources = [
+      srcRow('From a comped visit', srcA, 'the programme working as designed'),
+      srcRow('Invited, never came', srcB, 'posted anyway, no meal given'),
+      srcRow('Never invited', srcC, 'organic — nobody asked, nothing was spent')
+    ];
+
+    /* Concentration. An average piece-count is meaningless when one thread
+       carries 23 and most carry one, so quote the decile instead. */
+    const pieceSizes = EXT.filter(m => pTot(m) > 0).map(pTot).sort((a, b) => b - a);
+    const headSum = k => pieceSizes.slice(0, k).reduce((a, b) => a + b, 0);
+
     const totals = {
       threads: EXT.length, internal: INT.length,
       messages: agg.messages, msgs_in: agg.msgs_in, msgs_out: agg.msgs_out,
@@ -5245,6 +5294,15 @@ function wireMatrixModal() {
       reactions: agg.reactions,
       story: agg.story, reel: agg.reel, post: agg.post,
       own_reshares: agg.own_reshares,
+      cr_story: crStory, cr_reel: crReel, cr_post: crPost,
+      cr_pieces: crPieces, cr_inferred: crReel + crPost,
+      cr_threads: pieceSizes.length,
+      staff_pieces: staffPieces, staff_who: staffWho,
+      inbox_pieces: agg.tags,
+      top10_pieces: headSum(10),
+      decile_pieces: headSum(Math.ceil(pieceSizes.length * 0.1)),
+      max_pieces: pieceSizes.length ? pieceSizes[0] : 0,
+      solo_threads: pieceSizes.filter(x => x === 1).length,
       chases: chaseRows.length,
       collab_content: agg.collab_content,
       collab_creators: agg.collab_creators,
@@ -5359,7 +5417,7 @@ function wireMatrixModal() {
       top: agg.top, sites, grades: agg.grades, disclosed: agg.disclosed,
       collabs: agg.collabs, review,
       weeks: agg.weeks, wseries: agg.wseries,
-      offers, conf, chases, noback, table,
+      offers, conf, chases, noback, table, sources,
       noback_overdue: nobackOverdue,
       resolvable, resolvable_pct: EXT.length ? Math.round(resolvable / EXT.length * 1000) / 10 : 0,
       ledger: ledgerOut
@@ -5432,39 +5490,101 @@ var INF_SRC = null;            /* {master, ledger, agg} — the unsliced source 
 var INF_HOST = null;           /* #infbody — replaced wholesale on every slice */
 var INF_PRISTINE = '';         /* the tab's static template, captured once     */
 var INF_W = '';                /* '' = all time, else ISO Monday of the week   */
-var INF_RG = '';               /* '' = all regions, else a region key          */
+var INF_RG = '';               /* '' = all clusters, else a cluster key        */
+var INF_CITY = '';             /* '' = all cities, else a city key            */
 var INF_KEYS_BOUND = false;
 var INF_WEEK_KEY = 'mr_hub_inf_week';
 var INF_REGION_KEY = 'mr_hub_inf_region';
+var INF_CITY_KEY = 'mr_hub_inf_city';
 var INF_DAY = 86400000;
 
-/* AM clusters, keyword-matched on the loose `site` string.
-   Confirmed by Michael 4 Sept 2026: M21 Birmingham sits in North England &
-   Midlands, and "West End" is Glasgow (MAF1, Byres Road) — never London. */
-var INF_REGIONS = [
-  { k: 'scot', label: 'Scotland & Newcastle', words: ['edinburgh', 'fountainbridge', 'nicolson',
-    'leith', 'sjq', 'st james', 'glasgow', 'bath street', 'renfield', 'byres', 'west end',
-    'newcastle', 'aberdeen', 'metro', 'ikigai', 'south bridge'] },
-  { k: 'north', label: 'North England & Midlands', words: ['manchester', 'york street', 'leeds',
-    'leicester', 'sheffield', 'meadowhall', 'yorkshire', 'nottingham', 'birmingham', 'liverpool'] },
-  { k: 'south', label: 'South England', words: ['london', 'soho', 'shoreditch', 'lakeside',
-    'southampton', 'nori', 'o2', 'stratford', 'westfield'] }
+/* GEOGRAPHY — CITY is the unit, the AM cluster is only a grouping of cities.
+   Michael 7 Sept: "would rather subdivide the region into cities, that makes more
+   sense." He is right for influencer work: a creator posts about ONE restaurant,
+   and `site` is free text with 73 spellings of 14 places ("Shoreditch", "Maki &
+   Ramen Shoreditch", "SJQ", "St James Quarter", "NQ", "Northern Quarter"…).
+   Cities collapse those variants; the cluster is then derived, never matched
+   twice, so a site can never sit in two places at once.
+   🔴 Fixed here, found by auditing all 73 live strings against the old list:
+   "Eldon Square", "Maki & Ramen 02", "Aberedeen" and "Fountain Bridge" all fell
+   into SITE NOT STATED because the keyword list had never learned them.
+   ✅ Michael 4 Sept: Birmingham is North England & Midlands; "West End" is
+   Glasgow (MAF1, Byres Road), never London. */
+var INF_CLUSTERS = [
+  { k: 'scot',  label: 'Scotland & Newcastle' },
+  { k: 'north', label: 'North England & Midlands' },
+  { k: 'south', label: 'South England' }
 ];
-
-function infRegionOf(site) {
+/* Order matters: first city whose token appears wins. Tokens of 3 characters or
+   fewer are matched on a word boundary, so "nq" cannot fire inside "banquet". */
+var INF_CITIES = [
+  { k: 'edinburgh',   label: 'Edinburgh',   cluster: 'scot',  words: ['fountainbridge', 'fountain bridge', 'nicolson', 'leith', 'south bridge', 'st james', 'sjq', 'm3', 'edinburgh'] },
+  { k: 'glasgow',     label: 'Glasgow',     cluster: 'scot',  words: ['renfield', 'renfeild', 'byres', 'bath street', 'west end', 'm8', 'glasgow'] },
+  { k: 'aberdeen',    label: 'Aberdeen',    cluster: 'scot',  words: ['aberdeen', 'aberedeen', 'union square'] },
+  { k: 'newcastle',   label: 'Newcastle',   cluster: 'scot',  words: ['eldon', 'metrocentre', 'metro centre', 'metro', 'newcastle', 'newcastl'] },
+  { k: 'manchester',  label: 'Manchester',  cluster: 'north', words: ['northern quarter', 'manchester', 'nq'] },
+  { k: 'leeds',       label: 'Leeds',       cluster: 'north', words: ['bond street', 'bond st', 'leeds'] },
+  { k: 'sheffield',   label: 'Sheffield',   cluster: 'north', words: ['meadowhall', 'sheffield'] },
+  { k: 'nottingham',  label: 'Nottingham',  cluster: 'north', words: ['nottingham', 'king street'] },
+  { k: 'leicester',   label: 'Leicester',   cluster: 'north', words: ['highcross', 'leicester'] },
+  { k: 'birmingham',  label: 'Birmingham',  cluster: 'north', words: ['new street', 'bullring', 'birmingham'] },
+  { k: 'liverpool',   label: 'Liverpool',   cluster: 'north', words: ['liverpool'] },
+  { k: 'london',      label: 'London',      cluster: 'south', words: ['shoreditch', 'soho', 'stratford', 'westfield', 'nori', 'london', 'o2', '02'] },
+  { k: 'southampton', label: 'Southampton', cluster: 'south', words: ['southampton'] },
+  { k: 'lakeside',    label: 'Lakeside',    cluster: 'south', words: ['lakeside', 'thurrock'] }
+];
+var INF_CITY_RE = null;
+function infCityMatchers() {
+  if (INF_CITY_RE) return INF_CITY_RE;
+  INF_CITY_RE = INF_CITIES.map(function (c) {
+    return { k: c.k, tests: c.words.map(function (w) {
+      return w.length <= 3
+        ? { re: new RegExp('(^|[^a-z0-9])' + w + '([^a-z0-9]|$)') }
+        : { sub: w };
+    }) };
+  });
+  return INF_CITY_RE;
+}
+function infCityOf(site) {
   var s = String(site || '').toLowerCase();
   if (!s.trim()) return 'none';
-  for (var i = 0; i < INF_REGIONS.length; i++) {
-    var w = INF_REGIONS[i].words;
-    for (var j = 0; j < w.length; j++) if (s.indexOf(w[j]) > -1) return INF_REGIONS[i].k;
+  var M = infCityMatchers();
+  for (var i = 0; i < M.length; i++) {
+    var t = M[i].tests;
+    for (var j = 0; j < t.length; j++) {
+      if (t[j].sub ? s.indexOf(t[j].sub) > -1 : t[j].re.test(s)) return M[i].k;
+    }
   }
   return 'none';
+}
+function infCityDef(k) {
+  for (var i = 0; i < INF_CITIES.length; i++) if (INF_CITIES[i].k === k) return INF_CITIES[i];
+  return null;
+}
+/* The cluster is DERIVED from the city — one source of truth. */
+function infRegionOf(site) {
+  var c = infCityOf(site);
+  if (c === 'none') return 'none';
+  var d = infCityDef(c);
+  return d ? d.cluster : 'none';
 }
 function infRegionLabel(k) {
   if (!k) return 'All regions';
   if (k === 'none') return 'Site not stated';
-  for (var i = 0; i < INF_REGIONS.length; i++) if (INF_REGIONS[i].k === k) return INF_REGIONS[i].label;
+  for (var i = 0; i < INF_CLUSTERS.length; i++) if (INF_CLUSTERS[i].k === k) return INF_CLUSTERS[i].label;
   return k;
+}
+function infCityLabel(k) {
+  if (!k) return 'All cities';
+  if (k === 'none') return 'Site not stated';
+  var d = infCityDef(k);
+  return d ? d.label : k;
+}
+/* What the current filters actually name, in one phrase. */
+function infPlaceLabel() {
+  if (INF_CITY) return infCityLabel(INF_CITY);
+  if (INF_RG) return infRegionLabel(INF_RG);
+  return 'all regions';
 }
 
 function infMs(s) {
@@ -5497,26 +5617,31 @@ function infWeekLabel(w) {
 }
 
 function infCounts(w) {
-  var c = { all: 0, none: 0 };
-  INF_REGIONS.forEach(function (r) { c[r.k] = 0; });
+  var c = { all: 0, none: 0, city: { none: 0 } };
+  INF_CLUSTERS.forEach(function (r) { c[r.k] = 0; });
+  INF_CITIES.forEach(function (x) { c.city[x.k] = 0; });
   (INF_SRC.master || []).forEach(function (m) {
     if (m.account_class !== 'EXTERNAL') return;
     if (w && !infTouchesWeek(m, w)) return;
     c.all++;
-    c[infRegionOf(m.site)]++;
+    var ck = infCityOf(m.site);
+    c.city[ck] = (c.city[ck] || 0) + 1;
+    c[ck === 'none' ? 'none' : infCityDef(ck).cluster]++;
   });
   return c;
 }
 
 /* Build the tab's data object for the current slice. */
-function infSlice(w, rg) {
+function infSlice(w, rg, city) {
   var src = INF_SRC, agg = src.agg;
-  var rows = src.master, a = agg, sliced = !!(w || rg);
+  var rows = src.master, a = agg, sliced = !!(w || rg || city);
 
   if (sliced) {
     rows = src.master.filter(function (m) {
       if (w && !infTouchesWeek(m, w)) return false;
-      if (rg && m.account_class === 'EXTERNAL' && infRegionOf(m.site) !== rg) return false;
+      if (m.account_class !== 'EXTERNAL') return true;
+      if (city) return infCityOf(m.site) === city;
+      if (rg && infRegionOf(m.site) !== rg) return false;
       return true;
     });
     a = {};
@@ -5539,7 +5664,8 @@ function infSlice(w, rg) {
   D._sliced = sliced;
   D._week = w || '';
   D._region = rg || '';
-  D._noWeeks = !!rg;                                   /* week × region is not derivable */
+  D._city = city || '';
+  D._noWeeks = !!(rg || city);        /* week × geography is not derivable for pieces */
   return D;
 }
 
@@ -5582,26 +5708,71 @@ function infBar(D) {
   bar.append(Object.assign(document.createElement('span'), { className: 'sep' }));
 
   var c = infCounts(INF_W);
-  bar.append(mk('All regions', !INF_RG, function () { infSetRegion(''); }, c.all));
-  INF_REGIONS.forEach(function (r) {
-    bar.append(mk(r.label, INF_RG === r.k, function () { infSetRegion(INF_RG === r.k ? '' : r.k); }, c[r.k]));
+  bar.append(mk('All regions', !INF_RG && !INF_CITY, function () { infSetRegion(''); }, c.all));
+  INF_CLUSTERS.forEach(function (r) {
+    bar.append(mk(r.label, INF_RG === r.k && !INF_CITY, function () { infSetRegion(INF_RG === r.k ? '' : r.k); }, c[r.k]));
   });
   if (c.none) bar.append(mk('Site not stated', INF_RG === 'none', function () { infSetRegion(INF_RG === 'none' ? '' : 'none'); }, c.none));
 
+  /* City picker, grouped by cluster and narrowed to the selected one. A city
+     implies its cluster, so picking one never contradicts the chips. */
+  var csel = document.createElement('select');
+  var c0 = document.createElement('option');
+  c0.value = '';
+  c0.textContent = INF_RG && INF_RG !== 'none' ? 'All cities in ' + infRegionLabel(INF_RG) + '…' : 'Pick a city…';
+  csel.append(c0);
+  INF_CLUSTERS.forEach(function (r) {
+    if (INF_RG && INF_RG !== 'none' && INF_RG !== r.k) return;
+    var g = document.createElement('optgroup');
+    g.label = r.label;
+    var any = false;
+    INF_CITIES.forEach(function (x) {
+      if (x.cluster !== r.k) return;
+      var n = c.city[x.k] || 0;
+      if (!n && INF_CITY !== x.k) return;              /* hide cities with nothing in this week */
+      any = true;
+      var o = document.createElement('option');
+      o.value = x.k;
+      o.textContent = x.label + ' · ' + n;
+      if (x.k === INF_CITY) o.selected = true;
+      g.append(o);
+    });
+    if (any) csel.append(g);
+  });
+  csel.onchange = function () { infSetCity(csel.value); };
+  bar.append(csel);
+
   var st = document.createElement('div');
   st.className = 'state';
-  if (!INF_W && !INF_RG) {
+  if (!INF_W && !INF_RG && !INF_CITY) {
     st.innerHTML = 'Showing <b>everything</b> · ' + (INF_SRC.agg.weeks || []).length +
-      ' weeks · ← → step weeks, esc clears';
+      ' weeks · ' + INF_CITIES.length + ' cities · ← → step weeks, esc clears';
   } else {
     st.innerHTML = 'Scoped to <b>' + (INF_W ? infWeekLabel(INF_W) : 'all time') + '</b> · <b>' +
-      infRegionLabel(INF_RG) + '</b> · esc clears';
+      infPlaceLabel() + '</b>' + (INF_CITY ? ' <span class="subtle">(' + infRegionLabel(INF_RG) + ')</span>' : '') +
+      ' · esc clears';
   }
   bar.append(st);
 }
 
 function infSetWeek(w) { INF_W = w || ''; try { localStorage.setItem(INF_WEEK_KEY, INF_W); } catch (e) {} infApply(true); }
-function infSetRegion(r) { INF_RG = r || ''; try { localStorage.setItem(INF_REGION_KEY, INF_RG); } catch (e) {} infApply(true); }
+function infSetRegion(r) {
+  INF_RG = r || '';
+  if (INF_CITY) { var d = infCityDef(INF_CITY); if (!INF_RG || !d || d.cluster !== INF_RG) INF_CITY = ''; }
+  infSave(); infApply(true);
+}
+function infSetCity(k) {
+  INF_CITY = k || '';
+  var d = INF_CITY ? infCityDef(INF_CITY) : null;
+  if (d) INF_RG = d.cluster;                 /* a city always implies its cluster */
+  infSave(); infApply(true);
+}
+function infSave() {
+  try {
+    localStorage.setItem(INF_REGION_KEY, INF_RG);
+    localStorage.setItem(INF_CITY_KEY, INF_CITY);
+  } catch (e) {}
+}
 function infStepWeek(dir) {
   var weeks = (INF_SRC.agg.weeks || []).slice().sort();
   if (!weeks.length) return;
@@ -5615,11 +5786,11 @@ function infStepWeek(dir) {
 /* Never move the page. The panels flash instead, so the eye knows something changed. */
 function infApply(flash) {
   var y = window.scrollY;
-  var D = infSlice(INF_W, INF_RG);
+  var D = infSlice(INF_W, INF_RG, INF_CITY);
   if (!D.totals.threads) {
     INF_HOST.innerHTML = '<div class="emptyslice"><b>Nothing happened in this slice.</b><br>' +
       'No influencer threads touch ' + (INF_W ? infWeekLabel(INF_W) : 'all time') +
-      ' in ' + infRegionLabel(INF_RG).toLowerCase() + '. That is the finding, not an error — ' +
+      ' in ' + infPlaceLabel().toLowerCase() + '. That is the finding, not an error — ' +
       'six empty tables would only look like a bug.</div>';
   } else {
     INF_HOST.innerHTML = INF_PRISTINE;
@@ -5644,10 +5815,11 @@ function infBindKeys() {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'ArrowLeft') { e.preventDefault(); infStepWeek(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); infStepWeek(1); }
-    else if (e.key === 'Escape' && (INF_W || INF_RG)) {
+    else if (e.key === 'Escape' && (INF_W || INF_RG || INF_CITY)) {
       e.preventDefault();
-      INF_W = ''; INF_RG = '';
-      try { localStorage.setItem(INF_WEEK_KEY, ''); localStorage.setItem(INF_REGION_KEY, ''); } catch (err) {}
+      INF_W = ''; INF_RG = ''; INF_CITY = '';
+      try { localStorage.setItem(INF_WEEK_KEY, ''); } catch (err) {}
+      infSave();
       infApply(true);
     }
   });
@@ -5679,8 +5851,11 @@ async function loadInfluencer() {
     var sw = localStorage.getItem(INF_WEEK_KEY) || '';
     INF_W = weeksAvail.indexOf(sw) > -1 ? sw : '';
     var sr = localStorage.getItem(INF_REGION_KEY) || '';
-    INF_RG = (sr === 'none' || INF_REGIONS.some(function (r) { return r.k === sr; })) ? sr : '';
-  } catch (e) { INF_W = ''; INF_RG = ''; }
+    INF_RG = (sr === 'none' || INF_CLUSTERS.some(function (r) { return r.k === sr; })) ? sr : '';
+    var sc = localStorage.getItem(INF_CITY_KEY) || '';
+    INF_CITY = infCityDef(sc) ? sc : '';
+    if (INF_CITY) INF_RG = infCityDef(INF_CITY).cluster;
+  } catch (e) { INF_W = ''; INF_RG = ''; INF_CITY = ''; }
 
   infBindKeys();
   infApply(false);
@@ -5818,7 +5993,8 @@ const LOOP = IDATA.loop;
     ['Chases due now', fmt(T.chases), 'RED', 'someone has to send a message today'],
     ['Fed, nothing back', fmt(IDATA.noback_overdue), 'AMBER', 'visited over 7 days ago, still no post'],
     ['Invites sent', fmt(T.invited), '', T.inv_to_book + '% turn into a comped visit'],
-    ['Content pieces logged', fmt(T.tags), '', fmt(T.story) + ' story · ' + fmt(T.reel) + ' reel · ' + fmt(T.post) + ' post' + (IDATA._sliced ? ' · all time, all regions' : '')],
+    ['Content pieces logged', fmt(T.cr_pieces), '', fmt(T.cr_story) + ' story (proof) · ' + fmt(T.cr_inferred) + ' reel or post (inferred)'
+      + (T.staff_pieces ? ' · excludes ' + fmt(T.staff_pieces) + ' staff pieces' : '')],
     ['No deliverable agreed', T.none_stated_pct + '%', 'AMBER', fmt(T.none_stated) + ' invites asked for nothing specific'],
   ];
   for (const [l, v, rag, d] of cards) {
@@ -5959,12 +6135,47 @@ renderChase();
 
 /* ═══════════ 6. WHAT WE GOT BACK ═══════════ */
 {
-  $('#mixCnt').textContent = IDATA._sliced
-    ? fmt(T.tags) + ' PIECES · ALL TIME, ALL REGIONS'
-    : fmt(T.tags) + ' PIECES · ' + fmt(T.creators) + ' CREATORS';
+  $('#mixCnt').textContent = fmt(T.cr_pieces) + ' CREATOR PIECES · ' + fmt(T.cr_threads) + ' THREADS';
   $('#mixLede').innerHTML = 'Of the <b>' + IDATA.mix.n + ' comped visits</b>, this is what actually appeared. '
     + 'Just over half produce nothing at all, which is the number worth arguing about. '
     + 'Collab is <b>inferred from wording</b>, never proven, because Instagram does not export a co-author field.';
+  /* ── where the pieces came from ── */
+  {
+    const smax = Math.max(...IDATA.sources.map(x => x.n), 1);
+    build('#srcTable', [
+      { h: 'Origin', k: 'label' },
+      { h: 'Threads', k: 'threads', num: true },
+      { h: 'Posted', k: 'creators', num: true },
+      { h: 'Story', k: 'story', num: true },
+      { h: 'Reel', k: 'reel', num: true },
+      { h: 'Post', k: 'post', num: true },
+      { h: 'Pieces', num: true, sk: 'n', cell: x => fillCell(x.n, smax, { colour: '#FDE8D7' }) },
+      { h: '', f: x => x.note },
+    ], IDATA.sources, { sortable: true });
+
+    const paid = IDATA.sources[0].n, organic = IDATA.sources[2].n;
+    const pc = v => T.cr_pieces ? Math.round(v / T.cr_pieces * 100) : 0;
+    const note = $('#srcNote');
+    note.innerHTML =
+      '<b>The headline used to say ' + fmt(T.inbox_pieces) + '.</b> That was every story, reel and post share sitting in the '
+      + 'inbox, our own team included: ' + (T.staff_pieces
+          ? fmt(T.staff_pieces) + ' of them were posted by staff and brand accounts ('
+            + T.staff_who.slice(0, 3).join(', ') + ')'
+          : 'no staff pieces in this slice')
+      + ', which is not influencer content. The number above counts creator threads only.'
+      + '<br><br><b>' + pc(organic) + '% of creator content (' + fmt(organic) + ' pieces from '
+      + fmt(IDATA.sources[2].creators) + ' threads) came from people we never invited.</b> '
+      + 'Only ' + pc(paid) + '% (' + fmt(paid) + ') came off a comped visit. Before anyone reads the total as programme output, '
+      + 'that split is the number that matters.'
+      + '<br><br>It is also concentrated: the top 10 threads carry <b>' + fmt(T.top10_pieces) + '</b> pieces ('
+      + pc(T.top10_pieces) + '%), the busiest single thread <b>' + fmt(T.max_pieces) + '</b>, while '
+      + fmt(T.solo_threads) + ' of ' + fmt(T.cr_threads) + ' threads produced exactly one. '
+      + 'Quote the median creator, never the average.'
+      + '<br><br><span class="subtle">Basis: the master\u2019s per-thread story/reel/post columns, which are EXTERNAL-scoped, '
+      + 'so this whole block slices by week and by region. DM_RAW\u2019s own count is '
+      + fmt(T.inbox_pieces) + '; it differs by a piece or two on posts because it counts messages and this counts thread tags.</span>';
+  }
+
   const MIXROWS = [
     ['Posted a story', 'story', '#DBEAFE', 'the only proof-grade signal we have'],
     ['Posted a reel', 'reel', '#EDE9FE', 'shared to us; caption is the evidence'],
@@ -5987,8 +6198,9 @@ renderChase();
     const nt = el('div', 'slicenote');
     nt.innerHTML = '<b>Pieces per week are not shown for a single region.</b> A content tag is dated by the '
       + 'message that carried it and carries no site; a thread carries a site but no per-week content date. '
-      + 'Splitting by week <i>and</i> region at once would mean inventing the overlap. '
-      + 'Clear the region to read the weekly series, or keep the region and read the tables above.';
+      + 'Splitting by week <i>and</i> place at once would mean inventing the overlap. '
+      + 'Clear the city and region to read the weekly series, or keep them and read the tables above — '
+      + 'the origin breakdown at the top of this section IS thread-scoped, so it slices both ways.';
     wt.parentNode.insertBefore(nt, wt);
   } else {
     const wk = IDATA.weeks.map(w => {
@@ -6003,8 +6215,8 @@ renderChase();
       { h: 'Total', num: true, sk: 'n', cell: x => fillCell(x.n, wmax, { colour: '#DBEAFE' }) },
     ], wk, { sortable: true });
   }
-  if (IDATA._sliced) { const bd = el('span', 'slicebadge', 'all time · all regions'); $('#mixCnt').append(bd); }
   const tmax = Math.max(...IDATA.top.map(t => t.n));
+  if (IDATA._sliced) $('#topBadge').append(el('span', 'slicebadge', 'all time · all regions'));
   build('#topTable', [
     { h: 'Creator', f: t => '@' + t.handle },
     { h: 'Story', k: 'story', num: true }, { h: 'Reel', k: 'reel', num: true }, { h: 'Post', k: 'post', num: true },
@@ -6019,7 +6231,7 @@ renderChase();
 
 /* ═══════════ 7. WHAT THIS CAN PROVE ═══════════ */
 {
-  $('#pfCnt').textContent = fmt(T.story) + ' PROOF · ' + fmt(T.reel + T.post) + ' INFERRED';
+  $('#pfCnt').textContent = fmt(T.cr_story) + ' PROOF · ' + fmt(T.cr_inferred) + ' INFERRED';
   if (IDATA._sliced) $('#pfCnt').append(el('span', 'slicebadge', 'all time · all regions'));
   $('#pfLede').innerHTML = 'Before anyone quotes these numbers in a board pack: <b>only story tags are proof.</b> '
     + 'A story tag arrives in our DMs as a notification, so the message <i>is</i> the evidence. '
@@ -6143,7 +6355,8 @@ $('#inf-foot').textContent = 'Influencer pipeline · data ' + IDATA.window[0] + 
   + ' · ' + IDATA.generated + ' · source DYI_INFLUENCER_MASTER (' + fmt(T.threads) + ' external threads'
   + (IDATA._sliced ? '' : ', ' + fmt(T.messages) + ' messages') + ')'
   + (IDATA._sliced ? ' · SCOPED to ' + (IDATA._week ? infWeekLabel(IDATA._week) : 'all time')
-      + ' · ' + infRegionLabel(IDATA._region) + '. Chase and SLA clocks still run from the last message in the whole data.' : '');
+      + ' · ' + (IDATA._city ? infCityLabel(IDATA._city) : infRegionLabel(IDATA._region))
+      + '. Chase and SLA clocks still run from the last message in the whole data.' : '');
 
 }
 
