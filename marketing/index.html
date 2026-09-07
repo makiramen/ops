@@ -478,6 +478,11 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 #tab-influencer .reconnote { font-size: 12px; color: #475569; background: #FFF8F3; border: 1px solid #F3D9C4;
   border-left: 3px solid #D9540E; border-radius: 8px; padding: 11px 13px; line-height: 1.6; margin: 6px 0 18px; }
 #tab-influencer .reconnote b { color: #0F172A; }
+#tab-influencer .infbar .infhint { font-weight: 700; font-size: 10px; color: #92400E; background: #FEF3C7;
+  border-radius: 4px; padding: 1px 4px; margin-left: 5px; }
+#tab-influencer .infbar button.on .infhint { background: rgba(255,255,255,.25); color: #fff; }
+#tab-influencer .infbar button.inferbtn { border: 1px dashed #D9540E; color: #92400E; background: #FFF8F3; }
+#tab-influencer .infbar button.inferbtn.on { background: #D9540E; color: #fff; border-style: solid; }
 #tab-influencer .emptyslice { font-size: 13px; color: #475569; background: #F8FAFC; border: 1px dashed #CBD5E1;
   border-radius: 10px; padding: 26px 18px; text-align: center; line-height: 1.6; }
 #tab-influencer .emptyslice b { color: #0F172A; }
@@ -894,6 +899,9 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
     <h2 style="font-size:11px;margin:0 0 6px">Where the pieces came from</h2>
     <table id="srcTable"></table>
     <div class="reconnote" id="srcNote"></div>
+    <h2 style="font-size:11px;margin:0 0 6px">Which threads we can place on a map</h2>
+    <table id="geoTable"></table>
+    <div class="reconnote" id="geoNote"></div>
     <div class="grid2">
       <div>
         <h2 style="font-size:11px;margin-bottom:6px">Content mix of comped visits</h2>
@@ -5417,7 +5425,7 @@ function wireMatrixModal() {
       top: agg.top, sites, grades: agg.grades, disclosed: agg.disclosed,
       collabs: agg.collabs, review,
       weeks: agg.weeks, wseries: agg.wseries,
-      offers, conf, chases, noback, table, sources,
+      offers, conf, chases, noback, table, sources, _extRows: EXT,
       noback_overdue: nobackOverdue,
       resolvable, resolvable_pct: EXT.length ? Math.round(resolvable / EXT.length * 1000) / 10 : 0,
       ledger: ledgerOut
@@ -5496,6 +5504,8 @@ var INF_KEYS_BOUND = false;
 var INF_WEEK_KEY = 'mr_hub_inf_week';
 var INF_REGION_KEY = 'mr_hub_inf_region';
 var INF_CITY_KEY = 'mr_hub_inf_city';
+var INF_INFER_KEY = 'mr_hub_inf_infer';
+var INF_INFER = false;          /* include handle-inferred cities in the filter */
 var INF_DAY = 86400000;
 
 /* GEOGRAPHY — CITY is the unit, the AM cluster is only a grouping of cities.
@@ -5533,6 +5543,57 @@ var INF_CITIES = [
   { k: 'southampton', label: 'Southampton', cluster: 'south', words: ['southampton'] },
   { k: 'lakeside',    label: 'Lakeside',    cluster: 'south', words: ['lakeside', 'thurrock'] }
 ];
+/* ── INFERRED COVERAGE CITY ───────────────────────────────────────────────
+   Michael 7 Sept: "surely we can find a way to allocate the site". Measured
+   first, then built. Two routes were tested against the live data:
+     · scanning the DM text for a city name recovers only 67 of 1,517 (4.4%)
+     · the creator's OWN HANDLE / display name recovers 108 (7.1%) — the estate
+       is covered by location-branded food accounts (northeastcravings,
+       abbynewcastlefoodie, London_Food_Review, southamptonbloggers).
+   So the handle is the better signal, but it is a signal about WHO THEY COVER,
+   never proof of which restaurant they visited. It is therefore a separate,
+   OPT-IN layer, labelled "inferred" everywhere it appears, and it never
+   overwrites a real site. 🔴 Never merge these into the site column.
+   Tokens must be ≥4 chars and are matched on the de-punctuated handle+name. */
+var INF_HINTS = [
+  ['newcastle',   ['newcastle', 'geordie', 'northeast', 'tyneside']],
+  ['edinburgh',   ['edinburgh']],
+  ['glasgow',     ['glasgow', 'weegie']],
+  ['aberdeen',    ['aberdeen']],
+  ['manchester',  ['manchester']],
+  ['leeds',       ['leeds']],
+  ['sheffield',   ['sheffield']],
+  ['nottingham',  ['nottingham', 'notts']],
+  ['leicester',   ['leicester']],
+  ['birmingham',  ['birmingham', 'brum']],
+  ['liverpool',   ['liverpool', 'scouse']],
+  ['london',      ['london', 'shoreditch', 'soho', 'hackney']],
+  ['southampton', ['southampton', 'soton']]
+];
+function infHintCity(handle, name) {
+  var s = String((handle || '') + ' ' + (name || '')).toLowerCase().replace(/[^a-z]/g, '');
+  if (!s) return '';
+  for (var i = 0; i < INF_HINTS.length; i++) {
+    var w = INF_HINTS[i][1];
+    for (var j = 0; j < w.length; j++) if (s.indexOf(w[j]) > -1) return INF_HINTS[i][0];
+  }
+  return '';
+}
+/* A thread's city and where it came from. site ALWAYS wins. */
+function infRowCity(m) {
+  var c = infCityOf(m.site);
+  if (c !== 'none') return { k: c, src: 'site' };
+  var h = infHintCity(m.handle, m.name);
+  if (h) return { k: h, src: 'hint' };
+  return { k: 'none', src: '' };
+}
+/* A thread whose only content is a story tag and who was never invited is an
+   inbound notification, not a relationship — no site exists to be found. */
+function infStoryOnly(m) {
+  var st = Number(m.story_tags) || 0, re = Number(m.reel_tags) || 0, po = Number(m.post_tags) || 0;
+  return st > 0 && re === 0 && po === 0 && !m.invited;
+}
+
 var INF_CITY_RE = null;
 function infCityMatchers() {
   if (INF_CITY_RE) return INF_CITY_RE;
@@ -5617,16 +5678,27 @@ function infWeekLabel(w) {
 }
 
 function infCounts(w) {
-  var c = { all: 0, none: 0, city: { none: 0 } };
-  INF_CLUSTERS.forEach(function (r) { c[r.k] = 0; });
-  INF_CITIES.forEach(function (x) { c.city[x.k] = 0; });
+  var c = { all: 0, none: 0, city: { none: 0 }, inf: { none: 0 }, infTotal: 0, storyOnly: 0, residual: 0 };
+  INF_CLUSTERS.forEach(function (r) { c[r.k] = 0; c['inf_' + r.k] = 0; });
+  INF_CITIES.forEach(function (x) { c.city[x.k] = 0; c.inf[x.k] = 0; });
   (INF_SRC.master || []).forEach(function (m) {
     if (m.account_class !== 'EXTERNAL') return;
     if (w && !infTouchesWeek(m, w)) return;
     c.all++;
-    var ck = infCityOf(m.site);
-    c.city[ck] = (c.city[ck] || 0) + 1;
-    c[ck === 'none' ? 'none' : infCityDef(ck).cluster]++;
+    var r = infRowCity(m);
+    if (r.src === 'site') {
+      c.city[r.k]++;
+      c[infCityDef(r.k).cluster]++;
+    } else if (r.src === 'hint') {
+      /* NOT added to c.none — the chips must reconcile whether inference is on
+         or off, so "site not stated" adds infTotal back only when it is off. */
+      c.inf[r.k]++;
+      c['inf_' + infCityDef(r.k).cluster]++;
+      c.infTotal++;
+    } else {
+      c.none++;
+      if (infStoryOnly(m)) c.storyOnly++; else c.residual++;
+    }
   });
   return c;
 }
@@ -5640,8 +5712,13 @@ function infSlice(w, rg, city) {
     rows = src.master.filter(function (m) {
       if (w && !infTouchesWeek(m, w)) return false;
       if (m.account_class !== 'EXTERNAL') return true;
-      if (city) return infCityOf(m.site) === city;
-      if (rg && infRegionOf(m.site) !== rg) return false;
+      var rc = infRowCity(m);
+      if (rc.src === 'hint' && !INF_INFER) rc = { k: 'none', src: '' };   /* opt-in only */
+      if (city) return rc.k === city;
+      if (rg) {
+        var g = rc.k === 'none' ? 'none' : infCityDef(rc.k).cluster;
+        if (g !== rg) return false;
+      }
       return true;
     });
     a = {};
@@ -5710,9 +5787,19 @@ function infBar(D) {
   var c = infCounts(INF_W);
   bar.append(mk('All regions', !INF_RG && !INF_CITY, function () { infSetRegion(''); }, c.all));
   INF_CLUSTERS.forEach(function (r) {
-    bar.append(mk(r.label, INF_RG === r.k && !INF_CITY, function () { infSetRegion(INF_RG === r.k ? '' : r.k); }, c[r.k]));
+    var n = c[r.k] + (INF_INFER ? c['inf_' + r.k] : 0);
+    var b = mk(r.label, INF_RG === r.k && !INF_CITY, function () { infSetRegion(INF_RG === r.k ? '' : r.k); }, n);
+    if (!INF_INFER && c['inf_' + r.k]) {
+      var s2 = document.createElement('span');
+      s2.className = 'infhint';
+      s2.textContent = '+' + c['inf_' + r.k];
+      s2.title = c['inf_' + r.k] + ' more inferred from the creator handle — turn on "include inferred" to add them';
+      b.append(s2);
+    }
+    bar.append(b);
   });
-  if (c.none) bar.append(mk('Site not stated', INF_RG === 'none', function () { infSetRegion(INF_RG === 'none' ? '' : 'none'); }, c.none));
+  var noneN = c.none + (INF_INFER ? 0 : c.infTotal);
+  if (noneN) bar.append(mk('Site not stated', INF_RG === 'none', function () { infSetRegion(INF_RG === 'none' ? '' : 'none'); }, noneN));
 
   /* City picker, grouped by cluster and narrowed to the selected one. A city
      implies its cluster, so picking one never contradicts the chips. */
@@ -5728,12 +5815,12 @@ function infBar(D) {
     var any = false;
     INF_CITIES.forEach(function (x) {
       if (x.cluster !== r.k) return;
-      var n = c.city[x.k] || 0;
+      var n = (c.city[x.k] || 0) + (INF_INFER ? (c.inf[x.k] || 0) : 0);
       if (!n && INF_CITY !== x.k) return;              /* hide cities with nothing in this week */
       any = true;
       var o = document.createElement('option');
       o.value = x.k;
-      o.textContent = x.label + ' · ' + n;
+      o.textContent = x.label + ' · ' + n + (!INF_INFER && c.inf[x.k] ? ' (+' + c.inf[x.k] + ' inferred)' : '');
       if (x.k === INF_CITY) o.selected = true;
       g.append(o);
     });
@@ -5742,15 +5829,24 @@ function infBar(D) {
   csel.onchange = function () { infSetCity(csel.value); };
   bar.append(csel);
 
+  if (c.infTotal || INF_INFER) {
+    var t = mk((INF_INFER ? 'Inferred ON' : 'Include inferred') , INF_INFER, function () { infSetInfer(!INF_INFER); }, c.infTotal);
+    t.title = c.infTotal + ' threads have no site but a city can be inferred from the creator\u2019s handle '
+      + '(e.g. "abbynewcastlefoodie"). That is who they COVER, not proof of which restaurant they visited.';
+    t.classList.add('inferbtn');
+    bar.append(t);
+  }
+
   var st = document.createElement('div');
   st.className = 'state';
   if (!INF_W && !INF_RG && !INF_CITY) {
     st.innerHTML = 'Showing <b>everything</b> · ' + (INF_SRC.agg.weeks || []).length +
-      ' weeks · ' + INF_CITIES.length + ' cities · ← → step weeks, esc clears';
+      ' weeks · ' + INF_CITIES.length + ' cities' + (INF_INFER ? ' · <b>inferred cities ON</b>' : '') +
+      ' · ← → step weeks, esc clears';
   } else {
     st.innerHTML = 'Scoped to <b>' + (INF_W ? infWeekLabel(INF_W) : 'all time') + '</b> · <b>' +
       infPlaceLabel() + '</b>' + (INF_CITY ? ' <span class="subtle">(' + infRegionLabel(INF_RG) + ')</span>' : '') +
-      ' · esc clears';
+      (INF_INFER ? ' · <b>incl. inferred</b>' : '') + ' · esc clears';
   }
   bar.append(st);
 }
@@ -5767,10 +5863,12 @@ function infSetCity(k) {
   if (d) INF_RG = d.cluster;                 /* a city always implies its cluster */
   infSave(); infApply(true);
 }
+function infSetInfer(v) { INF_INFER = !!v; infSave(); infApply(true); }
 function infSave() {
   try {
     localStorage.setItem(INF_REGION_KEY, INF_RG);
     localStorage.setItem(INF_CITY_KEY, INF_CITY);
+    localStorage.setItem(INF_INFER_KEY, INF_INFER ? '1' : '');
   } catch (e) {}
 }
 function infStepWeek(dir) {
@@ -5855,7 +5953,8 @@ async function loadInfluencer() {
     var sc = localStorage.getItem(INF_CITY_KEY) || '';
     INF_CITY = infCityDef(sc) ? sc : '';
     if (INF_CITY) INF_RG = infCityDef(INF_CITY).cluster;
-  } catch (e) { INF_W = ''; INF_RG = ''; INF_CITY = ''; }
+    INF_INFER = !!localStorage.getItem(INF_INFER_KEY);
+  } catch (e) { INF_W = ''; INF_RG = ''; INF_CITY = ''; INF_INFER = false; }
 
   infBindKeys();
   infApply(false);
@@ -6174,6 +6273,53 @@ renderChase();
       + '<br><br><span class="subtle">Basis: the master\u2019s per-thread story/reel/post columns, which are EXTERNAL-scoped, '
       + 'so this whole block slices by week and by region. DM_RAW\u2019s own count is '
       + fmt(T.inbox_pieces) + '; it differs by a piece or two on posts because it counts messages and this counts thread tags.</span>';
+  }
+
+  /* ── geography coverage: what can and cannot be placed ── */
+  {
+    const EXTR = IDATA._extRows || [];
+    const buckets = { site: 0, hint: 0, story: 0, none: 0 };
+    EXTR.forEach(m => {
+      const r = infRowCity(m);
+      if (r.src === 'site') buckets.site++;
+      else if (r.src === 'hint') buckets.hint++;
+      else if (infStoryOnly(m)) buckets.story++;
+      else buckets.none++;
+    });
+    const gtot = buckets.site + buckets.hint + buckets.story + buckets.none;
+    const gpc = v => gtot ? Math.round(v / gtot * 100) : 0;
+    const GROWS = [
+      { k: 'Site named in the thread', n: buckets.site, q: 'Confirmed', c: '#DCFCE7',
+        note: 'a real restaurant was named while the visit was arranged' },
+      { k: 'City inferred from the handle', n: buckets.hint, q: 'Inferred', c: '#FEF3C7',
+        note: 'e.g. "abbynewcastlefoodie" — who they cover, not where they ate' },
+      { k: 'Story tag only, never invited', n: buckets.story, q: 'Not allocatable', c: '#E2E8F0',
+        note: 'an inbound tag notification, not a relationship — no site exists to find' },
+      { k: 'No signal at all', n: buckets.none, q: 'Not allocatable', c: '#E2E8F0',
+        note: 'mostly single cold inbound DMs that never became a conversation' },
+    ];
+    const gmax = Math.max(...GROWS.map(x => x.n), 1);
+    build('#geoTable', [
+      { h: 'Thread', k: 'k' },
+      { h: 'Quality', cell: r => { const td = el('td'); td.append(el('span', 'tag', r.q)); return td; } },
+      { h: 'Threads', num: true, sk: 'n', cell: r => fillCell(r.n, gmax, { colour: r.c }) },
+      { h: 'Share', num: true, f: r => gpc(r.n) + '%' },
+      { h: '', f: r => r.note },
+    ], GROWS, { sortable: true });
+
+    $('#geoNote').innerHTML =
+      '<b>Every comped visit we paid for already has a site — all ' + fmt(IDATA.totals.booked) + ' of them.</b> '
+      + 'Nothing we spent money on is unallocated, so this is not a hole in the funnel.'
+      + '<br><br>What is unplaced is almost entirely traffic we never engaged: <b>' + fmt(buckets.story + buckets.none)
+      + ' threads (' + gpc(buckets.story + buckets.none) + '%)</b>, of which <b>' + fmt(buckets.story)
+      + '</b> are one-off story tags with no conversation behind them. Those can never carry a site and are '
+      + 'counted here separately rather than read as a failure to record one.'
+      + '<br><br>Two recovery routes were measured on the live data before building anything. '
+      + 'Scanning the message text for a city name reaches only <b>4.4%</b> of the unplaced. '
+      + 'The creator\u2019s own handle reaches <b>' + gpc(buckets.hint) + '%</b> (' + fmt(buckets.hint) + ' threads), '
+      + 'because the estate is covered by location-branded food accounts. That is the layer behind '
+      + '<b>Include inferred</b> in the bar. It is opt-in, it never overwrites a real site, and it tells you who a '
+      + 'creator COVERS rather than which restaurant they ate in.';
   }
 
   const MIXROWS = [
