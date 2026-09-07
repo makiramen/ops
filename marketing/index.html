@@ -871,20 +871,6 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
   </div>
 </div>
 
-<!-- ══ 4b. POSTED FOR FREE, NEVER INVITED ══ -->
-<div class="section">
-  <h2 class="fold closed" data-fold="untapped">
-    <span class="chev">▼</span>Posted for free, never invited
-    <span class="cnt" id="upCnt"></span>
-  </h2>
-  <div class="foldbody hidden" id="fold-untapped">
-    <div class="lede" id="upLede"></div>
-    <div class="controls" id="upFilters"></div>
-    <div class="scroll"><table id="upTable"></table></div>
-    <div style="margin-top:10px" class="subtle" id="upFoot"></div>
-  </div>
-</div>
-
 <!-- ══ 5. WHERE THE FUNNEL LEAKS ══ -->
 <div class="section">
   <h2 class="fold closed" data-fold="funnel">
@@ -5298,24 +5284,6 @@ function wireMatrixModal() {
       srcRow('Never invited', srcC, 'organic — nobody asked, nothing was spent')
     ];
 
-    /* ── POSTED FOR FREE, NEVER INVITED ──────────────────────────────────
-       55% of all creator content comes from people we never asked and never
-       fed. That is the single biggest unworked list in the data, so it gets to
-       be a list rather than a statistic: proven advocates, ranked by how much
-       they have already given us. */
-    /* dayFloor is declared further down in this function, so use a local one. */
-    const dayFloorU = (a, b) => (a == null || b == null) ? '' : Math.floor((a - b) / DAY);
-    const untapped = EXT.filter(m => !m.invited && pTot(m) > 0).map(m => ({
-      nm: nm40(m.name || m.handle), slug: m.handle, real: realHandle(m.content_evidence),
-      site: m.site || '', city: (typeof infCityOf === 'function' && m.site) ? infCityOf(m.site) : 'none',
-      story: num(m.story_tags), reel: num(m.reel_tags), post: num(m.post_tags), n: pTot(m),
-      grade: m.evidence_grade || '', disclosed: m.disclosed === 'TRUE' ? 1 : 0,
-      msgs: num(m.msgs_total), last: datePart(m.last_message),
-      quiet: dayFloorU(asofMs, ms(m.last_message)),
-      _i: master.indexOf(m)
-    })).sort((a, b) => b.n - a.n || b.story - a.story || a._i - b._i);
-    untapped.forEach(u => { delete u._i; });
-
     /* ── DATA HYGIENE: the tab flags its own gaps instead of waiting to be
        audited by hand. Every one of these was found manually on 7 Sept. */
     const blankSite = m => !String(m.site || '').trim();
@@ -5364,8 +5332,6 @@ function wireMatrixModal() {
       decile_pieces: headSum(Math.ceil(pieceSizes.length * 0.1)),
       max_pieces: pieceSizes.length ? pieceSizes[0] : 0,
       solo_threads: pieceSizes.filter(x => x === 1).length,
-      untapped: untapped.length,
-      untapped_pieces: untapped.reduce((t, u) => t + u.n, 0),
       chases: chaseRows.length,
       collab_content: agg.collab_content,
       collab_creators: agg.collab_creators,
@@ -5480,7 +5446,7 @@ function wireMatrixModal() {
       top: agg.top, sites, grades: agg.grades, disclosed: agg.disclosed,
       collabs: agg.collabs, review,
       weeks: agg.weeks, wseries: agg.wseries,
-      offers, conf, chases, noback, table, sources, untapped, hygiene, _extRows: EXT,
+      offers, conf, chases, noback, table, sources, hygiene, _extRows: EXT,
       noback_overdue: nobackOverdue,
       resolvable, resolvable_pct: EXT.length ? Math.round(resolvable / EXT.length * 1000) / 10 : 0,
       ledger: ledgerOut
@@ -6150,7 +6116,6 @@ const LOOP = IDATA.loop;
     ['Content pieces logged', fmt(T.cr_pieces), '', fmt(T.cr_story) + ' story (proof) · ' + fmt(T.cr_inferred) + ' reel or post (inferred)'
       + (T.staff_pieces ? ' · excludes ' + fmt(T.staff_pieces) + ' staff pieces' : '')],
     ['No deliverable agreed', T.none_stated_pct + '%', 'AMBER', fmt(T.none_stated) + ' invites asked for nothing specific'],
-    ['Posted for free, never asked', fmt(T.untapped), '', fmt(T.untapped_pieces) + ' pieces we never paid for or requested'],
   ];
   for (const [l, v, rag, d] of cards) {
     const k = el('div', 'card');
@@ -6286,61 +6251,6 @@ renderChase();
     { h: 'Msgs', k: 'msgs', num: true },
     { h: 'Last contact', k: 'last' },
   ], nb, { sortable: true });
-}
-
-/* ═══════════ 4b. POSTED FOR FREE, NEVER INVITED ═══════════ */
-{
-  const UP = IDATA.untapped || [];
-  const upPieces = UP.reduce((t, u) => t + u.n, 0);
-  $('#upCnt').textContent = fmt(UP.length) + ' CREATORS · ' + fmt(upPieces) + ' PIECES, UNPROMPTED';
-  $('#upLede').innerHTML = '<b>These people posted about us without being asked and without being fed.</b> '
-    + 'They are ' + (T.cr_pieces ? Math.round(upPieces / T.cr_pieces * 100) : 0) + '% of all creator content and they cost nothing. '
-    + 'Nobody has ever run outreach at this list, which makes it the largest unworked opportunity on this tab: '
-    + 'a creator who already posts for free is the cheapest comped visit we will ever buy. '
-    + 'Ranked by what they have already given us, story tags first because those are the only proof-grade signal.';
-
-  let upTier = 'all';
-  const upRows = () => {
-    if (upTier === 'proof') return UP.filter(u => u.story > 0);
-    if (upTier === 'repeat') return UP.filter(u => u.n > 1);
-    if (upTier === 'sited') return UP.filter(u => u.site);
-    return UP;
-  };
-  const renderUp = () => {
-    const rows = upRows();
-    const umax = Math.max(...UP.map(u => u.n), 1);
-    build('#upTable', [
-      { h: 'Creator', cell: creatorCell },
-      { h: 'Site named', f: u => u.site || '—' },
-      { h: 'Story', k: 'story', num: true },
-      { h: 'Reel', k: 'reel', num: true },
-      { h: 'Post', k: 'post', num: true },
-      { h: 'Pieces', num: true, sk: 'n', cell: u => fillCell(u.n, umax, { colour: '#DCFCE7' }) },
-      { h: 'Msgs', k: 'msgs', num: true },
-      { h: 'Last contact', cell: u => el('td', 'nowrap', u.last) },
-      { h: 'Quiet', num: true, sk: 'quiet', cell: u => fillCell(u.quiet, 90, { colour: '#F1F5F9', text: u.quiet + 'd' }) },
-    ], rows, { sortable: true });
-    $('#upFoot').textContent = fmt(rows.length) + ' of ' + fmt(UP.length) + ' shown · '
-      + fmt(UP.filter(u => u.story > 0).length) + ' have posted a story (proof grade) · '
-      + fmt(UP.filter(u => u.n > 1).length) + ' have posted more than once · clocks run from ' + IDATA.asof;
-  };
-  const upf = $('#upFilters');
-  upf.replaceChildren();
-  [['all', 'Everyone', UP.length],
-   ['proof', 'Posted a story', UP.filter(u => u.story > 0).length],
-   ['repeat', 'Posted more than once', UP.filter(u => u.n > 1).length],
-   ['sited', 'Named a site', UP.filter(u => u.site).length]].forEach(([k, label, n2]) => {
-    const btn = el('button', 'filterbtn' + (upTier === k ? ' on' : ''), label);
-    btn.append(el('span', 'n', String(n2)));
-    btn.onclick = () => {
-      upTier = k;
-      [...upf.children].forEach(c => c.classList.remove('on'));
-      btn.classList.add('on');
-      renderUp();
-    };
-    upf.append(btn);
-  });
-  renderUp();
 }
 
 /* ═══════════ 5. FUNNEL ═══════════ */
