@@ -112,6 +112,24 @@ a{color:var(--maki)}
 .sup li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid var(--line)}
 .sup li span:first-child{font-weight:600;white-space:nowrap}
 .sup li span:last-child{text-align:right;color:var(--muted)}
+/* order guide v1.2: per-site action rows */
+.sup li.og{display:block;padding:8px 10px;margin:6px -10px 0;border-top:0;border-radius:8px}
+.sup li.og.today{background:var(--red-bg)}
+.sup li.og.today .og-site{color:var(--red-ink)}
+.sup li.og.soon{background:var(--amber-bg)}
+.og-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.og-site{font-weight:700;font-size:14px}
+.og-when{font-size:11.5px;color:var(--muted);font-weight:500;margin-top:1px}
+.og-tag{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.og-tag.today{background:var(--red);color:#fff}
+.og-tag.soon{background:var(--amber);color:#fff}
+.og-tag.later{background:var(--grey-bg);color:var(--grey-ink)}
+.og-tag.passed{background:var(--grey);color:#fff}
+.og-items{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.og-item{display:inline-flex;align-items:baseline;gap:6px;background:var(--paper);border:1px solid var(--line);border-radius:7px;padding:4px 9px;font-size:13px;font-weight:700;color:var(--ink)}
+.og-item.urgent{border-color:var(--red);color:var(--red-ink)}
+.og-item small{font-weight:600;color:var(--muted);font-size:11px}
+.og-item.urgent small{color:var(--red-ink)}
 
 /* chips */
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 16px}
@@ -645,22 +663,37 @@ function renderSupCards(){
     return;
   }
   el.innerHTML = sups.map(sup=>{
-    const sitesIn = Object.keys(buckets[sup]).sort();
+    const sitesIn = Object.keys(buckets[sup]).sort((a,b)=>{
+      const ha = buckets[sup][a][0].del ? buckets[sup][a][0].del.hoursToCut : 1e9;
+      const hb = buckets[sup][b][0].del ? buckets[sup][b][0].del.hoursToCut : 1e9;
+      return ha-hb;
+    });
     const hs = sitesIn.map(s=>{const d=buckets[sup][s][0].del; return d? d.hoursToCut : null;})
                       .filter(h=>h!=null && h>0);
     const soon = hs.length ? Math.min.apply(null,hs) : null;
     const cls  = soon==null ? 'shut' : (soon<2 ? 'live' : (soon<8 ? 'soon' : ''));
+    const todayN = sitesIn.filter(s=>{const d=buckets[sup][s][0].del; return d && d.cutIsToday && d.hoursToCut>0;}).length;
+    const nLines = sitesIn.reduce((n,s)=>n+buckets[sup][s].length,0);
     return '<div class="card sup '+cls+'"><div class="sup-hd"><h3>'+sup+'</h3>'+
       '<span class="cut '+(cls||'soon')+'">next cut-off '+fmtLeft(soon)+'</span></div>'+
-      '<div class="meta">'+sitesIn.length+' site'+(sitesIn.length>1?'s':'')+
-      ', '+sitesIn.reduce((n,s)=>n+buckets[sup][s].length,0)+' lines. Cut-offs differ by site, so each is shown against its own.</div><ul>'+
+      '<div class="meta">'+sitesIn.length+' site'+(sitesIn.length>1?'s':'')+', '+nLines+' line'+(nLines>1?'s':'')+'. '+
+      (todayN ? '<b style="color:var(--red-ink)">'+todayN+' site'+(todayN>1?'s':'')+' must order today.</b> ' : 'No cut-off falls today. ')+
+      'Cut-offs differ by site, so each is shown against its own.</div><ul>'+
       sitesIn.map(s=>{
         const rs = buckets[sup][s], d = rs[0].del, r = rs[0].route;
-        const when = d ? fmtD(d.next.cut)+' '+d.next.cutTime+' → '+fmtD(d.next.del)+
+        const when = d ? 'Order by '+fmtD(d.next.cut)+' '+d.next.cutTime+' → delivered '+fmtD(d.next.del)+
                         (r && r.min ? ', £'+r.min+' min' : '')
                        : ((r && r.note) ? r.note : 'cut-off not confirmed');
-        return '<li><span>'+s+' '+siteName(s)+'<br><span style="font-weight:500;font-size:11.5px;color:var(--muted)">'+when+'</span></span>'+
-               '<span>'+rs.map(x=>x.item.name+(x.status==='URGENT'?' ⚠':'')).join(', ')+'</span></li>';
+        let k='later', tag='order by '+(d ? DAYNAME[d.next.cut.getDay()].slice(0,3)+' '+d.next.cutTime : '?');
+        if(d && d.hoursToCut<=0){ k='passed'; tag='cut-off passed'; }
+        else if(d && d.cutIsToday){ k='today'; tag='order today by '+d.next.cutTime; }
+        else if(d && d.hoursToCut<24){ k='soon'; tag='order by tomorrow '+d.next.cutTime; }
+        const items = rs.slice().sort((a,b)=>(a.status==='URGENT'?0:1)-(b.status==='URGENT'?0:1) || a.cover-b.cover)
+          .map(x=>'<span class="og-item'+(x.status==='URGENT'?' urgent':'')+'">'+x.item.name+
+                  '<small>'+(x.cover==null?'':fmtDays(x.cover))+(x.status==='URGENT'?' ⚠':'')+'</small></span>').join('');
+        return '<li class="og '+k+'"><div class="og-top"><div><div class="og-site">'+s+' '+siteName(s)+'</div>'+
+               '<div class="og-when">'+when+'</div></div><span class="og-tag '+k+'">'+tag+'</span></div>'+
+               '<div class="og-items">'+items+'</div></li>';
       }).join('')+'</ul></div>';
   }).join('');
 }
