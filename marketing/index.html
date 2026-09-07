@@ -5238,6 +5238,16 @@ function wireMatrixModal() {
     const withContent = EXT.filter(m => m.posted === 'YES');
     const dtp = bookedContent.filter(m => m.days_to_post !== '' && m.days_to_post != null)
       .map(m => parseFloat(m.days_to_post)).sort((a, b) => a - b);
+    /* THE LADDER. Two steps were missing and one was mislabelled.
+       🔴 "Actually came in" IS NOT RECORDED ANYWHERE. Nothing in the export or
+       the till says a creator turned up. What we can prove is that a visit DATE
+       was confirmed (the 🍣🥢🎌 booking template parsed) and that the date has
+       since passed. Attendance after that is inferred only from content or from
+       a human moving the thread to "Visited - awaiting content". So the ladder
+       stops at "date has now passed" and the gap is named rather than guessed. */
+    const datePassed = booked.filter(m => { const v = ms(m.visit_date); return v != null && v <= asofMs; });
+    const visitedFlagged = booked.filter(m => m.status === 'Visited - awaiting content').length;
+    const attendanceUnknown = Math.max(0, datePassed.length - bookedContent.length - visitedFlagged);
     const noneStated = invited.filter(m => m.agreed_posting === 'NONE STATED').length;
     const statusC = {};
     EXT.forEach(m => { statusC[m.status] = (statusC[m.status] || 0) + 1; });
@@ -5326,6 +5336,13 @@ function wireMatrixModal() {
       none_stated: noneStated,
       none_stated_pct: invited.length ? Math.round(noneStated / invited.length * 100) : 0,
       terms: EXT.filter(m => m.terms_confirmed).length,
+      date_passed: datePassed.length,
+      date_future: booked.length - datePassed.length,
+      visited_flagged: visitedFlagged,
+      attendance_unknown: attendanceUnknown,
+      acc_rate: invited.length ? Math.round(EXT.filter(m => m.terms_confirmed).length / invited.length * 100) : 0,
+      acc_to_book: EXT.filter(m => m.terms_confirmed).length
+        ? Math.round(booked.length / EXT.filter(m => m.terms_confirmed).length * 100) : 0,
       visit: EXT.filter(m => m.visit_date).length,
       dtp_n: dtp.length,
       dtp_median: dtp.length ? r1(median(dtp)) : 0,
@@ -5364,7 +5381,9 @@ function wireMatrixModal() {
 
     const funnel = [
       { k: 'Invites sent', n: invited.length },
-      { k: 'Comped visits booked', n: booked.length },
+      { k: 'Accepted the invite', n: EXT.filter(m => m.terms_confirmed).length },
+      { k: 'Visit date confirmed', n: booked.length },
+      { k: 'That date has now passed', n: datePassed.length },
       { k: 'Produced content', n: bookedContent.length }
     ];
     const pipeline = STAGES.map(s => ({ stage: s, n: statusC[s] || 0 }));
@@ -6123,7 +6142,10 @@ const LOOP = IDATA.loop;
   const cards = [
     ['Chases due now', fmt(T.chases), 'RED', 'someone has to send a message today'],
     ['Fed, nothing back', fmt(IDATA.noback_overdue), 'AMBER', 'visited over 7 days ago, still no post'],
-    ['Invites sent', fmt(T.invited), '', T.inv_to_book + '% turn into a comped visit'],
+    ['Invites sent', fmt(T.invited), '', T.inv_to_book + '% turn into a booked visit date'],
+    ['Invites accepted', fmt(T.terms), '', T.acc_rate + '% of invites say yes · ' + T.acc_to_book + '% of those get a date'],
+    ['Turned up, unprovable', fmt(T.attendance_unknown), 'AMBER',
+      'visit dates passed with no content and no visited flag'],
     ['Content pieces logged', fmt(T.cr_pieces), '', fmt(T.cr_story) + ' story (proof) · ' + fmt(T.cr_inferred) + ' reel or post (inferred)'
       + (T.staff_pieces ? ' · excludes ' + fmt(T.staff_pieces) + ' staff pieces' : '')],
     ['No deliverable agreed', T.none_stated_pct + '%', 'AMBER', fmt(T.none_stated) + ' invites asked for nothing specific'],
@@ -6266,10 +6288,18 @@ renderChase();
 
 /* ═══════════ 5. FUNNEL ═══════════ */
 {
-  $('#fnCnt').textContent = fmt(T.invited) + ' → ' + fmt(T.booked) + ' → ' + fmt(T.booked_content);
-  $('#fnLede').innerHTML = 'Read this top to bottom: we invite <b>' + fmt(T.invited) + '</b>, <b>' + fmt(T.booked)
-    + '</b> actually come in, and <b>' + fmt(T.booked_content) + '</b> post something. '
-    + 'The biggest single leak is not the visit, it is the ask: <b>' + T.none_stated_pct
+  $('#fnCnt').textContent = fmt(T.invited) + ' → ' + fmt(T.terms) + ' → ' + fmt(T.booked) + ' → ' + fmt(T.booked_content);
+  $('#fnLede').innerHTML = 'Read this top to bottom. We invite <b>' + fmt(T.invited) + '</b>, <b>' + fmt(T.terms)
+    + '</b> say yes (' + T.acc_rate + '%), <b>' + fmt(T.booked) + '</b> get a confirmed visit date ('
+    + T.acc_to_book + '% of the yeses), and <b>' + fmt(T.booked_content) + '</b> post something.'
+    + '<br><br>🔴 <b>Nothing in this data proves anyone actually turned up.</b> The export records that a date was '
+    + '<i>agreed</i>, never that a meal was eaten. <b>' + fmt(T.date_passed) + '</b> confirmed dates have now passed: '
+    + fmt(T.booked_content) + ' of those produced content and ' + fmt(T.visited_flagged)
+    + ' were manually marked visited, which leaves <b>' + fmt(T.attendance_unknown)
+    + ' where we cannot tell whether they came and posted nothing, or never came at all</b>. '
+    + 'That is a real hole: we are comping meals with no proof of redemption. The only fixes are a code on the '
+    + 'voucher that the till captures, or Georgie marking the thread when a GM confirms the visit.'
+    + '<br><br>The biggest leak before that is the ask: <b>' + T.none_stated_pct
     + '% of invites do not say what we want posted</b>, so there is nothing to hold anyone to.';
   const fmax = Math.max(...IDATA.funnel.map(f => f.n));
   build('#funnelTable', [
