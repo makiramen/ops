@@ -5287,8 +5287,19 @@ function wireMatrixModal() {
     /* ── DATA HYGIENE: the tab flags its own gaps instead of waiting to be
        audited by hand. Every one of these was found manually on 7 Sept. */
     const blankSite = m => !String(m.site || '').trim();
+    /* "Invited, no site recorded" looks like a tracking failure and is not one:
+       measured 7 Sept, 76% of them are COLD and 55% carry a single message (our
+       invite, never answered). A site is recorded when a visit is ARRANGED, so a
+       thread that never got that far has no site to record. The only genuine
+       recording miss is a thread we invited, that POSTED, and where nobody wrote
+       down where they went. Split it so the dashboard says which is which. */
+    const LIVE_STATUS = ['Outreach sent', 'Awaiting confirmation'];
+    const invNoSite = EXT.filter(m => m.invited && blankSite(m));
     const hygiene = {
-      invited_no_site: EXT.filter(m => m.invited && blankSite(m)).length,
+      invited_no_site: invNoSite.length,
+      invited_no_site_cold: invNoSite.filter(m => m.status === 'Cold').length,
+      invited_no_site_live: invNoSite.filter(m => LIVE_STATUS.indexOf(m.status) > -1).length,
+      posted_no_site: invNoSite.filter(m => m.posted === 'YES').length,
       chase_no_site: EXT.filter(m => m.chase_flag && blankSite(m)).length,
       site_unresolved: EXT.filter(m => !blankSite(m) &&
         (typeof infCityOf === 'function' ? infCityOf(m.site) === 'none' : false)).length,
@@ -6138,8 +6149,8 @@ const LOOP = IDATA.loop;
     return d;
   };
   const items = [
-    [H.invited_no_site, 'invited, no site recorded', true,
-      'We reached out and never wrote down which restaurant. The only genuinely fixable geography gap; everything else unplaced is traffic we never engaged.'],
+    [H.posted_no_site, 'posted, no site recorded', true,
+      'We invited them, they posted, and nobody wrote down which restaurant. This is the ONLY genuine recording miss in the geography data, and it is small enough to backfill by hand.'],
     [H.chase_no_site, 'chases due with no site', true,
       'Georgie cannot route these to a GM without a site.'],
     [H.site_unresolved, 'site strings that match no city', true,
@@ -6367,6 +6378,13 @@ renderChase();
       + ' threads (' + gpc(buckets.story + buckets.none) + '%)</b>, of which <b>' + fmt(buckets.story)
       + '</b> are one-off story tags with no conversation behind them. Those can never carry a site and are '
       + 'counted here separately rather than read as a failure to record one.'
+      + '<br><br><b>' + fmt(IDATA.hygiene.invited_no_site) + ' threads were invited and still carry no site, and that is NOT a tracking failure.</b> '
+      + 'A site gets recorded when a visit is <i>arranged</i>, so a thread that never got that far has nothing to record. '
+      + '<b>' + fmt(IDATA.hygiene.invited_no_site_cold) + '</b> of them went cold and '
+      + '<b>' + fmt(IDATA.hygiene.invited_no_site_live) + '</b> are still live (' + fmt(IDATA.hygiene.chase_no_site)
+      + ' of those already sit on the chase list above). It is a conversion problem at the top of the funnel, not a data problem. '
+      + 'The only real recording miss is the <b>' + fmt(IDATA.hygiene.posted_no_site)
+      + '</b> we invited who then posted with no site written down; those are worth backfilling by hand.'
       + '<br><br>Two recovery routes were measured on the live data before building anything. '
       + 'Scanning the message text for a city name reaches only <b>4.4%</b> of the unplaced. '
       + 'The creator\u2019s own handle reaches <b>' + gpc(buckets.hint) + '%</b> (' + fmt(buckets.hint) + ' threads), '
