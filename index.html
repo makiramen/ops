@@ -1180,6 +1180,7 @@
     <button class="tabbtn" data-tab="reviews">Reviews <span class="tb-badge" id="tb-reviews" style="display:none">0</span></button>
     <button class="tabbtn" data-tab="broth">Broth <span class="tb-badge" id="tb-broth" style="display:none">0</span></button>
     <button class="tabbtn" data-tab="ecbudget">Budget Burn</button>
+    <button class="tabbtn" data-tab="keyline">Keyline <span class="tb-badge" id="tb-keyline" style="display:none">0</span></button>
     <button class="tabbtn" data-tab="redlight">Red Light <span class="tb-badge" id="tb-red">0</span></button>
     <!-- 6-tab trim (2026-06-22): OKRs / Governance / Risk Register / Roadmap tab buttons hidden.
          Their .tabpanel panels + all JS/data are left intact below; un-comment to restore.
@@ -1817,6 +1818,29 @@
     <div id="closedWeeksNote" style="margin-top:10px;padding:8px 12px;font-size:11px;color:var(--maki-muted);border-top:1px solid var(--maki-line);line-height:1.5"></div>
   </div>
 </div><!-- /tab-ecbudget -->
+
+  <!-- ============ TAB: KEYLINE CONTROL (added 2026-09-07; standalone page keyline.html, refreshed daily from Kobas) ============ -->
+  <div class="tabpanel" id="tab-keyline">
+    <style>
+      #tab-keyline .kl-frame{width:100%;height:calc(100vh - 150px);min-height:900px;border:1px solid var(--line);border-radius:12px;background:#FBF7F0;box-shadow:var(--shadow)}
+      #tab-keyline .kl-bar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 10px;font-size:12.5px;color:var(--ink-2)}
+      #tab-keyline .kl-bar a{color:var(--maki-orange);font-weight:600}
+    </style>
+    <div class="kl-bar"><span>Keyline stock and ordering, 21 keylines across the 9 England sites, cover against the next reachable delivery. Refreshed from Kobas each morning.</span><a href="keyline.html" target="_blank" rel="noopener">Open full page</a></div>
+    <iframe class="kl-frame" id="keylineFrame" data-src="keyline.html" title="Keyline Control" loading="lazy"></iframe>
+    <script>
+      (function(){
+        var f=document.getElementById('keylineFrame');
+        function load(){ if(f && !f.src){ f.src=f.dataset.src+'?v='+Date.now(); } }
+        document.querySelectorAll('.tabbtn[data-tab="keyline"]').forEach(function(b){ b.addEventListener('click', load); });
+        fetch('keyline.html',{cache:'no-store'}).then(function(r){return r.text();}).then(function(h){
+          var m=h.match(/window\.KEYLINE_DATA = (\{[\s\S]*?\});\n<\/script>/); if(!m) return;
+          var d=JSON.parse(m[1]); var red={}; d.lines.forEach(function(l){ if(l.negative||(l.stock!=null&&l.stock<0)||(l.cover!=null&&l.cover<3)) red[l.site]=1; });
+          var n=Object.keys(red).length; var b=document.getElementById('tb-keyline'); if(b&&n){ b.textContent=n; b.style.display=''; }
+        }).catch(function(){});
+      })();
+    </script>
+  </div><!-- /tab-keyline -->
 
   <!-- ============ TAB: OKRS ============ -->
   <div class="tabpanel" id="tab-okrs">

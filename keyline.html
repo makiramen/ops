@@ -1,0 +1,919 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Keyline Control</title></head><body>
+<style>
+:root{
+  --maki:#E8730C; --maki-deep:#B5470B; --ink:#171717; --ink2:#262626;
+  --muted:#6B7280; --cream:#FBF7F0; --paper:#FFFFFF; --line:#E7E1D6; --soft:#F5EEE0;
+  --green:#1F8A4C; --amber:#E2A813; --red:#C2410C; --grey:#9CA3AF; --blue:#2563EB;
+  --green-bg:#E5F4EC; --green-ink:#0E5A30;
+  --amber-bg:#FBF1D6; --amber-ink:#7A5A04;
+  --red-bg:#FBE4D5;   --red-ink:#9A3412;
+  --grey-bg:#EEEEF0;  --grey-ink:#4B5563;
+  --blue-bg:#E0ECFF;  --blue-ink:#1E40AF;
+  --shadow:0 1px 2px rgba(23,23,23,.06), 0 4px 14px rgba(23,23,23,.05);
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#F5F1EA; --ink2:#E4DED4; --muted:#A0998C;
+    --cream:#17150F; --paper:#211E17; --line:#3A352C; --soft:#2A251C;
+    --green-bg:#12301F; --green-ink:#7FD3A2;
+    --amber-bg:#332810; --amber-ink:#F0CF7A;
+    --red-bg:#3A1B0C;   --red-ink:#F5A97F;
+    --grey-bg:#2A2820;  --grey-ink:#B3ADA1;
+    --blue-bg:#152441;  --blue-ink:#9DBEF5;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#F5F1EA; --ink2:#E4DED4; --muted:#A0998C;
+  --cream:#17150F; --paper:#211E17; --line:#3A352C; --soft:#2A251C;
+  --green-bg:#12301F; --green-ink:#7FD3A2;
+  --amber-bg:#332810; --amber-ink:#F0CF7A;
+  --red-bg:#3A1B0C;   --red-ink:#F5A97F;
+  --grey-bg:#2A2820;  --grey-ink:#B3ADA1;
+  --blue-bg:#152441;  --blue-ink:#9DBEF5;
+  --shadow:0 1px 2px rgba(0,0,0,.4), 0 4px 14px rgba(0,0,0,.3);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--cream);color:var(--ink);
+  font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased}
+.wrap{max-width:1220px;margin:0 auto;padding:28px 22px 80px}
+h1{font-size:30px;letter-spacing:-.02em;margin:0 0 2px;font-weight:700}
+h2{font-size:15px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+   font-weight:600;margin:34px 0 12px}
+h3{font-size:17px;margin:0 0 8px;font-weight:650;letter-spacing:-.01em}
+.sub{color:var(--muted);font-size:14px;margin:0}
+a{color:var(--maki)}
+.mono{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+
+/* header */
+.hd{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end;justify-content:space-between;
+    border-bottom:3px solid var(--maki);padding-bottom:14px;margin-bottom:6px}
+.badge{display:inline-block;background:var(--maki);color:#fff;font-size:11px;font-weight:700;
+  letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:4px}
+.clock{font-size:13px;color:var(--muted);text-align:right}
+.clock b{color:var(--ink);font-size:20px;display:block;font-weight:650}
+
+/* gate banner */
+.gate{border-radius:10px;padding:14px 16px;margin:16px 0 4px;border:1px solid;display:flex;
+      gap:12px;align-items:flex-start;box-shadow:var(--shadow)}
+.gate .dot{width:10px;height:10px;border-radius:50%;flex:0 0 10px;margin-top:6px}
+.gate-ok{background:var(--green-bg);border-color:transparent;color:var(--green-ink)}
+.gate-ok .dot{background:var(--green)}
+.gate-warn{background:var(--amber-bg);border-color:transparent;color:var(--amber-ink)}
+.gate-warn .dot{background:var(--amber)}
+.gate-stop{background:var(--red-bg);border-color:transparent;color:var(--red-ink)}
+.gate-stop .dot{background:var(--red)}
+.gate b{display:block;margin-bottom:2px}
+.gate small{opacity:.85;font-size:13px}
+
+/* tabs */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin:22px 0 6px;border-bottom:1px solid var(--line)}
+.tab{appearance:none;border:0;background:none;color:var(--muted);font:inherit;font-weight:600;
+  font-size:14px;padding:10px 14px;border-bottom:2px solid transparent;cursor:pointer;margin-bottom:-1px}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{color:var(--maki);border-bottom-color:var(--maki)}
+.tab .cnt{display:inline-block;margin-left:6px;background:var(--soft);color:var(--muted);
+  border-radius:20px;padding:1px 7px;font-size:11px;font-weight:700}
+.tab[aria-selected="true"] .cnt{background:var(--maki);color:#fff}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:14px 16px;
+  box-shadow:var(--shadow);cursor:pointer;text-align:left;font:inherit;color:inherit}
+.tile:hover{border-color:var(--maki)}
+.tile[aria-pressed="true"]{border-color:var(--maki);box-shadow:0 0 0 2px rgba(232,115,12,.18),var(--shadow)}
+.tile .n{font-size:32px;font-weight:700;letter-spacing:-.03em;line-height:1.05}
+.tile .l{font-size:12.5px;color:var(--muted);margin-top:3px;font-weight:600}
+.n-red{color:var(--red)} .n-amber{color:var(--amber)} .n-green{color:var(--green)}
+.n-grey{color:var(--grey)} .n-blue{color:var(--blue)}
+
+/* cards */
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+  box-shadow:var(--shadow);margin-bottom:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+
+/* supplier cut-off card */
+.sup{border-left:4px solid var(--line)}
+.sup.live{border-left-color:var(--red)}
+.sup.soon{border-left-color:var(--amber)}
+.sup.shut{border-left-color:var(--grey);opacity:.72}
+.sup-hd{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:2px}
+.sup-hd h3{margin:0}
+.cut{font-size:12px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.cut.live{background:var(--red-bg);color:var(--red-ink)}
+.cut.soon{background:var(--amber-bg);color:var(--amber-ink)}
+.cut.shut{background:var(--grey-bg);color:var(--grey-ink)}
+.sup .meta{font-size:12.5px;color:var(--muted);margin:4px 0 10px;line-height:1.45}
+.sup ul{list-style:none;margin:0;padding:0;font-size:13.5px}
+.sup li{display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-top:1px solid var(--line)}
+.sup li span:first-child{font-weight:600;white-space:nowrap}
+.sup li span:last-child{text-align:right;color:var(--muted)}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 16px}
+.chip{appearance:none;font:inherit;font-size:13px;font-weight:600;background:var(--paper);
+  border:1px solid var(--line);color:var(--ink);border-radius:20px;padding:6px 13px;cursor:pointer}
+.chip:hover{border-color:var(--maki)}
+.chip[aria-pressed="true"]{background:var(--maki);border-color:var(--maki);color:#fff}
+.chip .b{opacity:.7;font-weight:500;margin-left:5px}
+
+/* table */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--paper);
+  box-shadow:var(--shadow)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:760px}
+th{text-align:left;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);
+  font-weight:700;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--soft);
+  position:sticky;top:0;z-index:1}
+td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+.sitehd td{background:var(--soft);font-weight:700;font-size:13px;letter-spacing:.02em}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2.5px 8px;border-radius:20px;
+  white-space:nowrap;letter-spacing:.02em}
+.p-URGENT{background:var(--red-bg);color:var(--red-ink)}
+.p-ORDER{background:var(--amber-bg);color:var(--amber-ink)}
+.p-WATCH{background:var(--blue-bg);color:var(--blue-ink)}
+.p-OK{background:var(--green-bg);color:var(--green-ink)}
+.p-CHECK{background:var(--red-bg);color:var(--red-ink);outline:1px dashed var(--red)}
+.p-DATA{background:var(--grey-bg);color:var(--grey-ink)}
+.p-OVER{background:var(--grey-bg);color:var(--grey-ink)}
+.p-ROUTE{background:var(--grey-bg);color:var(--grey-ink);outline:1px dashed var(--grey)}
+.why{color:var(--muted);font-size:12.5px;margin-top:3px;max-width:46ch}
+.prov{font-size:10.5px;font-weight:700;color:var(--maki-deep);letter-spacing:.05em}
+.empty{padding:26px;text-align:center;color:var(--muted);font-size:14px}
+.stale{font-size:11px;font-weight:700;color:var(--red-ink);background:var(--red-bg);
+  padding:1.5px 7px;border-radius:20px;margin-left:6px}
+
+/* nudges */
+.nudge{display:grid;grid-template-columns:78px 1fr auto;gap:14px;align-items:start;
+  padding:13px 0;border-top:1px solid var(--line)}
+.nudge:first-child{border-top:0}
+.nudge .t{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
+.nudge .t small{display:block;font-weight:500;color:var(--muted);font-size:11px}
+.nudge .d b{font-size:14.5px}
+.nudge .d p{margin:3px 0 0;color:var(--muted);font-size:13px;max-width:70ch}
+.st{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.st-fired{background:var(--green-bg);color:var(--green-ink)}
+.st-pending{background:var(--amber-bg);color:var(--amber-ink)}
+.st-suppress{background:var(--grey-bg);color:var(--grey-ink)}
+.st-blocked{background:var(--red-bg);color:var(--red-ink)}
+details.prev{margin-top:8px}
+details.prev summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--maki)}
+.mail{margin-top:10px;border:1px solid var(--line);border-radius:8px;background:var(--cream);
+  padding:14px 16px;font-size:13.5px}
+.mail .h{border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:10px;
+  font-size:12.5px;color:var(--muted)}
+.mail .h b{color:var(--ink)}
+.mail h4{margin:14px 0 5px;font-size:13.5px;letter-spacing:.02em}
+.mail h4:first-child{margin-top:0}
+.mail ul{margin:4px 0;padding-left:18px}
+.mail li{margin:2px 0}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0;line-height:1.55}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:13.5px;margin:0}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:600}
+.hide{display:none}
+.warnbox{background:var(--amber-bg);color:var(--amber-ink);border-radius:8px;padding:12px 14px;
+  font-size:13.5px;margin:10px 0}
+.warnbox b{display:block;margin-bottom:3px}
+
+/* site red-light strip */
+.rag{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px;margin:14px 0 2px}
+.rag .s{border-radius:10px;padding:12px 12px 10px;color:#fff;box-shadow:var(--shadow);cursor:pointer;
+  border:0;text-align:left;font:inherit;position:relative;overflow:hidden;min-height:92px}
+.rag .s b{display:block;font-size:22px;font-weight:800;letter-spacing:-.02em;line-height:1}
+.rag .s i{display:block;font-style:normal;font-size:12px;opacity:.92;margin-top:2px;font-weight:600}
+.rag .s small{display:block;font-size:11.5px;margin-top:8px;line-height:1.35;opacity:.95}
+.rag .s.RED{background:#D1240F;animation:pulse 1.6s ease-in-out infinite}
+.rag .s.AMBER{background:#E8730C}
+.rag .s.GREEN{background:#1F8A4C}
+.rag .s.GREY{background:#6B7280}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(209,36,15,.55)}50%{box-shadow:0 0 0 7px rgba(209,36,15,0)}}
+.raghd{display:flex;justify-content:space-between;align-items:baseline;margin-top:22px}
+.raghd h2{margin:0}
+.raghd .legend{font-size:12px;color:var(--muted)}
+.raghd .legend span{display:inline-block;width:10px;height:10px;border-radius:50%;margin:0 4px 0 10px;vertical-align:-1px}
+.asm{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;color:#fff;background:var(--maki);
+  padding:1.5px 6px;border-radius:4px;margin-left:6px;vertical-align:1px}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+@media (max-width:640px){
+  .wrap{padding:20px 14px 60px} h1{font-size:24px}
+  .nudge{grid-template-columns:64px 1fr;} .nudge .st{grid-column:2}
+}
+</style>
+<script>
+/* ============================================================
+   MAKI & RAMEN: KEYLINE CONTROL
+   Single-file front end. All logic client-side so the page
+   re-evaluates live as cut-offs pass through the day.
+   Replace window.KEYLINE_DATA.lines with the Kobas pull.
+   ============================================================ */
+
+const SITES = [
+  {code:'M9',  name:'Manchester',   venue:2},
+  {code:'M10', name:'Leeds',        venue:13},
+  {code:'M11', name:'Leicester',    venue:24},
+  {code:'M14', name:'Meadowhall',   venue:37},
+  {code:'M16', name:'Nottingham',   venue:42},
+  {code:'M17', name:'Lakeside',     venue:49},
+  {code:'M18', name:'Soho',         venue:51},
+  {code:'M19', name:'Shoreditch',   venue:58},
+  {code:'M20', name:'Southampton',  venue:60}
+];
+
+/* 21 keylines. buffer = safety days. unit = how the chef counts it.
+   Michael 07 Sep: everything shows as CASE except salmon and both prawn
+   lines; beef/rump is 3kg per pack. */
+const ITEMS = [
+  {id:'tonkotsu',  name:'Tonkotsu broth concentrate', pack:'8 x 1800g case', unit:'case', buffer:2,   crit:'Critical'},
+  {id:'chkbroth',  name:'Chicken broth concentrate',  pack:'8 x 1800g case', unit:'case', buffer:2,   crit:'Critical'},
+  {id:'karaage',   name:'Chicken karaage',            pack:'10 x 1000g case',unit:'case', buffer:1,   crit:'Core'},
+  {id:'katsu',     name:'Chicken katsu',              pack:'10 x 1000g case',unit:'case', buffer:1,   crit:'Core'},
+  {id:'pbsliced',  name:'Pork belly sliced',          pack:'10 x 1000g case',unit:'case', buffer:1,   crit:'Core'},
+  {id:'pbdiced',   name:'Pork belly diced',           pack:'10 x 1000g case',unit:'case', buffer:1,   crit:'Core'},
+  {id:'noodle',    name:'Ramen noodle',               pack:'10 x 5 case',    unit:'case', buffer:2,   crit:'Critical'},
+  {id:'rump',      name:'Steak rump',                 pack:'3kg per pack',   unit:'pack', buffer:1,   crit:'Core'},
+  {id:'salmon',    name:'Salmon fillet',              pack:'per kg',         unit:'kg',   buffer:1,   crit:'Core'},
+  {id:'prawn',     name:'Prawn (seafood ramen, nigiri)', pack:'1.8kg pack',     unit:'kg',   buffer:1,   crit:'Core'},
+  {id:'ebi',       name:'Shirakiku Nobashi Ebi 21/25', pack:'30 x 20 case',   unit:'case', buffer:0.5, crit:'Non-core'},
+  {id:'chkfillet', name:'Chicken fillet (6mm)',       pack:'2 x 2500g case', unit:'case', buffer:1,   crit:'Core'},
+  {id:'soba',      name:'Soba sauce',                 pack:'2kg tub',        unit:'case', buffer:1,   crit:'Core'},
+  {id:'teriyaki',  name:'Spicy teriyaki sauce',       pack:'2kg tub',        unit:'case', buffer:1,   crit:'Core'},
+  {id:'tataki',    name:'Beef tataki chilled',        pack:'2kg tub',        unit:'case', buffer:0.5, crit:'Non-core'},
+  {id:'chkpaste',  name:'Chicken paste',              pack:'2kg tub',        unit:'case', buffer:1,   crit:'Core'},
+  {id:'hell',      name:'Hell sauce',                 pack:'2kg tub',        unit:'case', buffer:1,   crit:'Core'},
+  {id:'rice',      name:'Sushi rice',                 pack:'25kg sack',      unit:'case', buffer:2,   crit:'Critical'},
+  {id:'squid',     name:'Pineapple squid',            pack:'1kg pack',       unit:'case', buffer:1,   crit:'Core'},
+  {id:'vegan',     name:'Vegan tonkotsu paste',       pack:'10 x 1090g case',unit:'case', buffer:1,   crit:'Critical'},
+  {id:'gyoza',     name:'Chicken and veg gyoza',      pack:'10 x 600g case', unit:'case', buffer:1,   crit:'Core'}
+];
+
+/* Estate supplier map. Evidence: M9 and M18 stock lists agree on 19 of 21.
+   siteOverride carries the two known exceptions. */
+const SUPPLIER_OF = {
+  tonkotsu:'JFC', chkbroth:'JFC', karaage:'JFC', katsu:'JFC', pbsliced:'JFC',
+  pbdiced:'JFC', soba:'JFC', teriyaki:'JFC', tataki:'JFC', chkpaste:'JFC',
+  hell:'JFC', vegan:'JFC', chkfillet:'JFC',
+  noodle:'JFE',
+  rice:'Harro', gyoza:'Harro', ebi:'Harro',
+  salmon:'True World', squid:'True World', prawn:'True World',
+  rump:'Dunster Farm'
+};
+const SUPPLIER_OVERRIDE = { 'M17|rump':'Brakes', 'M18|rump':'Brakes', 'M19|rump':'Brakes', 'M20|rump':'Brakes' };
+const UNMAPPED = [];
+
+/* Supplier routes, read from the delivery schedule sheet
+   (1EtSW6mw9Zl3dEG9idM7F_C1JP0deHBZYobpohxPFDr8) on 07 Sep 2026, one tab per site.
+   verified:false = the tab gives no usable cut-off. assumed:true = the tab gives
+   delivery days but no time, so the time is borrowed from the nearest tab that
+   states one (True World 21:00 from M21/Aberdeen; Dunsters 14:00 from M21;
+   Brakes 12:00 stated on the London tabs). Assumed lines get a real status
+   plus a CUT-OFF ASSUMED flag until Sophie confirms the time. */
+const H_MWF16 = [{day:5,time:'16:00',dev:1},{day:2,time:'16:00',dev:3},{day:4,time:'16:00',dev:5}];
+const H_WF12  = [{day:1,time:'12:00',dev:3},{day:3,time:'12:00',dev:5}];
+const H_TF14  = [{day:1,time:'14:00',dev:2},{day:4,time:'14:00',dev:5}];
+const JFE_MWF = [{day:5,time:'12:00',dev:1},{day:2,time:'12:00',dev:3},{day:4,time:'12:00',dev:5}];
+const JFE_TF  = [{day:1,time:'12:00',dev:2},{day:4,time:'12:00',dev:5}];
+const JFE_WF  = [{day:2,time:'12:00',dev:3},{day:4,time:'12:00',dev:5}];
+const BRAKES  = {verified:true, assumed:false, cutoffs:JFE_MWF};
+const DUNST   = {verified:true, assumed:true, cutoffs:[{day:5,time:'14:00',dev:1},{day:2,time:'14:00',dev:3},{day:4,time:'14:00',dev:5}]};
+const TWF_NEXT= {verified:true, assumed:true, rolling:true, rollingTime:'21:00', noDeliver:[0], anyDay:true};
+const ROUTES = [
+  /* M9 Manchester, tab MA313A */
+  {site:'M9',  sup:'Harro', verified:true, min:350, cutoffs:H_WF12},
+  {site:'M9',  sup:'JFE',   verified:true, min:null, cutoffs:JFE_WF},
+  {site:'M9',  sup:'JFC',   verified:true, min:200, cutoffs:[{day:5,time:'12:00',dev:3}]},
+  {site:'M9',  sup:'Dunster Farm', ...DUNST},
+  {site:'M9',  sup:'True World', ...TWF_NEXT},
+  /* M10 Leeds, tab MAK7A */
+  {site:'M10', sup:'Harro', verified:true, min:350, cutoffs:H_WF12},
+  {site:'M10', sup:'JFE',   verified:false, note:'Tab reads "Monday 12:00hrs Friday", ambiguous'},
+  {site:'M10', sup:'JFC',   verified:true, min:200, cutoffs:[{day:2,time:'10:00',dev:5}]},
+  {site:'M10', sup:'Dunster Farm', ...DUNST},
+  {site:'M10', sup:'True World', ...TWF_NEXT},
+  /* M11 Leicester, tab MA314 */
+  {site:'M11', sup:'Harro', verified:true, min:350, cutoffs:H_TF14},
+  {site:'M11', sup:'JFE',   verified:true, min:null, cutoffs:JFE_TF},
+  {site:'M11', sup:'JFC',   verified:true, min:200, cutoffs:[{day:2,time:'10:00',dev:5}]},
+  {site:'M11', sup:'Dunster Farm', ...DUNST},
+  {site:'M11', sup:'True World', ...TWF_NEXT},
+  /* M14 Meadowhall, tab MA317 */
+  {site:'M14', sup:'Harro', verified:true, min:350, cutoffs:[{day:4,time:'12:00',dev:1},{day:1,time:'12:00',dev:3},{day:3,time:'12:00',dev:5}]},
+  {site:'M14', sup:'JFE',   verified:false, note:'Tab reads "Monday 12:00hrs Friday", ambiguous'},
+  {site:'M14', sup:'JFC',   verified:true, min:200, cutoffs:[{day:5,time:'12:00',dev:3}]},
+  {site:'M14', sup:'Dunster Farm', ...DUNST},
+  {site:'M14', sup:'True World', ...TWF_NEXT},
+  /* M16 Nottingham, tab MA319 */
+  {site:'M16', sup:'Harro', verified:true, min:350, cutoffs:H_TF14},
+  {site:'M16', sup:'JFE',   verified:true, min:null, cutoffs:JFE_TF},
+  {site:'M16', sup:'JFC',   verified:true, min:200, cutoffs:[{day:2,time:'12:00',dev:5}]},
+  {site:'M16', sup:'Dunster Farm', ...DUNST},
+  {site:'M16', sup:'True World', ...TWF_NEXT},
+  /* M17 Lakeside, tab MA320 */
+  {site:'M17', sup:'Harro', verified:true, min:200, cutoffs:[{day:5,time:'16:00',dev:1},{day:2,time:'16:00',dev:3},{day:3,time:'16:00',dev:4}]},
+  {site:'M17', sup:'JFE',   verified:true, min:null, cutoffs:[{day:5,time:'12:00',dev:1},{day:2,time:'12:00',dev:3}]},
+  {site:'M17', sup:'JFC',   verified:true, min:200, cutoffs:[{day:5,time:'12:00',dev:1},{day:3,time:'12:00',dev:4}]},
+  {site:'M17', sup:'Brakes', ...BRAKES},
+  {site:'M17', sup:'True World', ...TWF_NEXT},
+  /* M18 Soho, tab MA321 */
+  {site:'M18', sup:'Harro', verified:true, min:200, cutoffs:H_MWF16},
+  {site:'M18', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MWF},
+  {site:'M18', sup:'JFC',   verified:true, min:100, rolling:true, rollingTime:'12:00', noDeliver:[3]},
+  {site:'M18', sup:'Brakes', ...BRAKES},
+  {site:'M18', sup:'True World', ...TWF_NEXT},
+  /* M19 Shoreditch, tab MA323 */
+  {site:'M19', sup:'Harro', verified:true, min:200, cutoffs:H_MWF16},
+  {site:'M19', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MWF},
+  {site:'M19', sup:'JFC',   verified:true, min:100, rolling:true, rollingTime:'12:00', noDeliver:[3]},
+  {site:'M19', sup:'Brakes', ...BRAKES},
+  {site:'M19', sup:'True World', ...TWF_NEXT},
+  /* M20 Southampton, tab MA324 (Sophie updating this tab) */
+  {site:'M20', sup:'Harro', verified:true, min:300, cutoffs:[{day:5,time:'14:00',dev:1},{day:3,time:'14:00',dev:4}]},
+  {site:'M20', sup:'JFE',   verified:false, note:'Tab says Monday only, no cut-off time (tab being updated)'},
+  {site:'M20', sup:'JFC',   verified:true, min:200, cutoffs:[{day:1,time:'12:00',dev:3}]},
+  {site:'M20', sup:'Brakes', ...BRAKES},
+  {site:'M20', sup:'True World', verified:false, note:'Tab says Tue and Thu delivery, no cut-off time (tab being updated)'}
+];
+const UNKNOWN_SITES = [];          // every England site now has a tab (07 Sep)
+const NO_CUTOFF_SUPPLIERS = [];
+
+const DAYNAME = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtD(d){
+  const t=new Date(); t.setHours(0,0,0,0);
+  const diff=Math.round((new Date(d).setHours(0,0,0,0)-t)/864e5);
+  const base=DAYNAME[d.getDay()];
+  if(diff===0) return base+' (today)';
+  if(diff>0 && diff<7) return base;
+  return base+' '+d.getDate()+' '+MON[d.getMonth()];
+}
+
+/* ---------------- route resolution ---------------- */
+function routeFor(site, sup){
+  if(NO_CUTOFF_SUPPLIERS.includes(sup))
+    return {verified:false, note:sup+' has no cut-off time recorded anywhere'};
+  if(UNKNOWN_SITES.includes(site))
+    return {verified:false, note:site+' has no tab in the delivery schedule'};
+  const r = ROUTES.find(x=>x.site===site && x.sup===sup);
+  if(!r) return {verified:false, note:'No route on file for '+site+' / '+sup};
+  return r;
+}
+const startOfDay = d => {const x=new Date(d); x.setHours(0,0,0,0); return x;};
+const addDays = (d,n) => {const x=new Date(d); x.setDate(x.getDate()+n); return x;};
+const hhmm = t => {const [h,m]=t.split(':').map(Number); return h+m/60;};
+
+/* Next reachable cut-off and the delivery it buys, plus the one after. */
+function nextDeliveries(route, now){
+  if(!route || route.verified===false) return null;
+  const today = startOfDay(now), hourNow = now.getHours()+now.getMinutes()/60;
+  const events = [];
+  for(let k=0;k<21;k++){
+    const d = addDays(today,k), dow = d.getDay();
+    if(route.rolling){
+      if(!route.anyDay && (dow===0 || dow===6)) continue;   // business-day cut-offs unless anyDay (True World)
+      if(k===0 && hourNow >= hhmm(route.rollingTime)) continue;
+      let del = addDays(d,1);
+      let guard=0;
+      while((route.noDeliver||[]).includes(del.getDay()) || del.getDay()===0){
+        del = addDays(del,1); if(++guard>7) break;
+      }
+      events.push({cut:d, cutTime:route.rollingTime, del, cutDow:dow});
+    } else {
+      for(const c of route.cutoffs){
+        if(c.day!==dow) continue;
+        if(k===0 && hourNow >= hhmm(c.time)) continue;
+        let ahead = (c.dev - dow + 7) % 7; if(ahead===0) ahead = 7;
+        events.push({cut:d, cutTime:c.time, del:addDays(d,ahead), cutDow:dow});
+      }
+    }
+    if(events.length>=6) break;
+  }
+  events.sort((a,b)=> a.cut-b.cut || hhmm(a.cutTime)-hhmm(b.cutTime));
+  if(!events.length) return null;
+  const now1 = events[0];
+  const skip = events.find(e=> startOfDay(e.del) > startOfDay(now1.del)) || null;   // next delivery strictly later than the one we can still catch
+  const dd = t => Math.round((startOfDay(t)-startOfDay(now))/864e5);
+  return {
+    next: now1, skip,
+    Rnow:  dd(now1.del),
+    Rskip: skip ? dd(skip.del) : dd(now1.del)+7,
+    cutIsToday: dd(now1.cut)===0,
+    hoursToCut: (startOfDay(now1.cut)/1 + hhmm(now1.cutTime)*36e5 - now)/36e5
+  };
+}
+
+/* ---------------- the status engine ---------------- */
+function evaluate(line, now){
+  const item = ITEMS.find(i=>i.id===line.item);
+  const sup  = SUPPLIER_OVERRIDE[line.site+'|'+line.item] || SUPPLIER_OF[line.item];
+  const route= routeFor(line.site, sup);
+  const del  = nextDeliveries(route, now);
+  const B    = (line.bufferOverride!=null) ? line.bufferOverride : item.buffer;
+  const D    = line.cover;
+  const site = window.KEYLINE_DATA.siteMeta[line.site] || {};
+  const out  = {...line, item, sup, route, del, B, stale:!!site.stale, assumed:!!(route&&route.assumed)};
+
+  if(line.stock < 0 || line.negative){
+    out.status='CHECK';
+    out.why='Kobas shows '+fmtQty(line.stock,item)+'. You cannot hold negative stock. Count it physically, then tell Ross if the count and Kobas still disagree.';
+    return out;
+  }
+  if(UNMAPPED.includes(line.item)){
+    out.status='CHECK'; out.why='This line is not mapped to a supplier tab at any site. Ross to confirm the SKU before it can be ordered.'; return out;
+  }
+  if(line.note && line.stock>=0 && D<=90){ out.noteExtra=line.note; }
+  if(line.missing){ out.status='DATA'; out.why='Not returned by the Kobas report for this site.'; return out; }
+  if(D > 90){ out.status='DATA'; out.why=Math.round(D)+' days of cover is not credible. Usage or unit of measure is wrong, not the stock.'; return out; }
+
+  if(!del){
+    out.status='ROUTE';
+    out.why=(route.note||'Supplier route unverified')+'. Cover is '+fmtDays(D)+'. Nothing is instructed until the cut-off is confirmed.';
+    out.provisional=true;
+    out.provStatus = D < 3 ? 'would be URGENT' : (D < 7 ? 'would be ORDER TODAY' : 'looks fine');
+    return out;
+  }
+
+  const threshold = del.Rskip + B;
+  out.threshold = threshold; out.Rnow = del.Rnow; out.Rskip = del.Rskip;
+
+  if(D < del.Rnow){
+    out.status='URGENT';
+    out.why='Cover '+fmtDays(D)+'. The earliest possible delivery is '+fmtD(del.next.del)+', '+del.Rnow+' days away, so routine ordering will not reach you in time. Order at the next cut-off ('+fmtD(del.next.cut)+' '+del.next.cutTime+') AND contact your AM now to arrange a transfer, approved local sourcing or menu mitigation.';
+  } else if(del.cutIsToday && D < threshold){
+    out.status='ORDER';
+    out.why='Cover '+fmtDays(D)+'. Next reachable delivery '+fmtD(del.next.del)+' ('+del.Rnow+' days). Miss today and the next is '+del.Rskip+' days out, against a '+B+' day safety buffer. Order by '+del.next.cutTime+' today.';
+  } else if(D < threshold){
+    out.status='WATCH';
+    out.why='Cover '+fmtDays(D)+'. You do not need to order today. Order by '+fmtD(del.next.cut)+' '+del.next.cutTime+' for delivery '+fmtD(del.next.del)+'.';
+  } else if(D > 21){
+    out.status='OVER';
+    out.why=Math.round(D)+' days of cover. Stop ordering and propose a transfer to a tighter site.';
+  } else {
+    out.status='OK';
+    out.why='Cover '+fmtDays(D)+' against a '+threshold.toFixed(1)+' day trigger.';
+  }
+  if(out.noteExtra) out.why += ' ' + out.noteExtra;
+  return out;
+}
+
+function fmtDays(d){ return (d<10 ? d.toFixed(1) : Math.round(d)) + ' days'; }
+function fmtQty(v,item){
+  if(v==null) return '-';
+  const u = item.unit==='kg' ? 'kg' : (item.unit==='pack' ? (Math.abs(v)===1?'pack':'packs') : (Math.abs(v)===1?'case':'cases'));
+  return (Math.round(v*10)/10) + ' ' + u;
+}
+const RANK = {URGENT:0, ORDER:1, WATCH:2, CHECK:3, ROUTE:4, DATA:5, OVER:6, OK:7};
+const LABEL = {URGENT:'Urgent', ORDER:'Order today', WATCH:'Watch', CHECK:'Physical check',
+               ROUTE:'Route unverified', DATA:'Data check', OVER:'Overstocked', OK:'OK'};
+</script>
+<script>
+window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026-09-07T16:07+00:00", "importedLabel": "pulled from Kobas 07 Sep 17:07 UK", "source": "kobas-live", "version": "1.1.0"}, "siteMeta": {"M9": {"checkDate": "09/06", "stale": false}, "M10": {"checkDate": "09/06", "stale": false}, "M11": {"checkDate": "09/06", "stale": false}, "M14": {"checkDate": "09/07", "stale": false}, "M16": {"checkDate": "09/06", "stale": false}, "M17": {"checkDate": "09/06", "stale": false}, "M18": {"checkDate": "09/06", "stale": false}, "M19": {"checkDate": "09/06", "stale": false}, "M20": {"checkDate": "09/07", "stale": false}}, "lines": [{"site": "M9", "item": "tonkotsu", "stock": 18.04, "cover": 32.0}, {"site": "M9", "item": "chkbroth", "stock": 7.18, "cover": 26.0}, {"site": "M9", "item": "karaage", "stock": 10.54, "cover": 16.0}, {"site": "M9", "item": "katsu", "stock": 4.39, "cover": 29.0}, {"site": "M9", "item": "pbsliced", "stock": 10.62, "cover": 71.0}, {"site": "M9", "item": "pbdiced", "stock": 2.61, "cover": 65.0}, {"site": "M9", "item": "noodle", "stock": 30.66, "cover": 24.0}, {"site": "M9", "item": "rump", "stock": 13.34, "cover": 7.0}, {"site": "M9", "item": "salmon", "stock": 7.29, "cover": 21.0}, {"site": "M9", "item": "prawn", "stock": 19.93, "cover": 41.0, "note": "Peeled Prawns (Item 1978) reads -1.9 kg. Negative on the second prawn SKU."}, {"site": "M9", "item": "ebi", "stock": 2.16, "cover": 26.0}, {"site": "M9", "item": "chkfillet", "stock": 4.22, "cover": 56.0}, {"site": "M9", "item": "soba", "stock": 14.1, "cover": 22.0}, {"site": "M9", "item": "teriyaki", "stock": 16.9, "cover": 55.0}, {"site": "M9", "item": "tataki", "stock": 13.22, "cover": 22.0}, {"site": "M9", "item": "chkpaste", "stock": 18.64, "cover": 34.0}, {"site": "M9", "item": "hell", "stock": 19.22, "cover": 54.0}, {"site": "M9", "item": "rice", "stock": 1.69, "cover": 25.0}, {"site": "M9", "item": "squid", "stock": 14.79, "cover": 28.0}, {"site": "M9", "item": "vegan", "stock": 2.92, "cover": 108.0}, {"site": "M9", "item": "gyoza", "stock": 7.88, "cover": 61.0}, {"site": "M10", "item": "tonkotsu", "stock": 1.07, "cover": 5.0}, {"site": "M10", "item": "chkbroth", "stock": 1.25, "cover": 11.0}, {"site": "M10", "item": "karaage", "stock": 1.82, "cover": 8.0}, {"site": "M10", "item": "katsu", "stock": 1.48, "cover": 23.0}, {"site": "M10", "item": "pbsliced", "stock": 0.68, "cover": 11.0}, {"site": "M10", "item": "pbdiced", "stock": 1.1, "cover": 66.0}, {"site": "M10", "item": "noodle", "stock": -0.46, "cover": 4.0, "negative": true}, {"site": "M10", "item": "rump", "stock": 4.97, "cover": 5.0}, {"site": "M10", "item": "salmon", "stock": 2.1, "cover": 23.0}, {"site": "M10", "item": "prawn", "stock": 2.74, "cover": 24.0, "note": "Peeled Prawns (Item 1978) reads -0.3 kg. Negative on the second prawn SKU."}, {"site": "M10", "item": "ebi", "stock": 0.55, "cover": 16.0}, {"site": "M10", "item": "chkfillet", "stock": 0.36, "cover": 19.0}, {"site": "M10", "item": "soba", "stock": 4.33, "cover": 19.0}, {"site": "M10", "item": "teriyaki", "stock": 4.58, "cover": 29.0}, {"site": "M10", "item": "tataki", "stock": 0.59, "cover": 6.0}, {"site": "M10", "item": "chkpaste", "stock": 12.29, "cover": 46.0}, {"site": "M10", "item": "hell", "stock": 4.57, "cover": 28.0}, {"site": "M10", "item": "rice", "stock": 2.07, "cover": 55.0}, {"site": "M10", "item": "squid", "stock": 9.09, "cover": 33.0}, {"site": "M10", "item": "vegan", "stock": -0.03, "cover": 0.0, "negative": true}, {"site": "M10", "item": "gyoza", "stock": 0.32, "cover": 10.0}, {"site": "M11", "item": "tonkotsu", "stock": 6.42, "cover": 37.0}, {"site": "M11", "item": "chkbroth", "stock": 0.67, "cover": 8.0}, {"site": "M11", "item": "karaage", "stock": 4.86, "cover": 18.0}, {"site": "M11", "item": "katsu", "stock": 2.56, "cover": 35.0}, {"site": "M11", "item": "pbsliced", "stock": 4.77, "cover": 142.0}, {"site": "M11", "item": "pbdiced", "stock": 0.89, "cover": 138.0}, {"site": "M11", "item": "noodle", "stock": 6.8, "cover": 20.0}, {"site": "M11", "item": "rump", "stock": 7.05, "cover": 8.0}, {"site": "M11", "item": "salmon", "stock": -0.97, "cover": 8.0, "negative": true}, {"site": "M11", "item": "prawn", "stock": 2.25, "cover": 19.0, "note": "Peeled Prawns (Item 1978) reads -0.5 kg. Negative on the second prawn SKU."}, {"site": "M11", "item": "ebi", "stock": 0.49, "cover": 14.0}, {"site": "M11", "item": "chkfillet", "stock": 0.41, "cover": 9.0}, {"site": "M11", "item": "soba", "stock": 7.5, "cover": 30.0}, {"site": "M11", "item": "teriyaki", "stock": 8.67, "cover": 42.0}, {"site": "M11", "item": "tataki", "stock": 13.73, "cover": 57.0}, {"site": "M11", "item": "chkpaste", "stock": 16.41, "cover": 68.0}, {"site": "M11", "item": "hell", "stock": 9.67, "cover": 48.0}, {"site": "M11", "item": "rice", "stock": 3.28, "cover": 77.0}, {"site": "M11", "item": "squid", "stock": -0.62, "cover": 0.0, "negative": true}, {"site": "M11", "item": "vegan", "stock": 1.17, "cover": 147.0}, {"site": "M11", "item": "gyoza", "stock": 2.02, "cover": 38.0}, {"site": "M14", "item": "tonkotsu", "stock": 6.13, "cover": 17.0}, {"site": "M14", "item": "chkbroth", "stock": 5.01, "cover": 21.0}, {"site": "M14", "item": "karaage", "stock": 2.69, "cover": 6.0}, {"site": "M14", "item": "katsu", "stock": 1.32, "cover": 14.0}, {"site": "M14", "item": "pbsliced", "stock": 3.21, "cover": 47.0}, {"site": "M14", "item": "pbdiced", "stock": 1.38, "cover": 103.0}, {"site": "M14", "item": "noodle", "stock": 16.71, "cover": 23.0}, {"site": "M14", "item": "rump", "stock": 0.63, "cover": 2.0}, {"site": "M14", "item": "salmon", "stock": 5.55, "cover": 19.0}, {"site": "M14", "item": "prawn", "stock": 0.99, "cover": 6.0, "note": "Peeled Prawns (Item 1978) also holds 0.6 kg here with 3 days cover. Two live SKUs for one ingredient."}, {"site": "M14", "item": "ebi", "stock": 0.67, "cover": 13.0}, {"site": "M14", "item": "chkfillet", "stock": -0.05, "cover": 0.0, "negative": true}, {"site": "M14", "item": "soba", "stock": 2.63, "cover": 5.0}, {"site": "M14", "item": "teriyaki", "stock": 17.65, "cover": 65.0}, {"site": "M14", "item": "tataki", "stock": 8.93, "cover": 34.0}, {"site": "M14", "item": "chkpaste", "stock": 10.5, "cover": 33.0}, {"site": "M14", "item": "hell", "stock": 5.88, "cover": 37.0}, {"site": "M14", "item": "rice", "stock": 3.47, "cover": 66.0}, {"site": "M14", "item": "squid", "stock": -0.52, "cover": 0.0, "negative": true}, {"site": "M14", "item": "vegan", "stock": 0.17, "cover": 18.0}, {"site": "M14", "item": "gyoza", "stock": 3.48, "cover": 9.0}, {"site": "M16", "item": "tonkotsu", "stock": 3.45, "cover": 15.0}, {"site": "M16", "item": "chkbroth", "stock": 0.04, "cover": 6.0}, {"site": "M16", "item": "karaage", "stock": 3.37, "cover": 12.0}, {"site": "M16", "item": "katsu", "stock": 2.07, "cover": 29.0}, {"site": "M16", "item": "pbsliced", "stock": 2.05, "cover": 34.0}, {"site": "M16", "item": "pbdiced", "stock": 0.31, "cover": 25.0}, {"site": "M16", "item": "noodle", "stock": 18.78, "cover": 29.0}, {"site": "M16", "item": "rump", "stock": 2.06, "cover": 3.0}, {"site": "M16", "item": "salmon", "stock": 5.8, "cover": 32.0}, {"site": "M16", "item": "prawn", "stock": 1.74, "cover": 14.0, "note": "Peeled Prawns (Item 1978) reads -1.1 kg. Negative on the second prawn SKU."}, {"site": "M16", "item": "ebi", "stock": -0.09, "cover": 1.0, "negative": true}, {"site": "M16", "item": "chkfillet", "stock": 0.35, "cover": 14.0}, {"site": "M16", "item": "soba", "stock": 5.13, "cover": 15.0}, {"site": "M16", "item": "teriyaki", "stock": 5.52, "cover": 26.0}, {"site": "M16", "item": "tataki", "stock": 9.69, "cover": 27.0}, {"site": "M16", "item": "chkpaste", "stock": 2.32, "cover": 6.0}, {"site": "M16", "item": "hell", "stock": 3.7, "cover": 18.0}, {"site": "M16", "item": "rice", "stock": 3.24, "cover": 76.0}, {"site": "M16", "item": "squid", "stock": 0.71, "cover": 3.0}, {"site": "M16", "item": "vegan", "stock": 0.37, "cover": 33.0}, {"site": "M16", "item": "gyoza", "stock": 1.82, "cover": 28.0}, {"site": "M17", "item": "tonkotsu", "stock": 6.81, "cover": 38.0}, {"site": "M17", "item": "chkbroth", "stock": 3.8, "cover": 24.0}, {"site": "M17", "item": "karaage", "stock": 4.42, "cover": 12.0}, {"site": "M17", "item": "katsu", "stock": 0.92, "cover": 15.0}, {"site": "M17", "item": "pbsliced", "stock": 0.76, "cover": 23.0}, {"site": "M17", "item": "pbdiced", "stock": 0.92, "cover": 64.0}, {"site": "M17", "item": "noodle", "stock": 3.49, "cover": 12.0}, {"site": "M17", "item": "rump", "stock": 1.09, "cover": 4.0}, {"site": "M17", "item": "salmon", "stock": 2.37, "cover": 21.0}, {"site": "M17", "item": "prawn", "stock": 5.88, "cover": 18.0, "note": "Peeled Prawns (Item 1978) reads -1.0 kg. Negative on the second prawn SKU."}, {"site": "M17", "item": "ebi", "stock": 0.23, "cover": 3.0}, {"site": "M17", "item": "chkfillet", "stock": -0.14, "cover": 0.0, "negative": true}, {"site": "M17", "item": "soba", "stock": 6.17, "cover": 19.0}, {"site": "M17", "item": "teriyaki", "stock": 5.52, "cover": 27.0}, {"site": "M17", "item": "tataki", "stock": 6.64, "cover": 60.0}, {"site": "M17", "item": "chkpaste", "stock": 3.41, "cover": 17.0}, {"site": "M17", "item": "hell", "stock": 1.52, "cover": 13.0}, {"site": "M17", "item": "rice", "stock": 1.7, "cover": 9.0}, {"site": "M17", "item": "squid", "stock": 7.95, "cover": 16.0}, {"site": "M17", "item": "vegan", "stock": 0.92, "cover": 140.0}, {"site": "M17", "item": "gyoza", "stock": 0.52, "cover": 12.0}, {"site": "M18", "item": "tonkotsu", "stock": 4.84, "cover": 13.0}, {"site": "M18", "item": "chkbroth", "stock": 1.27, "cover": 8.0}, {"site": "M18", "item": "karaage", "stock": -0.27, "cover": 3.0, "negative": true}, {"site": "M18", "item": "katsu", "stock": 0.64, "cover": 11.0}, {"site": "M18", "item": "pbsliced", "stock": 3.74, "cover": 43.0}, {"site": "M18", "item": "pbdiced", "stock": 1.82, "cover": 76.0}, {"site": "M18", "item": "noodle", "stock": 15.66, "cover": 10.0}, {"site": "M18", "item": "rump", "stock": 7.29, "cover": 2.0}, {"site": "M18", "item": "salmon", "stock": 10.99, "cover": 25.0}, {"site": "M18", "item": "prawn", "stock": 9.98, "cover": 16.0, "note": "Peeled Prawns (Item 1978) reads -0.8 kg. Negative on the second prawn SKU."}, {"site": "M18", "item": "ebi", "stock": 0.68, "cover": 13.0}, {"site": "M18", "item": "chkfillet", "stock": 1.19, "cover": 28.0}, {"site": "M18", "item": "soba", "stock": 11.47, "cover": 39.0}, {"site": "M18", "item": "teriyaki", "stock": 9.62, "cover": 60.0}, {"site": "M18", "item": "tataki", "stock": 11.61, "cover": 47.0}, {"site": "M18", "item": "chkpaste", "stock": 13.13, "cover": 41.0}, {"site": "M18", "item": "hell", "stock": 14.71, "cover": 76.0}, {"site": "M18", "item": "rice", "stock": 2.8, "cover": 65.0}, {"site": "M18", "item": "squid", "stock": 7.42, "cover": 16.0}, {"site": "M18", "item": "vegan", "stock": 0.35, "cover": 22.0}, {"site": "M18", "item": "gyoza", "stock": 4.32, "cover": 55.0}, {"site": "M19", "item": "tonkotsu", "stock": 0.28, "cover": 4.0}, {"site": "M19", "item": "chkbroth", "stock": 0.74, "cover": 6.0}, {"site": "M19", "item": "karaage", "stock": 0.21, "cover": 5.0}, {"site": "M19", "item": "katsu", "stock": 1.86, "cover": 31.0}, {"site": "M19", "item": "pbsliced", "stock": 1.73, "cover": 34.0}, {"site": "M19", "item": "pbdiced", "stock": 1.09, "cover": 74.0}, {"site": "M19", "item": "noodle", "stock": 8.84, "cover": 23.0}, {"site": "M19", "item": "rump", "stock": -0.83, "cover": 1.0, "negative": true}, {"site": "M19", "item": "salmon", "stock": 1.13, "cover": 15.0}, {"site": "M19", "item": "prawn", "stock": 3.07, "cover": 22.0, "note": "Peeled Prawns (Item 1978) reads -0.9 kg. Negative on the second prawn SKU."}, {"site": "M19", "item": "ebi", "stock": 0.47, "cover": 15.0}, {"site": "M19", "item": "chkfillet", "stock": -0.03, "cover": 0.0, "negative": true}, {"site": "M19", "item": "soba", "stock": 2.43, "cover": 14.0}, {"site": "M19", "item": "teriyaki", "stock": 5.0, "cover": 45.0}, {"site": "M19", "item": "tataki", "stock": 6.71, "cover": 52.0}, {"site": "M19", "item": "chkpaste", "stock": 9.66, "cover": 80.0}, {"site": "M19", "item": "hell", "stock": 2.11, "cover": 19.0}, {"site": "M19", "item": "rice", "stock": 2.45, "cover": 82.0}, {"site": "M19", "item": "squid", "stock": 0.0, "cover": 2.0}, {"site": "M19", "item": "vegan", "stock": 1.27, "cover": 200.0}, {"site": "M19", "item": "gyoza", "stock": 1.38, "cover": 8.0}, {"site": "M20", "item": "tonkotsu", "stock": 4.2, "cover": 10.0}, {"site": "M20", "item": "chkbroth", "stock": 2.1, "cover": 8.0}, {"site": "M20", "item": "karaage", "stock": 0.93, "cover": 4.0}, {"site": "M20", "item": "katsu", "stock": 1.41, "cover": 16.0}, {"site": "M20", "item": "pbsliced", "stock": 0.33, "cover": 5.0}, {"site": "M20", "item": "pbdiced", "stock": 0.46, "cover": 26.0}, {"site": "M20", "item": "noodle", "stock": 31.57, "cover": 10.0}, {"site": "M20", "item": "rump", "stock": 9.81, "cover": 2.0}, {"site": "M20", "item": "salmon", "stock": 8.38, "cover": 27.0}, {"site": "M20", "item": "prawn", "stock": 3.09, "cover": 11.0, "note": "Peeled Prawns (Item 1978) also holds 12.8 kg here with 42 days cover. Two live SKUs for one ingredient."}, {"site": "M20", "item": "ebi", "stock": 1.24, "cover": 10.0}, {"site": "M20", "item": "chkfillet", "stock": -0.06, "cover": 0.0, "negative": true}, {"site": "M20", "item": "soba", "stock": 3.91, "cover": 9.0}, {"site": "M20", "item": "teriyaki", "stock": 2.25, "cover": 11.0}, {"site": "M20", "item": "tataki", "stock": 7.56, "cover": 32.0}, {"site": "M20", "item": "chkpaste", "stock": 3.46, "cover": 14.0}, {"site": "M20", "item": "hell", "stock": 10.16, "cover": 66.0}, {"site": "M20", "item": "rice", "stock": 3.17, "cover": 68.0}, {"site": "M20", "item": "squid", "stock": 1.36, "cover": 4.0}, {"site": "M20", "item": "vegan", "stock": 0.14, "cover": 20.0}, {"site": "M20", "item": "gyoza", "stock": 7.27, "cover": 67.0}]};
+</script>
+<div class="wrap">
+  <div class="hd">
+    <div>
+      <span class="badge">Maki &amp; Ramen · Executive Chef</span>
+      <h1>Keyline Control</h1>
+      <p class="sub">21 keylines &times; 9 England sites. Cover against the next reachable delivery, not a flat rule. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
+    </div>
+    <div class="clock"><b id="clk">--:--</b><span id="today">-</span></div>
+  </div>
+
+  <div id="gate"></div>
+  <div class="raghd"><h2>Site red light</h2><span class="legend"><span style="background:#D1240F"></span>red: order or urgent today <span style="background:#E8730C"></span>amber: watch or count <span style="background:#1F8A4C"></span>green: fine</span></div>
+  <div class="rag" id="siteRag"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="today"  aria-selected="true">Today<span class="cnt" id="c-today">0</span></button>
+    <button class="tab" role="tab" data-view="sites"  aria-selected="false">By site</button>
+    <button class="tab" role="tab" data-view="nudges" aria-selected="false">Nudges<span class="cnt" id="c-nudge">0</span></button>
+    <button class="tab" role="tab" data-view="email"  aria-selected="false">Email preview</button>
+    <button class="tab" role="tab" data-view="excep"  aria-selected="false">Exceptions<span class="cnt" id="c-exc">0</span></button>
+    <button class="tab" role="tab" data-view="gaps"   aria-selected="false">Setup gaps<span class="cnt" id="c-gaps">0</span></button>
+  </div>
+
+  <section id="v-today">
+    <div class="tiles" id="tiles"></div>
+    <h2>Order guide for today</h2>
+    <div class="grid" id="supcards"></div>
+    <h2>Every line that needs a decision</h2>
+    <div class="tblwrap"><table id="t-action"><thead><tr>
+      <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Cover</th>
+      <th class="num">Trigger</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="v-sites" class="hide">
+    <div class="chips" id="sitechips"></div>
+    <div class="chips" id="filterchips"></div>
+    <div class="tblwrap"><table id="t-site"><thead><tr>
+      <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Cover</th>
+      <th class="num">Trigger</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="v-nudges" class="hide">
+    <p class="sub">Every message the system sends today, in order, with the exact conditions that fire or suppress it. Nothing sends to a supplier, ever.</p>
+    <div class="card" id="nudgelist"></div>
+    <div class="warnbox" id="nudgeblock"></div>
+  </section>
+
+  <section id="v-email" class="hide">
+    <p class="sub">The 07:00 estate email to Sophie and O, rendered from live figures. Same content goes out as a PDF attachment.</p>
+    <div class="card" id="mailprev"></div>
+  </section>
+
+  <section id="v-excep" class="hide">
+    <div class="card" id="excep"></div>
+  </section>
+
+  <section id="v-gaps" class="hide">
+    <p class="sub">What is stopping the remaining lines from giving an instruction. Each one has an owner and closes on its own once answered.</p>
+    <div class="card" id="gaps"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+/* ---------------- state ---------------- */
+let NOW = new Date();
+let ROWS = [];
+let siteFilter = 'ALL', statusFilter = 'ALL';
+
+function recompute(){
+  NOW = new Date();
+  ROWS = window.KEYLINE_DATA.lines.map(l => evaluate(l, NOW))
+          .sort((a,b)=> RANK[a.status]-RANK[b.status] || a.site.localeCompare(b.site) || a.cover-b.cover);
+}
+const count = s => ROWS.filter(r=>r.status===s).length;
+const siteName = c => (SITES.find(s=>s.code===c)||{}).name || c;
+
+/* ---------------- freshness gate ---------------- */
+function gateState(){
+  const m = window.KEYLINE_DATA.meta;
+  const problems = [];
+  if(m.source !== 'kobas-live') problems.push({stop:true, msg:'This page is running on sample figures, not a Kobas pull. Do not order from it.'});
+  const staleSites = Object.entries(window.KEYLINE_DATA.siteMeta).filter(([,v])=>v.stale).map(([k])=>k);
+  if(staleSites.length) problems.push({stop:false, msg:'Stock check more than 8 days old at '+staleSites.join(', ')+'. Their lines are flagged and must be counted before ordering.'});
+  const imported = m.importedAt ? new Date(m.importedAt) : null;
+  if(imported && (NOW-imported)/36e5 > 18) problems.push({stop:true, msg:'The Kobas import is '+Math.round((NOW-imported)/36e5)+' hours old. Re-run it before ordering.'});
+  const routeless = count('ROUTE');
+  if(routeless) problems.push({stop:false, msg:routeless+' of '+ROWS.length+' lines have no usable supplier cut-off on the delivery schedule, so they show a provisional read only.'});
+  const assumed = ROWS.filter(r=>r.assumed && !['CHECK','DATA'].includes(r.status)).length;
+  if(assumed) problems.push({stop:false, msg:assumed+' lines run on an assumed cut-off time (True World 21:00, Dunsters 14:00). Delivery days are confirmed, the time is not.'});
+  return problems;
+}
+function renderGate(){
+  const p = gateState(), el = document.getElementById('gate'), m = window.KEYLINE_DATA.meta;
+  if(!p.length){
+    el.innerHTML = '<div class="gate gate-ok"><span class="dot"></span><div><b>Safe to order</b>'+
+      '<small>Kobas position '+m.reportDate+', '+m.importedLabel+'. All nine sites present, all 21 keylines found.</small></div></div>';
+    return;
+  }
+  const stop = p.some(x=>x.stop);
+  el.innerHTML = '<div class="gate '+(stop?'gate-stop':'gate-warn')+'"><span class="dot"></span><div><b>'+
+    (stop?'Do not use for ordering':'Read with care')+'</b><small>'+
+    p.map(x=>x.msg).join('<br>')+'</small></div></div>';
+}
+
+/* ---------------- site red light ---------------- */
+function siteRag(code){
+  const rs = ROWS.filter(r=>r.site===code);
+  const u = rs.filter(r=>r.status==='URGENT').length, o = rs.filter(r=>r.status==='ORDER').length;
+  const w = rs.filter(r=>r.status==='WATCH').length,  k = rs.filter(r=>r.status==='CHECK').length;
+  const st = window.KEYLINE_DATA.siteMeta[code]||{};
+  let rag = 'GREEN';
+  if(u+o) rag='RED'; else if(w+k) rag='AMBER';
+  if(st.stale && rag==='GREEN') rag='GREY';
+  const bits=[]; if(u) bits.push(u+' urgent'); if(o) bits.push(o+' order today'); if(w) bits.push(w+' watch'); if(k) bits.push(k+' count');
+  const worst = rs.filter(r=>['URGENT','ORDER'].includes(r.status)).slice(0,2).map(r=>r.item.name).join(', ');
+  return {rag,u,o,w,k,bits,worst,stale:!!st.stale};
+}
+function renderSiteRag(){
+  document.getElementById('siteRag').innerHTML = SITES.map(s=>{
+    const g = siteRag(s.code);
+    return '<button class="s '+g.rag+'" data-site="'+s.code+'"><b>'+s.code+'</b><i>'+s.name+'</i><small>'+
+      (g.stale?'stale count. ':'')+(g.bits.length? g.bits.join(' · ') : 'all 21 lines fine')+(g.worst? '<br>'+g.worst:'')+'</small></button>';
+  }).join('');
+  document.querySelectorAll('#siteRag .s').forEach(b=>b.onclick=()=>{siteFilter=b.dataset.site;statusFilter='ALL';show('sites');renderChips();renderSiteTable();});
+}
+
+/* ---------------- tiles ---------------- */
+const TILES = [
+  {k:'URGENT', l:'urgent',            c:'n-red'},
+  {k:'ORDER',  l:'order today',       c:'n-amber'},
+  {k:'WATCH',  l:'watch',             c:'n-blue'},
+  {k:'CHECK',  l:'physical check',    c:'n-red'},
+  {k:'ROUTE',  l:'route unverified',  c:'n-grey'},
+  {k:'OVER',   l:'overstocked',       c:'n-grey'},
+  {k:'OK',     l:'fine',              c:'n-green'}
+];
+function renderTiles(){
+  document.getElementById('tiles').innerHTML = TILES.map(t=>
+    '<button class="tile" data-status="'+t.k+'" aria-pressed="'+(statusFilter===t.k)+'">'+
+    '<div class="n '+t.c+'">'+count(t.k)+'</div><div class="l">'+t.l+'</div></button>').join('');
+  document.querySelectorAll('#tiles .tile').forEach(b=>b.onclick=()=>{
+    statusFilter = (statusFilter===b.dataset.status) ? 'ALL' : b.dataset.status;
+    siteFilter='ALL'; show('sites'); renderSiteTable(); renderChips();
+  });
+}
+
+/* ---------------- supplier cut-off cards ---------------- */
+function fmtLeft(h){
+  if(h==null) return 'no cut-off on file';
+  if(h<=0) return 'cut-off passed';
+  if(h<1)  return Math.round(h*60)+' min left';
+  if(h<24) return h.toFixed(1)+' h left';
+  {const d=Math.round(h/24); return d+(d===1?' day':' days')+' away';}
+}
+function renderSupCards(){
+  const buckets = {};
+  ROWS.filter(r=>['URGENT','ORDER'].includes(r.status)).forEach(r=>{
+    buckets[r.sup] = buckets[r.sup] || {};
+    (buckets[r.sup][r.site] = buckets[r.sup][r.site] || []).push(r);
+  });
+  const sups = Object.keys(buckets).sort();
+  const el = document.getElementById('supcards');
+  if(!sups.length){
+    el.innerHTML = '<div class="card"><h3>Nothing to order today</h3><p class="note">No line at any of the nine sites falls below its trigger before the next reachable delivery. The 07:00 email will not send.</p></div>';
+    return;
+  }
+  el.innerHTML = sups.map(sup=>{
+    const sitesIn = Object.keys(buckets[sup]).sort();
+    const hs = sitesIn.map(s=>{const d=buckets[sup][s][0].del; return d? d.hoursToCut : null;})
+                      .filter(h=>h!=null && h>0);
+    const soon = hs.length ? Math.min.apply(null,hs) : null;
+    const cls  = soon==null ? 'shut' : (soon<2 ? 'live' : (soon<8 ? 'soon' : ''));
+    return '<div class="card sup '+cls+'"><div class="sup-hd"><h3>'+sup+'</h3>'+
+      '<span class="cut '+(cls||'soon')+'">next cut-off '+fmtLeft(soon)+'</span></div>'+
+      '<div class="meta">'+sitesIn.length+' site'+(sitesIn.length>1?'s':'')+
+      ', '+sitesIn.reduce((n,s)=>n+buckets[sup][s].length,0)+' lines. Cut-offs differ by site, so each is shown against its own.</div><ul>'+
+      sitesIn.map(s=>{
+        const rs = buckets[sup][s], d = rs[0].del, r = rs[0].route;
+        const when = d ? fmtD(d.next.cut)+' '+d.next.cutTime+' → '+fmtD(d.next.del)+
+                        (r && r.min ? ', £'+r.min+' min' : '')
+                       : ((r && r.note) ? r.note : 'cut-off not confirmed');
+        return '<li><span>'+s+' '+siteName(s)+'<br><span style="font-weight:500;font-size:11.5px;color:var(--muted)">'+when+'</span></span>'+
+               '<span>'+rs.map(x=>x.item.name+(x.status==='URGENT'?' ⚠':'')).join(', ')+'</span></li>';
+      }).join('')+'</ul></div>';
+  }).join('');
+}
+
+/* ---------------- tables ---------------- */
+function rowHtml(r, withSite){
+  const pill = '<span class="pill p-'+r.status+'">'+LABEL[r.status]+'</span>';
+  const prov = r.provisional ? '<div class="prov">PROVISIONAL: '+r.provStatus+'</div>' : '';
+  const stale = r.stale ? '<span class="stale">stale count</span>' : '';
+  const asm   = r.assumed ? '<span class="asm" title="Delivery days are on the tab, the cut-off time is borrowed from the nearest tab that states one">CUT-OFF ASSUMED</span>' : '';
+  return '<tr><td>'+(withSite? r.site+' '+siteName(r.site) : r.site)+stale+'</td>'+
+    '<td><b>'+r.item.name+'</b><div class="why">'+r.why+'</div>'+prov+'</td>'+
+    '<td class="num">'+fmtQty(r.stock, r.item)+'</td>'+
+    '<td class="num">'+(r.cover==null?'-':(r.cover<10? r.cover.toFixed(1): Math.round(r.cover)))+'</td>'+
+    '<td class="num">'+(r.threshold!=null? r.threshold.toFixed(1) : '-')+'</td>'+
+    '<td>'+pill+'</td><td>'+r.sup+asm+'</td></tr>';
+}
+function renderActionTable(){
+  const rows = ROWS.filter(r=>['URGENT','ORDER','WATCH','CHECK'].includes(r.status));
+  const tb = document.querySelector('#t-action tbody');
+  tb.innerHTML = rows.length ? rows.map(r=>rowHtml(r,true)).join('')
+    : '<tr><td colspan="7" class="empty">Nothing needs a decision today.</td></tr>';
+}
+function renderSiteTable(){
+  let rows = ROWS;
+  if(siteFilter!=='ALL')  rows = rows.filter(r=>r.site===siteFilter);
+  if(statusFilter!=='ALL')rows = rows.filter(r=>r.status===statusFilter);
+  const tb = document.querySelector('#t-site tbody');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="7" class="empty">Nothing matches that filter.</td></tr>'; return; }
+  let html='', last=null;
+  rows.forEach(r=>{
+    if(siteFilter==='ALL' && r.site!==last){ html+='<tr class="sitehd"><td colspan="7">'+r.site+' '+siteName(r.site)+'</td></tr>'; last=r.site; }
+    html += rowHtml(r,false);
+  });
+  tb.innerHTML = html;
+}
+function renderChips(){
+  document.getElementById('sitechips').innerHTML =
+    ['ALL'].concat(SITES.map(s=>s.code)).map(c=>{
+      const n = c==='ALL'? ROWS.filter(r=>RANK[r.status]<3).length
+                         : ROWS.filter(r=>r.site===c && RANK[r.status]<3).length;
+      return '<button class="chip" data-site="'+c+'" aria-pressed="'+(siteFilter===c)+'">'+
+        (c==='ALL'?'All sites':c+' '+siteName(c))+'<span class="b">'+n+'</span></button>';
+    }).join('');
+  document.getElementById('filterchips').innerHTML =
+    ['ALL'].concat(TILES.map(t=>t.k)).map(k=>
+      '<button class="chip" data-status="'+k+'" aria-pressed="'+(statusFilter===k)+'">'+
+      (k==='ALL'?'All statuses':LABEL[k])+'</button>').join('');
+  document.querySelectorAll('#sitechips .chip').forEach(b=>b.onclick=()=>{siteFilter=b.dataset.site;renderChips();renderSiteTable();});
+  document.querySelectorAll('#filterchips .chip').forEach(b=>b.onclick=()=>{statusFilter=b.dataset.status;renderChips();renderSiteTable();renderTiles();});
+}
+/* ---------------- nudge engine ---------------- */
+const RECIPIENTS = {
+  sophie:'sophie@makiramen.com + schairipu@gmail.com (O)',
+  ross:'ross@makiramen.com (phase 2)',
+  ams:'AMs (phase 2)',
+  hc:'Head Chef, per site (phase 2)'
+};
+function nudges(){
+  const urgent = count('URGENT'), order = count('ORDER'), check = count('CHECK');
+  const h = NOW.getHours() + NOW.getMinutes()/60;
+  const list = [];
+
+  list.push({
+    at:'06:45', label:'daily',
+    title:'Kobas import',
+    body:'Nine Stock Current Position exports pulled and merged. Alternative pack rows fold into the default Item ID: stock sums, usage comes from the default row only.',
+    to:'System', 
+    state: window.KEYLINE_DATA.meta.source==='kobas-live' ? 'fired' : 'blocked',
+    stateNote: window.KEYLINE_DATA.meta.source==='kobas-live' ? null : 'No live Kobas connection yet'
+  });
+
+  list.push({
+    at:'07:00', label:'daily',
+    title:'Estate order guide',
+    body:(urgent+order)===0
+      ? 'Suppressed. Nothing is below its trigger, and a daily email that always arrives stops being read.'
+      : urgent+' urgent and '+order+' to order across '+new Set(ROWS.filter(r=>RANK[r.status]<2).map(r=>r.site)).size+' sites. Red-light sites first, then lines grouped by supplier with the cut-off against each. Sent as a PDF attachment as well as inline.',
+    to: RECIPIENTS.sophie,
+    state: (urgent+order)===0 ? 'suppress' : (h>=7 ? 'fired' : 'pending')
+  });
+
+  list.push({
+    at:'07:15', label:'daily',
+    title:'Per-site brief to Head Chef',
+    body:'Only that site\'s lines, in kitchen language: count stock, order today, ask manager, no action. The words route unverified and data check never appear.',
+    to: RECIPIENTS.hc, state:'blocked',
+    stateNote:'No Head Chef email addresses on file'
+  });
+
+  const cutSoon = [];
+  ROWS.filter(r=>r.status==='ORDER' && r.del).forEach(r=>{
+    const k = r.site+'|'+r.sup;
+    if(!cutSoon.find(x=>x.k===k)) cutSoon.push({k, site:r.site, sup:r.sup, h:r.del.hoursToCut, t:r.del.next.cutTime, n:1});
+    else cutSoon.find(x=>x.k===k).n++;
+  });
+  cutSoon.sort((a,b)=>a.h-b.h).forEach(c=>{
+    list.push({
+      at:c.t, label:'cut-off',
+      title:'Order reminder: '+c.site+' / '+c.sup,
+      body:c.n+' line'+(c.n>1?'s':'')+' due. Fires two hours before the cut-off and only if the order has not been confirmed.',
+      to:RECIPIENTS.sophie,
+      state: c.h<=2 && c.h>0 ? 'fired' : (c.h<=0 ? 'suppress' : 'pending'),
+      stateNote: c.h<=0 ? 'Cut-off has passed' : null
+    });
+  });
+
+  if(check) list.push({
+    at:'07:00', label:'daily',
+    title:'Physical count required',
+    body:check+' line'+(check>1?'s':'')+' show negative or impossible stock. These never generate an order, they generate a count.',
+    to:RECIPIENTS.sophie, state:h>=7?'fired':'pending'
+  });
+
+  list.push({
+    at:'08:00', label:'watchdog',
+    title:'Import failure alert',
+    body:'If no Kobas import has landed by 08:00, Sophie and her deputy are told the estate is blind today and sites must fall back to the normal supplier routine.',
+    to:RECIPIENTS.sophie, 
+    state: window.KEYLINE_DATA.meta.source==='kobas-live' ? 'suppress' : (h>=8?'fired':'pending'),
+    stateNote: window.KEYLINE_DATA.meta.source==='kobas-live' ? 'Import landed, nothing to raise' : null
+  });
+
+  list.push({
+    at:'Mon 09:00', label:'weekly',
+    title:'Mapping and SKU queue to Ross',
+    body:'Duplicate and split SKUs, unit-of-measure mismatches, negative lines that survive a physical count, and any supplier route still unconfirmed.',
+    to:RECIPIENTS.ross, state:'pending'
+  });
+
+  return list;
+}
+function renderNudges(){
+  const l = nudges();
+  document.getElementById('nudgelist').innerHTML = l.map(n=>
+    '<div class="nudge"><div class="t">'+n.at+'<small>'+n.label+'</small></div>'+
+    '<div class="d"><b>'+n.title+'</b><p>'+n.body+'</p>'+
+    '<p style="margin-top:4px;font-size:12px;color:var(--muted)"><b style="font-weight:600">To:</b> '+n.to+
+    (n.stateNote? ' · '+n.stateNote : '')+'</p></div>'+
+    '<span class="st st-'+n.state+'">'+(window.KEYLINE_DATA.meta.source==='kobas-live'
+      ? ({fired:'sent',pending:'pending',suppress:'suppressed',blocked:'blocked'})[n.state]
+      : ({fired:'would send',pending:'would wait',suppress:'suppressed',blocked:'blocked'})[n.state])+'</span></div>'
+  ).join('');
+  document.getElementById('c-nudge').textContent = l.filter(n=>n.state==='pending'||n.state==='fired').length;
+  document.getElementById('nudgeblock').innerHTML =
+    '<b>Phase 1 goes to Sophie and O only</b>Everything routes to sophie@makiramen.com and schairipu@gmail.com until Head Chef addresses exist. Then per-site briefs go to the kitchens and the AMs and Ross pick up their own streams. Open items are on the Setup gaps tab.';
+}
+
+/* ---------------- email preview ---------------- */
+function renderMail(){
+  const urgent = ROWS.filter(r=>r.status==='URGENT');
+  const order  = ROWS.filter(r=>r.status==='ORDER');
+  const check  = ROWS.filter(r=>r.status==='CHECK');
+  const m = window.KEYLINE_DATA.meta;
+  if(!urgent.length && !order.length){
+    document.getElementById('mailprev').innerHTML =
+      '<h3>No email today</h3><p class="note">Nothing is below its trigger. The system stays silent rather than sending an all-clear, so that an email in the inbox always means something needs doing.</p>';
+    return;
+  }
+  const bySite = {};
+  urgent.concat(order).forEach(r=>{ (bySite[r.site]=bySite[r.site]||[]).push(r); });
+  const reds = SITES.map(s=>({s,g:siteRag(s.code)})).filter(x=>x.g.rag==='RED');
+  const ambers = SITES.map(s=>({s,g:siteRag(s.code)})).filter(x=>x.g.rag==='AMBER');
+  let body = '<h4 style="color:#D1240F">RED LIGHT: '+(reds.length? reds.map(x=>x.s.code+' '+x.s.name).join(', ') : 'none')+'</h4>'+
+    (reds.length? '<ul>'+reds.map(x=>'<li><b>'+x.s.code+' '+x.s.name+'</b>: '+x.g.bits.join(', ')+'</li>').join('')+'</ul>':'')+
+    '<h4 style="color:#E8730C">AMBER: '+(ambers.length? ambers.map(x=>x.s.code).join(', ') : 'none')+'</h4>'+
+    '<h4 style="color:#1F8A4C">GREEN: '+(SITES.filter(s=>siteRag(s.code).rag==='GREEN').map(s=>s.code).join(', ')||'none')+'</h4>';
+  Object.keys(bySite).sort().forEach(s=>{
+    const rs = bySite[s].sort((a,b)=>RANK[a.status]-RANK[b.status]);
+    const st = window.KEYLINE_DATA.siteMeta[s]||{};
+    body += '<h4>'+s+' '+siteName(s).toUpperCase()+(st.stale? ': STOCK CHECK '+st.checkDate+', COUNT BEFORE ORDERING':'')+'</h4><ul>';
+    const bySup = {};
+    rs.forEach(r=>{ (bySup[r.sup]=bySup[r.sup]||[]).push(r); });
+    Object.keys(bySup).forEach(sup=>{
+      const first = bySup[sup][0];
+      body += '<li><b>'+sup+'</b>'+(first.del? ': order by '+fmtD(first.del.next.cut)+' '+first.del.next.cutTime+(first.assumed?' (time assumed)':'')+', delivery '+fmtD(first.del.next.del) : ': cut-off not confirmed')+
+        (first.route && first.route.min ? ', £'+first.route.min+' minimum':'')+'<ul>'+
+        bySup[sup].map(r=>'<li>'+r.item.name+': '+fmtQty(r.stock,r.item)+', '+fmtDays(r.cover)+
+          (r.status==='URGENT'? '. <b>URGENT, contact your AM as well as ordering</b>':'')+'</li>').join('')+'</ul></li>';
+    });
+    body += '</ul>';
+  });
+  if(check.length){
+    body += '<h4>PHYSICAL CHECK: do not order these</h4><ul>'+
+      check.map(r=>'<li>'+r.site+' '+r.item.name+': '+fmtQty(r.stock,r.item)+': '+
+        (r.stock<0||r.negative ? 'negative in Kobas, count it' : 'supplier mapping unconfirmed, Ross to resolve')+'</li>').join('')+'</ul>'+
+      '<p class="note">Physical stock, Kobas SKU or supplier mapping check required. Report the count to Ross.</p>';
+  }
+  document.getElementById('mailprev').innerHTML =
+    '<div class="mail"><div class="h"><b>To:</b> sophie@makiramen.com, schairipu@gmail.com<br>'+
+    '<b>Subject:</b> Keyline: '+urgent.length+' urgent, '+order.length+' to order, '+check.length+' to check<br>'+
+    '<b>Sent:</b> 07:00 · Kobas position '+m.reportDate+', '+m.importedLabel+'</div>'+body+
+    '<p class="note">No quantities in this phase. No email ever goes to a supplier.</p></div>';
+}
+
+/* ---------------- exceptions + gaps ---------------- */
+function renderExcep(){
+  const groups = [
+    ['CHECK','Negative or impossible stock','A count, not an order. Kobas and the shelf disagree.'],
+    ['DATA','Data check','Cover figures that are not credible, or lines the report did not return.'],
+    ['OVER','Overstocked','More than 21 days of cover. Propose a transfer.']
+  ];
+  const html = groups.map(([k,t,d])=>{
+    const rs = ROWS.filter(r=>r.status===k);
+    if(!rs.length) return '';
+    return '<h3>'+t+' <span class="pill p-'+k+'">'+rs.length+'</span></h3><p class="note">'+d+'</p>'+
+      '<div class="tblwrap" style="margin:10px 0 22px"><table><thead><tr><th>Site</th><th>Item</th>'+
+      '<th class="num">Stock</th><th class="num">Cover</th><th>What to do</th></tr></thead><tbody>'+
+      rs.map(r=>'<tr><td>'+r.site+'</td><td>'+r.item.name+'</td><td class="num">'+fmtQty(r.stock,r.item)+
+        '</td><td class="num">'+(r.cover==null?'-':Math.round(r.cover))+'</td><td class="why">'+r.why+'</td></tr>').join('')+
+      '</tbody></table></div>';
+  }).join('');
+  document.getElementById('excep').innerHTML = html || '<p class="empty">No exceptions. That would be a first.</p>';
+  document.getElementById('c-exc').textContent = ROWS.filter(r=>['CHECK','DATA','OVER'].includes(r.status)).length;
+}
+
+const GAPS = [
+  {q:'True World cut-off time', o:'Sophie', w:'Every England tab says next-day delivery but none gives a time. Running on 21:00 (M21 and Aberdeen tabs) until confirmed. Salmon, prawn, squid all ride on it.', n:()=>ROWS.filter(r=>r.sup==='True World'&&r.assumed).length},
+  {q:'Dunsters cut-off time (M9, M10, M11, M14, M16)', o:'Sophie', w:'Tabs say Mon Wed Fri, no time. Running on 14:00 business day before (M21 tab, beef line). Rump only.', n:()=>ROWS.filter(r=>r.sup==='Dunster Farm'&&r.assumed).length},
+  {q:'JFE at M10 and M14 ("Monday 12:00hrs Friday")', o:'Sophie', w:'Could be read two ways. Noodles are a 2-day-buffer critical line, so these two stay provisional until the tab is rewritten.', n:()=>ROWS.filter(r=>['M10','M14'].includes(r.site)&&r.sup==='JFE'&&r.status==='ROUTE').length},
+  {q:'M20 tab: JFE and True World times', o:'Sophie', w:'Being updated (Michael, 07 Sep). JFE says Monday only, True World says Tue and Thu, neither has a cut-off.', n:()=>ROWS.filter(r=>r.site==='M20'&&r.status==='ROUTE').length},
+  {q:'Prawn card: 900 g at £13.16 vs Kobas 1 x 1800 g', o:'Ross', w:'Michael has the seafood-ramen prawn as 1 x 900 g, £13.16. Kobas Item 1936 still reads 1 x 1800 Grams. Until the card matches, kg in this page could be double the shelf.', n:()=>9},
+  {q:'Prawn is two live SKUs', o:'Ross', w:'Item 1936 carries the stock. Item 1978 Peeled Prawns is negative at most sites. One ingredient, two SKUs, so neither figure is complete.', n:()=>9},
+  {q:'Rump pack size in Kobas', o:'Ross', w:'Kobas default supply is a 1kg line with a 3kg alternative underneath. Stock only reads correctly once the two are merged, and the site orders in 3kg packs.', n:()=>9},
+  {q:'Head Chef and GM email addresses', o:'Sophie / HR', w:'Needed before anything can go to a kitchen. Phase 1 sends to Sophie and O only.', n:()=>9},
+  {q:'07:00 automation needs a live Kobas session', o:'Michael', w:'Kobas logs out after 60 minutes and only Michael can log in. The morning run needs Chrome open on his Mac with Kobas signed in, or the run reports the estate blind.', n:()=>189},
+  {q:'Safety buffer sign-off', o:'Sophie / Matt Polak', w:'2 days on broths, noodles and rice; 1 on proteins and sauces; 0.5 on tataki and Ebi. My reading of the criticality tiers, not signed off.', n:()=>21}
+];
+function renderGaps(){
+  document.getElementById('gaps').innerHTML = '<div class="tblwrap"><table><thead><tr><th>Open question</th>'+
+    '<th>Owner</th><th class="num">Lines blocked</th><th>Why it matters</th></tr></thead><tbody>'+
+    GAPS.map(g=>'<tr><td><b>'+g.q+'</b></td><td>'+g.o+'</td><td class="num">'+g.n()+'</td><td class="why">'+g.w+'</td></tr>').join('')+
+    '</tbody></table></div>';
+  document.getElementById('c-gaps').textContent = GAPS.length;
+}
+
+/* ---------------- shell ---------------- */
+function show(v){
+  ['today','sites','nudges','email','excep','gaps'].forEach(x=>
+    document.getElementById('v-'+x).classList.toggle('hide', x!==v));
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.view===v));
+}
+function renderAll(){
+  recompute(); renderGate(); renderSiteRag(); renderTiles(); renderSupCards(); renderActionTable();
+  renderChips(); renderSiteTable(); renderNudges(); renderMail(); renderExcep(); renderGaps();
+  document.getElementById('c-today').textContent = ROWS.filter(r=>RANK[r.status]<2).length;
+  document.getElementById('clk').textContent = NOW.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('today').textContent = NOW.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  const m = window.KEYLINE_DATA.meta;
+  document.getElementById('foot').innerHTML = 'Kobas position '+m.reportDate+' · '+m.importedLabel+
+    ' · '+ROWS.length+' lines across '+SITES.length+' sites · engine v'+m.version+
+    '. Cut-off countdowns run on your device clock, so this page re-reads itself as the day moves.';
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>show(t.dataset.view));
+renderAll();
+setInterval(renderAll, 60000);
+</script>
+
+
+</body></html>
