@@ -451,6 +451,34 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 #tab-influencer .methodrow { display: grid; grid-template-columns: 130px 1fr; gap: 6px 14px; font-size: 12px; color: #475569; line-height: 1.6; padding: 7px 0; border-bottom: 1px solid #F3F4F6; }
 #tab-influencer .methodrow b { color: #0F172A; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
 
+/* ═══ INFLUENCERS — week split + region split (7 Sept 2026) ═══
+   The bar is the only chrome; everything below it is the SAME renderer run over
+   fewer master rows, which is why the sliced view can never drift from the whole. */
+#tab-influencer .infbar { position: sticky; top: 38px; z-index: 19; display: flex; flex-wrap: wrap;
+  align-items: center; gap: 6px; background: #fff; border: 1px solid #E5E7EB; border-radius: 10px;
+  padding: 7px 9px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(16,24,40,.06); }
+#tab-influencer .infbar.scoped { border-color: #D9540E; box-shadow: 0 1px 3px rgba(217,84,14,.22); }
+#tab-influencer .infbar button { background: #F3F4F6; border: 1px solid transparent; font-family: inherit;
+  font-size: 11px; font-weight: 700; color: #475569; padding: 5px 10px; border-radius: 7px; cursor: pointer; white-space: nowrap; }
+#tab-influencer .infbar button:hover { background: #E5E7EB; }
+#tab-influencer .infbar button.on { background: #D9540E; color: #fff; }
+#tab-influencer .infbar button.on .c { opacity: .85; }
+#tab-influencer .infbar select { font-family: inherit; font-size: 11px; font-weight: 700; color: #475569;
+  padding: 5px 8px; border-radius: 7px; border: 1px solid #E5E7EB; background: #fff; cursor: pointer; max-width: 260px; }
+#tab-influencer .infbar .sep { width: 1px; height: 18px; background: #E5E7EB; margin: 0 3px; }
+#tab-influencer .infbar .state { font-size: 11px; color: #64748B; margin-left: auto; text-align: right; line-height: 1.4; }
+#tab-influencer .infbar .state b { color: #D9540E; }
+#tab-influencer .infbar .c { font-weight: 600; opacity: .65; margin-left: 5px; }
+#tab-influencer #infbody { transition: opacity .18s ease; }
+#tab-influencer #infbody.inf-flash { opacity: .35; }
+#tab-influencer .slicebadge { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: #92400E; background: #FEF3C7; border-radius: 5px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+#tab-influencer .slicenote { font-size: 12px; color: #475569; background: #F8FAFC; border: 1px dashed #CBD5E1;
+  border-radius: 8px; padding: 10px 12px; line-height: 1.55; margin-top: 6px; }
+#tab-influencer .emptyslice { font-size: 13px; color: #475569; background: #F8FAFC; border: 1px dashed #CBD5E1;
+  border-radius: 10px; padding: 26px 18px; text-align: center; line-height: 1.6; }
+#tab-influencer .emptyslice b { color: #0F172A; }
+
 /* ═══════════════ LOYALTY TAB (Ramen Royalty Control) ═══════════════
    1 Sept 2026. Ported from RR_Control_Page_2026-09-01.html into the Hub's
    own design system. EVERY rule is scoped under #tab-loyalty so no other
@@ -5382,6 +5410,249 @@ function dyiLoopStatus(IDATA, ledger, aggHiMs) {
   };
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   INFLUENCERS — WEEK SPLIT + REGION SPLIT            (7 Sept 2026)
+   ---------------------------------------------------------------------------
+   dyiBuildData() already rebuilds the whole tab from (master, ledger, agg), so
+   a slice is just THE SAME BUILD RUN OVER FEWER MASTER ROWS. That is why the
+   sliced view and the whole view can never disagree.
+
+   🔴 THE RULE THAT DECIDES WHAT CAN BE SPLIT
+   A content tag is dated by the MESSAGE that carried it and carries NO site.
+   A thread carries a SITE but no per-week content date. So pieces split by
+   WEEK (agg.wseries) or by REGION (thread tag columns) but NEVER BOTH — in any
+   region view the week table hides its piece columns and says why.
+   Panels computed server-side from DM_RAW (message totals, top creators,
+   evidence grades, collabs) carry neither a week nor a site, so in a slice they
+   are BADGED "all time · all regions" rather than silently recomputed.
+   hi_ms is deliberately NOT changed by a slice: chase and SLA clocks still run
+   from the last message in the whole data.
+   ═══════════════════════════════════════════════════════════════════════════ */
+var INF_SRC = null;            /* {master, ledger, agg} — the unsliced source  */
+var INF_HOST = null;           /* #infbody — replaced wholesale on every slice */
+var INF_PRISTINE = '';         /* the tab's static template, captured once     */
+var INF_W = '';                /* '' = all time, else ISO Monday of the week   */
+var INF_RG = '';               /* '' = all regions, else a region key          */
+var INF_KEYS_BOUND = false;
+var INF_WEEK_KEY = 'mr_hub_inf_week';
+var INF_REGION_KEY = 'mr_hub_inf_region';
+var INF_DAY = 86400000;
+
+/* AM clusters, keyword-matched on the loose `site` string.
+   Confirmed by Michael 4 Sept 2026: M21 Birmingham sits in North England &
+   Midlands, and "West End" is Glasgow (MAF1, Byres Road) — never London. */
+var INF_REGIONS = [
+  { k: 'scot', label: 'Scotland & Newcastle', words: ['edinburgh', 'fountainbridge', 'nicolson',
+    'leith', 'sjq', 'st james', 'glasgow', 'bath street', 'renfield', 'byres', 'west end',
+    'newcastle', 'aberdeen', 'metro', 'ikigai', 'south bridge'] },
+  { k: 'north', label: 'North England & Midlands', words: ['manchester', 'york street', 'leeds',
+    'leicester', 'sheffield', 'meadowhall', 'yorkshire', 'nottingham', 'birmingham', 'liverpool'] },
+  { k: 'south', label: 'South England', words: ['london', 'soho', 'shoreditch', 'lakeside',
+    'southampton', 'nori', 'o2', 'stratford', 'westfield'] }
+];
+
+function infRegionOf(site) {
+  var s = String(site || '').toLowerCase();
+  if (!s.trim()) return 'none';
+  for (var i = 0; i < INF_REGIONS.length; i++) {
+    var w = INF_REGIONS[i].words;
+    for (var j = 0; j < w.length; j++) if (s.indexOf(w[j]) > -1) return INF_REGIONS[i].k;
+  }
+  return 'none';
+}
+function infRegionLabel(k) {
+  if (!k) return 'All regions';
+  if (k === 'none') return 'Site not stated';
+  for (var i = 0; i < INF_REGIONS.length; i++) if (INF_REGIONS[i].k === k) return INF_REGIONS[i].label;
+  return k;
+}
+
+function infMs(s) {
+  if (!s) return null;
+  var t = Date.parse(String(s).replace(' ', 'T') + (String(s).length === 10 ? 'T00:00:00Z' : 'Z'));
+  return isNaN(t) ? null : t;
+}
+function infWeekStart(t) {
+  var d = new Date(t);
+  var dow = (d.getUTCDay() + 6) % 7;                       /* Monday = 0 */
+  var m = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - dow * INF_DAY;
+  return new Date(m).toISOString().slice(0, 10);
+}
+/* A thread belongs to a week if ANY of its lifecycle dates falls in it. */
+var INF_DATE_FIELDS = ['first_contact', 'invited', 'visit_date', 'first_content_at', 'last_message'];
+function infTouchesWeek(m, w) {
+  for (var i = 0; i < INF_DATE_FIELDS.length; i++) {
+    var t = infMs(m[INF_DATE_FIELDS[i]]);
+    if (t != null && infWeekStart(t) === w) return true;
+  }
+  return false;
+}
+function infWeekLabel(w) {
+  var a = new Date(w + 'T00:00:00Z'), b = new Date(a.getTime() + 6 * INF_DAY);
+  var f = function (d, withMonth) {
+    return d.getUTCDate() + (withMonth ? ' ' + d.toLocaleString('en-GB', { month: 'short', timeZone: 'UTC' }) : '');
+  };
+  var sameMonth = a.getUTCMonth() === b.getUTCMonth();
+  return f(a, !sameMonth) + ' – ' + f(b, true);
+}
+
+function infCounts(w) {
+  var c = { all: 0, none: 0 };
+  INF_REGIONS.forEach(function (r) { c[r.k] = 0; });
+  (INF_SRC.master || []).forEach(function (m) {
+    if (m.account_class !== 'EXTERNAL') return;
+    if (w && !infTouchesWeek(m, w)) return;
+    c.all++;
+    c[infRegionOf(m.site)]++;
+  });
+  return c;
+}
+
+/* Build the tab's data object for the current slice. */
+function infSlice(w, rg) {
+  var src = INF_SRC, agg = src.agg;
+  var rows = src.master, a = agg, sliced = !!(w || rg);
+
+  if (sliced) {
+    rows = src.master.filter(function (m) {
+      if (w && !infTouchesWeek(m, w)) return false;
+      if (rg && m.account_class === 'EXTERNAL' && infRegionOf(m.site) !== rg) return false;
+      return true;
+    });
+    a = {};
+    for (var k in agg) if (Object.prototype.hasOwnProperty.call(agg, k)) a[k] = agg[k];
+    /* Message-level totals carry neither a week nor a site — print nothing, never 0. */
+    ['messages', 'msgs_in', 'msgs_out', 'creators'].forEach(function (key) { a[key] = null; });
+    if (w) {
+      var ws = { story: {}, reel: {}, post: {} };
+      ['story', 'reel', 'post'].forEach(function (t) {
+        ws[t][w] = (agg.wseries && agg.wseries[t] && agg.wseries[t][w]) || 0;
+      });
+      a.weeks = [w];
+      a.wseries = ws;
+    }
+  }
+
+  var D = dyiBuildData(rows, src.ledger, a);
+  D.generated = 'refreshed live from the sheet';
+  D.loop = dyiLoopStatus(D, src.ledger, agg.hi_ms);   /* clocks always run from the WHOLE data */
+  D._sliced = sliced;
+  D._week = w || '';
+  D._region = rg || '';
+  D._noWeeks = !!rg;                                   /* week × region is not derivable */
+  return D;
+}
+
+function infBar(D) {
+  var bar = document.getElementById('infbar');
+  if (!bar) return;
+  bar.replaceChildren();
+  bar.classList.toggle('scoped', !!(INF_W || INF_RG));
+
+  var weeks = (INF_SRC.agg.weeks || []).slice().sort();
+  var mk = function (label, on, fn, count) {
+    var b = document.createElement('button');
+    b.textContent = label;
+    if (count != null) { var s = document.createElement('span'); s.className = 'c'; s.textContent = count; b.append(s); }
+    if (on) b.className = 'on';
+    b.onclick = fn;
+    return b;
+  };
+
+  bar.append(mk('All time', !INF_W, function () { infSetWeek(''); }));
+  if (weeks.length) {
+    var last = weeks[weeks.length - 1];
+    bar.append(mk('Latest week', INF_W === last, function () { infSetWeek(last); }));
+    var sel = document.createElement('select');
+    var o0 = document.createElement('option');
+    o0.value = ''; o0.textContent = 'Pick a week…';
+    sel.append(o0);
+    weeks.slice().reverse().forEach(function (w) {
+      var o = document.createElement('option');
+      var n = infCounts(w).all;
+      o.value = w;
+      o.textContent = infWeekLabel(w) + ' · ' + n + ' thread' + (n === 1 ? '' : 's') + (n ? '' : ' · quiet');
+      if (w === INF_W) o.selected = true;
+      sel.append(o);
+    });
+    sel.onchange = function () { infSetWeek(sel.value); };
+    bar.append(sel);
+  }
+
+  bar.append(Object.assign(document.createElement('span'), { className: 'sep' }));
+
+  var c = infCounts(INF_W);
+  bar.append(mk('All regions', !INF_RG, function () { infSetRegion(''); }, c.all));
+  INF_REGIONS.forEach(function (r) {
+    bar.append(mk(r.label, INF_RG === r.k, function () { infSetRegion(INF_RG === r.k ? '' : r.k); }, c[r.k]));
+  });
+  if (c.none) bar.append(mk('Site not stated', INF_RG === 'none', function () { infSetRegion(INF_RG === 'none' ? '' : 'none'); }, c.none));
+
+  var st = document.createElement('div');
+  st.className = 'state';
+  if (!INF_W && !INF_RG) {
+    st.innerHTML = 'Showing <b>everything</b> · ' + (INF_SRC.agg.weeks || []).length +
+      ' weeks · ← → step weeks, esc clears';
+  } else {
+    st.innerHTML = 'Scoped to <b>' + (INF_W ? infWeekLabel(INF_W) : 'all time') + '</b> · <b>' +
+      infRegionLabel(INF_RG) + '</b> · esc clears';
+  }
+  bar.append(st);
+}
+
+function infSetWeek(w) { INF_W = w || ''; try { localStorage.setItem(INF_WEEK_KEY, INF_W); } catch (e) {} infApply(true); }
+function infSetRegion(r) { INF_RG = r || ''; try { localStorage.setItem(INF_REGION_KEY, INF_RG); } catch (e) {} infApply(true); }
+function infStepWeek(dir) {
+  var weeks = (INF_SRC.agg.weeks || []).slice().sort();
+  if (!weeks.length) return;
+  var i = INF_W ? weeks.indexOf(INF_W) : weeks.length;
+  var n = i + dir;
+  if (n < 0) n = 0;
+  if (n >= weeks.length) { infSetWeek(''); return; }
+  infSetWeek(weeks[n]);
+}
+
+/* Never move the page. The panels flash instead, so the eye knows something changed. */
+function infApply(flash) {
+  var y = window.scrollY;
+  var D = infSlice(INF_W, INF_RG);
+  if (!D.totals.threads) {
+    INF_HOST.innerHTML = '<div class="emptyslice"><b>Nothing happened in this slice.</b><br>' +
+      'No influencer threads touch ' + (INF_W ? infWeekLabel(INF_W) : 'all time') +
+      ' in ' + infRegionLabel(INF_RG).toLowerCase() + '. That is the finding, not an error — ' +
+      'six empty tables would only look like a bug.</div>';
+  } else {
+    INF_HOST.innerHTML = INF_PRISTINE;
+    infRender(D);
+  }
+  infBar(D);
+  window.scrollTo(0, y);
+  if (flash && INF_HOST) {
+    INF_HOST.classList.add('inf-flash');
+    setTimeout(function () { INF_HOST.classList.remove('inf-flash'); }, 180);
+  }
+}
+
+function infBindKeys() {
+  if (INF_KEYS_BOUND) return;
+  INF_KEYS_BOUND = true;
+  document.addEventListener('keydown', function (e) {
+    var pane = document.getElementById('tab-influencer');
+    if (!pane || !pane.classList.contains('active') || !INF_SRC) return;
+    var t = e.target && e.target.tagName;
+    if (t === 'INPUT' || t === 'SELECT' || t === 'TEXTAREA') return;   /* never eat typing */
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'ArrowLeft') { e.preventDefault(); infStepWeek(-1); }
+    else if (e.key === 'ArrowRight') { e.preventDefault(); infStepWeek(1); }
+    else if (e.key === 'Escape' && (INF_W || INF_RG)) {
+      e.preventDefault();
+      INF_W = ''; INF_RG = '';
+      try { localStorage.setItem(INF_WEEK_KEY, ''); localStorage.setItem(INF_REGION_KEY, ''); } catch (err) {}
+      infApply(true);
+    }
+  });
+}
+
 async function loadInfluencer() {
   var d = await loadData();
   var pane = document.getElementById('tab-influencer');
@@ -5389,14 +5660,38 @@ async function loadInfluencer() {
     pane.insertAdjacentHTML('afterbegin', '<div class="err">Influencer data not in the payload yet — WebApi needs the DYI sheets (dyi_master / dyi_ledger / dyi_agg). Deploy the new WebApi version, then reload.</div>');
     return;
   }
-  var IDATA = dyiBuildData(d.dyi_master, d.dyi_ledger || [], d.dyi_agg);
-  IDATA.generated = 'refreshed live from the sheet';
-  IDATA.loop = dyiLoopStatus(IDATA, d.dyi_ledger || [], d.dyi_agg.hi_ms);
+  INF_SRC = { master: d.dyi_master, ledger: d.dyi_ledger || [], agg: d.dyi_agg };
+
+  /* Capture the static template ONCE, then own the pane: bar on top, body below.
+     Every slice replaces the body wholesale, so no listener or appended node can
+     ever stack up across renders. */
+  if (!INF_HOST) {
+    INF_PRISTINE = pane.innerHTML;
+    pane.replaceChildren();
+    var bar = document.createElement('div');
+    bar.id = 'infbar'; bar.className = 'infbar';
+    INF_HOST = document.createElement('div');
+    INF_HOST.id = 'infbody';
+    pane.append(bar, INF_HOST);
+  }
+  var weeksAvail = INF_SRC.agg.weeks || [];
+  try {
+    var sw = localStorage.getItem(INF_WEEK_KEY) || '';
+    INF_W = weeksAvail.indexOf(sw) > -1 ? sw : '';
+    var sr = localStorage.getItem(INF_REGION_KEY) || '';
+    INF_RG = (sr === 'none' || INF_REGIONS.some(function (r) { return r.k === sr; })) ? sr : '';
+  } catch (e) { INF_W = ''; INF_RG = ''; }
+
+  infBindKeys();
+  infApply(false);
+}
+
+function infRender(IDATA) {
 
 /* ─────────── helpers ─────────── */
 const $ = s => document.querySelector('#tab-influencer ' + s);
 const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
-const fmt = n => Number(n).toLocaleString('en-GB');
+const fmt = n => (n == null ? '—' : Number(n).toLocaleString('en-GB'));
 const T = IDATA.totals;
 
 /* ─────────── who is this person, honestly ───────────
@@ -5523,7 +5818,7 @@ const LOOP = IDATA.loop;
     ['Chases due now', fmt(T.chases), 'RED', 'someone has to send a message today'],
     ['Fed, nothing back', fmt(IDATA.noback_overdue), 'AMBER', 'visited over 7 days ago, still no post'],
     ['Invites sent', fmt(T.invited), '', T.inv_to_book + '% turn into a comped visit'],
-    ['Content pieces logged', fmt(T.tags), '', fmt(T.story) + ' story · ' + fmt(T.reel) + ' reel · ' + fmt(T.post) + ' post'],
+    ['Content pieces logged', fmt(T.tags), '', fmt(T.story) + ' story · ' + fmt(T.reel) + ' reel · ' + fmt(T.post) + ' post' + (IDATA._sliced ? ' · all time, all regions' : '')],
     ['No deliverable agreed', T.none_stated_pct + '%', 'AMBER', fmt(T.none_stated) + ' invites asked for nothing specific'],
   ];
   for (const [l, v, rag, d] of cards) {
@@ -5664,7 +5959,9 @@ renderChase();
 
 /* ═══════════ 6. WHAT WE GOT BACK ═══════════ */
 {
-  $('#mixCnt').textContent = fmt(T.tags) + ' PIECES · ' + fmt(T.creators) + ' CREATORS';
+  $('#mixCnt').textContent = IDATA._sliced
+    ? fmt(T.tags) + ' PIECES · ALL TIME, ALL REGIONS'
+    : fmt(T.tags) + ' PIECES · ' + fmt(T.creators) + ' CREATORS';
   $('#mixLede').innerHTML = 'Of the <b>' + IDATA.mix.n + ' comped visits</b>, this is what actually appeared. '
     + 'Just over half produce nothing at all, which is the number worth arguing about. '
     + 'Collab is <b>inferred from wording</b>, never proven, because Instagram does not export a co-author field.';
@@ -5681,17 +5978,32 @@ renderChase();
     { h: 'Share', num: true, sk: 'pct', cell: r => fillCell(r.pct, 100, { colour: r.c, text: r.pct + '%' }) },
     { h: '', f: r => r.note },
   ], MIXROWS);
-  const wk = IDATA.weeks.map(w => {
-    const s = IDATA.wseries.story[w] || 0, r = IDATA.wseries.reel[w] || 0, p = IDATA.wseries.post[w] || 0;
-    const d = new Date(w);
-    return { w, lab: d.getDate() + ' ' + d.toLocaleString('en-GB', { month: 'short' }), s, r, p, n: s + r + p };
-  }).reverse();
-  const wmax = Math.max(...wk.map(x => x.n), 1);
-  build('#weekTable', [
-    { h: 'Week of', k: 'lab' },
-    { h: 'Story', k: 's', num: true }, { h: 'Reel', k: 'r', num: true }, { h: 'Post', k: 'p', num: true },
-    { h: 'Total', num: true, sk: 'n', cell: x => fillCell(x.n, wmax, { colour: '#DBEAFE' }) },
-  ], wk, { sortable: true });
+  /* A content tag is dated by the MESSAGE that carried it and carries no site,
+     while a thread carries a site but no per-week content date. So pieces split
+     by week OR by region, never both — say so rather than inventing a number. */
+  if (IDATA._noWeeks) {
+    const wt = $('#weekTable');
+    wt.replaceChildren();
+    const nt = el('div', 'slicenote');
+    nt.innerHTML = '<b>Pieces per week are not shown for a single region.</b> A content tag is dated by the '
+      + 'message that carried it and carries no site; a thread carries a site but no per-week content date. '
+      + 'Splitting by week <i>and</i> region at once would mean inventing the overlap. '
+      + 'Clear the region to read the weekly series, or keep the region and read the tables above.';
+    wt.parentNode.insertBefore(nt, wt);
+  } else {
+    const wk = IDATA.weeks.map(w => {
+      const s = IDATA.wseries.story[w] || 0, r = IDATA.wseries.reel[w] || 0, p = IDATA.wseries.post[w] || 0;
+      const d = new Date(w);
+      return { w, lab: d.getDate() + ' ' + d.toLocaleString('en-GB', { month: 'short' }), s, r, p, n: s + r + p };
+    }).reverse();
+    const wmax = Math.max(...wk.map(x => x.n), 1);
+    build('#weekTable', [
+      { h: 'Week of', k: 'lab' },
+      { h: 'Story', k: 's', num: true }, { h: 'Reel', k: 'r', num: true }, { h: 'Post', k: 'p', num: true },
+      { h: 'Total', num: true, sk: 'n', cell: x => fillCell(x.n, wmax, { colour: '#DBEAFE' }) },
+    ], wk, { sortable: true });
+  }
+  if (IDATA._sliced) { const bd = el('span', 'slicebadge', 'all time · all regions'); $('#mixCnt').append(bd); }
   const tmax = Math.max(...IDATA.top.map(t => t.n));
   build('#topTable', [
     { h: 'Creator', f: t => '@' + t.handle },
@@ -5708,6 +6020,7 @@ renderChase();
 /* ═══════════ 7. WHAT THIS CAN PROVE ═══════════ */
 {
   $('#pfCnt').textContent = fmt(T.story) + ' PROOF · ' + fmt(T.reel + T.post) + ' INFERRED';
+  if (IDATA._sliced) $('#pfCnt').append(el('span', 'slicebadge', 'all time · all regions'));
   $('#pfLede').innerHTML = 'Before anyone quotes these numbers in a board pack: <b>only story tags are proof.</b> '
     + 'A story tag arrives in our DMs as a notification, so the message <i>is</i> the evidence. '
     + 'Reels and posts are things creators chose to share with us, so the caption is all we have. '
@@ -5827,7 +6140,10 @@ document.querySelectorAll('#tab-influencer h2.fold').forEach(h => {
 });
 
 $('#inf-foot').textContent = 'Influencer pipeline · data ' + IDATA.window[0] + ' to ' + IDATA.window[1]
-  + ' · ' + IDATA.generated + ' · source DYI_INFLUENCER_MASTER (' + fmt(T.threads) + ' external threads, ' + fmt(T.messages) + ' messages)';
+  + ' · ' + IDATA.generated + ' · source DYI_INFLUENCER_MASTER (' + fmt(T.threads) + ' external threads'
+  + (IDATA._sliced ? '' : ', ' + fmt(T.messages) + ' messages') + ')'
+  + (IDATA._sliced ? ' · SCOPED to ' + (IDATA._week ? infWeekLabel(IDATA._week) : 'all time')
+      + ' · ' + infRegionLabel(IDATA._region) + '. Chase and SLA clocks still run from the last message in the whole data.' : '');
 
 }
 
