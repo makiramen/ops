@@ -428,6 +428,15 @@ function nextDeliveries(route, now){
   };
 }
 
+/* 8-month average daily usage per site and line, in the line's keyline unit per day (cases, packs, kg).
+   Source: Kobas Stock Ingredient Movements, 1 Jan to 16 Aug 2026 (last two weeks of August excluded, Sophie's
+   definition), one report per site per two-month block, Units Used x measure per unit summed across pack rows and
+   divided by the keyline pack. Pulled 07 Sep 2026. Trading days per site in USAGE8M_DAYS. A missing key falls
+   back to the usage Kobas implies from the current position. */
+const USAGE8M = {"M9":{"tonkotsu":1.782,"chkbroth":0.703,"karaage":2.933,"katsu":0.571,"pbsliced":0.643,"pbdiced":0.145,"noodle":5.652,"rump":2.042,"salmon":8.376,"prawn":2.032,"ebi":0.222,"chkfillet":0.208,"soba":1.14,"teriyaki":0.91,"tataki":1.15,"chkpaste":1.516,"hell":1.191,"rice":0.815,"squid":3.231,"vegan":0.035,"gyoza":0.656},"M10":{"tonkotsu":0.927,"chkbroth":0.305,"karaage":1.765,"katsu":0.305,"pbsliced":0.377,"pbdiced":0.106,"noodle":2.934,"rump":1.013,"salmon":3.631,"prawn":0.601,"ebi":0.112,"chkfillet":0.089,"soba":0.567,"teriyaki":0.522,"tataki":0.547,"chkpaste":0.85,"hell":0.628,"rice":0.447,"squid":1.36,"vegan":0.019,"gyoza":0.353},"M11":{"tonkotsu":0.463,"chkbroth":0.298,"karaage":1.287,"katsu":0.251,"pbsliced":0.164,"pbdiced":0.041,"noodle":1.788,"rump":0.736,"salmon":3.046,"prawn":0.826,"ebi":0.105,"chkfillet":0.107,"soba":0.528,"teriyaki":0.465,"tataki":0.394,"chkpaste":0.562,"hell":0.371,"rice":0.49,"squid":1.577,"vegan":0.012,"gyoza":0.295},"M14":{"tonkotsu":0.816,"chkbroth":0.564,"karaage":2.207,"katsu":0.355,"pbsliced":0.279,"pbdiced":0.075,"noodle":3.019,"rump":1.463,"salmon":4.382,"prawn":1.092,"ebi":0.134,"chkfillet":0.16,"soba":1.085,"teriyaki":0.71,"tataki":0.781,"chkpaste":0.83,"hell":0.513,"rice":0.469,"squid":2.923,"vegan":0.012,"gyoza":0.493},"M16":{"tonkotsu":0.882,"chkbroth":0.517,"karaage":1.804,"katsu":0.316,"pbsliced":0.343,"pbdiced":0.097,"noodle":3.198,"rump":1.121,"salmon":3.789,"prawn":0.909,"ebi":0.123,"chkfillet":0.15,"soba":0.793,"teriyaki":0.585,"tataki":0.616,"chkpaste":0.831,"hell":0.659,"rice":0.477,"squid":2.204,"vegan":0.034,"gyoza":0.415},"M17":{"tonkotsu":0.517,"chkbroth":0.5,"karaage":1.81,"katsu":0.276,"pbsliced":0.188,"pbdiced":0.057,"noodle":2.108,"rump":1.008,"salmon":3.795,"prawn":1.567,"ebi":0.13,"chkfillet":0.133,"soba":0.839,"teriyaki":0.574,"tataki":0.438,"chkpaste":0.582,"hell":0.471,"rice":0.324,"squid":4.135,"vegan":0.009,"gyoza":0.356},"M18":{"tonkotsu":1.024,"chkbroth":0.642,"karaage":1.372,"katsu":0.252,"pbsliced":0.357,"pbdiced":0.139,"noodle":3.419,"rump":1.324,"salmon":4.053,"prawn":1.445,"ebi":0.102,"chkfillet":0.143,"soba":0.514,"teriyaki":0.321,"tataki":0.665,"chkpaste":0.733,"hell":0.729,"rice":0.29,"squid":2.594,"vegan":0.019,"gyoza":0.315},"M19":{"tonkotsu":0.717,"chkbroth":0.372,"karaage":1.077,"katsu":0.283,"pbsliced":0.21,"pbdiced":0.073,"noodle":1.947,"rump":1.916,"salmon":3.936,"prawn":1.265,"ebi":0.101,"chkfillet":0.083,"soba":0.535,"teriyaki":0.31,"tataki":0.556,"chkpaste":0.262,"hell":0.394,"rice":0.259,"squid":2.682,"vegan":0.006,"gyoza":0.261},"M20":{"tonkotsu":1.275,"chkbroth":0.901,"karaage":2.13,"katsu":0.413,"pbsliced":0.403,"pbdiced":0.099,"noodle":3.864,"rump":2.074,"salmon":4.854,"prawn":2.075,"ebi":0.147,"chkfillet":0.164,"soba":1.073,"teriyaki":0.524,"tataki":0.964,"chkpaste":0.792,"hell":0.671,"rice":0.386,"squid":5.454,"vegan":0.009,"gyoza":0.463}};
+const USAGE8M_DAYS = {"M9":228,"M10":228,"M11":228,"M14":228,"M16":228,"M17":192,"M18":164,"M19":51,"M20":45};
+const USAGE8M_META = {"from":"2026-01-01","to":"2026-08-16","pulled":"2026-09-07","firstTradingDay":{"M17":"2026-02-06","M18":"2026-03-06","M19":"2026-06-27","M20":"2026-07-03"},"source":"Kobas Stock Ingredient Movements, one report per site per two-month block (Jan-Feb, Mar-Apr, May-Jun, Jul to 16 Aug); Units Used x measure per unit summed across pack rows, divided by the keyline pack; trading days = days with sales > 0 in Mona Lisa"};
+
 /* ---------------- the status engine ---------------- */
 function evaluate(line, now){
   const item = ITEMS.find(i=>i.id===line.item);
@@ -435,9 +444,13 @@ function evaluate(line, now){
   const route= routeFor(line.site, sup);
   const del  = nextDeliveries(route, now);
   const B    = (line.bufferOverride!=null) ? line.bufferOverride : item.buffer;
-  const D    = line.cover;
+  /* Days left: stock / 8-month average daily usage where the site has history (USAGE8M),
+     otherwise the days remaining Kobas reports. Kobas's own figure is kept as coverKobas. */
+  const hist = (USAGE8M[line.site]||{})[line.item];
+  const Dk   = line.cover;
+  const D    = (hist>0 && line.stock!=null && line.stock>=0) ? line.stock/hist : Dk;
   const site = window.KEYLINE_DATA.siteMeta[line.site] || {};
-  const out  = {...line, item, sup, route, del, B, stale:!!site.stale, assumed:!!(route&&route.assumed)};
+  const out  = {...line, item, sup, route, del, B, cover:D, coverKobas:Dk, usageHist:(hist>0?hist:null), stale:!!site.stale, assumed:!!(route&&route.assumed)};
 
   if(line.stock < 0 || line.negative){
     out.status='CHECK';
@@ -449,11 +462,11 @@ function evaluate(line, now){
   }
   if(line.note && line.stock>=0 && D<=90){ out.noteExtra=line.note; }
   if(line.missing){ out.status='DATA'; out.why='Not returned by the Kobas report for this site.'; return out; }
-  if(D > 90){ out.status='DATA'; out.why=Math.round(D)+' days of cover is not credible. Usage or unit of measure is wrong, not the stock.'; return out; }
+  if(D > 90){ out.status='DATA'; out.why=Math.round(D)+' days of stock is not credible. Usage or unit of measure is wrong, not the stock.'; return out; }
 
   if(!del){
     out.status='ROUTE';
-    out.why=(route.note||'Supplier route unverified')+'. Cover is '+fmtDays(D)+'. Nothing is instructed until the cut-off is confirmed.';
+    out.why=(route.note||'Supplier route unverified')+'. '+fmtDays(D)+' left. Nothing is instructed until the cut-off is confirmed.';
     out.provisional=true;
     out.provStatus = D < 3 ? 'would be URGENT' : (D < 7 ? 'would be ORDER TODAY' : 'looks fine');
     return out;
@@ -461,29 +474,29 @@ function evaluate(line, now){
 
   const threshold = del.Rskip + B;
   out.threshold = threshold; out.Rnow = del.Rnow; out.Rskip = del.Rskip;
-  /* Bottom Line (Sophie's method): daily usage x delivery coverage days, rounded UP to a whole unit.
-     Usage here is the usage Kobas implies from the current position (stock / days cover);
-     swap for the 8-month average once that pull exists. Order = Bottom Line - Stock. */
-  const usage = (line.stock > 0 && D > 0) ? line.stock / D : null;
-  out.usage = usage;
+  /* Bottom Line (Sophie's method): average daily usage x delivery coverage days, rounded UP to a whole unit.
+     Usage is the 8-month Kobas average (USAGE8M, 1 Jan to 16 Aug 2026). Where a site has no history it falls
+     back to the usage Kobas implies from the current position (stock / days remaining). Order = Bottom Line - Stock. */
+  const usage = (hist>0) ? hist : ((line.stock > 0 && Dk > 0) ? line.stock / Dk : null);
+  out.usage = usage; out.usageSource = (hist>0) ? '8-month average' : 'implied from the Kobas position';
   out.bottomLine = usage!=null ? Math.ceil(usage * threshold - 1e-9) : null;
   out.orderQty = out.bottomLine!=null ? Math.max(0, out.bottomLine - Math.floor(line.stock)) : null;
 
   if(D < del.Rnow){
     out.status='URGENT';
-    out.why='Cover '+fmtDays(D)+'. The earliest possible delivery is '+fmtD(del.next.del)+', '+del.Rnow+' days away, so routine ordering will not reach you in time. Order at the next cut-off ('+fmtD(del.next.cut)+' '+del.next.cutTime+') AND contact your AM now to arrange a transfer, approved local sourcing or menu mitigation.';
+    out.why=fmtDays(D)+' left. The earliest possible delivery is '+fmtD(del.next.del)+', '+del.Rnow+' days away, so routine ordering will not reach you in time. Order at the next cut-off ('+fmtD(del.next.cut)+' '+del.next.cutTime+') AND contact your AM now to arrange a transfer, approved local sourcing or menu mitigation.';
   } else if(del.cutIsToday && D < threshold){
     out.status='ORDER';
-    out.why='Cover '+fmtDays(D)+'. Next reachable delivery '+fmtD(del.next.del)+' ('+del.Rnow+' days). Miss today and the next is '+del.Rskip+' days out, against a '+B+' day safety buffer. Order by '+del.next.cutTime+' today.';
+    out.why=fmtDays(D)+' left. Next reachable delivery '+fmtD(del.next.del)+' ('+del.Rnow+' days). Miss today and the next is '+del.Rskip+' days out, against a '+B+' day safety buffer. Order by '+del.next.cutTime+' today.';
   } else if(D < threshold){
     out.status='WATCH';
-    out.why='Cover '+fmtDays(D)+'. You do not need to order today. Order by '+fmtD(del.next.cut)+' '+del.next.cutTime+' for delivery '+fmtD(del.next.del)+'.';
+    out.why=fmtDays(D)+' left. You do not need to order today. Order by '+fmtD(del.next.cut)+' '+del.next.cutTime+' for delivery '+fmtD(del.next.del)+'.';
   } else if(D > 21){
     out.status='OVER';
-    out.why=Math.round(D)+' days of cover. Stop ordering and propose a transfer to a tighter site.';
+    out.why=Math.round(D)+' days of stock. Stop ordering and propose a transfer to a tighter site.';
   } else {
     out.status='OK';
-    out.why='Cover '+fmtDays(D)+' against a bottom line of '+(out.bottomLine!=null? fmtQty(out.bottomLine,item) : threshold.toFixed(1)+' days')+'.';
+    out.why=fmtDays(D)+' left against a bottom line of '+(out.bottomLine!=null? fmtQty(out.bottomLine,item) : threshold.toFixed(1)+' days')+'.';
   }
   if(out.noteExtra) out.why += ' ' + out.noteExtra;
   return out;
@@ -507,7 +520,7 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <div>
       <span class="badge">Maki &amp; Ramen · Executive Chef</span>
       <h1>Keyline Control</h1>
-      <p class="sub">21 keylines &times; 9 England sites. Cover against the next reachable delivery, not a flat rule. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
+      <p class="sub">21 keylines &times; 9 England sites. Days of stock against the next reachable delivery, not a flat rule. Usage is the 8-month Kobas average. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
     </div>
     <div class="clock"><b id="clk">--:--</b><span id="today">-</span></div>
   </div>
@@ -531,7 +544,7 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <div class="grid" id="supcards"></div>
     <h2>Every line that needs a decision</h2>
     <div class="tblwrap"><table id="t-action"><thead><tr>
-      <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Cover</th>
+      <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Days left</th>
       <th class="num">Bottom line</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
   </section>
 
@@ -539,7 +552,7 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <div class="chips" id="sitechips"></div>
     <div class="chips" id="filterchips"></div>
     <div class="tblwrap"><table id="t-site"><thead><tr>
-      <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Cover</th>
+      <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Days left</th>
       <th class="num">Bottom line</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
   </section>
 
@@ -715,8 +728,8 @@ function rowHtml(r, withSite){
   return '<tr><td>'+(withSite? r.site+' '+siteName(r.site) : r.site)+stale+'</td>'+
     '<td><b>'+r.item.name+'</b><div class="why">'+r.why+'</div>'+prov+'</td>'+
     '<td class="num">'+fmtQty(r.stock, r.item)+'</td>'+
-    '<td class="num">'+(r.cover==null?'-':(r.cover<10? r.cover.toFixed(1): Math.round(r.cover)))+'</td>'+
-    '<td class="num" title="Implied daily usage x '+(r.threshold!=null? r.threshold.toFixed(1):'?')+' cover days, rounded up">'+(r.bottomLine!=null? fmtQty(r.bottomLine, r.item) : '-')+'</td>'+
+    '<td class="num"'+(r.usageHist!=null && r.coverKobas!=null ? ' title="Stock / 8-month average daily usage. Kobas itself reports '+fmtDays(r.coverKobas)+' remaining."' : '')+'>'+(r.cover==null?'-':(r.cover<10? r.cover.toFixed(1): Math.round(r.cover)))+'</td>'+
+    '<td class="num" title="'+(r.usage!=null ? (Math.round(r.usage*100)/100)+' '+r.item.unit+' a day ('+r.usageSource+') x ' : '')+(r.threshold!=null? r.threshold.toFixed(1):'?')+' delivery days, rounded up">'+(r.bottomLine!=null? fmtQty(r.bottomLine, r.item) : '-')+'</td>'+
     '<td class="num">'+(r.orderQty!=null ? (r.orderQty>0 ? '<b class="oq">'+fmtQty(r.orderQty, r.item)+'</b>' : '<span style="color:var(--muted)">0</span>') : '-')+'</td>'+
     '<td>'+pill+'</td><td>'+r.sup+asm+'</td></tr>';
 }
@@ -769,7 +782,7 @@ function nudges(){
   list.push({
     at:'06:45', label:'daily',
     title:'Kobas import',
-    body:'Nine Stock Current Position exports pulled and merged. Alternative pack rows fold into the default Item ID: stock sums, usage comes from the default row only.',
+    body:'Nine Stock Current Position exports pulled and merged. Alternative pack rows fold into the default Item ID: stock sums. Daily usage is the 8-month Kobas average (Jan to mid-Aug 2026), not the position report.',
     to:'System', 
     state: window.KEYLINE_DATA.meta.source==='kobas-live' ? 'fired' : 'blocked',
     stateNote: window.KEYLINE_DATA.meta.source==='kobas-live' ? null : 'No live Kobas connection yet'
@@ -880,7 +893,7 @@ function renderMail(){
       const first = bySup[sup][0];
       body += '<li><b>'+sup+'</b>'+(first.del? ': order by '+fmtD(first.del.next.cut)+' '+first.del.next.cutTime+(first.assumed?' (time assumed)':'')+', delivery '+fmtD(first.del.next.del) : ': cut-off not confirmed')+
         (first.route && first.route.min ? ', £'+first.route.min+' minimum':'')+'<ul>'+
-        bySup[sup].map(r=>'<li>'+r.item.name+': '+fmtQty(r.stock,r.item)+' in stock, '+fmtDays(r.cover)+(r.orderQty!=null && r.orderQty>0 ? ', <b>order '+fmtQty(r.orderQty,r.item)+'</b> (bottom line '+fmtQty(r.bottomLine,r.item)+')' : '')+
+        bySup[sup].map(r=>'<li>'+r.item.name+': '+fmtQty(r.stock,r.item)+' in stock, '+fmtDays(r.cover)+' left'+(r.orderQty!=null && r.orderQty>0 ? ', <b>order '+fmtQty(r.orderQty,r.item)+'</b> (bottom line '+fmtQty(r.bottomLine,r.item)+')' : '')+
           (r.status==='URGENT'? '. <b>URGENT, contact your AM as well as ordering</b>':'')+'</li>').join('')+'</ul></li>';
     });
     body += '</ul>';
@@ -902,15 +915,15 @@ function renderMail(){
 function renderExcep(){
   const groups = [
     ['CHECK','Negative or impossible stock','A count, not an order. Kobas and the shelf disagree.'],
-    ['DATA','Data check','Cover figures that are not credible, or lines the report did not return.'],
-    ['OVER','Overstocked','More than 21 days of cover. Propose a transfer.']
+    ['DATA','Data check','Days-left figures that are not credible, or lines the report did not return.'],
+    ['OVER','Overstocked','More than 21 days of stock. Propose a transfer.']
   ];
   const html = groups.map(([k,t,d])=>{
     const rs = ROWS.filter(r=>r.status===k);
     if(!rs.length) return '';
     return '<h3>'+t+' <span class="pill p-'+k+'">'+rs.length+'</span></h3><p class="note">'+d+'</p>'+
       '<div class="tblwrap" style="margin:10px 0 22px"><table><thead><tr><th>Site</th><th>Item</th>'+
-      '<th class="num">Stock</th><th class="num">Cover</th><th>What to do</th></tr></thead><tbody>'+
+      '<th class="num">Stock</th><th class="num">Days left</th><th>What to do</th></tr></thead><tbody>'+
       rs.map(r=>'<tr><td>'+r.site+'</td><td>'+r.item.name+'</td><td class="num">'+fmtQty(r.stock,r.item)+
         '</td><td class="num">'+(r.cover==null?'-':Math.round(r.cover))+'</td><td class="why">'+r.why+'</td></tr>').join('')+
       '</tbody></table></div>';
