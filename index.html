@@ -1835,8 +1835,8 @@
         document.querySelectorAll('.tabbtn[data-tab="keyline"]').forEach(function(b){ b.addEventListener('click', load); });
         fetch('keyline.html',{cache:'no-store'}).then(function(r){return r.text();}).then(function(h){
           var m=h.match(/window\.KEYLINE_DATA = (\{[\s\S]*?\});\n<\/script>/); if(!m) return;
-          var d=JSON.parse(m[1]); var red={}; d.lines.forEach(function(l){ if(l.negative||(l.stock!=null&&l.stock<0)||(l.cover!=null&&l.cover<3)) red[l.site]=1; });
-          var n=Object.keys(red).length; var b=document.getElementById('tb-keyline'); if(b&&n){ b.textContent=n; b.style.display=''; }
+          var d=JSON.parse(m[1]); var n=(d.meta.redSites||[]).length;   // red-light sites stamped at build time by render.py
+          var b=document.getElementById('tb-keyline'); if(b&&n){ b.textContent=n; b.title='Red light: '+d.meta.redSites.join(', '); b.style.display=''; }
         }).catch(function(){});
       })();
     </script>
