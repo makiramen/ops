@@ -266,76 +266,80 @@ const SUPPLIER_OVERRIDE = { 'M17|rump':'Brakes', 'M18|rump':'Brakes', 'M19|rump'
 const UNMAPPED = [];
 
 /* Supplier routes, read from the delivery schedule sheet
-   (1EtSW6mw9Zl3dEG9idM7F_C1JP0deHBZYobpohxPFDr8) on 07 Sep 2026, one tab per site.
-   verified:false = the tab gives no usable cut-off. assumed:true = the tab gives
-   delivery days but no time, so the time is borrowed from the nearest tab that
-   states one (True World 21:00 from M21/Aberdeen; Dunsters 14:00 from M21;
-   Brakes 12:00 stated on the London tabs). Assumed lines get a real status
-   plus a CUT-OFF ASSUMED flag until Sophie confirms the time. */
+   (1EtSW6mw9Zl3dEG9idM7F_C1JP0deHBZYobpohxPFDr8), re-read 07 Sep 2026 (evening)
+   after Sophie's update: every England site tab now states delivery days AND a
+   cut-off time for all five keyline suppliers, so nothing is assumed any more.
+   True World: England is 20:00 the day before (Mon-Sat next day at M9, M17, M18,
+   M19; Mon/Wed/Fri at M10, M11, M14, M16; Tue/Thu at M20). Dunsters and Brakes:
+   14:00 business day before (M20 Brakes) or 12:00 the day before (London Brakes).
+   verified:false is kept only for a tab that gives no usable cut-off. */
 const H_MWF16 = [{day:5,time:'16:00',dev:1},{day:2,time:'16:00',dev:3},{day:4,time:'16:00',dev:5}];
 const H_WF12  = [{day:1,time:'12:00',dev:3},{day:3,time:'12:00',dev:5}];
 const H_TF14  = [{day:1,time:'14:00',dev:2},{day:4,time:'14:00',dev:5}];
 const JFE_MWF = [{day:5,time:'12:00',dev:1},{day:2,time:'12:00',dev:3},{day:4,time:'12:00',dev:5}];
 const JFE_TF  = [{day:1,time:'12:00',dev:2},{day:4,time:'12:00',dev:5}];
 const JFE_WF  = [{day:2,time:'12:00',dev:3},{day:4,time:'12:00',dev:5}];
-const BRAKES  = {verified:true, assumed:false, cutoffs:JFE_MWF};
-const DUNST   = {verified:true, assumed:true, cutoffs:[{day:5,time:'14:00',dev:1},{day:2,time:'14:00',dev:3},{day:4,time:'14:00',dev:5}]};
-const TWF_NEXT= {verified:true, assumed:true, rolling:true, rollingTime:'21:00', noDeliver:[0], anyDay:true};
+const JFE_MON_FRI12 = [{day:5,time:'12:00',dev:1}];                       // Monday delivery, Friday 12:00 cut-off (M10, M14)
+const BRAKES  = {verified:true, assumed:false, cutoffs:JFE_MWF};             // London: Mon/Wed/Fri, 12:00 the day before
+const BRAKES_M20 = {verified:true, assumed:false, cutoffs:[{day:5,time:'14:00',dev:1},{day:2,time:'14:00',dev:3},{day:4,time:'14:00',dev:5}]};
+const DUNST   = {verified:true, assumed:false, cutoffs:[{day:5,time:'14:00',dev:1},{day:2,time:'14:00',dev:3},{day:4,time:'14:00',dev:5}]};
+const TWF_NEXT= {verified:true, assumed:false, rolling:true, rollingTime:'20:00', noDeliver:[0], anyDay:true};   // Mon-Sat next day, 20:00 cut-off
+const TWF_MWF = {verified:true, assumed:false, cutoffs:[{day:0,time:'20:00',dev:1},{day:2,time:'20:00',dev:3},{day:4,time:'20:00',dev:5}]};   // Mon/Wed/Fri, 20:00 the day before
 const ROUTES = [
   /* M9 Manchester, tab MA313A */
   {site:'M9',  sup:'Harro', verified:true, min:350, cutoffs:H_WF12},
   {site:'M9',  sup:'JFE',   verified:true, min:null, cutoffs:JFE_WF},
   {site:'M9',  sup:'JFC',   verified:true, min:200, cutoffs:[{day:5,time:'12:00',dev:3}]},
   {site:'M9',  sup:'Dunster Farm', ...DUNST},
-  {site:'M9',  sup:'True World', ...TWF_NEXT},
+  {site:'M9',  sup:'True World', min:200, ...TWF_NEXT},
   /* M10 Leeds, tab MAK7A */
   {site:'M10', sup:'Harro', verified:true, min:350, cutoffs:H_WF12},
-  {site:'M10', sup:'JFE',   verified:false, note:'Tab reads "Monday 12:00hrs Friday", ambiguous'},
+  {site:'M10', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MON_FRI12},
   {site:'M10', sup:'JFC',   verified:true, min:200, cutoffs:[{day:2,time:'10:00',dev:5}]},
   {site:'M10', sup:'Dunster Farm', ...DUNST},
-  {site:'M10', sup:'True World', ...TWF_NEXT},
+  {site:'M10', sup:'True World', min:200, ...TWF_MWF},
   /* M11 Leicester, tab MA314 */
   {site:'M11', sup:'Harro', verified:true, min:350, cutoffs:H_TF14},
   {site:'M11', sup:'JFE',   verified:true, min:null, cutoffs:JFE_TF},
   {site:'M11', sup:'JFC',   verified:true, min:200, cutoffs:[{day:2,time:'10:00',dev:5}]},
   {site:'M11', sup:'Dunster Farm', ...DUNST},
-  {site:'M11', sup:'True World', ...TWF_NEXT},
+  {site:'M11', sup:'True World', min:200, ...TWF_MWF},
   /* M14 Meadowhall, tab MA317 */
   {site:'M14', sup:'Harro', verified:true, min:350, cutoffs:[{day:4,time:'12:00',dev:1},{day:1,time:'12:00',dev:3},{day:3,time:'12:00',dev:5}]},
-  {site:'M14', sup:'JFE',   verified:false, note:'Tab reads "Monday 12:00hrs Friday", ambiguous'},
+  {site:'M14', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MON_FRI12},
   {site:'M14', sup:'JFC',   verified:true, min:200, cutoffs:[{day:5,time:'12:00',dev:3}]},
   {site:'M14', sup:'Dunster Farm', ...DUNST},
-  {site:'M14', sup:'True World', ...TWF_NEXT},
+  {site:'M14', sup:'True World', min:200, ...TWF_MWF},
   /* M16 Nottingham, tab MA319 */
   {site:'M16', sup:'Harro', verified:true, min:350, cutoffs:H_TF14},
   {site:'M16', sup:'JFE',   verified:true, min:null, cutoffs:JFE_TF},
   {site:'M16', sup:'JFC',   verified:true, min:200, cutoffs:[{day:2,time:'12:00',dev:5}]},
   {site:'M16', sup:'Dunster Farm', ...DUNST},
-  {site:'M16', sup:'True World', ...TWF_NEXT},
+  {site:'M16', sup:'True World', min:200, ...TWF_MWF},
   /* M17 Lakeside, tab MA320 */
   {site:'M17', sup:'Harro', verified:true, min:200, cutoffs:[{day:5,time:'16:00',dev:1},{day:2,time:'16:00',dev:3},{day:3,time:'16:00',dev:4}]},
   {site:'M17', sup:'JFE',   verified:true, min:null, cutoffs:[{day:5,time:'12:00',dev:1},{day:2,time:'12:00',dev:3}]},
   {site:'M17', sup:'JFC',   verified:true, min:200, cutoffs:[{day:5,time:'12:00',dev:1},{day:3,time:'12:00',dev:4}]},
   {site:'M17', sup:'Brakes', ...BRAKES},
-  {site:'M17', sup:'True World', ...TWF_NEXT},
+  {site:'M17', sup:'True World', min:100, ...TWF_NEXT},
   /* M18 Soho, tab MA321 */
   {site:'M18', sup:'Harro', verified:true, min:200, cutoffs:H_MWF16},
   {site:'M18', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MWF},
   {site:'M18', sup:'JFC',   verified:true, min:100, rolling:true, rollingTime:'12:00', noDeliver:[3]},
   {site:'M18', sup:'Brakes', ...BRAKES},
-  {site:'M18', sup:'True World', ...TWF_NEXT},
+  {site:'M18', sup:'True World', min:null, ...TWF_NEXT},
   /* M19 Shoreditch, tab MA323 */
   {site:'M19', sup:'Harro', verified:true, min:200, cutoffs:H_MWF16},
   {site:'M19', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MWF},
   {site:'M19', sup:'JFC',   verified:true, min:100, rolling:true, rollingTime:'12:00', noDeliver:[3]},
   {site:'M19', sup:'Brakes', ...BRAKES},
-  {site:'M19', sup:'True World', ...TWF_NEXT},
-  /* M20 Southampton, tab MA324 (Sophie updating this tab) */
+  {site:'M19', sup:'True World', min:100, ...TWF_NEXT},
+  /* M20 Southampton, tab MA324 (updated by Sophie 07 Sep) */
   {site:'M20', sup:'Harro', verified:true, min:300, cutoffs:[{day:5,time:'14:00',dev:1},{day:3,time:'14:00',dev:4}]},
-  {site:'M20', sup:'JFE',   verified:false, note:'Tab says Monday only, no cut-off time (tab being updated)'},
+  {site:'M20', sup:'JFE',   verified:true, min:null, cutoffs:[{day:0,time:'12:00',dev:1}]},
   {site:'M20', sup:'JFC',   verified:true, min:200, cutoffs:[{day:1,time:'12:00',dev:3}]},
-  {site:'M20', sup:'Brakes', ...BRAKES},
-  {site:'M20', sup:'True World', verified:false, note:'Tab says Tue and Thu delivery, no cut-off time (tab being updated)'}
+  {site:'M20', sup:'Brakes', ...BRAKES_M20},
+  {site:'M20', sup:'True World', verified:true, assumed:false, min:200, cutoffs:[{day:1,time:'20:00',dev:2},{day:3,time:'20:00',dev:4}]}
 ];
 const UNKNOWN_SITES = [];          // every England site now has a tab (07 Sep)
 const NO_CUTOFF_SUPPLIERS = [];
@@ -562,7 +566,7 @@ function gateState(){
   const routeless = count('ROUTE');
   if(routeless) problems.push({stop:false, msg:routeless+' of '+ROWS.length+' lines have no usable supplier cut-off on the delivery schedule, so they show a provisional read only.'});
   const assumed = ROWS.filter(r=>r.assumed && !['CHECK','DATA'].includes(r.status)).length;
-  if(assumed) problems.push({stop:false, msg:assumed+' lines run on an assumed cut-off time (True World 21:00, Dunsters 14:00). Delivery days are confirmed, the time is not.'});
+  if(assumed) problems.push({stop:false, msg:assumed+' lines run on an assumed cut-off time. Delivery days are confirmed, the time is not.'});
   return problems;
 }
 function renderGate(){
