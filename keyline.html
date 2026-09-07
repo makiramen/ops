@@ -130,6 +130,7 @@ a{color:var(--maki)}
 .og-item.urgent{border-color:var(--red);color:var(--red-ink)}
 .og-item small{font-weight:600;color:var(--muted);font-size:11px}
 .og-item.urgent small{color:var(--red-ink)}
+.oq{color:var(--red-ink)}
 
 /* chips */
 .chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 16px}
@@ -460,6 +461,13 @@ function evaluate(line, now){
 
   const threshold = del.Rskip + B;
   out.threshold = threshold; out.Rnow = del.Rnow; out.Rskip = del.Rskip;
+  /* Bottom Line (Sophie's method): daily usage x delivery coverage days, rounded UP to a whole unit.
+     Usage here is the usage Kobas implies from the current position (stock / days cover);
+     swap for the 8-month average once that pull exists. Order = Bottom Line - Stock. */
+  const usage = (line.stock > 0 && D > 0) ? line.stock / D : null;
+  out.usage = usage;
+  out.bottomLine = usage!=null ? Math.ceil(usage * threshold - 1e-9) : null;
+  out.orderQty = out.bottomLine!=null ? Math.max(0, out.bottomLine - Math.floor(line.stock)) : null;
 
   if(D < del.Rnow){
     out.status='URGENT';
@@ -475,7 +483,7 @@ function evaluate(line, now){
     out.why=Math.round(D)+' days of cover. Stop ordering and propose a transfer to a tighter site.';
   } else {
     out.status='OK';
-    out.why='Cover '+fmtDays(D)+' against a '+threshold.toFixed(1)+' day trigger.';
+    out.why='Cover '+fmtDays(D)+' against a bottom line of '+(out.bottomLine!=null? fmtQty(out.bottomLine,item) : threshold.toFixed(1)+' days')+'.';
   }
   if(out.noteExtra) out.why += ' ' + out.noteExtra;
   return out;
@@ -524,7 +532,7 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <h2>Every line that needs a decision</h2>
     <div class="tblwrap"><table id="t-action"><thead><tr>
       <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Cover</th>
-      <th class="num">Trigger</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+      <th class="num">Bottom line</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <section id="v-sites" class="hide">
@@ -532,7 +540,7 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <div class="chips" id="filterchips"></div>
     <div class="tblwrap"><table id="t-site"><thead><tr>
       <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Cover</th>
-      <th class="num">Trigger</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+      <th class="num">Bottom line</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <section id="v-nudges" class="hide">
@@ -690,7 +698,7 @@ function renderSupCards(){
         else if(d && d.hoursToCut<24){ k='soon'; tag='order by tomorrow '+d.next.cutTime; }
         const items = rs.slice().sort((a,b)=>(a.status==='URGENT'?0:1)-(b.status==='URGENT'?0:1) || a.cover-b.cover)
           .map(x=>'<span class="og-item'+(x.status==='URGENT'?' urgent':'')+'">'+x.item.name+
-                  '<small>'+(x.cover==null?'':fmtDays(x.cover))+(x.status==='URGENT'?' ⚠':'')+'</small></span>').join('');
+                  '<small>'+(x.orderQty!=null && x.orderQty>0 ? 'order '+fmtQty(x.orderQty,x.item) : (x.cover==null?'':fmtDays(x.cover)))+(x.status==='URGENT'?' ⚠':'')+'</small></span>').join('');
         return '<li class="og '+k+'"><div class="og-top"><div><div class="og-site">'+s+' '+siteName(s)+'</div>'+
                '<div class="og-when">'+when+'</div></div><span class="og-tag '+k+'">'+tag+'</span></div>'+
                '<div class="og-items">'+items+'</div></li>';
@@ -708,7 +716,8 @@ function rowHtml(r, withSite){
     '<td><b>'+r.item.name+'</b><div class="why">'+r.why+'</div>'+prov+'</td>'+
     '<td class="num">'+fmtQty(r.stock, r.item)+'</td>'+
     '<td class="num">'+(r.cover==null?'-':(r.cover<10? r.cover.toFixed(1): Math.round(r.cover)))+'</td>'+
-    '<td class="num">'+(r.threshold!=null? r.threshold.toFixed(1) : '-')+'</td>'+
+    '<td class="num" title="Implied daily usage x '+(r.threshold!=null? r.threshold.toFixed(1):'?')+' cover days, rounded up">'+(r.bottomLine!=null? fmtQty(r.bottomLine, r.item) : '-')+'</td>'+
+    '<td class="num">'+(r.orderQty!=null ? (r.orderQty>0 ? '<b class="oq">'+fmtQty(r.orderQty, r.item)+'</b>' : '<span style="color:var(--muted)">0</span>') : '-')+'</td>'+
     '<td>'+pill+'</td><td>'+r.sup+asm+'</td></tr>';
 }
 function renderActionTable(){
@@ -871,7 +880,7 @@ function renderMail(){
       const first = bySup[sup][0];
       body += '<li><b>'+sup+'</b>'+(first.del? ': order by '+fmtD(first.del.next.cut)+' '+first.del.next.cutTime+(first.assumed?' (time assumed)':'')+', delivery '+fmtD(first.del.next.del) : ': cut-off not confirmed')+
         (first.route && first.route.min ? ', £'+first.route.min+' minimum':'')+'<ul>'+
-        bySup[sup].map(r=>'<li>'+r.item.name+': '+fmtQty(r.stock,r.item)+', '+fmtDays(r.cover)+
+        bySup[sup].map(r=>'<li>'+r.item.name+': '+fmtQty(r.stock,r.item)+' in stock, '+fmtDays(r.cover)+(r.orderQty!=null && r.orderQty>0 ? ', <b>order '+fmtQty(r.orderQty,r.item)+'</b> (bottom line '+fmtQty(r.bottomLine,r.item)+')' : '')+
           (r.status==='URGENT'? '. <b>URGENT, contact your AM as well as ordering</b>':'')+'</li>').join('')+'</ul></li>';
     });
     body += '</ul>';
