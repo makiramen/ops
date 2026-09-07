@@ -1546,7 +1546,9 @@ function loadData() {
     if (hubValid(cached)) {
       DATA = cached;
       freshP.then(function(f) {
-        if (String(f.generated_at) === String(cached.generated_at)) { hubStamp(cached); return; }
+        // offer only a strictly NEWER payload (ISO strings compare lexically);
+        // the cache can be ahead of the static file after an /exec fallback
+        if (String(f.generated_at) <= String(cached.generated_at)) { hubStamp(cached); return; }
         hubCachePut(f).then(function() { hubOfferFresh(f); });
         hubStamp(cached, 'newer data ready');
       }).catch(function(e) { hubStamp(cached, 'offline copy'); console.warn('fresh fetch failed', e); });
