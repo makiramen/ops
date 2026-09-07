@@ -1448,13 +1448,109 @@ document.querySelectorAll('nav.tabs button').forEach(function(b) {
 // =====================================================================
 var DATA = null;
 var _dataPromise = null;
-function loadData() {
-  if (!_dataPromise) {
-    _dataPromise = fetch(API_URL).then(function(r) {
-      if (!r.ok) throw new Error('data API HTTP ' + r.status);
-      return r.json();
-    }).then(function(d) { DATA = d; return d; });
+// 7 Sept 2026 — FAST OPEN. Three layers, newest wins:
+//   1. IndexedDB copy of the last payload → renders in ~1 s on every repeat visit.
+//   2. Static data.json published hourly to GitHub Pages (same origin CDN, gzip) → seconds.
+//   3. The Apps Script /exec (builds the payload live, 15 s – 2 min) → fallback only,
+//      or when the static file is stale (> STATIC_MAX_AGE_H old).
+// Tabs render once from whatever loads first; a fresher payload arriving later
+// is cached and offered via the "newer data" bar (reload = instant from cache).
+var STATIC_URL = 'https://makiramen.github.io/ops/marketing/data.json';
+var STATIC_MAX_AGE_H = 3;
+var HUB_DB = 'mrhub-cache', HUB_STORE = 'payload', HUB_KEY = 'latest';
+
+function hubIdb() {
+  return new Promise(function(res, rej) {
+    try {
+      var rq = indexedDB.open(HUB_DB, 1);
+      rq.onupgradeneeded = function() { rq.result.createObjectStore(HUB_STORE); };
+      rq.onsuccess = function() { res(rq.result); };
+      rq.onerror = function() { rej(rq.error); };
+    } catch (e) { rej(e); }
+  });
+}
+function hubCacheGet() {
+  return hubIdb().then(function(db) {
+    return new Promise(function(res) {
+      var rq = db.transaction(HUB_STORE, 'readonly').objectStore(HUB_STORE).get(HUB_KEY);
+      rq.onsuccess = function() { res(rq.result || null); };
+      rq.onerror = function() { res(null); };
+    });
+  }).catch(function() { return null; });
+}
+function hubCachePut(d) {
+  return hubIdb().then(function(db) {
+    return new Promise(function(res) {
+      var tx = db.transaction(HUB_STORE, 'readwrite');
+      tx.objectStore(HUB_STORE).put(d, HUB_KEY);
+      tx.oncomplete = function() { res(true); };
+      tx.onerror = function() { res(false); };
+    });
+  }).catch(function() { return false; });
+}
+function hubAgeHours(d) {
+  var t = Date.parse(String((d && d.generated_at) || '').replace(' ', 'T'));
+  return isNaN(t) ? 1e9 : (Date.now() - t) / 36e5;
+}
+function hubValid(d) { return d && typeof d === 'object' && d.generated_at && Array.isArray(d.content_library); }
+function hubFetchJson(url) {
+  return fetch(url, { cache: 'no-store' }).then(function(r) {
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' ' + url);
+    return r.json();
+  });
+}
+// Static first; /exec if the static copy is missing, invalid or stale.
+async function hubFetchFresh() {
+  var st = null;
+  try {
+    st = await hubFetchJson(STATIC_URL + '?t=' + Math.floor(Date.now() / 6e5));
+    if (!hubValid(st)) st = null;
+  } catch (e) { st = null; }
+  if (st && hubAgeHours(st) <= STATIC_MAX_AGE_H) { st.source = 'static'; return st; }
+  try {
+    var live = await hubFetchJson(API_URL);
+    if (hubValid(live)) { live.source = 'exec'; return live; }
+  } catch (e2) { if (!st) throw e2; }
+  if (st) { st.source = 'static-stale'; return st; }
+  throw new Error('no payload from static or /exec');
+}
+function hubStamp(d, note) {
+  var el = document.getElementById('asof');
+  if (!el || !d) return;
+  el.textContent = 'Data as of ' + String(d.generated_at).replace('T', ' ') + ' UK' + (note ? ' · ' + note : '');
+}
+function hubOfferFresh(d) {
+  var bar = document.getElementById('hub-fresh');
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'hub-fresh';
+    bar.style.cssText = 'position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:9999;background:#FF8B3D;color:#2A1206;padding:10px 16px;border-radius:8px;font:600 13px/1.3 system-ui,sans-serif;box-shadow:0 4px 18px rgba(0,0,0,.25);cursor:pointer';
+    document.body.appendChild(bar);
   }
+  bar.textContent = 'Newer data ready (as of ' + String(d.generated_at).replace('T', ' ') + ' UK) · click to refresh';
+  bar.onclick = function() { location.reload(); };
+}
+function loadData() {
+  if (_dataPromise) return _dataPromise;
+  _dataPromise = (async function() {
+    var cached = await hubCacheGet();
+    var freshP = hubFetchFresh();
+    if (hubValid(cached)) {
+      DATA = cached;
+      freshP.then(function(f) {
+        if (String(f.generated_at) === String(cached.generated_at)) { hubStamp(cached); return; }
+        hubCachePut(f).then(function() { hubOfferFresh(f); });
+        hubStamp(cached, 'newer data ready');
+      }).catch(function(e) { hubStamp(cached, 'offline copy'); console.warn('fresh fetch failed', e); });
+      hubStamp(cached, 'checking for newer…');
+      return cached;
+    }
+    var d = await freshP;
+    DATA = d;
+    hubCachePut(d);
+    hubStamp(d, d.source === 'exec' ? 'live build' : '');
+    return d;
+  })();
   return _dataPromise;
 }
 
@@ -1567,7 +1663,7 @@ async function loadSummary() {
   ]);
   renderCards(kpiData, bbCsv, glCsv);
   renderGreenLight(glCsv);
-  document.getElementById('asof').textContent = 'Data as of ' + ((DATA && DATA.generated_at) ? String(DATA.generated_at).replace('T', ' ') + ' UK' : new Date().toLocaleString('en-GB'));
+  if (document.getElementById('asof').textContent === 'Loading…') hubStamp(DATA);
 }
 
 async function loadKpiData() {
