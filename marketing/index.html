@@ -1488,8 +1488,16 @@ function hubCachePut(d) {
     });
   }).catch(function() { return false; });
 }
+// Age from published_at (UTC ISO, written by HubPublish.gs). generated_at is
+// Europe/London local with NO zone, so a Dubai browser would misread it by 3 h;
+// it is only the fallback, parsed as UTC minus the max BST offset.
 function hubAgeHours(d) {
-  var t = Date.parse(String((d && d.generated_at) || '').replace(' ', 'T'));
+  if (!d) return 1e9;
+  var t = Date.parse(String(d.published_at || ''));
+  if (isNaN(t)) {
+    t = Date.parse(String(d.generated_at || '').replace(' ', 'T') + 'Z');
+    if (!isNaN(t)) t -= 36e5;
+  }
   return isNaN(t) ? 1e9 : (Date.now() - t) / 36e5;
 }
 function hubValid(d) { return d && typeof d === 'object' && d.generated_at && Array.isArray(d.content_library); }
