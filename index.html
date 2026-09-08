@@ -6887,7 +6887,7 @@ async function ecbRefresh(){
   }catch(_e){}
   const sheetLoaded = await loadSheetData();
   if(sheetLoaded){
-    ecbSetLive("live", "Live · EC ledger sheet · through "+(DATA.daily_spend&&DATA.daily_spend.as_at||"?")+" · refreshed "+new Date().toLocaleString("en-GB"));
+    ecbSetLive("live", "Live · EC ledger sheet · through "+(DATA.daily_spend&&DATA.daily_spend.as_at||"?")+" · refreshed "+new Date().toLocaleString("en-GB",{timeZone:"Europe/London"})+" UK");
   } else if(snapshotLoaded){
     ecbSetLive("stale", "Sheet unreachable · showing committed snapshot through "+(DATA.daily_spend&&DATA.daily_spend.as_at||"?"));
   } else {
