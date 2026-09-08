@@ -1,0 +1,93 @@
+name: Budget Burn snapshot (EC ledger fallback)
+
+# WHY THIS EXISTS
+# The AM Control Centre's Budget Burn tab reads the EC ledger's published CSV live on every page
+# load. data/ec_budget_snapshot.json is the FALLBACK it renders when that client-side fetch fails,
+# so a stale snapshot means a stale-looking tab for whoever's browser cannot reach Google.
+#
+# The re-bake used to be a Claude scheduled task (trig_01FmNMVZvRd4XMyCdSVpCHaE, 07:30 UTC). On
+# 08/09/2026 that task was reporting SUCCEEDED every morning while the committed snapshot had not
+# moved since 25/08, ledger_through 2026-08-24, fourteen days behind. Same class of silent failure
+# as the broth tab: a build that only runs when a human (or a chat session) happens to complete it
+# is not a pipe. This runs it in the cloud, where the only honest test is the runner.
+#
+# Idempotent: the bake rebuilds from the ledger's full history every time and commits only when the
+# bytes actually move. The builder refuses to write a snapshot older than the committed one.
+
+on:
+  schedule:
+    - cron: '10 7,12 * * *'     # 11:10 / 16:10 Dubai. Two chances, because GitHub cron drops runs.
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: budget-burn-snapshot
+  cancel-in-progress: false
+
+jobs:
+  bake-and-ship:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Pull the EC ledger CSV
+        run: |
+          set -e
+          URL=$(grep -o 'https://docs.google.com/spreadsheets/d/e/[^"]*pub?output=csv' index.html | head -1)
+          test -n "$URL" || { echo "::error::SHEET_CSV_URL not found in index.html"; exit 1; }
+          curl -sSL --retry 3 --retry-delay 5 --max-time 120 "$URL&_cb=$(date +%s)" -o /tmp/ledger.csv
+          head -1 /tmp/ledger.csv | grep -q '^date,site_code,daily_total' \
+            || { echo "::error::the ledger CSV did not come back as the ledger (login page?)"; head -3 /tmp/ledger.csv; exit 1; }
+          echo "rows: $(wc -l < /tmp/ledger.csv)"
+
+      - name: Bake the snapshot
+        id: bake
+        run: |
+          set +e
+          node builders/bake_ec_budget_snapshot.js \
+            --csv /tmp/ledger.csv \
+            --index index.html \
+            --seed data/ec_budget_snapshot.json \
+            --out /tmp/new_snapshot.json > /tmp/bake.json 2> /tmp/bake.err
+          code=$?
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          cat /tmp/bake.json; cat /tmp/bake.err
+          test $code -eq 0 || exit $code
+          node -e '
+            const b=JSON.parse(require("fs").readFileSync("/tmp/bake.json","utf8"));
+            const fs=require("fs");
+            const rep={run_at:new Date().toISOString(), ledger_through:b.ledger_through,
+                       ledger_rows:b.ledger_rows, sites_filed:b.sites_filed, non_filers:b.non_filers,
+                       changed:b.changed_vs_committed, warnings:b.warnings, sha256:b.sha256};
+            fs.writeFileSync("data/ec_budget_run_report.json", JSON.stringify(rep,null,1)+"\n");
+            if(b.changed_vs_committed) fs.copyFileSync("/tmp/new_snapshot.json","data/ec_budget_snapshot.json");
+            console.log("::notice::ledger through "+b.ledger_through+", changed="+b.changed_vs_committed
+                        +(b.warnings.length?(", WARNINGS: "+b.warnings.join(" | ")):""));
+          '
+          echo "## Budget Burn snapshot" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/bake.json >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit and push
+        env:
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          set -e
+          git config user.name  maki-nori
+          git config user.email michael@makiramen.com
+          git add data/ec_budget_snapshot.json data/ec_budget_run_report.json
+          git diff --cached --quiet && { echo "nothing to commit"; exit 0; }
+          THROUGH=$(node -p "JSON.parse(require('fs').readFileSync('data/ec_budget_run_report.json','utf8')).ledger_through")
+          git commit -q -m "Budget Burn snapshot: EC ledger through $THROUGH" \
+            -m "Scheduled bake (bake_ec_budget_snapshot.js). Fallback only: the tab reads the same ledger CSV live on every load." \
+            -m "Co-Authored-By: Claude <noreply@anthropic.com>"
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:main
