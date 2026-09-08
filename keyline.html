@@ -67,6 +67,8 @@ a{color:var(--maki)}
 .gate-warn .dot{background:var(--amber)}
 .gate-stop{background:var(--red-bg);border-color:transparent;color:var(--red-ink)}
 .gate-stop .dot{background:var(--red)}
+.gate-info{background:var(--soft);border-color:var(--line);color:var(--ink)}
+.gate-info .dot{background:var(--maki)}
 .gate b{display:block;margin-bottom:2px}
 .gate small{opacity:.85;font-size:13px}
 
@@ -374,6 +376,8 @@ function fmtD(d){
   return base+' '+d.getDate()+' '+MON[d.getMonth()];
 }
 
+function fmtDabs(d){ return DAYNAME[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]; }
+
 /* ---------------- route resolution ---------------- */
 function routeFor(site, sup){
   if(NO_CUTOFF_SUPPLIERS.includes(sup))
@@ -428,6 +432,46 @@ function nextDeliveries(route, now){
   };
 }
 
+/* ---------------- trading period and the Baseline ----------------
+   Michael, 08/09/2026: no min bottom line, no max bottom line. One BASELINE per site and line: the permanent
+   stock holding that must be in store, built from the 8-month average usage and the delivery route.
+   Baseline = usage x (longest routine gap to the delivery after next on this route + item buffer), rounded UP.
+   It does not move with the day of the week. Weeks 1 and 2 of the 4-week trading period: hold the Baseline,
+   Order = Baseline - stock. Weeks 3 and 4: the reserve is open, sites may run into the Baseline down to the
+   run-out floor (usage x days to the delivery after next + buffer, the old daily bottom line), Order = floor - stock.
+   The Baseline is topped back up from week 1 of the next period, not before. */
+const PERIOD_ANCHOR = new Date(2026, 7, 31);   // Monday 31/08/2026 = week 1 of a 4-week trading period. Change here only.
+function periodWeek(now){
+  const d = Math.floor((startOfDay(now) - startOfDay(PERIOD_ANCHOR)) / 864e5);
+  const w = Math.floor(d / 7);
+  return ((w % 4) + 4) % 4 + 1;              // 1..4
+}
+function periodInfo(now){
+  const wk = periodWeek(now);
+  const dow = (startOfDay(now).getDay() + 6) % 7;                 // Monday = 0
+  const monday = addDays(startOfDay(now), -dow);
+  const reserveOpen = wk >= 3;
+  const nextChange = addDays(monday, reserveOpen ? (5 - wk) * 7 : (3 - wk) * 7);   // Monday the mode flips
+  return {week: wk, monday, reserveOpen, nextChange};
+}
+const _BLD = {};
+/* Longest routine gap to the delivery after next on this route, probed at 09:00 on each of the next 7 days. */
+function baselineDays(route, B){
+  if(!route || route.verified===false) return null;
+  const key = JSON.stringify([route.cutoffs||null, route.rolling||null, route.rollingTime||null, route.anyDay||null, route.noDeliver||null]);
+  if(_BLD[key]==null){
+    let worst = 0;
+    for(let k=0;k<7;k++){
+      const probe = addDays(startOfDay(NOW_FOR_BASELINE()), k); probe.setHours(9,0,0,0);
+      const d = nextDeliveries(route, probe);
+      if(d && d.Rskip > worst) worst = d.Rskip;
+    }
+    _BLD[key] = worst || null;
+  }
+  return _BLD[key]!=null ? _BLD[key] + B : null;
+}
+function NOW_FOR_BASELINE(){ return (typeof NOW !== 'undefined' && NOW) ? NOW : new Date(); }
+
 /* 8-month average daily usage per site and line, in the line's keyline unit per day (cases, packs, kg).
    Source: Kobas Stock Ingredient Movements, 1 Jan to 16 Aug 2026 (last two weeks of August excluded, Sophie's
    definition), one report per site per two-month block, Units Used x measure per unit summed across pack rows and
@@ -474,29 +518,41 @@ function evaluate(line, now){
 
   const threshold = del.Rskip + B;
   out.threshold = threshold; out.Rnow = del.Rnow; out.Rskip = del.Rskip;
-  /* Bottom Line (Sophie's method): average daily usage x delivery coverage days, rounded UP to a whole unit.
-     Usage is the 8-month Kobas average (USAGE8M, 1 Jan to 16 Aug 2026). Where a site has no history it falls
-     back to the usage Kobas implies from the current position (stock / days remaining). Order = Bottom Line - Stock. */
+  /* Usage is the 8-month Kobas average (USAGE8M, 1 Jan to 16 Aug 2026). Where a site has no history it falls
+     back to the usage Kobas implies from the current position (stock / days remaining). */
   const usage = (hist>0) ? hist : ((line.stock > 0 && Dk > 0) ? line.stock / Dk : null);
   out.usage = usage; out.usageSource = (hist>0) ? '8-month average' : 'implied from the Kobas position';
-  out.bottomLine = usage!=null ? Math.ceil(usage * threshold - 1e-9) : null;
-  out.orderQty = out.bottomLine!=null ? Math.max(0, out.bottomLine - Math.floor(line.stock)) : null;
+  /* Baseline: permanent holding, fixed per site and line. Floor: the run-out level for today's route position. */
+  const per = periodInfo(now);
+  const bDays = baselineDays(route, B);
+  out.period = per; out.baselineDays = bDays;
+  out.baseline = (usage!=null && bDays!=null) ? Math.ceil(usage * bDays - 1e-9) : null;
+  out.floor    = usage!=null ? Math.ceil(usage * threshold - 1e-9) : null;
+  out.required = per.reserveOpen ? out.floor : out.baseline;
+  out.bottomLine = out.baseline;   // legacy name kept for render.py and the mail builder
+  const stockWhole = Math.floor(line.stock);
+  out.orderQty = out.required!=null ? Math.max(0, out.required - stockWhole) : null;
+  const short = out.required!=null && stockWhole < out.required;
+  out.belowFloor = out.floor!=null && stockWhole < out.floor;   // real run-out risk, not just a Baseline top-up
+  const modeTxt = per.reserveOpen
+    ? 'Week '+per.week+' of 4, reserve open: order only to the run-out floor of '+(out.floor!=null? fmtQty(out.floor,item):'?')+', the Baseline of '+(out.baseline!=null? fmtQty(out.baseline,item):'?')+' is restored from '+fmtDabs(per.nextChange)+'.'
+    : 'Week '+per.week+' of 4: hold the Baseline of '+(out.baseline!=null? fmtQty(out.baseline,item):'?')+'.';
 
   if(D < del.Rnow){
     out.status='URGENT';
     out.why=fmtDays(D)+' left. The earliest possible delivery is '+fmtD(del.next.del)+', '+del.Rnow+' days away, so routine ordering will not reach you in time. Order at the next cut-off ('+fmtD(del.next.cut)+' '+del.next.cutTime+') AND contact your AM now to arrange a transfer, approved local sourcing or menu mitigation.';
-  } else if(del.cutIsToday && D < threshold){
+  } else if(del.cutIsToday && short){
     out.status='ORDER';
-    out.why=fmtDays(D)+' left. Next reachable delivery '+fmtD(del.next.del)+' ('+del.Rnow+' days). Miss today and the next is '+del.Rskip+' days out, against a '+B+' day safety buffer. Order by '+del.next.cutTime+' today.';
-  } else if(D < threshold){
+    out.why=fmtQty(line.stock,item)+' in stock, '+fmtDays(D)+' left. '+modeTxt+' Order '+fmtQty(out.orderQty,item)+' by '+del.next.cutTime+' today for delivery '+fmtD(del.next.del)+'; miss it and the next is '+del.Rskip+' days out.';
+  } else if(short){
     out.status='WATCH';
-    out.why=fmtDays(D)+' left. You do not need to order today. Order by '+fmtD(del.next.cut)+' '+del.next.cutTime+' for delivery '+fmtD(del.next.del)+'.';
-  } else if(D > 21){
+    out.why=fmtQty(line.stock,item)+' in stock, '+fmtDays(D)+' left. '+modeTxt+' You do not need to order today. Order '+fmtQty(out.orderQty,item)+' by '+fmtD(del.next.cut)+' '+del.next.cutTime+' for delivery '+fmtD(del.next.del)+'.';
+  } else if(D > 21 && out.baseline!=null && stockWhole > out.baseline){
     out.status='OVER';
-    out.why=Math.round(D)+' days of stock. Stop ordering and propose a transfer to a tighter site.';
+    out.why=Math.round(D)+' days of stock, '+fmtQty(line.stock - out.baseline,item)+' above the Baseline. Stop ordering and propose a transfer to a tighter site.';
   } else {
     out.status='OK';
-    out.why=fmtDays(D)+' left against a bottom line of '+(out.bottomLine!=null? fmtQty(out.bottomLine,item) : threshold.toFixed(1)+' days')+'.';
+    out.why=fmtQty(line.stock,item)+' in stock, '+fmtDays(D)+' left. '+modeTxt;
   }
   if(out.noteExtra) out.why += ' ' + out.noteExtra;
   return out;
@@ -520,13 +576,14 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <div>
       <span class="badge">Maki &amp; Ramen · Executive Chef</span>
       <h1>Keyline Control</h1>
-      <p class="sub">21 keylines &times; 9 England sites. Days of stock against the next reachable delivery, not a flat rule. Usage is the 8-month Kobas average. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
+      <p class="sub">21 keylines &times; 9 England sites. Every line carries a Baseline: the permanent stock holding for that site, built from the 8-month Kobas average usage and the delivery route. Weeks 1 and 2 of the trading period hold it; weeks 3 and 4 may run into it. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
     </div>
     <div class="clock"><b id="clk">--:--</b><span id="today">-</span></div>
   </div>
 
   <div id="gate"></div>
-  <div class="raghd"><h2>Site red light</h2><span class="legend"><span style="background:#D1240F"></span>red: order or urgent today <span style="background:#E8730C"></span>amber: watch or count <span style="background:#1F8A4C"></span>green: fine</span></div>
+  <div id="period"></div>
+  <div class="raghd"><h2>Site red light</h2><span class="legend"><span style="background:#D1240F"></span>red: urgent or order below the floor <span style="background:#E8730C"></span>amber: top-up order, watch or count <span style="background:#1F8A4C"></span>green: fine</span></div>
   <div class="rag" id="siteRag"></div>
 
   <div class="tabs" role="tablist">
@@ -545,7 +602,7 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <h2>Every line that needs a decision</h2>
     <div class="tblwrap"><table id="t-action"><thead><tr>
       <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Days left</th>
-      <th class="num">Bottom line</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+      <th class="num">Baseline</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <section id="v-sites" class="hide">
@@ -553,7 +610,7 @@ window.KEYLINE_DATA = {"meta": {"reportDate": "07 Sep 2026", "importedAt": "2026
     <div class="chips" id="filterchips"></div>
     <div class="tblwrap"><table id="t-site"><thead><tr>
       <th>Site</th><th>Item</th><th class="num">Stock</th><th class="num">Days left</th>
-      <th class="num">Bottom line</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+      <th class="num">Baseline</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <section id="v-nudges" class="hide">
@@ -621,14 +678,29 @@ function renderGate(){
     p.map(x=>x.msg).join('<br>')+'</small></div></div>';
 }
 
+/* ---------------- trading period banner ---------------- */
+function renderPeriod(){
+  const p = periodInfo(NOW), el = document.getElementById('period');
+  if(!el) return;
+  el.innerHTML = '<div class="gate gate-info"><span class="dot"></span><div><b>Trading period week '+p.week+' of 4 (w/c '+fmtDabs(p.monday)+'): '+
+    (p.reserveOpen ? 'reserve open' : 'hold the Baseline')+'</b><small>'+
+    (p.reserveOpen
+      ? 'Sites may run into their Baseline. Order only what reaches the delivery after next (the run-out floor). The Baseline is restored from '+fmtDabs(p.nextChange)+'.'
+      : 'Every line must be at or above its Baseline, the permanent holding for that site. Order = Baseline minus stock. The reserve opens '+fmtDabs(p.nextChange)+'.')+
+    '</small></div></div>';
+}
+
 /* ---------------- site red light ---------------- */
 function siteRag(code){
   const rs = ROWS.filter(r=>r.site===code);
   const u = rs.filter(r=>r.status==='URGENT').length, o = rs.filter(r=>r.status==='ORDER').length;
   const w = rs.filter(r=>r.status==='WATCH').length,  k = rs.filter(r=>r.status==='CHECK').length;
   const st = window.KEYLINE_DATA.siteMeta[code]||{};
+  /* RED = a line can run out (urgent, or an order today that is below the run-out floor). An order today that is
+     only a Baseline top-up, with the floor still covered, is AMBER: it must be placed, but nothing runs out. */
+  const oFloor = rs.filter(r=>r.status==='ORDER' && r.belowFloor).length;
   let rag = 'GREEN';
-  if(u+o) rag='RED'; else if(w+k) rag='AMBER';
+  if(u+oFloor) rag='RED'; else if(o+w+k) rag='AMBER';
   if(st.stale && rag==='GREEN') rag='GREY';
   const bits=[]; if(u) bits.push(u+' urgent'); if(o) bits.push(o+' order today'); if(w) bits.push(w+' watch'); if(k) bits.push(k+' count');
   const worst = rs.filter(r=>['URGENT','ORDER'].includes(r.status)).slice(0,2).map(r=>r.item.name).join(', ');
@@ -729,8 +801,8 @@ function rowHtml(r, withSite){
     '<td><b>'+r.item.name+'</b><div class="why">'+r.why+'</div>'+prov+'</td>'+
     '<td class="num">'+fmtQty(r.stock, r.item)+'</td>'+
     '<td class="num"'+(r.usageHist!=null && r.coverKobas!=null ? ' title="Stock / 8-month average daily usage. Kobas itself reports '+fmtDays(r.coverKobas)+' remaining."' : '')+'>'+(r.cover==null?'-':(r.cover<10? r.cover.toFixed(1): Math.round(r.cover)))+'</td>'+
-    '<td class="num" title="'+(r.usage!=null ? (Math.round(r.usage*100)/100)+' '+r.item.unit+' a day ('+r.usageSource+') x ' : '')+(r.threshold!=null? r.threshold.toFixed(1):'?')+' delivery days, rounded up">'+(r.bottomLine!=null? fmtQty(r.bottomLine, r.item) : '-')+'</td>'+
-    '<td class="num">'+(r.orderQty!=null ? (r.orderQty>0 ? '<b class="oq">'+fmtQty(r.orderQty, r.item)+'</b>' : '<span style="color:var(--muted)">0</span>') : '-')+'</td>'+
+    '<td class="num" title="Permanent holding: '+(r.usage!=null ? (Math.round(r.usage*100)/100)+' '+r.item.unit+' a day ('+r.usageSource+') x ' : '')+(r.baselineDays!=null? r.baselineDays.toFixed(1):'?')+' days (longest routine delivery gap + buffer), rounded up. Run-out floor today '+(r.floor!=null? fmtQty(r.floor, r.item):'-')+'.">'+(r.baseline!=null? fmtQty(r.baseline, r.item) : '-')+(r.period && r.period.reserveOpen && r.floor!=null ? '<div class="why">floor '+fmtQty(r.floor, r.item)+'</div>' : '')+'</td>'+
+    '<td class="num" title="'+(r.period && r.period.reserveOpen ? 'Reserve open: run-out floor minus stock' : 'Baseline minus stock')+'">'+(r.orderQty!=null ? (r.orderQty>0 ? '<b class="oq">'+fmtQty(r.orderQty, r.item)+'</b>' : '<span style="color:var(--muted)">0</span>') : '-')+'</td>'+
     '<td>'+pill+'</td><td>'+r.sup+asm+'</td></tr>';
 }
 function renderActionTable(){
@@ -893,7 +965,7 @@ function renderMail(){
       const first = bySup[sup][0];
       body += '<li><b>'+sup+'</b>'+(first.del? ': order by '+fmtD(first.del.next.cut)+' '+first.del.next.cutTime+(first.assumed?' (time assumed)':'')+', delivery '+fmtD(first.del.next.del) : ': cut-off not confirmed')+
         (first.route && first.route.min ? ', £'+first.route.min+' minimum':'')+'<ul>'+
-        bySup[sup].map(r=>'<li>'+r.item.name+': '+fmtQty(r.stock,r.item)+' in stock, '+fmtDays(r.cover)+' left'+(r.orderQty!=null && r.orderQty>0 ? ', <b>order '+fmtQty(r.orderQty,r.item)+'</b> (bottom line '+fmtQty(r.bottomLine,r.item)+')' : '')+
+        bySup[sup].map(r=>'<li>'+r.item.name+': '+fmtQty(r.stock,r.item)+' in stock, '+fmtDays(r.cover)+' left'+(r.orderQty!=null && r.orderQty>0 ? ', <b>order '+fmtQty(r.orderQty,r.item)+'</b> ('+(r.period && r.period.reserveOpen ? 'floor '+fmtQty(r.floor,r.item)+', reserve open' : 'baseline '+fmtQty(r.baseline,r.item))+')' : '')+
           (r.status==='URGENT'? '. <b>URGENT, contact your AM as well as ordering</b>':'')+'</li>').join('')+'</ul></li>';
     });
     body += '</ul>';
@@ -916,7 +988,7 @@ function renderExcep(){
   const groups = [
     ['CHECK','Negative or impossible stock','A count, not an order. Kobas and the shelf disagree.'],
     ['DATA','Data check','Days-left figures that are not credible, or lines the report did not return.'],
-    ['OVER','Overstocked','More than 21 days of stock. Propose a transfer.']
+    ['OVER','Overstocked','More than 21 days of stock and above the Baseline. Propose a transfer.']
   ];
   const html = groups.map(([k,t,d])=>{
     const rs = ROWS.filter(r=>r.status===k);
@@ -959,7 +1031,7 @@ function show(v){
   document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t.dataset.view===v));
 }
 function renderAll(){
-  recompute(); renderGate(); renderSiteRag(); renderTiles(); renderSupCards(); renderActionTable();
+  recompute(); renderGate(); renderPeriod(); renderSiteRag(); renderTiles(); renderSupCards(); renderActionTable();
   renderChips(); renderSiteTable(); renderNudges(); renderMail(); renderExcep(); renderGaps();
   document.getElementById('c-today').textContent = ROWS.filter(r=>RANK[r.status]<2).length;
   document.getElementById('clk').textContent = NOW.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
