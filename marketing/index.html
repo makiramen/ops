@@ -2332,13 +2332,13 @@ var DATA = null;
 var _dataPromise = null;
 // 7 Sept 2026 — FAST OPEN. Three layers, newest wins:
 //   1. IndexedDB copy of the last payload → renders in ~1 s on every repeat visit.
-//   2. Static data.json published hourly to GitHub Pages (same origin CDN, gzip) → seconds.
+//   2. Static data.json published every 4 h to GitHub Pages (same origin CDN, gzip) → seconds.
 //   3. The Apps Script /exec (builds the payload live, 15 s – 2 min) → fallback only,
 //      or when the static file is stale (> STATIC_MAX_AGE_H old).
 // Tabs render once from whatever loads first; a fresher payload arriving later
 // is cached and offered via the "newer data" bar (reload = instant from cache).
 var STATIC_URL = 'https://makiramen.github.io/ops/marketing/data.json';
-var STATIC_MAX_AGE_H = 3;
+var STATIC_MAX_AGE_H = 6;   // 8 Sept 2026: publish cadence moved hourly -> every 4 h, so 3 h would judge a healthy file stale and fall back to /exec on every open
 var HUB_DB = 'mrhub-cache', HUB_STORE = 'payload', HUB_KEY = 'latest';
 
 function hubIdb() {
