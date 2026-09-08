@@ -376,7 +376,7 @@ const NO_CUTOFF_SUPPLIERS = [];
 const DAYNAME = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function fmtD(d){
-  const t=new Date(); t.setHours(0,0,0,0);
+  const t=ukNow(); t.setHours(0,0,0,0);
   const diff=Math.round((new Date(d).setHours(0,0,0,0)-t)/864e5);
   const base=DAYNAME[d.getDay()];
   if(diff===0) return base+' (today)';
@@ -478,7 +478,10 @@ function baselineDays(route, B){
   }
   return _BLD[key]!=null ? _BLD[key] + B : null;
 }
-function NOW_FOR_BASELINE(){ return (typeof NOW !== 'undefined' && NOW) ? NOW : new Date(); }
+// The engine runs on UK wall clock whatever the viewer's zone (Michael views from Dubai, +3h): Kobas
+// timestamps and the cut-offs are UK wall clock compared as naive dates, so NOW must be too.
+function ukNow(){ try{ const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()); const g=t=>+p.find(x=>x.type===t).value; return new Date(g('year'),g('month')-1,g('day'),g('hour')%24,g('minute'),g('second')); }catch(e){ return new Date(); } }
+function NOW_FOR_BASELINE(){ return (typeof NOW !== 'undefined' && NOW) ? NOW : ukNow(); }
 
 /* 8-month average daily usage per site and line, in the line's keyline unit per day (cases, packs, kg).
    Source: Kobas Stock Ingredient Movements, 1 Jan to 16 Aug 2026 (last two weeks of August excluded, Sophie's
@@ -654,12 +657,12 @@ window.KEYLINE_ORDERS = {"meta":{"source":"kobas-live","pulledAt":"2026-09-08T06
 
 <script>
 /* ---------------- state ---------------- */
-let NOW = new Date();
+let NOW = ukNow();
 let ROWS = [];
 let siteFilter = 'ALL', statusFilter = 'ALL';
 
 function recompute(){
-  NOW = new Date();
+  NOW = ukNow();
   ROWS = window.KEYLINE_DATA.lines.map(l => evaluate(l, NOW))
           .sort((a,b)=> RANK[a.status]-RANK[b.status] || a.site.localeCompare(b.site) || a.cover-b.cover);
   ROWS.forEach(r=>{ r.comp = (typeof complianceForRow==='function') ? complianceForRow(r) : null; });   // Kobas order history, part_e
@@ -1345,7 +1348,7 @@ function renderAll(){
   recompute(); renderGate(); renderPeriod(); renderSiteRag(); renderTiles(); renderSupCards(); renderActionTable();
   renderChips(); renderSiteTable(); renderNudges(); if(typeof renderCompliance==='function') renderCompliance(); renderMail(); renderExcep(); renderGaps();
   document.getElementById('c-today').textContent = ROWS.filter(r=>RANK[r.status]<2).length;
-  document.getElementById('clk').textContent = NOW.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('clk').textContent = NOW.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' UK';
   document.getElementById('today').textContent = NOW.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const m = window.KEYLINE_DATA.meta;
   document.getElementById('foot').innerHTML = 'Kobas position '+m.reportDate+' · '+m.importedLabel+
