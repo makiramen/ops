@@ -782,7 +782,6 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
       <label>Sort</label>
       <select id="tt-sort">
         <option value="date">Newest</option>
-        <option value="views">Views</option>
         <option value="reach">Reach</option>
         <option value="eng">Engagement</option>
         <option value="engrate">Eng/Reach</option>
@@ -3014,7 +3013,6 @@ function renderContentSummary(elId, view, win, isTt) {
   var medEng = median(view.map(function(r) { return r.engRate; }));
   var label = WIN_LABEL[win] || 'this timeframe';
   var stats = [stat((isTt ? 'Videos' : 'Posts') + ' · ' + label, fmtN(view.length))];
-  if (isTt) stats.push(stat('Total views', fmtN(totViews)));
   stats.push(stat('Total reach', fmtN(totReach)));
   stats.push(stat('Total engagement', fmtN(totEng)));
   stats.push(stat('Median eng/reach', medEng != null ? fmtPct(medEng) : '—'));
@@ -3035,7 +3033,6 @@ function igChips(r) {
 }
 function ttChips(r) {
   return [
-    chip('views', fmtK(r.views)),
     chip('reach', fmtK(r.reach)),
     chip('eng/reach', fmtPct(r.engRate), engBand(r.engRate)),
     chip('likes', fmtK(r.likes)),
@@ -3051,8 +3048,8 @@ function igCardHtml(r) { return contentCard(r, typeTag(r.media_type), igChips(r)
 function ttCardHtml(r) { return contentCard(r, '<span class="tag tt">TIKTOK</span>', ttChips(r)); }
 
 // Outliers (v5.2, 8 Sept) — two lenses, one "expected".
-// Expected = the window MEDIAN of reach (IG) / views (TikTok) and of eng rate, both shown on the header.
-// STANDOUT  = >= BAR_MULT x median reach/views (reach lens)
+// Expected = the window MEDIAN of reach (both platforms; v5.3 dropped TikTok views) and of eng rate, both shown on the header.
+// STANDOUT  = >= BAR_MULT x median reach (reach lens)
 //          OR >= BAR_MULT x median eng rate with at least median reach and the likes floor (intent lens:
 //             shares/saves/comments drive the rate, so a mid-reach post people share hard now counts).
 // REACH SPIKE = clears the reach bar but engagement is under the platform floor (borrowed reach, don't chase).
@@ -3065,14 +3062,14 @@ var OUTLIER_BAR_MULT = 1.8;
 function renderOutliers(elId, view, isTt) {
   var el = document.getElementById(elId);
   if (!el) return;
-  var metricLabel = isTt ? 'views' : 'reach';
+  var metricLabel = 'reach';   // 8 Sept: TikTok judged on REACH too (views only as a fallback when reach is 0) — Michael: views vs reach was confusing
   var ENG_FLOOR = isTt ? 0.03 : 0.02;   // below platform norm = weak
   var ENG_CRIT = isTt ? 0.015 : 0.01;   // truly dead
   var LIKES_FLOOR = 80;                 // hard floor — under this = straight-up CUT, no matter the rate
   var floorTxt = (ENG_FLOOR * 100).toFixed(0) + '%';
   var multTxt = OUTLIER_BAR_MULT.toFixed(1) + '×';
-  function metricOf(r) { return isTt ? (Number(r.views) || Number(r.reach) || 0) : (Number(r.reach) || 0); }
-  // Rate on the SAME denominator as the reach lens (TikTok by views: reach and views diverge up to 9x and reach can be 0)
+  function metricOf(r) { return Number(r.reach) || (isTt ? Number(r.views) : 0) || 0; }
+  // Rate on the SAME denominator as the reach lens (reach; views only where a TikTok row has reach 0)
   function rateOf(r) { var m = metricOf(r); return m > 0 ? ((Number(r.likes) || 0) + (Number(r.comments) || 0) + (Number(r.saves) || 0) + (Number(r.shares) || 0)) / m : 0; }
   var valid = view.filter(function(r) { return metricOf(r) > 0; });
   var headHtml = '<div class="outlier-head"><span class="oh-title">Outliers</span>';
