@@ -6722,12 +6722,12 @@ var RR_SNAP = {
   members: {total: 40558, real: 40509, joined_since: 4189, rate_note: '~280/day, rising'},
   trading: {bills: 2069, spend: 53774.71, atv: 25.99, sites: 21, members: 1813, days: 14},
   share: {sales: 3.8, target: 25, legacy: 4.3},
-  cliff: {issued: 36265, redeemed: 902, forfeited: 35359, reissued: 4,
-    value: 176795, expired: '2026-09-01T23:59:59Z', activation: 2.5,
-    final_label: '18 Aug batch · closed 1 Sept 2026, 23:59 UTC · final',
+  cliff: {issued: 36265, redeemed: 902, outstanding: 35359, reissued: 4,
+    value: 176795, expires: '2026-09-15T23:59:59Z', activation: 2.5, status: 'LIVE',
+    final_label: '18 Aug batch · still LIVE · expiry extended 14 days to 15 Sept 2026, 23:59 UTC (unconfirmed with Trifft)',
     catchup: {sent: 29412, delivered: 29234, open_pc: 39.6, click_pc: 5.8, clicks: 1707, redeemed_attr: 263, unsub: 140, sent_at: '1 Sept 09:00 UTC'},
-    headline: 'The 18 Aug £5 batch has expired: 902 redeemed, 35,359 forfeited',
-    body: 'Final, closed set. 36,265 people were issued the £5 on 18 August; 902 (2.5%) redeemed it before it lapsed at 23:59 UTC on 1 September, 4 were re-issued, 35,359 let it go. The catch-up email did go out at 09:00 UTC on expiry day to the 29,412 mailable people in the batch: 39.6% opened, 1,707 clicked (5.8%), 263 redemptions attributed and 140 unsubscribed. Expiry day itself did 470 redemptions across all vouchers, 2.2x the day before, and 229 of the batch redeemed in the final 17 hours. The rolling £5 to new sign-ups is now the only live welcome offer.'},
+    headline: '35,359 £5 vouchers from the 18 Aug batch are still live: the 1 Sept expiry was extended by 14 days',
+    body: 'The batch did not lapse on 1 September. Trifft changed the coupon on 2 September and batch members are still redeeming it (verified against 6 September redemption events). To date 902 of 36,265 (2.5%) have redeemed: 673 by the morning of 1 September, 229 since. The catch-up email went out at 09:00 UTC on 1 September to 29,412 mailable people saying it was expiring: 39.6% opened, 1,707 clicked (5.8%), 263 redemptions attributed, 140 unsubscribed. Two things need doing: confirm the real expiry with Trifft (per-coupon expiry reads from the API now drift between 15 and 22 September, so there may be no single cliff at all), and schedule a second push for the new deadline, because nothing is booked against it.'},
   claim_to_redeem: {people_claimed: 2791, people_redeemed: 1480, rate: 53.0},
   tiers: [
     {name: 'Loyal',   threshold: 0,    members: 40129, ex_staff: 40110},
@@ -6827,8 +6827,8 @@ function rrMerge() {
       // "still on the snapshot": it tried and failed, so name it. Keys the API
       // never mentions at all are page furniture (faults, sources, build queue)
       // and are not claims about freshness, so they stay out of the list.
-      // cliff is a CLOSED batch (expired 1 Sept 23:59 UTC) and lives in the page as a
-      // final constant; the API sending null for it is expected, not staleness.
+      // cliff is the 18 Aug batch, tracked by hand in the page (dated constant, see
+      // final_label); the API sending null for it is expected, not staleness.
       if (empty) { if (RR_SNAP.hasOwnProperty(k) && k !== 'cliff') RR_SNAP_KEYS.push(k); continue; }
       out[k] = v;
       RR_LIVE_KEYS.push(k);
@@ -6918,7 +6918,7 @@ async function loadLoyalty() {
   var s2 = rrEl('rr-s2-src');
   if (s2) s2.textContent = '£5 welcome voucher · ' + RR.cliff.final_label + (stale5.length ? ' · voucher table ' + RR.pulled_label + ' snapshot' : '');
   var ak = rrEl('rr-alert-k');
-  if (ak) ak.textContent = 'Offer value forfeited at expiry · final';
+  if (ak) ak.textContent = 'Unredeemed offer value · still live · expiry extended to 15 Sept (unconfirmed)';
 
   rrEl('rr-since').textContent = 'Since go-live ' + rrDay(RR.launch_date);
 
@@ -6950,7 +6950,7 @@ function rrSubNav() {
 function rrSummary() {
   var c = RR.cliff, t = RR.trading, m = RR.members;
 
-  if (c && c.forfeited) {
+  if (c && c.outstanding) {
     rrEl('rr-alert').hidden = false;
     rrEl('rr-alert-h').textContent = c.headline;
     rrEl('rr-alert-p').textContent = c.body;
@@ -6974,23 +6974,23 @@ function rrSummary() {
     return '<div class="kpi ' + k[0] + '"><div class="v">' + k[1] + '</div><div class="k">' + k[2] + '</div><div class="d">' + k[3] + '</div></div>';
   }).join('');
 
-  rrEl('rr-funnel-lede').innerHTML = 'The programme’s whole case rested on a £5 voucher issued to <b>' + rrN(c.issued) +
-    '</b> people in one batch on 18 August. It expired at 23:59 UTC on 1 September. <b>' + rrN(c.redeemed) + '</b> (' + c.activation.toFixed(1) +
-    '%) redeemed it; <b>' + rrN(c.forfeited) + '</b> never did, and that offer has now lapsed. <b>The batch is closed, so these numbers are final.</b> ' +
-    'The one email that reached it (' + c.catchup.sent_at + ', ' + rrN(c.catchup.sent) + ' mailable of ' + rrN(c.issued) + ') opened at ' + c.catchup.open_pc + '% and clicked at ' + c.catchup.click_pc +
-    '%, with ' + rrN(c.catchup.redeemed_attr) + ' redemptions attributed. The migrated base did not move for a £5; the rolling £5 to new sign-ups redeems at roughly nine times that rate.';
+  rrEl('rr-funnel-lede').innerHTML = 'The programme’s whole case rests on a £5 voucher issued to <b>' + rrN(c.issued) +
+    '</b> people in one batch on 18 August. It was due to expire at 23:59 UTC on 1 September; <b>it did not</b>. Trifft extended it by 14 days and batch members are still redeeming. <b>' + rrN(c.redeemed) + '</b> (' + c.activation.toFixed(1) +
+    '%) have redeemed so far; <b>' + rrN(c.outstanding) + '</b> are still unredeemed and still live. ' +
+    'The one email that has reached them (' + c.catchup.sent_at + ', ' + rrN(c.catchup.sent) + ' mailable of ' + rrN(c.issued) + ') opened at ' + c.catchup.open_pc + '% and clicked at ' + c.catchup.click_pc +
+    '%, with ' + rrN(c.catchup.redeemed_attr) + ' redemptions attributed. The migrated base does not move much for a £5; the rolling £5 to new sign-ups redeems at roughly nine times that rate.';
 
   var steps = [
     ['Issued in the 18 Aug batch', c.issued, 100],
-    ['Redeemed before expiry', c.redeemed, c.issued ? c.redeemed / c.issued * 100 : 0],
-    ['Forfeited at 23:59 UTC, 1 Sept', c.forfeited, c.issued ? c.forfeited / c.issued * 100 : 0]
+    ['Redeemed to date', c.redeemed, c.issued ? c.redeemed / c.issued * 100 : 0],
+    ['Still unredeemed, still live', c.outstanding, c.issued ? c.outstanding / c.issued * 100 : 0]
   ];
   rrEl('rr-f-welcome').innerHTML = steps.map(function(s) {
     return '<div class="fstep"><span class="ftrack"><span class="ffill" style="width:' + Math.max(s[2], 2).toFixed(1) + '%"></span>' +
       '<span class="flab">' + s[0] + '</span></span><span class="fval">' + rrN(s[1]) + '</span></div>';
   }).join('') +
   '<div class="fstep" style="margin-top:4px"><span style="font-size:12px;color:var(--rr-ink-3)">Issue to redeem <b style="color:var(--rr-crit)">' +
-  rrPc(c.redeemed, c.issued) + '</b> &nbsp;·&nbsp; forfeited <b style="color:var(--rr-crit)">' + rrPc(c.forfeited, c.issued) + '</b> = ' + rrMoney(c.value) + ' &nbsp;·&nbsp; re-issued ' + rrN(c.reissued) + '</span><span></span></div>';
+  rrPc(c.redeemed, c.issued) + '</b> &nbsp;·&nbsp; unredeemed <b style="color:var(--rr-crit)">' + rrPc(c.outstanding, c.issued) + '</b> = ' + rrMoney(c.value) + ' still live &nbsp;·&nbsp; re-issued ' + rrN(c.reissued) + '</span><span></span></div>';
 
   rrEl('rr-f-note').innerHTML = 'Claim-to-redeem across every voucher type is <b>' + RR.claim_to_redeem.rate.toFixed(1) + '%</b> (' +
     rrN(RR.claim_to_redeem.people_redeemed) + ' of ' + rrN(RR.claim_to_redeem.people_claimed) + ' people). It barely moves by voucher. The app is where the money is lost.';
@@ -7219,17 +7219,17 @@ function rrExpiry() {
   rrEl('rr-exp-a-n').textContent = rrN(totA) + ' since go-live';
 
   rrEl('rr-exp-kpis').innerHTML = [
-    ['hot', rrN(rd[h]), 'Redeemed on expiry day', 'the biggest day since go-live'],
+    ['hot', rrN(rd[h]), 'Redeemed on the advertised expiry day', '1 Sept · the biggest day since go-live · the batch was then extended'],
     ['hot', (vsPrevDay ? vsPrevDay.toFixed(1) + '<small>x</small>' : '—'), 'Up on the day before',
       'vs ' + rrN(rd[h - 1]) + (vsWeek ? ' · ' + vsWeek.toFixed(1) + 'x the prior 7-day average' : '')],
-    ['', rrN(ac[h]), 'Claimed on expiry day', 'vs ' + rrN(ac[h - 1]) + ' the day before'],
+    ['', rrN(ac[h]), 'Claimed on the advertised expiry day', 'vs ' + rrN(ac[h - 1]) + ' the day before'],
     ['', (totR ? (rd[h] / totR * 100).toFixed(1) + '<small>%</small>' : '—'),
       'Of all redemptions ever', 'in one day out of ' + rd.length]
   ].map(function (k2) {
     return '<div class="kpi ' + k2[0] + '"><div class="v">' + k2[1] + '</div><div class="k">' + k2[2] + '</div><div class="d">' + k2[3] + '</div></div>';
   }).join('');
 
-  var foot = X.from + ' to ' + X.to + ', the 1 Sept deadline highlighted; the week after sits to its right';
+  var foot = X.from + ' to ' + X.to + ', the advertised 1 Sept deadline highlighted (the batch was extended, not expired)';
   rrBars('rr-ch-expr', rd, [h], X.labels, foot);
   rrBars('rr-ch-expa', ac, [h], X.labels, foot);
 }
