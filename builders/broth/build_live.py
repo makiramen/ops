@@ -85,6 +85,12 @@ for kind in KINDS:
         nums.append(val)
         cells.append({"scope": "factory", "loc": FACTORY, "kind": kind, "d": d,
                       "v": val, "n": n, "miss": 0, "batches": n})
+    if not nums:
+        # A week can open before the factory has logged a batch of one kind: Monday 08/09/26 the
+        # bake died here because no chicken batch had been filed since the Sunday. Emit NO entry
+        # for that kind rather than crash the whole run; the panel filters on the key existing,
+        # so the factory line simply shows the kind that has readings.
+        continue
     mean = statistics.mean(nums); sd = statistics.pstdev(nums)
     cv = sd / mean if mean else 0
     # No factory spec exists, so the factory is scored on how tightly it holds its
@@ -178,6 +184,8 @@ def add(sev, kind, loc, ftype, headline, detail):
 for kind in KINDS:
     lo, hi = SPEC[kind]
     rows = [r for r in scores if r["kind"] == kind]
+    if not rows:
+        continue                       # no site filed this kind in the window: nothing to flag
     means = [r["mean"] for r in rows]
     gmean = statistics.mean(means)
     gsd = statistics.pstdev(means) or 1e-9
@@ -493,7 +501,10 @@ json.dump(snap, open(_OUT, "w"), separators=(",", ":"))
 
 print("FACTORY (reference only, after ice, pre site dilution)")
 for k in KINDS:
-    f = factory[k]
+    f = factory.get(k)
+    if not f:
+        print(f"  {k:8s} no readings in this window")
+        continue
     print(f"  {k:8s} {f['mean']:5.2f}  consistency {f['consistency']:5.1f} ({f['rag']})  "
           f"cv {f['cv_pct']}%  range {f['min']} to {f['max']}  sd {f['sd']}  "
           f"{f['batches']} batches / {f['days']} days")
