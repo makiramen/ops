@@ -1,0 +1,239 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-09-08",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-08-31 \u2013 2026-09-06",
+    "commencing": "2026-08-31",
+    "ending": "2026-09-06"
+  },
+  "sites": {
+    "M18": {
+      "code": "M18",
+      "name": "Maki 18",
+      "gm": "Imre Balogh",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 37229.8,
+          "target": 35500.0,
+          "var_pct": 4.87,
+          "prev": 38428.04,
+          "wow_abs": -1198.24,
+          "wow_pct": -3.12
+        },
+        "covers": {
+          "actual": 1691,
+          "prev": 1797,
+          "wow_abs": -106,
+          "wow_pct": -5.9
+        },
+        "sph": {
+          "actual": 21.02,
+          "prev": 20.76,
+          "wow_abs": 0.26,
+          "wow_pct": 1.25,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 26.36,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 36.99,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 658.7
+        },
+        "waste": {
+          "actual": 3.97
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 6,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-08-31"
+      },
+      "efficiency_score": {
+        "score": 34,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+4.87) + 30% (\u00a3gap +1730 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 77.32,
+            "basis": "\u00a321.02 vs \u00a322 tgt \u2014 level 84, WoW +1.25% \u2192 mom 62"
+          },
+          "food": {
+            "weight": 30,
+            "value": 4.08,
+            "basis": "36.99% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 19.6,
+            "basis": "26.36% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "wage 26.4%",
+          "food 37.0%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.3415,
+        "new_reviews": 41,
+        "star_breakdown": {
+          "1": 4,
+          "2": 1,
+          "3": 4,
+          "4": 0,
+          "5": 32
+        },
+        "negatives": 9,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Zayana",
+            "text": "The ramen broth felt quite salty and overpowering so couldn\u2019t taste the actual broth. The noodles felt a bit off as well. Good halal options though. Service was quick and easy.",
+            "date": "2026-09-04",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Nicholas Cooper",
+            "text": "Service was great, food portions sizes were great too, but felt the actual taste was a bit bland.\nFor reference I had:\n- Squid Tempura - with adding soy there wasn't much flavour to the tempura\n- Steak Tataki Ramen - the broth was ok (was expecting better) and the steak itself had no flavour or seasonin",
+            "date": "2026-09-03",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "A R\u00f6",
+            "text": "Ramen was okay not really special, service and atmosphere really good and nice. But never order the lemonades here, tasting artificial and served in cheap plastic cups. \ud83d\udc25",
+            "date": "2026-09-02",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "cristiano rodrigues",
+            "text": "The staff are extremely arrogant, especially a tall white man. The food took nearly an hour, and the atmosphere was chaotic.",
+            "date": "2026-09-02",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Sabi Syangtan",
+            "text": "Very disappointing service. We ordered water and had to ask several times, but it was brought only after a long wait in a dirty bottle, which raised serious concerns about hygiene. The staff also seemed confused and disorganised. On top of that, the food portions were too small for the price. Overall, poor service, hygiene,and not value for money.",
+            "date": "2026-09-01",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Jade Friend",
+            "text": "Firstly we had to wait a while even though there was loads of empty seats.\nLook ages to get served, even though there was multiple staff. The food took a while and was not great, It was pretty bland and needed something else. My drink wasn\u2019t too bad but my friends lychee lemonade was ridiculously sweet.\n\nWhen I asked for the bill I also said I had a tastecard code. The guy decided to tell me I should\u2019ve booked to let them know.. I hadn\u2019t had a problem before, plus some places say it on the app, this one didn\u2019t.\nHe never even brought me the bill and decided to keep serving other people. Which I found very rude, I just wanted to leave it was loud from the staff shouting and super hot. I didn\u2019t get the guys name but he was a tall white guy that look like he\u2019d been in a fight all busted up.\nI had to get someone else to get me the bill.\nI should\u2019ve refused service charge.\n\nAlso the toilets were absolutely disgusting. Stunk, tissue everywhere, poo splattered up toilets.\nLiked like the place was falling apart. There was even a railing coming off the way wall we moved as we went up the stairs. We didn\u2019t notice until my friend grabbed on and almost fell from it coming away.\n\nWould not recommend and certainly will not be going back.",
+            "date": "2026-08-31",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Itai Moses (\u202b\u05d0\u05ea\u05d9\u202c\u200e)",
+            "text": "We came here as it was half price for food on first table. Glad that we did not pay full price, and not even sure it was worth it with half price off.\n\nWe got edamame which were clearly heated from frozen, veg gyozas were okay.\n\nVeg ramen was okay, the broth was decent but it was mainly just noodles, no veggies or extras. The tofu was meant to be fried tofu but was just soft and plain.\n\nFried chicken was fatty and poor quality meat, cooked from frozen and seemed to be undercooked. Same issue with chicken soba.\n\nBoba was nice but served with a tiny straw so you couldn\u2019t even drink it properly!\n\nThink based on the reviews this is a tourist trap, but you can get far better quality ramen in London for the price.",
+            "date": "2026-08-31",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-08."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-08-31.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-09-06",
+        "resolution": "weekly",
+        "partial": true,
+        "sales": 1534.46,
+        "orders": 48,
+        "orders_estimated": true,
+        "aov": 31.97,
+        "new_customers": 23,
+        "rating": null,
+        "open_hours_pct": null,
+        "avg_prep_min": null,
+        "rejection_pct": null,
+        "inaccuracy_pct": null,
+        "rider_wait_5min_pct": null,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source."
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    }
+  }
+}

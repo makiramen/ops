@@ -1,0 +1,223 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-09-08",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-08-31 \u2013 2026-09-06",
+    "commencing": "2026-08-31",
+    "ending": "2026-09-06"
+  },
+  "sites": {
+    "M21": {
+      "code": "M21",
+      "name": "Maki 21",
+      "gm": "(vacant)",
+      "gm_confirm": false,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 56987.95,
+          "target": 42500.0,
+          "var_pct": 34.09,
+          "prev": 55168.98,
+          "wow_abs": 1818.97,
+          "wow_pct": 3.3
+        },
+        "covers": {
+          "actual": 2957,
+          "prev": 3779,
+          "wow_abs": -822,
+          "wow_pct": -21.75
+        },
+        "sph": {
+          "actual": 19.27,
+          "prev": 14.6,
+          "wow_abs": 4.67,
+          "wow_pct": 31.99,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 27.17,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 24.92,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 1077.42
+        },
+        "waste": {
+          "actual": 90.44
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": 0.8,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-08-31"
+      },
+      "efficiency_score": {
+        "score": 64,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+34.09) + 30% (\u00a3gap +14488 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 68.15,
+            "basis": "\u00a319.27 vs \u00a322 tgt \u2014 level 54, WoW +31.99% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "24.92% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 7.45,
+            "basis": "27.17% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "0.80% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [
+          "weekly_star"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "wage 27.2%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.6078,
+        "new_reviews": 102,
+        "star_breakdown": {
+          "1": 7,
+          "2": 1,
+          "3": 0,
+          "4": 9,
+          "5": 85
+        },
+        "negatives": 8,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "akhyar mahmood",
+            "text": "This place uses the word Halal but serves alcohol. It's a mockery.",
+            "date": "2026-09-06",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Emily Cars",
+            "text": "Really disappointed with our experience. It took half an hour for anyone to just take our drink orders. The fried chicken starters were really chewy and rubbery. Both the ramen and yakisoba noodles seemed like they had just been heated in the microwave and lacked flavour. All the food had a strange artificial flavour as well. Would not recommend",
+            "date": "2026-09-05",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Amna Ahmed",
+            "text": "The chicken was overly salty, ramen lacked flavour other than salt. Chicken was also soggy. Katsu curry was average at best- the sauce was nice but chicken felt like frozen food you air fry. Rice was stiff. Staff were polite and served us quickly but the food is heavily lacking. Wouldn't return.",
+            "date": "2026-09-05",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Lib",
+            "text": "Was a bit disappointed with how the food was. Ordered a chicken firecracker ramen and steak ramen and with the chicken one being 16 pound it had only about 3 pieces of chicken in it and not much flavor. Steak was somewhat better as it came with more portion of steak.\n\nInitially our server told us they were out of steak ramen and we were going to leave but then another staff member said they did have it and fixed our order for us so that atleast worked out.\n\nOverall it\u2019s a nice built restaurant but the prices don\u2019t match the quality of the food at all.\n\nThey should also communicate that the 5 pound ramen is only one per table as it\u2019s providing false advertisement thinking both people can get ramen for 5 pound.",
+            "date": "2026-09-01",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Andy Miles",
+            "text": "Was totally ignored by serving staff for twenty minutes and left. Won't be returning.",
+            "date": "2026-09-01",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "mina",
+            "text": "Unfortunately, we were disappointed with our experience at Maki & Ramen Birmingham. We waited around an hour for our food, and only half the order arrived initially. We had to ask for the rest of our food and drinks, then waited ages again to pay and leave. I\u2019ve never experienced such a bad service before.\n\nThe music was also far too loud and overstimulating. The food was okay overall, with the sushi being the highlight, but the noodle broth arrived lukewarm.\n\nOverall, the slow service and atmosphere really took away from what could have been a much better experience I\u2019ve experienced at other branches. And I hope there\u2019s improvement as it goes on.",
+            "date": "2026-08-31",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Rex Lapis",
+            "text": "waited for 1 hour and had to ask the servers when the food would arrive. Turns out they ran out of an ingredient which the chef did not communicate to the servers and we had to place an order again. was given a \u00a320 coupon as compensation but this will probably be used for one per table as they do this with the \u00a35 coupons. Better to go alone",
+            "date": "2026-08-31",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "cherryq",
+            "text": "Came here with my friends and was planning to use our \u00a35 coupons. Turned out we couldn\u2019t use more than one coupon for one table so ordered anyways. We ordered our food, waited for over an hour and still didn\u2019t get our food. One item on the menu was had ran out and no staff were notified so we ended up waiting for nothing. Absolutely no communication between any of the staff in the kitchen and taking orders. We left without our food and was offered coupons, which they had ready probably because this has happened more than once. Felt completely ignored and I won\u2019t be coming here again.",
+            "date": "2026-08-31",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-08."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-08-31.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+      ]
+    }
+  }
+}

@@ -1,0 +1,224 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-09-08",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-08-31 \u2013 2026-09-06",
+    "commencing": "2026-08-31",
+    "ending": "2026-09-06"
+  },
+  "sites": {
+    "M8": {
+      "code": "M8",
+      "name": "Maki 8",
+      "gm": "Scott Renwick",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 48169.33,
+          "target": 42750.0,
+          "var_pct": 12.68,
+          "prev": 51892.48,
+          "wow_abs": -3723.15,
+          "wow_pct": -7.17
+        },
+        "covers": {
+          "actual": 2170,
+          "prev": 2059,
+          "wow_abs": 111,
+          "wow_pct": 5.39
+        },
+        "sph": {
+          "actual": 20.13,
+          "prev": 23.13,
+          "wow_abs": -3.0,
+          "wow_pct": -12.97,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 20.75,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 23.61,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 687.76
+        },
+        "waste": {
+          "actual": 189.59
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 4.0,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": 1.2,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-08-31"
+      },
+      "efficiency_score": {
+        "score": 91,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+12.68) + 30% (\u00a3gap +5419 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 48.18,
+            "basis": "\u00a320.13 vs \u00a322 tgt \u2014 level 69, WoW -12.97% \u2192 mom 0"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "23.61% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "20.75% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "1.20% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [
+          "weekly_star"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.6,
+        "new_reviews": 15,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 1,
+          "4": 0,
+          "5": 13
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Felitsiia Kryvenko (felisss)",
+            "text": "Worst customer service ever with rude workers who make disgusted faces at you.\n\nCame on Friday around 14:00 in a small group. We did get a table pretty fast, however when taking our order the waiter just forgot about one of people and was ready to leave the table. It is not a big issue since we all are people, however everything that happened next highlighted this too.\n\nNext, the orders would be placed perfectly like everyone ordered apart from one. One person had to reach all the way across the table to get ALL their orders just because waiters were too lazy to bring it closer to them, and when asked to put one dish a bit closer, the waiter made yet another face and almost threw the dish with anger.\n\nMoreover, when asked for a bill, one really rude guy tried to overcharge me for a lunch deal that we never ordered. Lunch deal for \u00a318 includes main, side, and a drink, and it looks like he tried to charge us for TAP WATER. When asked what\u2019s going on and why, he kept being rude and wouldn\u2019t take responsibility for his mistake. He kept saying that he\u2019s in right, we\u2019re wrong, and if he charges it correctly it will be more expensive. I wasted almost 10 minutes explaining math to this guy, until he finally left and someone brought us a correct bill (which was actually cheaper like it should be, not more expensive like that rude man kept saying).\n\nLastly, when we asked to pay separately for what we ordered, we were told they cannot do that, we have to tell them all prices. Fair enough, just be prepared to pull up a calculator if you still want to attend this place. But when we said that we won\u2019t pay their INCLUDED tip, the waitress dared to look annoyed. Well, the service was bad, and this is me being polite. I explained to her everything that happened and was met with a \u201cI don\u2019t understand what\u2019s the problem\u201d. Go talk to your male co-worker that worked on Friday and ask him how he tried to overcharge us, I\u2019m sure he\u2019ll be happy to show you his frustration over lost money.\n\nMaki & Ramen, just because people are drinking doesn\u2019t mean they won\u2019t notice awful customer service or overcharges in the bill. You treated one person badly and lost 4 loyal customers forever, well done!",
+            "date": "2026-09-05",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "kate beale",
+            "text": "Good generally",
+            "date": "2026-09-04",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-08."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-08-31.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 3,
+        "tasks": [
+          {
+            "task": "Recarpeting at front of store, potentially with company logo",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Look into purchasing a floor buffer to properly deep cleaning flooring {Shared between all sites}",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "3 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-09-06",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 4656.3,
+        "orders": 151,
+        "aov": 30.84,
+        "new_customers": 45,
+        "rating": 4.86,
+        "open_hours_pct": 99.7,
+        "avg_prep_min": 16,
+        "rejection_pct": 0,
+        "inaccuracy_pct": null,
+        "rider_wait_5min_pct": null,
+        "conversion_pct": 10.6,
+        "wow": {
+          "gmv_pct": 11.5,
+          "orders_abs": 27,
+          "prev_gmv": 4174.32,
+          "prev_orders": 124
+        },
+        "gmv_vs_4wk_pct": 21.3,
+        "gmv_vs_ly_pct": 37.5,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary."
+      },
+      "gaps": []
+    }
+  }
+}
