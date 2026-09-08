@@ -6722,10 +6722,12 @@ var RR_SNAP = {
   members: {total: 40558, real: 40509, joined_since: 4189, rate_note: '~280/day, rising'},
   trading: {bills: 2069, spend: 53774.71, atv: 25.99, sites: 21, members: 1813, days: 14},
   share: {sales: 3.8, target: 25, legacy: 4.3},
-  cliff: {issued: 36265, claimed: 2679, redeemed: 1365, outstanding: 35588,
-    value: 177940, expires: '2026-09-01T23:59:59Z', activation: 7.4,
-    headline: '35,588 £5 vouchers expire tonight and the catch-up email is still a draft',
-    body: 'The audience was wrong until 07:02 this morning: it pointed at a rolling 7-day segment of 2,322 recent sign-ups, none of them in the 18 August batch. It now points at UJSd2u, 35,723 profiles, correct definition. It has never been scheduled, and the automated nudge flow still has two open faults, so nothing else reaches these people before 23:59 UTC.'},
+  cliff: {issued: 36265, redeemed: 902, forfeited: 35359, reissued: 4,
+    value: 176795, expired: '2026-09-01T23:59:59Z', activation: 2.5,
+    final_label: '18 Aug batch · closed 1 Sept 2026, 23:59 UTC · final',
+    catchup: {sent: 29412, delivered: 29234, open_pc: 39.6, click_pc: 5.8, clicks: 1707, redeemed_attr: 263, unsub: 140, sent_at: '1 Sept 09:00 UTC'},
+    headline: 'The 18 Aug £5 batch has expired: 902 redeemed, 35,359 forfeited',
+    body: 'Final, closed set. 36,265 people were issued the £5 on 18 August; 902 (2.5%) redeemed it before it lapsed at 23:59 UTC on 1 September, 4 were re-issued, 35,359 let it go. The catch-up email did go out at 09:00 UTC on expiry day to the 29,412 mailable people in the batch: 39.6% opened, 1,707 clicked (5.8%), 263 redemptions attributed and 140 unsubscribed. Expiry day itself did 470 redemptions across all vouchers, 2.2x the day before, and 229 of the batch redeemed in the final 17 hours. The rolling £5 to new sign-ups is now the only live welcome offer.'},
   claim_to_redeem: {people_claimed: 2791, people_redeemed: 1480, rate: 53.0},
   tiers: [
     {name: 'Loyal',   threshold: 0,    members: 40129, ex_staff: 40110},
@@ -6797,13 +6799,13 @@ var RR_SNAP = {
 // automated COUPON EVENTS sync still has no API key. It is therefore a DATED
 // SNAPSHOT like the blocks above it, and it says so on the page.
 var RR_EXPIRY = {
-  pulled:    '2 Sept 2026',
+  pulled:    '8 Sept 2026',
   from:      '18 Aug',
-  to:        '1 Sept',
+  to:        '7 Sept',
   hot:       14,                       // index of 1 Sept, the expiry day
-  labels:    ['18','19','20','21','22','23','24','25','26','27','28','29','30','31','1'],
-  redeemed:  [9, 63, 54, 119, 198, 111, 110, 143, 141, 166, 186, 277, 211, 218, 470],
-  activated: [102, 309, 191, 215, 321, 230, 362, 342, 300, 281, 330, 422, 338, 420, 837],
+  labels:    ['18','19','20','21','22','23','24','25','26','27','28','29','30','31','1','2','3','4','5','6','7'],
+  redeemed:  [9, 63, 54, 119, 198, 111, 110, 143, 141, 166, 186, 277, 211, 218, 470, 177, 175, 235, 362, 311, 280],
+  activated: [102, 309, 191, 215, 321, 230, 362, 342, 300, 281, 330, 422, 338, 420, 837, 301, 288, 283, 444, 352, 312],
   prev7_mean_redeemed: 192             // 25-31 Aug, the week it has to beat
 };
 
@@ -6825,7 +6827,9 @@ function rrMerge() {
       // "still on the snapshot": it tried and failed, so name it. Keys the API
       // never mentions at all are page furniture (faults, sources, build queue)
       // and are not claims about freshness, so they stay out of the list.
-      if (empty) { if (RR_SNAP.hasOwnProperty(k)) RR_SNAP_KEYS.push(k); continue; }
+      // cliff is a CLOSED batch (expired 1 Sept 23:59 UTC) and lives in the page as a
+      // final constant; the API sending null for it is expected, not staleness.
+      if (empty) { if (RR_SNAP.hasOwnProperty(k) && k !== 'cliff') RR_SNAP_KEYS.push(k); continue; }
       out[k] = v;
       RR_LIVE_KEYS.push(k);
     }
@@ -6910,11 +6914,11 @@ async function loadLoyalty() {
   // offer value - and it is fed by vouchers/cliff/claim_to_redeem. When those
   // are stale, say so ON the panel: the stamp alone sits too far from the
   // number for anyone reading it to connect the two.
-  var stale5 = ['vouchers', 'cliff', 'claim_to_redeem'].filter(function (k) { return RR_LIVE_KEYS.indexOf(k) < 0; });
+  var stale5 = ['vouchers', 'claim_to_redeem'].filter(function (k) { return RR_LIVE_KEYS.indexOf(k) < 0; });
   var s2 = rrEl('rr-s2-src');
-  if (s2) s2.textContent = stale5.length ? '£5 welcome voucher · ' + RR.pulled_label + ' snapshot' : '£5 welcome voucher';
+  if (s2) s2.textContent = '£5 welcome voucher · ' + RR.cliff.final_label + (stale5.length ? ' · voucher table ' + RR.pulled_label + ' snapshot' : '');
   var ak = rrEl('rr-alert-k');
-  if (ak) ak.textContent = stale5.length ? 'Unredeemed offer value · ' + RR.pulled_label + ' snapshot' : 'Unredeemed offer value';
+  if (ak) ak.textContent = 'Offer value forfeited at expiry · final';
 
   rrEl('rr-since').textContent = 'Since go-live ' + rrDay(RR.launch_date);
 
@@ -6946,7 +6950,7 @@ function rrSubNav() {
 function rrSummary() {
   var c = RR.cliff, t = RR.trading, m = RR.members;
 
-  if (c && c.outstanding) {
+  if (c && c.forfeited) {
     rrEl('rr-alert').hidden = false;
     rrEl('rr-alert-h').textContent = c.headline;
     rrEl('rr-alert-p').textContent = c.body;
@@ -6970,22 +6974,23 @@ function rrSummary() {
     return '<div class="kpi ' + k[0] + '"><div class="v">' + k[1] + '</div><div class="k">' + k[2] + '</div><div class="d">' + k[3] + '</div></div>';
   }).join('');
 
-  rrEl('rr-funnel-lede').innerHTML = 'The programme’s whole case rests on a £5 voucher. It was issued to <b>' + rrN(c.issued) +
-    '</b> people in one batch on 18 August. <b>' + rrN(c.claimed) + '</b> of them opened the app and claimed it. Of those, <b>' + rrN(c.redeemed) +
-    '</b> walked into a restaurant and used it. <b>The break is at the claim, not the redemption.</b> Once someone claims, half of them spend it, which is a good offer behaving normally. The ' +
-    (100 - c.activation).toFixed(1) + '% who never claimed are the problem, and they are a reach and awareness problem, not a pricing one.';
+  rrEl('rr-funnel-lede').innerHTML = 'The programme’s whole case rested on a £5 voucher issued to <b>' + rrN(c.issued) +
+    '</b> people in one batch on 18 August. It expired at 23:59 UTC on 1 September. <b>' + rrN(c.redeemed) + '</b> (' + c.activation.toFixed(1) +
+    '%) redeemed it; <b>' + rrN(c.forfeited) + '</b> never did, and that offer has now lapsed. <b>The batch is closed, so these numbers are final.</b> ' +
+    'The one email that reached it (' + c.catchup.sent_at + ', ' + rrN(c.catchup.sent) + ' mailable of ' + rrN(c.issued) + ') opened at ' + c.catchup.open_pc + '% and clicked at ' + c.catchup.click_pc +
+    '%, with ' + rrN(c.catchup.redeemed_attr) + ' redemptions attributed. The migrated base did not move for a £5; the rolling £5 to new sign-ups redeems at roughly nine times that rate.';
 
   var steps = [
     ['Issued in the 18 Aug batch', c.issued, 100],
-    ['Claimed in the app', c.claimed, c.issued ? c.claimed / c.issued * 100 : 0],
-    ['Redeemed in a restaurant', c.redeemed, c.issued ? c.redeemed / c.issued * 100 : 0]
+    ['Redeemed before expiry', c.redeemed, c.issued ? c.redeemed / c.issued * 100 : 0],
+    ['Forfeited at 23:59 UTC, 1 Sept', c.forfeited, c.issued ? c.forfeited / c.issued * 100 : 0]
   ];
   rrEl('rr-f-welcome').innerHTML = steps.map(function(s) {
     return '<div class="fstep"><span class="ftrack"><span class="ffill" style="width:' + Math.max(s[2], 2).toFixed(1) + '%"></span>' +
       '<span class="flab">' + s[0] + '</span></span><span class="fval">' + rrN(s[1]) + '</span></div>';
   }).join('') +
-  '<div class="fstep" style="margin-top:4px"><span style="font-size:12px;color:var(--rr-ink-3)">Issue to claim <b style="color:var(--rr-crit)">' +
-  rrPc(c.claimed, c.issued) + '</b> &nbsp;·&nbsp; claim to redeem <b style="color:var(--rr-good)">' + rrPc(c.redeemed, c.claimed) + '</b></span><span></span></div>';
+  '<div class="fstep" style="margin-top:4px"><span style="font-size:12px;color:var(--rr-ink-3)">Issue to redeem <b style="color:var(--rr-crit)">' +
+  rrPc(c.redeemed, c.issued) + '</b> &nbsp;·&nbsp; forfeited <b style="color:var(--rr-crit)">' + rrPc(c.forfeited, c.issued) + '</b> = ' + rrMoney(c.value) + ' &nbsp;·&nbsp; re-issued ' + rrN(c.reissued) + '</span><span></span></div>';
 
   rrEl('rr-f-note').innerHTML = 'Claim-to-redeem across every voucher type is <b>' + RR.claim_to_redeem.rate.toFixed(1) + '%</b> (' +
     rrN(RR.claim_to_redeem.people_redeemed) + ' of ' + rrN(RR.claim_to_redeem.people_claimed) + ' people). It barely moves by voucher. The app is where the money is lost.';
@@ -7224,7 +7229,7 @@ function rrExpiry() {
     return '<div class="kpi ' + k2[0] + '"><div class="v">' + k2[1] + '</div><div class="k">' + k2[2] + '</div><div class="d">' + k2[3] + '</div></div>';
   }).join('');
 
-  var foot = X.from + ' to ' + X.to + ', the deadline highlighted';
+  var foot = X.from + ' to ' + X.to + ', the 1 Sept deadline highlighted; the week after sits to its right';
   rrBars('rr-ch-expr', rd, [h], X.labels, foot);
   rrBars('rr-ch-expa', ac, [h], X.labels, foot);
 }
