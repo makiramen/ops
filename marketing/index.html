@@ -337,6 +337,13 @@ tr.hiddenrow { display: none; }
 .mchip.crit b { color: #fff; }
 .ccard.dead { border-left-color: #7F1D1D; background: #FEF2F2; }
 .ccard.dead .cap { color: #7F1D1D; }
+/* Outliers v5.2: intent lens + reach spikes */
+.outlier-group.warn .og-label { color: #C2410C; }
+.outlier-group.warn .og-label .dot { background: #EA580C; }
+.ccard.warm { border-left-color: #EA580C; background: #FFF7ED; }
+.mchip.warn { background: #EA580C; border-color: #EA580C; color: #fff; }
+.mchip.warn b { color: #fff; }
+.sevtag.good { background: #DCFCE7; color: #15803D; }
 
 /* ════ INFLUENCER TAB (v5.2 design, scoped) ════ */
 #tab-influencer h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: #334155; }
@@ -3043,12 +3050,18 @@ function ttChips(r) {
 function igCardHtml(r) { return contentCard(r, typeTag(r.media_type), igChips(r)); }
 function ttCardHtml(r) { return contentCard(r, '<span class="tag tt">TIKTOK</span>', ttChips(r)); }
 
-// Outliers — standouts vs underperformers.
-// Standouts: reach (IG) / views (TikTok) >= 2x the window median.
+// Outliers (v5.2, 8 Sept) — two lenses, one "expected".
+// Expected = the window MEDIAN of reach (IG) / views (TikTok) and of eng rate, both shown on the header.
+// STANDOUT  = >= BAR_MULT x median reach/views (reach lens)
+//          OR >= BAR_MULT x median eng rate with at least median reach and the likes floor (intent lens:
+//             shares/saves/comments drive the rate, so a mid-reach post people share hard now counts).
+// REACH SPIKE = clears the reach bar but engagement is under the platform floor (borrowed reach, don't chase).
+// BAR_MULT is 1.8 = the 2x bar with Michael's 10% tolerance (8 Sept). Same split the TikTok backend rule uses.
 // Underperformers (judged HARSHLY, industry standard): weak reach/views (<=1/2 median) OR
 //   engagement/reach below the platform floor (IG 2% · TikTok 3% — TikTok norms run ~3.4% by view).
 //   CUT (dark) = the truly dead ones: eng/reach below the critical floor (IG 1% · TikTok 1.5%),
 //   or below the weak floor AND weak reach. WEAK (red) = fails one test.
+var OUTLIER_BAR_MULT = 1.8;
 function renderOutliers(elId, view, isTt) {
   var el = document.getElementById(elId);
   if (!el) return;
@@ -3057,7 +3070,10 @@ function renderOutliers(elId, view, isTt) {
   var ENG_CRIT = isTt ? 0.015 : 0.01;   // truly dead
   var LIKES_FLOOR = 80;                 // hard floor — under this = straight-up CUT, no matter the rate
   var floorTxt = (ENG_FLOOR * 100).toFixed(0) + '%';
+  var multTxt = OUTLIER_BAR_MULT.toFixed(1) + '×';
   function metricOf(r) { return isTt ? (Number(r.views) || Number(r.reach) || 0) : (Number(r.reach) || 0); }
+  // Rate on the SAME denominator as the reach lens (TikTok by views: reach and views diverge up to 9x and reach can be 0)
+  function rateOf(r) { var m = metricOf(r); return m > 0 ? ((Number(r.likes) || 0) + (Number(r.comments) || 0) + (Number(r.saves) || 0) + (Number(r.shares) || 0)) / m : 0; }
   var valid = view.filter(function(r) { return metricOf(r) > 0; });
   var headHtml = '<div class="outlier-head"><span class="oh-title">Outliers</span>';
   if (valid.length < 5) {
@@ -3065,29 +3081,53 @@ function renderOutliers(elId, view, isTt) {
     return;
   }
   var med = median(valid.map(metricOf));
-  headHtml += '<span class="subtle">vs median ' + metricLabel + ' this window (median ' + fmtN(med) + ') · underperformers judged against the industry eng/reach floor (IG 2% · TikTok 3%) and a hard ' + LIKES_FLOOR + '-likes floor</span></div>';
+  var medRate = median(valid.map(rateOf));
+  var barM = OUTLIER_BAR_MULT * med, barR = OUTLIER_BAR_MULT * medRate;
+  var rateLabel = 'eng/' + metricLabel;
+  headHtml += '<span class="subtle">expected = this window\'s median: ' + fmtN(med) + ' ' + metricLabel + ' · ' + fmtPct(medRate) + ' ' + rateLabel +
+    ' · standout bar ' + multTxt + ' either (' + fmtN(Math.round(barM)) + ' ' + metricLabel + ' or ' + fmtPct(barR) + ' ' + rateLabel + ', intent needs ≥ median ' + metricLabel + ') · underperformers vs the industry floor (IG 2% · TikTok 3%) and a hard ' + LIKES_FLOOR + '-likes floor</span></div>';
 
-  // Standouts (must also clear the hard likes floor — a big-reach post with <80 likes is not a win)
-  var good = valid.filter(function(r) { return metricOf(r) >= 2 * med && (Number(r.likes) || 0) >= LIKES_FLOOR; })
-    .sort(function(a, b) { return metricOf(b) - metricOf(a); }).slice(0, 8);
+  function likesOk(r) { return (Number(r.likes) || 0) >= LIKES_FLOOR; }
+  function reachLens(r) { return metricOf(r) >= barM && likesOk(r); }
+  function intentLens(r) { return rateOf(r) >= barR && metricOf(r) >= med && likesOk(r); }
+  // Standouts: either lens, but a reach-lens post under the engagement floor is a REACH SPIKE, not a win
+  var hits = valid.filter(function(r) { return reachLens(r) || intentLens(r); });
+  var spike = hits.filter(function(r) { return !intentLens(r) && rateOf(r) < ENG_FLOOR; })
+    .sort(function(a, b) { return metricOf(b) - metricOf(a); }).slice(0, 6);
+  var spikeSet = {}; spike.forEach(function(r) { spikeSet[r.content_id] = 1; });
+  function score(r) { return Math.max(med > 0 ? metricOf(r) / med : 0, medRate > 0 ? rateOf(r) / medRate : 0); }
+  var good = hits.filter(function(r) { return !spikeSet[r.content_id]; })
+    .sort(function(a, b) { return score(b) - score(a); }).slice(0, 10);
   var goodSet = {}; good.forEach(function(r) { goodSet[r.content_id] = 1; });
+  function lensChips(r) {
+    var xm = med > 0 ? metricOf(r) / med : 0, xr = medRate > 0 ? rateOf(r) / medRate : 0;
+    return [
+      chip('vs median ' + metricLabel, xm.toFixed(1) + '×', xm >= OUTLIER_BAR_MULT ? 'hot' : ''),
+      chip('vs median ' + rateLabel, xr.toFixed(1) + '×', xr >= OUTLIER_BAR_MULT ? 'hot' : (rateOf(r) < ENG_FLOOR ? 'cold' : ''))
+    ];
+  }
   function goodCard(r) {
-    var ratio = med > 0 ? metricOf(r) / med : 0;
-    var reach = chip('vs median ' + metricLabel, ratio.toFixed(1) + '×', 'hot');
+    var why = reachLens(r) && intentLens(r) ? 'REACH + INTENT' : (reachLens(r) ? 'REACH' : 'INTENT');
+    var badge = '<span class="mchip hot"><b>' + why + '</b></span>';
     var tag = isTt ? '<span class="tag tt">TIKTOK</span>' : typeTag(r.media_type);
-    return contentCard(r, tag, [reach].concat(isTt ? ttChips(r) : igChips(r)), 'hot');
+    return contentCard(r, tag, [badge].concat(lensChips(r), isTt ? ttChips(r) : igChips(r)), 'hot');
+  }
+  function spikeCard(r) {
+    var badge = '<span class="mchip warn"><b>REACH SPIKE</b></span>';
+    var tag = isTt ? '<span class="tag tt">TIKTOK</span>' : typeTag(r.media_type);
+    return contentCard(r, tag, [badge].concat(lensChips(r), isTt ? ttChips(r) : igChips(r)), 'warm');
   }
 
   // Underperformers — harsh: weak reach OR sub-floor engagement
-  function isBad(r) { return metricOf(r) <= 0.5 * med || r.engRate < ENG_FLOOR || (Number(r.likes) || 0) < LIKES_FLOOR; }
+  function isBad(r) { return metricOf(r) <= 0.5 * med || r.engRate < ENG_FLOOR || !likesOk(r); }
   function sevOf(r) {
     var lowReach = metricOf(r) <= 0.5 * med;
-    if ((Number(r.likes) || 0) < LIKES_FLOOR) return 'CUT';
+    if (!likesOk(r)) return 'CUT';
     if (r.engRate < ENG_CRIT || (r.engRate < ENG_FLOOR && lowReach)) return 'CUT';
     return 'WEAK';
   }
   function badness(r) { return (r.engRate / ENG_FLOOR) + (med > 0 ? metricOf(r) / med : 0); }
-  var bad = valid.filter(function(r) { return !goodSet[r.content_id] && isBad(r); })
+  var bad = valid.filter(function(r) { return !goodSet[r.content_id] && !spikeSet[r.content_id] && isBad(r); })
     .sort(function(a, b) { return badness(a) - badness(b); }).slice(0, 12);
   var nCut = bad.filter(function(r) { return sevOf(r) === 'CUT'; }).length;
   function badCard(r) {
@@ -3104,10 +3144,15 @@ function renderOutliers(elId, view, isTt) {
   }
 
   var html = headHtml;
-  html += '<div class="outlier-group good"><div class="og-label"><span class="dot"></span>Standouts — ' + good.length + ' <span class="subtle">(≥2× median ' + metricLabel + ')</span></div>';
+  html += '<div class="outlier-group good"><div class="og-label"><span class="dot"></span>Standouts — ' + good.length + ' <span class="subtle">(≥' + multTxt + ' median ' + metricLabel + ', or ≥' + multTxt + ' median ' + rateLabel + ' on at least median ' + metricLabel + ')</span></div>';
+  html += '<div class="og-legend"><span><span class="sevtag good">REACH</span> cleared the ' + metricLabel + ' bar</span><span><span class="sevtag good">INTENT</span> cleared the ' + rateLabel + ' bar: shares, saves and comments doing the work</span></div>';
   html += good.length ? '<div class="cardgrid">' + good.map(goodCard).join('') + '</div>'
     : '<div class="subtle" style="padding:2px 0 6px">No clear standouts in this window.</div>';
   html += '</div>';
+  if (spike.length) {
+    html += '<div class="outlier-group warn"><div class="og-label"><span class="dot"></span>Reach spikes — ' + spike.length + ' <span class="subtle">(cleared the ' + metricLabel + ' bar but ' + rateLabel + ' under the ' + floorTxt + ' floor: borrowed reach, log the hook, don\'t chase)</span></div>';
+    html += '<div class="cardgrid">' + spike.map(spikeCard).join('') + '</div></div>';
+  }
   html += '<div class="outlier-group bad"><div class="og-label"><span class="dot"></span>Underperformers — ' + bad.length + (nCut ? ' <span class="sevtag cut">' + nCut + ' CUT</span>' : '') + '</div>';
   html += '<div class="og-legend"><span><span class="sevtag cut">CUT</span> under ' + LIKES_FLOOR + ' likes, eng/reach below ' + (ENG_CRIT * 100).toFixed(1) + '%, or below ' + floorTxt + ' with weak reach — pull it</span><span><span class="sevtag weak">WEAK</span> below the ' + floorTxt + ' floor or ≤½ median ' + metricLabel + '</span></div>';
   html += bad.length ? '<div class="cardgrid">' + bad.map(badCard).join('') + '</div>'
