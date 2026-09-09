@@ -1120,6 +1120,10 @@
 #tab-ecbudget .tbl .delta.down{color:var(--rag-green)}
 #tab-ecbudget .tbl .delta.flat{color:var(--maki-muted)}
 #tab-ecbudget .tbl tr.nodata td{color:var(--maki-muted);background:#FCFBF7}
+#tab-ecbudget #carryTbl th,#tab-ecbudget #carryTbl td{text-align:center;vertical-align:middle}
+#tab-ecbudget #carryTbl th:first-child,#tab-ecbudget #carryTbl td:first-child{text-align:left}
+#tab-ecbudget #carryTbl{table-layout:fixed}
+#tab-ecbudget #carryTbl td.site-code{white-space:nowrap}
 #tab-ecbudget .section-intro{font-size:12.5px;color:var(--maki-muted);margin-bottom:10px;max-width:840px}
 #tab-ecbudget .note{background:#FFF8E1;border-left:3px solid var(--rag-amber);padding:10px 14px;border-radius:6px;font-size:12.5px;color:#5A4400;margin:12px 0}
 #tab-ecbudget .note.red{background:#FCEFE7;border-left-color:var(--rag-red);color:#7A2E0C}
@@ -1777,6 +1781,19 @@
   </div>
   <div style="display:flex;align-items:center;gap:8px;margin:-2px 0 12px;font-size:11.5px;color:var(--maki-muted)"><span id="ecbLiveDot" style="width:9px;height:9px;border-radius:50%;background:#9CA3AF;flex:none"></span><span id="ecbLiveText">Loading…</span><span style="margin-left:auto">From the EC control centre · same ledger sheet, read live</span></div>
   <div id="budgetMissed" style="margin-bottom:12px"></div>
+  <!-- CARRY-FORWARD BLOCK (added 09/09/2026): actual food cost vs actual sales, 25% cap, cumulative across the 4-week period from Mon 31/08 -->
+  <div class="delivery-tile" id="carryTile" style="border-top-color:#E8730C;margin-bottom:14px">
+    <div style="display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
+      <div style="flex:1;min-width:260px">
+        <h2>Budget carry-forward · actual food cost vs actual sales</h2>
+        <div class="tile-sub">Budget = <strong>25% of actual sales</strong>, not projections. What each site spent this week, what is left, what last week handed over, and where the 4-week period stands. <span class="source-chip">KPI weekly · daily cash-up · EC ledger</span></div>
+      </div>
+      <div id="carryPeriodWrap" style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--maki-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Period <select id="carryPeriod" style="font-size:13px;font-weight:600;padding:6px 10px;border:1px solid var(--maki-line);border-radius:8px;background:#fff;color:var(--maki-ink);cursor:pointer;text-transform:none;letter-spacing:0"></select></div>
+    </div>
+    <div class="tile-stats" id="carryStats"></div>
+    <div style="overflow-x:auto"><table class="tbl" id="carryTbl"><thead></thead><tbody><tr><td style="color:var(--maki-muted)">Loading weekly KPI and cash-up files…</td></tr></tbody></table></div>
+    <div id="carryNote" style="margin-top:10px;padding:8px 12px;font-size:11px;color:var(--maki-muted);border-top:1px solid var(--maki-line);line-height:1.5"></div>
+  </div>
   <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--maki-line);border-radius:var(--radius);padding:12px 18px;box-shadow:var(--shadow);margin-bottom:12px">
     <span style="font-size:11px;color:var(--maki-muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600">Week</span>
     <select id="budgetWeekSelect" style="min-width:240px;font-size:14px;font-weight:600;padding:7px 12px;border:1px solid var(--maki-line);border-radius:8px;background:#fff;color:var(--maki-ink);cursor:pointer"></select>
@@ -6835,6 +6852,7 @@ function renderBudget(){
   renderBudgetStatusAndOverview(d, dates, view, sunISO, date);
   renderClosedWeeks(d, dates);
   renderDailySpend();
+  try{ renderCarry(d, dates); }catch(e){ console.warn("[ECB] carry failed:",e); }
 }
 function renderMissedFilings(d, dates){
   const el=document.getElementById("budgetMissed"); if(!el) return;
@@ -6867,6 +6885,185 @@ function renderMissedFilings(d, dates){
     <div style="margin-top:7px;font-size:11px;opacity:.85">Tally = total missed daily reports per site since it started filing. Chase the chefs above; red badge = 3+ misses.</div>
   </div>`;
 }
+// ---- CARRY-FORWARD BLOCK (added 09/09/2026) ----
+// Budget = 25% x ACTUAL sales. Settled weeks: KPI food_pct x sales.actual from ./data/all_sites_wc_<Mon>.json
+// (Mon-Sun AM weeks). Live week: ledger purchases Mon..as_at vs cash-up sales for the same days
+// (./data/daily/daily_<date>.json). Under/over carries forward inside a 4-week period anchored on Mon 31/08/2026.
+// A week with no KPI file, or a site with a null KPI, is UNSETTLED and contributes nothing to the carry.
+// A live-week day with no ledger row is UNRECORDED, never a zero.
+const CARRY = { anchor:"2026-08-31", weeks:4, cap:0.25, weekly:{}, daily:{}, dailyIndex:null, loading:false, period:null, pending:null };
+const CARRY_AM_CODE = { IK2:"IKI2", MN:"MakiNori" };
+function carryMonday(iso){ const x=new Date(iso+"T12:00:00"); x.setDate(x.getDate()-((x.getDay()+6)%7)); return x.toISOString().slice(0,10); }
+function carryAddDays(iso,n){ const x=new Date(iso+"T12:00:00"); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10); }
+function carryUKToday(){ try{ const p=new Intl.DateTimeFormat("en-GB",{timeZone:"Europe/London",year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(new Date()); const g=t=>p.find(x=>x.type===t).value; return g("year")+"-"+g("month")+"-"+g("day"); }catch(_e){ return new Date().toISOString().slice(0,10); } }
+function carryPeriodStart(iso){ const a=new Date(CARRY.anchor+"T12:00:00"), m=new Date(carryMonday(iso)+"T12:00:00"); const wk=Math.round((m-a)/86400000/7); const k=Math.floor(wk/CARRY.weeks); return carryAddDays(CARRY.anchor, Math.max(0,k)*CARRY.weeks*7); }
+function carryShort(iso){ return new Date(iso+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"}); }
+function carryPeriodLabel(start){ return carryShort(start)+" to "+carryShort(carryAddDays(start,CARRY.weeks*7-1)); }
+function carryThrough(d){ const ks=Object.keys(d.ledger||{}); if(!ks.length) return null; return (d.as_at && ks.includes(d.as_at)) ? d.as_at : ks.sort().slice(-1)[0]; }
+function carryWeeksFor(start, today){ const out=[]; for(let i=0;i<CARRY.weeks;i++){ const m=carryAddDays(start,i*7); if(m<=today) out.push(m); } return out; }
+async function carryLoad(d){
+  if(CARRY.loading){ CARRY.pending=true; return; }
+  CARRY.loading=true;
+  try{
+    const through=carryThrough(d); const today=carryUKToday();
+    const start=CARRY.period || carryPeriodStart(through||today);
+    const weeks=carryWeeksFor(start, today);
+    await Promise.all(weeks.map(async m=>{
+      if(CARRY.weekly[m]!==undefined) return;
+      try{ const r=await fetch("./data/all_sites_wc_"+m+".json?cb="+Date.now(),{cache:"no-store"}); CARRY.weekly[m]= r.ok ? await r.json() : null; }
+      catch(_e){ CARRY.weekly[m]=null; }
+    }));
+    if(!CARRY.dailyIndex){
+      try{ const r=await fetch("./data/daily/daily_index.json?cb="+Date.now(),{cache:"no-store"}); CARRY.dailyIndex = r.ok ? await r.json() : {dates:[]}; }
+      catch(_e){ CARRY.dailyIndex={dates:[]}; }
+    }
+    const have=new Set((CARRY.dailyIndex&&CARRY.dailyIndex.dates)||[]);
+    // cash-up days needed: every week in the period that has no KPI file yet (live week, and any unsettled week awaiting its KPI build)
+    const need=[];
+    weeks.forEach(m=>{ if(CARRY.weekly[m]) return; for(let i=0;i<7;i++){ const dt=carryAddDays(m,i); if(dt<=(through||today) && have.has(dt) && CARRY.daily[dt]===undefined) need.push(dt); } });
+    await Promise.all(need.map(async dt=>{
+      try{ const r=await fetch("./data/daily/daily_"+dt+".json?cb="+Date.now(),{cache:"no-store"}); CARRY.daily[dt]= r.ok ? await r.json() : null; }
+      catch(_e){ CARRY.daily[dt]=null; }
+    }));
+  } finally { CARRY.loading=false; }
+  const again=CARRY.pending; CARRY.pending=null;
+  try{ renderBudget(); }catch(e){ console.warn("[ECB] carry render failed:",e); }
+  if(again) carryLoad(DATA.daily_spend);
+}
+function carrySiteWeek(d, code, m, through){
+  // returns {state, sales, spend, pct, bud, variance, unrecorded, days, salesDays, note}
+  const amc=CARRY_AM_CODE[code]||code;
+  const lf=(d.live_from||{})[code]; const sun=carryAddDays(m,6);
+  if(lf && sun<lf) return {state:"prelive"};
+  const wj=CARRY.weekly[m];
+  if(wj){
+    const s=wj.sites&&wj.sites[amc]; const k=s&&s.kpis||{};
+    const sales=k.sales?k.sales.actual:null; const fp=k.food_pct?k.food_pct.actual:null;
+    if(sales!=null && isFinite(sales) && sales>0 && fp!=null && isFinite(fp)){
+      const spend=sales*fp/100, bud=sales*CARRY.cap;
+      return {state:"settled", sales, spend, pct:fp, bud, variance:bud-spend};
+    }
+    return {state:"unsettled", note: sales==null||!(sales>0) ? "no sales in KPI" : "food cost null in KPI"};
+  }
+  if(!through || m>through) return {state:"future"};
+  // no KPI file: live week (contains as_at) or a completed week still awaiting its KPI build. Both read ledger + cash-up to the same day.
+  const end = sun<through ? sun : through;
+  let spend=0, filed=0, unrecorded=0, sales=0, salesDays=0, days=0;
+  for(let i=0;i<7;i++){
+    const dt=carryAddDays(m,i); if(dt>end) break; days++;
+    const v=(d.ledger[dt]||{})[code];
+    if(v!=null && isFinite(v)){ spend+=v; filed++; } else unrecorded++;
+    const dj=CARRY.daily[dt]; const sj=dj&&dj.sites&&dj.sites[amc]; const sa=sj&&sj.sales?sj.sales.actual:null;
+    if(sa!=null && isFinite(sa) && sa>0){ sales+=sa; salesDays++; }
+  }
+  const live = sun>=through;
+  if(filed===0) return {state:"unrecorded", days, unrecorded, sales, salesDays, live};
+  if(salesDays===0) return {state:"unsettled", note:"no cash-up sales yet", spend, days, unrecorded, live};
+  const bud=sales*CARRY.cap;
+  return {state: live?"live":"awaiting", sales, spend, pct:spend/sales*100, bud, variance:bud-spend, days, unrecorded, salesDays, live};
+}
+function carryPctCol(p){ return p==null?"var(--maki-muted)":p>CARRY.cap*100?"var(--rag-red)":p>CARRY.cap*100-2?"var(--amber-ink)":"var(--rag-green)"; }
+function carrySigned(n){ if(n==null||!isFinite(n)) return "·"; const r=Math.round(Math.abs(n)).toLocaleString("en-GB"); return n<0?`<span style="color:var(--rag-red)">−£${r}</span>`:`<span style="color:var(--rag-green)">+£${r}</span>`; }
+function carryMoney(c, key){
+  if(!c) return '<span style="color:var(--maki-muted)">·</span>';
+  if(c.state==="prelive") return '<span style="font-size:10.5px;color:var(--maki-muted)">not live</span>';
+  if(c.state==="future") return '<span style="color:var(--maki-muted)">·</span>';
+  if((c.state==="unrecorded"||c.state==="unsettled") && key!=="spend" && key!=="variance") return '<span style="color:var(--maki-muted)">·</span>';
+  if(c.state==="unrecorded") return `<span style="color:var(--rag-red);font-weight:600">unrecorded</span><div style="font-size:10.5px;color:var(--maki-muted)">${c.unrecorded} of ${c.days} day${c.days===1?"":"s"} not filed</div>`;
+  if(c.state==="unsettled") return `<span style="color:var(--amber-ink);font-weight:600">unsettled</span><div style="font-size:10.5px;color:var(--maki-muted)">${esc(c.note||"")}</div>`;
+  if(key==="variance") return `<span style="font-weight:700">${carrySigned(c.variance)}</span>`;
+  return `<strong>${fmtGBP(c[key])}</strong>`;
+}
+function renderCarry(d, dates){
+  const tbl=document.getElementById("carryTbl"); if(!tbl||!d||!d.ledger) return;
+  const through=carryThrough(d); const today=carryUKToday();
+  const curStart=carryPeriodStart(through||today);
+  const sel=document.getElementById("carryPeriod");
+  if(sel){
+    const starts=[]; for(let s=CARRY.anchor; s<=curStart; s=carryAddDays(s,CARRY.weeks*7)) starts.push(s);
+    if(!CARRY.period || !starts.includes(CARRY.period)) CARRY.period=curStart;
+    sel.innerHTML=starts.slice().reverse().map(s=>`<option value="${s}"${s===CARRY.period?" selected":""}>${carryPeriodLabel(s)}${s===curStart?" · current":""}</option>`).join("");
+  }
+  const start=CARRY.period||curStart;
+  const weeks=carryWeeksFor(start, today);
+  const needLoad = weeks.some(m=>CARRY.weekly[m]===undefined) || !CARRY.dailyIndex;
+  if(needLoad){ carryLoad(d); return; }
+  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
+  const effC=budgetEffCluster();
+  let view=d.sites.filter(r=> effC==="all" || codeCluster[r.code]===effC);
+  const wkState=weeks.map(m=>{ if(CARRY.weekly[m]) return "settled"; const sun=carryAddDays(m,6); if(!through||m>through) return "future"; return sun>=through?"live":"awaiting"; });
+  // "this week" = the last week that has started; "last week" = the one before it
+  let curIdx=-1; weeks.forEach((m,i)=>{ if(wkState[i]!=="future") curIdx=i; });
+  const prevIdx=curIdx-1;
+  const curMon=curIdx>=0?weeks[curIdx]:null, prevMon=prevIdx>=0?weeks[prevIdx]:null;
+  const curLive = curIdx>=0 && wkState[curIdx]!=="settled";
+  const thisHead = curMon ? `This week · w/c ${carryShort(curMon)}<div style="font-size:10px;font-weight:600;text-transform:none;letter-spacing:0">${curLive?`<span style="color:#E8730C">● live · Mon to ${carryShort(through)}</span>`:`<span style="color:var(--rag-green)">✓ settled</span>`}</div>` : "This week";
+  const prevHead = prevMon ? `Last week · w/c ${carryShort(prevMon)}<div style="font-size:10px;font-weight:600;text-transform:none;letter-spacing:0">${wkState[prevIdx]==="settled"?`<span style="color:var(--rag-green)">✓ settled</span>`:`<span style="color:var(--amber-ink)">⧗ awaiting KPI</span>`}</div>` : `Last week<div style="font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--maki-muted)">first week of period</div>`;
+  { let cg=tbl.querySelector("colgroup"); if(!cg){ cg=document.createElement("colgroup"); tbl.insertBefore(cg, tbl.firstChild); } cg.innerHTML=`<col style="width:190px"><col><col><col><col><col><col style="width:220px">`; }
+  tbl.querySelector("thead").innerHTML=`<tr><th>Site</th><th class="num" style="color:#E8730C">Spent this week £</th><th class="num">Budget this week £</th><th class="num">Left this week £</th><th class="num">Carry from last week £</th><th class="num">Period left £</th><th>Period used</th></tr>
+    <tr><th style="font-weight:500;border-top:none;padding-top:0"></th><th colspan="3" class="num" style="font-weight:500;border-top:none;padding-top:0">${thisHead}</th><th class="num" style="font-weight:500;border-top:none;padding-top:0">${prevHead}</th><th colspan="2" class="num" style="font-weight:500;border-top:none;padding-top:0">${carryPeriodLabel(start)} · ${wkState.filter(s=>s==="settled").length} settled${curLive?" + live":""} of ${CARRY.weeks}</th></tr>`;
+  const bar=(pct)=>{ if(pct==null) return '<span style="color:var(--maki-muted)">·</span>'; const col=pct>100?"var(--rag-red)":pct>92?"var(--rag-amber)":"var(--rag-green)"; return `<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:8px;background:var(--maki-soft);border-radius:4px;overflow:hidden"><div style="width:${Math.min(100,pct).toFixed(0)}%;height:100%;background:${col}"></div></div><span style="font-size:11px;font-weight:600;min-width:38px;text-align:right;color:${col}">${pct.toFixed(0)}%</span></div>`; };
+  const counted=c=>c&&(c.state==="settled"||c.state==="live"||c.state==="awaiting");
+  const calc=r=>{
+    const cells=weeks.map(m=>carrySiteWeek(d, r.code, m, through));
+    const t={sales:0,spend:0,bud:0,left:0,counted:0,gaps:0,unrec:0};
+    cells.forEach(c=>{ if(counted(c)){ t.sales+=c.sales; t.spend+=c.spend; t.bud+=c.bud; t.left+=c.variance; t.counted++; t.unrec+=c.unrecorded||0; } else if(c.state==="unsettled"||c.state==="unrecorded") t.gaps++; });
+    t.used = t.bud>0 ? t.spend/t.bud*100 : null;
+    return {cells,t,cur:curIdx>=0?cells[curIdx]:null,prev:prevIdx>=0?cells[prevIdx]:null};
+  };
+  const unrecBadge=c=> (c&&counted(c)&&c.unrecorded) ? `<div style="font-size:10.5px;color:var(--rag-red);font-weight:600">${c.unrecorded} day${c.unrecorded===1?"":"s"} unrecorded</div>` : "";
+  const siteRow=(r,x)=>`<tr${x.t.counted?"":' class="nodata"'}>
+      <td class="site-code">${r.code}${x.t.gaps?`<div style="font-size:10px;color:var(--amber-ink);font-weight:600">${x.t.gaps} wk${x.t.gaps===1?"":"s"} excluded</div>`:""}</td>
+      <td class="num" title="${x.cur&&counted(x.cur)?`Sales to date ${fmtGBP(x.cur.sales)}`:""}">${carryMoney(x.cur,"spend")}${unrecBadge(x.cur)}</td>
+      <td class="num">${carryMoney(x.cur,"bud")}</td>
+      <td class="num">${x.cur&&!counted(x.cur)?'<span style="color:var(--maki-muted)">·</span>':carryMoney(x.cur,"variance")}</td>
+      <td class="num" title="${x.prev&&counted(x.prev)?`Spent ${fmtGBP(x.prev.spend)} of ${fmtGBP(x.prev.bud)} (${x.prev.pct.toFixed(1)}%)`:""}">${prevIdx<0?'<span style="color:var(--maki-muted)">·</span>':carryMoney(x.prev,"variance")}</td>
+      <td class="num" style="font-weight:700" title="Spent ${fmtGBP(x.t.spend)} of ${fmtGBP(x.t.bud)} this period">${x.t.counted?carrySigned(x.t.left):'<span style="color:var(--maki-muted)">·</span>'}</td>
+      <td>${bar(x.t.used)}</td>
+    </tr>`;
+  const subRow=(label,t)=>`<tr style="background:var(--maki-soft);font-weight:700">
+      <td style="font-size:11px;letter-spacing:.04em">${label} · TOTAL</td>
+      <td class="num">${t.cur.n?fmtGBP(t.cur.spend):"·"}${t.cur.gaps?`<div style="font-size:10.5px;font-weight:600;color:var(--amber-ink)">${t.cur.gaps} site${t.cur.gaps===1?"":"s"} out</div>`:""}</td>
+      <td class="num">${t.cur.n?fmtGBP(t.cur.bud):"·"}</td>
+      <td class="num">${t.cur.n?carrySigned(t.cur.bud-t.cur.spend):"·"}</td>
+      <td class="num">${t.prev.n?carrySigned(t.prev.bud-t.prev.spend):"·"}${t.prev.gaps?`<div style="font-size:10.5px;font-weight:600;color:var(--amber-ink)">${t.prev.gaps} site${t.prev.gaps===1?"":"s"} out</div>`:""}</td>
+      <td class="num">${carrySigned(t.bud-t.spend)}</td>
+      <td>${bar(t.bud>0?t.spend/t.bud*100:null)}</td>
+    </tr>`;
+  const newTot=()=>({sales:0,spend:0,bud:0,cur:{n:0,spend:0,bud:0,gaps:0},prev:{n:0,spend:0,bud:0,gaps:0},gapsSites:0,unrec:0});
+  const addW=(w,c)=>{ if(counted(c)){ w.n++; w.spend+=c.spend; w.bud+=c.bud; } else if(c&&(c.state==="unsettled"||c.state==="unrecorded")) w.gaps++; };
+  const addTo=(t,x)=>{ t.sales+=x.t.sales; t.spend+=x.t.spend; t.bud+=x.t.bud; t.unrec+=x.t.unrec; if(x.t.gaps) t.gapsSites++; addW(t.cur,x.cur); addW(t.prev,x.prev); };
+  const CLUSTER_ORDER=["scotland_newcastle","north_midlands","south"];
+  const G=newTot(); let rows="";
+  const ncol=7;
+  if(effC==="all"){
+    CLUSTER_ORDER.forEach(ck=>{
+      const grp=view.filter(r=>codeCluster[r.code]===ck); if(!grp.length) return;
+      const cl=DATA.clusters[ck]; const t=newTot();
+      rows+=`<tr><td colspan="${ncol}" style="background:var(--maki-soft);font-weight:700;font-size:11px;letter-spacing:.06em;color:var(--maki-red-deep);text-transform:uppercase;text-align:left">${cl?cl.name:ck}${cl&&cl.ec?` · EC ${cl.ec}`:""}${cl&&cl.dec?` · DEC ${cl.dec}`:""}</td></tr>`;
+      grp.forEach(r=>{ const x=calc(r); addTo(t,x); addTo(G,x); rows+=siteRow(r,x); });
+      rows+=subRow(cl?cl.name:ck,t);
+    });
+    view.filter(r=>!CLUSTER_ORDER.includes(codeCluster[r.code])).forEach(r=>{ const x=calc(r); addTo(G,x); rows+=siteRow(r,x); });
+  } else {
+    view.forEach(r=>{ const x=calc(r); addTo(G,x); rows+=siteRow(r,x); });
+    if(rows) rows+=subRow(DATA.clusters[effC]?DATA.clusters[effC].name:effC,G);
+  }
+  tbl.querySelector("tbody").innerHTML = rows || `<tr><td colspan="${ncol}" style="text-align:center;color:var(--maki-muted)">No sites for this cluster</td></tr>`;
+  const gLeft=G.bud-G.spend;
+  document.getElementById("carryStats").innerHTML=[
+    {l:"Spent this week", v:fmtGBP(G.cur.spend)},
+    {l:"Left this week", v:carrySigned(G.cur.bud-G.cur.spend)},
+    {l:"Carry from last week", v:G.prev.n?carrySigned(G.prev.bud-G.prev.spend):"·"},
+    {l:"Period left", v:carrySigned(gLeft)}
+  ].map(x=>`<div class="tile-stat"><span>${x.l}</span><strong>${x.v}</strong></div>`).join("");
+  const liveTxt = curLive ? ` This week is live: spent = ledger purchases Mon to ${carryShort(through)}, budget = 25% of cash-up sales for the same days, so both grow through the week; it settles to the KPI food cost once the week's KPI file lands.` : "";
+  const unrecTxt = G.unrec ? ` <strong style="color:var(--rag-red)">${G.unrec} site-day${G.unrec===1?"":"s"} unrecorded</strong> this week: those sites' spend is understated, not under budget.` : "";
+  const gapTxt = G.gapsSites ? ` ${G.gapsSites} site${G.gapsSites===1?" carries":"s carry"} an excluded week (unsettled KPI or nothing filed); their period figures cover the counted weeks only.` : "";
+  document.getElementById("carryNote").innerHTML = `Budget = 25% of actual sales. Left this week = budget minus spent. Carry from last week = what last week finished under (plus) or over (minus) its 25%, from the settled KPI. Period left = the same, cumulative from Mon ${carryShort(start)} across every counted week, including this one.${liveTxt}${unrecTxt}${gapTxt} Bar = spent vs budget for the period to date (red over 100%, amber over 92%). Hover any figure for the sales and £ behind it. Responds to the cluster pills below.`;
+}
+function initCarryPeriod(){ const el=document.getElementById("carryPeriod"); if(el) el.addEventListener("change", e=>{ CARRY.period=e.target.value; renderBudget(); }); }
+// ---- /CARRY-FORWARD BLOCK ----
 function budgetEffCluster(){ return (STATE.budgetCluster && STATE.budgetCluster!=="all") ? STATE.budgetCluster : STATE.cluster; }
 function initBudgetClusterPills(){ document.querySelectorAll("#budgetClusterPills .pill").forEach(p => { p.addEventListener("click", () => { document.querySelectorAll("#budgetClusterPills .pill").forEach(x=>x.classList.remove("active")); p.classList.add("active"); STATE.budgetCluster=p.dataset.cluster; renderBudget(); }); }); }
 function initBudgetSlider(){ const el=document.getElementById("budgetSlider"); if(el) el.addEventListener("input", e => { STATE.budgetIdx=parseInt(e.target.value,10); STATE.budgetDayTouched=true; renderBudget(); }); }
@@ -6899,6 +7096,7 @@ async function ecbRefresh(){
 function ecbInit(){
   if(!document.getElementById("tab-ecbudget")) return;
   initBudgetClusterPills(); initBudgetSlider(); initBudgetWeekSelect();
+  initCarryPeriod();
   ecbRefresh();
 }
 if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", ecbInit); else ecbInit();
