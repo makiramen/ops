@@ -1654,13 +1654,27 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 #tab-survey .bs-wrap{max-width:100%;padding:0 18px}
 #tab-survey header{padding:26px 0 14px}
 
+
+#tab-survey .bs-area{border-top:2px solid var(--ink);padding-top:16px;margin-top:8px}
+#tab-survey .bs-area-k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--maki-deep);margin:0 0 8px}
+#tab-survey .bs-area-h{font-size:clamp(22px,3.2vw,32px);margin:0 0 12px}
+#tab-survey .bs-cluster{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);margin:34px 0 0;padding-bottom:6px}
+#tab-survey .bs-qs{list-style:none;margin:0;padding:0;display:block}
+#tab-survey .bs-qs li{display:grid;grid-template-columns:46px 1fr;gap:14px;padding:16px 0;border-top:1px solid var(--rule)}
+#tab-survey .bs-qs li:first-child{border-top:1px solid var(--rule-strong)}
+#tab-survey .bs-qs .bs-qn{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.08em;color:var(--maki-deep);padding-top:5px}
+#tab-survey .bs-qs h4{font-size:18.5px;line-height:1.25;letter-spacing:-.012em;margin:0 0 8px}
+#tab-survey .bs-qs .bs-ev{margin:0;font-size:14.5px;color:var(--ink-2);max-width:none}
+#tab-survey .bs-qs .bs-ev b{font-family:"IBM Plex Mono",monospace;font-weight:500;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);display:block;margin-bottom:3px}
+#tab-survey .bs-tagrow{margin-top:11px;display:flex;gap:7px;flex-wrap:wrap}
+@media (max-width:520px){#tab-survey .bs-qs li{grid-template-columns:1fr;gap:4px}#tab-survey .bs-qs .bs-qn{padding-top:0}}
 </style>
 <div class="bs-wrap">
 <header>
   <p class="bs-eyebrow">Brand survey · read-out 4 · 7 Sep 2026, 18:51</p>
   <h1>What 1,319 customers told us</h1>
-  <p class="bs-standfirst">Eleven short sections. Each one says what we asked, what the data shows, and what to do about it. Click a tab, or use the arrows at the bottom of each page.</p>
-  <div class="bs-meta"><span>1,319 valid (1,328 submitted, 9 under 18)</span><span>3 to 7 Sep 2026</span><span>449 written comments read</span><span>Survey still open</span></div>
+  <p class="bs-standfirst">Twelve short sections. Each one says what we asked, what the data shows, and what to do about it. Click a tab, or use the arrows at the bottom of each page.</p>
+  <div class="bs-meta"><span>1,319 valid (1,328 submitted, 9 under 18)</span><span>3 to 7 Sep 2026</span><span>449 written comments read</span><span>Read-out 4 · closing pack</span></div>
 </header>
 
 <nav class="bs-tabs" role="tablist" aria-label="Sections">
@@ -1674,7 +1688,8 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
   <button class="bs-tab" role="tab" data-t="social"><i>7</i>Social</button>
   <button class="bs-tab" role="tab" data-t="food"><i>8</i>Dishes &amp; wants</button>
   <button class="bs-tab" role="tab" data-t="onething"><i>9</i>One thing to fix</button>
-  <button class="bs-tab" role="tab" data-t="actions"><i>10</i>Actions</button>
+  <button class="bs-tab" role="tab" data-t="questions"><i>10</i>Proposed questions</button>
+  <button class="bs-tab" role="tab" data-t="actions"><i>11</i>Actions</button>
 </nav>
 
 <!-- 0 OVERVIEW -->
@@ -2250,12 +2265,304 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
   </div>
 
   <div class="bs-sowhat"><b>What it means</b><p>Two things, and they do not compete. <strong>The operation owns the bottom half of the base:</strong> anyone with a poor visit wants food and service fixed, and nothing else will do. <strong>Marketing owns the top half:</strong> among people we have already satisfied, social and branding outrank food and service two to one, and it is our own followers asking loudest. Fund both. And put price and offers on the agenda: 90 people wrote in about them unprompted when we did not even offer it as an option.</p></div>
-  <div class="bs-pnav"><button data-go="food">← Dishes &amp; wants</button><button data-go="actions">Next: Actions →</button></div>
+  <div class="bs-pnav"><button data-go="food">← Dishes &amp; wants</button><button data-go="questions">Next: Proposed questions →</button></div>
 </section>
 
-<!-- 10 ACTIONS -->
+<!-- 10 PROPOSED QUESTIONS -->
+<section class="bs-panel" id="bsp-questions" role="tabpanel" hidden>
+  <h2>Section 10 · Proposed questions</h2>
+  <h3>The survey answered what. It did not answer whether we are willing to act, or why any of it is true.</h3>
+  <div class="bs-asked">
+    <div><b>Why this section exists</b><p>1,319 people have told us what they think. That closes the measurement, not the decision. Two sets of questions are still open: the ones we owe each other internally, and the ones only twelve people in a room on 15 and 16 September can answer.</p></div>
+    <div><b>Area 1 · What we ask ourselves</b><p>Fourteen questions the data forces on us. Each one has a named owner and a date. None of them can be answered by more responses.</p></div>
+    <div><b>Area 2 · What we penetrate in the focus group</b><p>Eleven probes for Becca's script. Every one is something the quant structurally cannot reach: intent, category signal, and the reason behind a number we already have.</p></div>
+  </div>
+
+  <!-- ================= AREA 1 ================= -->
+  <div class="bs-area">
+    <p class="bs-area-k">Area 1</p>
+    <h3 class="bs-area-h">What we need to ask ourselves with this data</h3>
+    <p class="bs-dim" style="max-width:70ch">These are not research questions. They are decisions, standards and owners that the survey has made impossible to keep avoiding. Answer them in the room, not by running the numbers again.</p>
+  </div>
+
+  <p class="bs-cluster">A · Decisions owed before 2027</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">Q1</div>
+      <div class="bs-qb">
+        <h4>What was the pink actually bought to do, and why is it still not written down?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>The programme brief carries an open action from 25 August: Michael and Teddy state the target attribute shift, or criterion C4 cannot be scored. It is 9 September. Without a stated destination, the focus group can describe where the identity lands but cannot say whether that is where we wanted it. This is the single biggest gap in the whole programme.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Michael + Teddy</span><span class="bs-pill">Hard deadline: 12 Sep</span><span class="bs-pill bs-bad">Blocks the focus group</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q2</div>
+      <div class="bs-qb">
+        <h4>Is the menu decision closed, or will somebody reopen it after the panel?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>Four read-outs, 256 to 1,319 responses, and the answer has not moved: A wins the order by 15 points, reading by 40 and brand fit by 16; B wins appetite by 18. 261 people said B looks tastier and would still order from A. Only 48 went the other way. If we are going to accept the hybrid, say so now, because every further test costs time and buys nothing.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Michael · Teddy · Becca</span><span class="bs-pill">This week</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q3</div>
+      <div class="bs-qb">
+        <h4>Are we clear this is a layout finding and not a "bring back orange" finding?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>Voice preference is identical in both camps: 50% of A people and 53% of B people pick the bold line. The gap is grid, hierarchy and one bowl per dish, not the colour. If the business reads this as a verdict on the palette, we will make the wrong change and then blame the research.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Becca</span><span class="bs-pill">Before the readout on 17 Sep</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q4</div>
+      <div class="bs-qb">
+        <h4>What does a hybrid menu actually cost across 21 sites, and does that change the answer?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>We have a preference, not a business case. Reprint, artwork, delivery-platform re-shoot and the in-store swap have never been priced. A 15-point preference is worth a different amount at £4k than at £40k.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Becca · Ross</span><span class="bs-pill">Number by 16 Sep</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q5</div>
+      <div class="bs-qb">
+        <h4>Are we deciding a growth question with a loyalty-only sample?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>Everyone here is on our list. NPS +66 is a ceiling, not a score. The brief says it in terms: this programme measures downside risk, it cannot tell us whether the new direction wins anyone new. If the pink was bought to broaden appeal, that question is still completely untested after 15 September. Do we fund a non-customer read before 2027 commitment, or do we accept the decision is a risk decision only and record that?</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Michael</span><span class="bs-pill bs-bad">Must appear in the final report</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="bs-cluster">B · Where the money goes</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">Q6</div>
+      <div class="bs-qb">
+        <h4>Do we fund the bowl and the brand in parallel, or in sequence?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>The data says both, and it says which comes first. Anyone with a poor visit wants food and service fixed and nothing else will do: 67% of them name the operation. Among people we have already satisfied, marketing outranks the operation more than two to one, 41% against 17%. The marketing mandate is real, and it is funded by the operation getting the basics right. The 2027 admin and marketing budget has to reflect a sequence, not a wish list.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Michael · Monica · Becca</span><span class="bs-pill">Into the 2027 budget build</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q7</div>
+      <div class="bs-qb">
+        <h4>Are we running a discount business we have never priced?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>53% want to hear from us only when there is an offer. 90 people wrote in about price and offers unprompted, when it was not one of the four options we gave them, making it the single biggest unforced ask in the survey. "I only come if you have an offer" is a customer telling us our cadence has trained them. Is the offer-led email building frequency or buying visits we already had?</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Monica · Becca</span><span class="bs-pill">Margin read, October</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q8</div>
+      <div class="bs-qb">
+        <h4>Is "follows us" a 2027 KPI with a target, or a nice-to-have?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>55% of our own loyalty base does not follow us, and the followers are measurably better customers: NPS +72 against +61, fortnightly-or-more visiting 25% against 18%, email-driven visits 60% against 46%. This is the cheapest audience growth in the business and nobody owns the number.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Becca · CRM</span><span class="bs-pill">Name an owner and a target</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="bs-cluster">C · Standards we have never actually set</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">Q9</div>
+      <div class="bs-qb">
+        <h4>What is the lowest food score we are willing to run a site at?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>A 7 out of 10 bowl leaves only 22% of people recommending us. A 7 out of 10 service still leaves 41%. "Acceptable" food is already losing close to four customers in five, and we have no threshold anywhere in the KPI framework that says so.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Michael · Exec Chef</span><span class="bs-pill">Into the KPI dictionary</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q10</div>
+      <div class="bs-qb">
+        <h4>At what point does Leicester stop being an action and become a management decision?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>Lowest NPS in the estate at +40 and falling for a third read-out running, 45% poor-visit rate against an estate 20%, and the lowest food and service scores in the business at 8.3 and 8.3. It has been on the action list at every read-out. What is the trigger, what is the window, and who makes the call?</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Michael · North &amp; Midlands AM</span><span class="bs-pill bs-bad">Trigger needed, not another visit</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q11</div>
+      <div class="bs-qb">
+        <h4>Are we training for warmth when customers are asking for speed?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>73% say service at its best is fast and efficient. 50% say warm and chatty. A 23-point gap, and it holds in every region. Our service standards, Mapal content and floor briefs need checking against that, because right now we do not know which one we teach.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Ops · HR</span><span class="bs-pill">Audit the training content</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q12</div>
+      <div class="bs-qb">
+        <h4>Is a 24% to 3% spread on the same dish a product problem or a floor problem?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>Hell Ramen is 24% of recommendations at Byres Road and 3% at Newcastle. Same recipe, same spec, same price. Either the kitchens are producing a different dish or the floors are selling a different dish, and those are two entirely different fixes with two different owners.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Exec Chef · AMs</span><span class="bs-pill">Answer before the floor brief goes out</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="bs-cluster">D · The plumbing we keep discovering in surveys</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">Q13</div>
+      <div class="bs-qb">
+        <h4>Do we count failed redemptions, or keep finding them in free-text a month later?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>Nobody asked about the app. 30 people raised it anyway, across 13 sites, and 18 of those 30 scored us 9 or 10. Our best customers are leaving with a story about a reward that would not scan. A "could not redeem" reason code on the till turns this into a number we manage instead of an anecdote we find.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Ops · Trifft · Data</span><span class="bs-pill">Decide, then brief the estate</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">Q14</div>
+      <div class="bs-qb">
+        <h4>Do we fix the identity spine, and do we commit to re-running this survey in 12 months?</h4>
+        <p class="bs-ev"><b>Why it is on the list</b>The Member ID prefill captured 125 of 1,328. 91% of this data cannot be tied to a loyalty profile, so we cannot cut any of it by tier, spend or venue of record. Separately, the brief asked for instruments that are re-runnable, because a one-off study is worth far less than wave one of a tracker. Both need an owner and a date or neither happens.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Vidya · Data</span><span class="bs-pill">Wave 2: September 2027</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <div class="bs-sowhat"><b>The test for Area 1</b><p>None of these fourteen get better with more responses. If we close the survey and leave them open, we will have bought 1,319 opinions and spent them on nothing. Q1 is the one with a deadline attached: without a stated target attribute shift, the focus group on 15 September cannot score the criterion it was designed around.</p></div>
+
+  <!-- ================= AREA 2 ================= -->
+  <div class="bs-area" style="margin-top:48px">
+    <p class="bs-area-k">Area 2</p>
+    <h3 class="bs-area-h">What we penetrate come the focus group</h3>
+    <p class="bs-dim" style="max-width:70ch">Two calls, six people each, sixty minutes. Under-30s Tuesday 15 September, 30-plus Wednesday 16 September. Becca moderates, Georgie logs. The quant has bought us the entire hour: nothing below is a question the survey could have answered.</p>
+  </div>
+
+  <div class="bs-two" style="margin-top:20px">
+    <div class="bs-card">
+      <h4>What the room must not be spent on</h4>
+      <p class="bs-dim" style="margin:0 0 10px">All of this is now settled at n=1,319. Re-asking it wastes the most expensive sixty minutes in the programme.</p>
+      <ul class="bs-rank">
+        <li><span>Food and service quality in their region</span><b class="bs-pill">settled</b></li>
+        <li><span>Why they keep coming back</span><b class="bs-pill">settled</b></li>
+        <li><span>Email cadence and brand voice</span><b class="bs-pill">settled</b></li>
+        <li><span>Which content formats they like</span><b class="bs-pill">settled</b></li>
+        <li><span>Which dish they would recommend</span><b class="bs-pill">settled</b></li>
+        <li><span>"Do you like the pink?"</span><b class="bs-pill bs-bad">never ask</b></li>
+      </ul>
+    </div>
+    <div class="bs-card">
+      <h4>The four criteria the probes have to feed</h4>
+      <p class="bs-dim" style="margin:0 0 10px">From the programme brief. The session produces evidence against these, not a vote, and they resolve into Proceed, Modify or Halt.</p>
+      <ul class="bs-rank">
+        <li><span><strong>C1 Category fit</strong><br><span class="bs-dim">Does it read as Japanese food?</span></span><b class="bs-pill bs-bad">only auto-halt</b></li>
+        <li><span><strong>C2 Distinctiveness</strong><br><span class="bs-dim">Confusable with competitors?</span></span><b class="bs-pill">line-up test</b></li>
+        <li><span><strong>C3 Base tolerance</strong><br><span class="bs-dim">Rejection, not preference</span></span><b class="bs-pill">framing risk</b></li>
+        <li><span><strong>C4 Attribute shift</strong><br><span class="bs-dim">Does it move us where we want?</span></span><b class="bs-pill bs-bad">blocked on Q1</b></li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="bs-cluster">E · The one thing the survey structurally could not do</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">P1</div>
+      <div class="bs-qb">
+        <h4>Five seconds, cold, unprompted: what kind of place is this and what do they sell?</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>C1, the only automatic halt. We showed 1,319 people two menus and never once asked what category the identity signals. Pink is heavily coded to dessert, bubble tea, beauty and confectionery. Ask before any prompt, take the silent typed answer first, and count the words. If "dessert", "bubble tea", "sweet shop" or "beauty" appear in the room, that is the finding and no amount of preference data outranks it.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-bad">Halt criterion</span><span class="bs-pill">Monadic, blind, typed before spoken</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">P2</div>
+      <div class="bs-qb">
+        <h4>"Would you walk into that, and what would you expect to pay?"</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>Price signal. 90 people wrote in unprompted that we are expensive, and "£15 to £20 for lunch is far too much" was the shape of it. The quant cannot tell us whether the identity is contributing to that read. If the new look prices us above what we charge, we have a positioning problem hiding inside a design decision.</p>
+        <div class="bs-tagrow"><span class="bs-pill">Both identities, same question, same order</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="bs-cluster">F · The menu, done properly this time</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">P3</div>
+      <div class="bs-qb">
+        <h4>Task first: "find the Hell Ramen." Then: "you are vegetarian, what can you eat?" Time them both.</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>Whether A's 40-point reading win is navigation or aesthetics. The survey asked which is easier to read; it could not watch anyone try. If people find things fine on B and still prefer A, the hybrid brief is about hierarchy and taste, not usability, and that changes what Becca actually builds.</p>
+        <div class="bs-tagrow"><span class="bs-pill">Georgie logs seconds and failures</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">P4</div>
+      <div class="bs-qb">
+        <h4>Show both at matched resolution, then ask what makes one easier.</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>Our own known flaw. A was uploaded at roughly twice B's resolution, so it looked sharper on a phone. The ordering and brand-fit gaps are too wide to be sharpness alone, but the 40-point reading gap is not quotable outside the business until this is controlled. The room is the cheapest way to control it.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-bad">Do not quote 70.2% externally until this is done</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">P5</div>
+      <div class="bs-qb">
+        <h4>"Which makes you hungrier? Which would you order from? Why are those different answers?"</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>The 261 people who said B looks tastier and would still order from A, against 48 the other way. That contradiction is the entire hybrid brief and we do not know what causes it. Ask it in that order, and push on the third question until somebody explains the gap in their own words.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">This writes the hybrid brief</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="bs-cluster">G · Distinctiveness, tolerance and the shift</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">P6</div>
+      <div class="bs-qb">
+        <h4>Logo line-up, no names: "which one is Maki &amp; Ramen, and which two stand out most?"</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>C2. The survey has nothing on distinctiveness at all, because you cannot run a line-up in a form and trust it. If the pink was bought to buy distinctiveness, this is the only evidence in the entire programme that it did or did not.</p>
+        <div class="bs-tagrow"><span class="bs-pill">Three minutes, both identities in the line-up</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">P7</div>
+      <div class="bs-qb">
+        <h4>"If this became the look, what would you think had happened to the place?"</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>C3, framed to avoid the trap. Loyal customers almost always prefer the familiar, so a mild preference for the current look is the expected result and is not a finding. Active rejection is. This phrasing gets at the story they tell themselves about the change, which is where rejection actually shows up, rather than a politeness score.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-bad">Do not let preference be reported as rejection</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">P8</div>
+      <div class="bs-qb">
+        <h4>The nine-attribute A or B battery, logged by person, then only discuss the closest three.</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>C4. More expensive, more properly Japanese, more fun, date, parents, alone on a Tuesday, easier to remember, more for someone like me, better food. The ones everyone agrees on need no discussion. The disagreements are where the reasons live. Log who picked what so it can be cut by age and by delivery against eat-in afterwards.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-bad">Unscoreable until Q1 is answered</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <p class="bs-cluster">H · Numbers we have, reasons we do not</p>
+  <ul class="bs-qs">
+    <li>
+      <div class="bs-qn">P9</div>
+      <div class="bs-qb">
+        <h4>"When you say our social could be better, what are you not seeing?" Then show three real posts.</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>The largest unexplained number in the survey. Social is level with food quality as the one thing to fix, 23% among our own followers against 13% among non-followers, and it comes loudest from people whose last visit was great. We know the formats they want, close-ups at 59% and kitchen behind-the-scenes at 46%. We do not know what they think is missing from what we already post. Show real posts, not concepts.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">Becca · the content brief depends on this</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">P10</div>
+      <div class="bs-qb">
+        <h4>"Tell me about the last time you tried to use a reward."</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>Where the blame lands. 30 unprompted complaints across 13 sites, and 18 came from people who still scored us 9 or 10. We have the count. We do not know whether the customer walks away thinking the app is broken, the staff are untrained, or the brand does not honour what it promised. Those are three different fixes and only the narrative tells us which.</p>
+        <div class="bs-tagrow"><span class="bs-pill">Open story, no prompting, let them run</span></div>
+      </div>
+    </li>
+    <li>
+      <div class="bs-qn">P11</div>
+      <div class="bs-qb">
+        <h4>To the delivery-led three: "where do you actually see us, and what do we look like there?"</h4>
+        <p class="bs-ev"><b>What we are penetrating</b>The brand nobody in this programme has looked at. 93% of the sample eats in, so delivery is close to invisible in the quant. At least three of the twelve are delivery-led by design, and they may never see the interior, the printed menu or the signage. If the new identity does not reach the Deliveroo tile and the packaging, we are rebranding a touchpoint half our future customers do not use.</p>
+        <div class="bs-tagrow"><span class="bs-pill bs-maki">The gap the quant cannot see at 1.3%</span></div>
+      </div>
+    </li>
+  </ul>
+
+  <div class="bs-callout bs-flag" style="margin-top:26px">
+    <span class="bs-h">The honest limit on both calls</span>
+    <p>Twelve loyal customers cannot tell us whether the new direction wins anyone new, and they will not sound like the 5% who scored us 6 or less, because detractors do not accept focus group invitations. Whatever comes out of 15 and 16 September, do not let approval in the room be written up as evidence of growth. That is a separate study and it has not been commissioned.</p>
+  </div>
+
+  <div class="bs-sowhat"><b>How the two areas connect</b><p>Area 2 cannot start until Area 1 Q1 is answered, because C4 is unscoreable without a stated destination. And Area 1 Q2, Q3 and Q4 should be settled before the calls, so that the room is used to explain the menu result rather than to relitigate it. Everything else in Area 1 is ours to decide and does not wait for the panel at all.</p></div>
+  <div class="bs-pnav"><button data-go="onething">← The one thing</button><button data-go="actions">Next: Actions →</button></div>
+</section>
+
+<!-- 11 ACTIONS -->
 <section class="bs-panel" id="bsp-actions" role="tabpanel" hidden>
-  <h2>Section 10 · Actions</h2>
+  <h2>Section 11 · Actions</h2>
   <h3>Eight actions, one owner each</h3>
   <ul class="bs-act">
     <li><span><strong>Leicester visit this week.</strong> 45% poor-visit rate, NPS +40 and falling for the third read-out running, food and service both 8.3, worst site in the estate on all three. Then Leeds, where the issue is complaints going unanswered.</span><span class="bs-own">North &amp; Midlands AM</span></li>
@@ -2273,7 +2580,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
     <span class="bs-h">Data note</span>
     <p>91% of responses still cannot be tied to a loyalty profile because the Klaviyo prefill is not passing through. Nothing on these pages is affected; it only blocks cuts by spend, tier and venue-of-record, and the free side and prize draw fulfilment from the form alone.</p>
   </div>
-  <div class="bs-pnav"><button data-go="onething">← The one thing</button><button data-go="overview">Back to overview</button></div>
+  <div class="bs-pnav"><button data-go="questions">← Proposed questions</button><button data-go="overview">Back to overview</button></div>
 </section>
 
 <footer>
