@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-08",
+  "generated_at": "2026-09-09",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-31 \u2013 2026-09-06",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": 25.39,
+          "actual": 25.7,
           "target": 23.0,
           "gated": false
         },
@@ -74,8 +74,8 @@
         "week_commencing": "2026-08-31"
       },
       "efficiency_score": {
-        "score": 95,
-        "rag": "green",
+        "score": 94,
+        "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
           "wage": 30,
@@ -98,8 +98,8 @@
           },
           "food": {
             "weight": 30,
-            "value": 96.88,
-            "basis": "25.39% vs 25% baseline, -8/pp over"
+            "value": 94.4,
+            "basis": "25.70% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -120,7 +120,7 @@
       "red_light": {
         "status": "red",
         "triggers": [
-          "food 25.4%"
+          "food 25.7%"
         ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
@@ -148,7 +148,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-08."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-09."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-31.json (AGMM Task List Status). Open items only.",
@@ -184,18 +184,18 @@
         "store": null,
         "week_ending": "2026-09-06",
         "resolution": "weekly",
-        "partial": true,
+        "partial": false,
         "sales": 2227.77,
         "orders": 64,
-        "orders_estimated": true,
+        "orders_estimated": false,
         "aov": 34.81,
         "new_customers": 29,
-        "rating": null,
-        "open_hours_pct": null,
-        "avg_prep_min": null,
-        "rejection_pct": null,
-        "inaccuracy_pct": null,
-        "rider_wait_5min_pct": null,
+        "rating": 4.83,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 11.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 0.0,
+        "rider_wait_5min_pct": 7.8,
         "conversion_pct": null,
         "wow": {
           "gmv_pct": null,
@@ -205,7 +205,8 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source."
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. | Deliveroo weekly Invoice Statement CSV (order-level; GMV = sum of Order Value over Delivery/Pickup/Storefront order rows, refunds/adverts/vouchers/previous-invoice rows excluded; orders = those rows + any 'Deliveroo commission on food remake' line, matching the Tax Invoice Total row) \u2014 w/c 2026-08-31, statements dated 2026-09-07, filed to Drive by michael@ 08/09. PARTIAL 6d slice: only the 4 entities with a filed statement on Wed 09/09 (M1, M6, M9, M15); the other 13 AM entities (M3, M8, M10, M11, M12, M13, M14, M16, M17, M18, M19, M20, IKI2) had no Tax Invoice or statement filed yet and are deliberately absent, never zero. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "busy_mode_pct": 3.1
       },
       "gaps": []
     }

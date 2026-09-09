@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-08",
+  "generated_at": "2026-09-09",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-31 \u2013 2026-09-06",
@@ -62,9 +62,9 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": -1.2,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
           "variance_pct": 1.4,
@@ -150,7 +150,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-08."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-09."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-31.json (AGMM Task List Status). Open items only.",
@@ -186,18 +186,18 @@
         "store": null,
         "week_ending": "2026-09-06",
         "resolution": "weekly",
-        "partial": true,
+        "partial": false,
         "sales": 2634.93,
         "orders": 82,
         "orders_estimated": true,
         "aov": 32.13,
         "new_customers": 34,
-        "rating": null,
-        "open_hours_pct": null,
-        "avg_prep_min": null,
-        "rejection_pct": null,
-        "inaccuracy_pct": null,
-        "rider_wait_5min_pct": null,
+        "rating": 4.6,
+        "open_hours_pct": 98.1,
+        "avg_prep_min": 14.9,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 1.1,
+        "rider_wait_5min_pct": 6.1,
         "conversion_pct": null,
         "wow": {
           "gmv_pct": null,
@@ -207,7 +207,8 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source."
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
       },
       "gaps": []
     }

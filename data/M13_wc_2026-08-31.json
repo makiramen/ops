@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-08",
+  "generated_at": "2026-09-09",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-31 \u2013 2026-09-06",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": 27.01,
+          "actual": 27.13,
           "target": 23.0,
           "gated": false
         },
@@ -98,8 +98,8 @@
           },
           "food": {
             "weight": 30,
-            "value": 83.92,
-            "basis": "27.01% vs 25% baseline, -8/pp over"
+            "value": 82.96,
+            "basis": "27.13% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -121,7 +121,7 @@
         "status": "red",
         "triggers": [
           "sales -14.0% vs target",
-          "food 27.0%"
+          "food 27.1%"
         ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
@@ -149,7 +149,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-08."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-09."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-31.json (AGMM Task List Status). Open items only.",
@@ -185,18 +185,18 @@
         "store": null,
         "week_ending": "2026-09-06",
         "resolution": "weekly",
-        "partial": true,
+        "partial": false,
         "sales": 6035.82,
         "orders": 179,
         "orders_estimated": true,
         "aov": 33.72,
         "new_customers": 44,
-        "rating": null,
-        "open_hours_pct": null,
-        "avg_prep_min": null,
-        "rejection_pct": null,
-        "inaccuracy_pct": null,
-        "rider_wait_5min_pct": null,
+        "rating": 4.24,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 13.1,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 2.3,
+        "rider_wait_5min_pct": 0.6,
         "conversion_pct": null,
         "wow": {
           "gmv_pct": null,
@@ -206,7 +206,8 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source."
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
       },
       "gaps": []
     }
