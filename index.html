@@ -6976,7 +6976,7 @@ function carryMoney(c, key){
 }
 function renderCarry(d, dates){
   const tbl=document.getElementById("carryTbl"); if(!tbl||!d||!d.ledger) return;
-  const through=carryThrough(d); const today=carryUKToday();
+  let through=carryThrough(d); const today=carryUKToday();
   const curStart=carryPeriodStart(through||today);
   const sel=document.getElementById("carryPeriod");
   if(sel){
@@ -6988,6 +6988,8 @@ function renderCarry(d, dates){
   const weeks=carryWeeksFor(start, today);
   const needLoad = weeks.some(m=>CARRY.weekly[m]===undefined) || !CARRY.dailyIndex;
   if(needLoad){ carryLoad(d); return; }
+  // spend and budget must cover the SAME days: cap the live week at the latest cash-up day (the ledger can run a day ahead of the daily pull)
+  { const dl=CARRY.dailyIndex&&CARRY.dailyIndex.latest; if(dl && through && dl<through) through=dl; }
   const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const effC=budgetEffCluster();
   let view=d.sites.filter(r=> effC==="all" || codeCluster[r.code]===effC);
