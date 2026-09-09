@@ -746,16 +746,16 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
       <label>Sort</label>
       <select id="ig-sort">
         <option value="date">Newest</option>
-        <option value="reach">Reach</option>
+        <option value="views">Views</option>
         <option value="eng">Engagement</option>
-        <option value="engrate">Eng/Reach</option>
+        <option value="engrate">Eng/Views</option>
         <option value="watch">Watch time</option>
       </select>
     </div>
     <div class="statrow" id="ig-summary" style="margin-bottom:10px"></div>
     <div class="outlier-sec" id="ig-outliers"></div>
     <div class="subhead">All posts</div>
-    <div class="sub" style="margin-bottom:8px">Card accent: <span class="rag GREEN">green ≥6% eng/reach</span> <span class="rag RED">red &lt;2%</span> — same thresholds as the Add/Remove matrix</div>
+    <div class="sub" style="margin-bottom:8px">Card accent: <span class="rag GREEN">green ≥4% eng/views</span> <span class="rag RED">red &lt;1.3%</span> — rescaled from the 6% / 2% reach bars so the same posts pass and fail</div>
     <div class="cardgrid" id="ig-cards"><div class="loading">Loading…</div></div>
   </div>
 </div>
@@ -782,9 +782,9 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
       <label>Sort</label>
       <select id="tt-sort">
         <option value="date">Newest</option>
-        <option value="reach">Reach</option>
+        <option value="views">Views</option>
         <option value="eng">Engagement</option>
-        <option value="engrate">Eng/Reach</option>
+        <option value="engrate">Eng/Views</option>
         <option value="watch">Watch time</option>
         <option value="followers">Followers +</option>
       </select>
@@ -792,7 +792,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
     <div class="statrow" id="tt-summary" style="margin-bottom:10px"></div>
     <div class="outlier-sec" id="tt-outliers"></div>
     <div class="subhead">All videos</div>
-    <div class="sub" style="margin-bottom:8px">Card accent: <span class="rag GREEN">green ≥6% eng/reach</span> <span class="rag RED">red &lt;2%</span> — same thresholds as the Add/Remove matrix</div>
+    <div class="sub" style="margin-bottom:8px">Card accent: <span class="rag GREEN">green ≥5% eng/views</span> <span class="rag RED">red &lt;2.5%</span> — rescaled from the 6% / 3% reach bars so the same videos pass and fail</div>
     <div class="cardgrid" id="tt-cards"><div class="loading">Loading…</div></div>
   </div>
 </div>
@@ -3247,10 +3247,14 @@ function renderGreenLight(csv) {
     (counts.NT ? '<span class="rag NT">N/T ' + counts.NT + '</span>' : '');
 }
 
+// v5.9 (9 Sept): VIEWS is the denominator on both tabs. Instagram's 2025 update renamed
+// reach to "viewers" and made views the headline number; views is the bigger, comparable
+// figure across IG and TikTok, and it is the only one present on every row (a TikTok row
+// exists with reach null against 736 views). reach is kept only as a silent fallback.
 function computeEngRate(o) {
-  var reach = Number(o.reach) || 0;
-  if (!reach) return 0;
-  return ((Number(o.likes) || 0) + (Number(o.comments) || 0) + (Number(o.saves) || 0) + (Number(o.shares) || 0)) / reach;
+  var base = Number(o.views) || Number(o.reach) || 0;
+  if (!base) return 0;
+  return ((Number(o.likes) || 0) + (Number(o.comments) || 0) + (Number(o.saves) || 0) + (Number(o.shares) || 0)) / base;
 }
 
 // Timeframe filter for the content library. 'week'/'month' are calendar-to-date
@@ -3320,9 +3324,12 @@ async function loadInstagram() {
 function escAttr(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 function fmtK(n) { n = Number(n); if (n == null || isNaN(n)) return '—'; if (Math.abs(n) >= 10000) return (n / 1000).toFixed(0) + 'k'; if (Math.abs(n) >= 1000) return (n / 1000).toFixed(1) + 'k'; return String(Math.round(n)); }
 function chip(label, val, cls) { return '<span class="mchip' + (cls ? ' ' + cls : '') + '"><b>' + val + '</b> ' + label + '</span>'; }
-function engBand(rate) { return rate >= 0.06 ? 'hot' : (rate > 0 && rate < 0.02 ? 'cold' : ''); }
+// Bands rescaled with the denominator (9 Sept). Measured 30-day medians: IG 3.07% on reach
+// -> 1.99% on views (x0.65), TikTok 5.35% -> 4.57% (x0.85). Bars moved by the same factor so
+// the same posts pass and fail: IG green 4% / red 1.3%, TikTok green 5% / red 2.5%.
+function engBand(rate, isTt) { return rate >= (isTt ? 0.05 : 0.04) ? 'hot' : (rate > 0 && rate < (isTt ? 0.025 : 0.013) ? 'cold' : ''); }
 function contentCard(r, tag, chips, forceBand) {
-  var band = forceBand !== undefined ? forceBand : engBand(r.engRate);
+  var band = forceBand !== undefined ? forceBand : engBand(r.engRate, r.platform === 'tiktok');
   return '<div class="ccard' + (band ? ' ' + band : '') + '">' +
     '<div class="toprow">' + tag + '<span class="date">' + fmtDate(r.posted_at) + '</span>' +
       (r.permalink ? '<a class="postlink" href="' + escAttr(r.permalink) + '" target="_blank">open ↗</a>' : '') + '</div>' +
@@ -3335,23 +3342,22 @@ function contentCard(r, tag, chips, forceBand) {
 function renderContentSummary(elId, view, win, isTt) {
   var el = document.getElementById(elId);
   if (!el) return;
-  var totReach = view.reduce(function(s, r) { return s + (Number(r.reach) || 0); }, 0);
-  var totViews = view.reduce(function(s, r) { return s + (Number(r.views) || 0); }, 0);
+  var totViews = view.reduce(function(s, r) { return s + (Number(r.views) || Number(r.reach) || 0); }, 0);
   var totEng = view.reduce(function(s, r) { return s + (Number(r.engagement) || 0); }, 0);
   var medEng = median(view.map(function(r) { return r.engRate; }));
   var label = WIN_LABEL[win] || 'this timeframe';
   var stats = [stat((isTt ? 'Videos' : 'Posts') + ' · ' + label, fmtN(view.length))];
-  stats.push(stat('Total reach', fmtN(totReach)));
+  stats.push(stat('Total views', fmtN(totViews)));
   stats.push(stat('Total engagement', fmtN(totEng)));
-  stats.push(stat('Median eng/reach', medEng != null ? fmtPct(medEng) : '—'));
+  stats.push(stat('Median eng/views', medEng != null ? fmtPct(medEng) : '—'));
   el.innerHTML = stats.join('');
 }
 
 // Per-platform chip + card builders (shared by the full grid and the outlier groups)
 function igChips(r) {
   return [
-    chip('reach', fmtK(r.reach)),
-    chip('eng/reach', fmtPct(r.engRate), engBand(r.engRate)),
+    chip('views', fmtK(Number(r.views) || Number(r.reach))),
+    chip('eng/views', fmtPct(r.engRate), engBand(r.engRate, false)),
     chip('likes', fmtK(r.likes)),
     chip('comments', fmtK(r.comments)),
     chip('saves', fmtK(r.saves)),
@@ -3361,8 +3367,8 @@ function igChips(r) {
 }
 function ttChips(r) {
   return [
-    chip('reach', fmtK(r.reach)),
-    chip('eng/reach', fmtPct(r.engRate), engBand(r.engRate)),
+    chip('views', fmtK(Number(r.views) || Number(r.reach))),
+    chip('eng/views', fmtPct(r.engRate), engBand(r.engRate, true)),
     chip('likes', fmtK(r.likes)),
     chip('comments', fmtK(r.comments)),
     chip('shares', fmtK(r.shares)),
@@ -3375,29 +3381,30 @@ function ttChips(r) {
 function igCardHtml(r) { return contentCard(r, typeTag(r.media_type), igChips(r)); }
 function ttCardHtml(r) { return contentCard(r, '<span class="tag tt">TIKTOK</span>', ttChips(r)); }
 
-// Outliers (v5.2, 8 Sept) — two lenses, one "expected".
-// Expected = the window MEDIAN of reach (both platforms; v5.3 dropped TikTok views) and of eng rate, both shown on the header.
-// STANDOUT  = >= BAR_MULT x median reach (reach lens)
-//          OR >= BAR_MULT x median eng rate with at least median reach and the likes floor (intent lens:
-//             shares/saves/comments drive the rate, so a mid-reach post people share hard now counts).
-// REACH SPIKE = clears the reach bar but engagement is under the platform floor (borrowed reach, don't chase).
+// Outliers (v5.9, 9 Sept) — two lenses, one "expected", judged on VIEWS.
+// Expected = the window MEDIAN of views (both platforms) and of eng/views, both shown on the header.
+// STANDOUT  = >= BAR_MULT x median views (views lens)
+//          OR >= BAR_MULT x median eng rate with at least median views and the likes floor (intent lens:
+//             shares/saves/comments drive the rate, so a mid-views post people share hard now counts).
+// VIEW SPIKE = clears the views bar but engagement is under the platform floor (borrowed views, don't chase).
 // BAR_MULT is 1.8 = the 2x bar with Michael's 10% tolerance (8 Sept). Same split the TikTok backend rule uses.
-// Underperformers (judged HARSHLY, industry standard): weak reach/views (<=1/2 median) OR
-//   engagement/reach below the platform floor (IG 2% · TikTok 3% — TikTok norms run ~3.4% by view).
-//   CUT (dark) = the truly dead ones: eng/reach below the critical floor (IG 1% · TikTok 1.5%),
-//   or below the weak floor AND weak reach. WEAK (red) = fails one test.
+// Underperformers (judged HARSHLY, industry standard): weak views (<=1/2 median) OR
+//   engagement/views below the platform floor (IG 1.3% · TikTok 2.5%, rescaled from the 2% / 3%
+//   reach bars by the measured median shift so the same content passes and fails).
+//   CUT (dark) = the truly dead ones: eng/views below the critical floor (IG 0.65% · TikTok 1.25%),
+//   or below the weak floor AND weak views. WEAK (red) = fails one test.
 var OUTLIER_BAR_MULT = 1.8;
 function renderOutliers(elId, view, isTt) {
   var el = document.getElementById(elId);
   if (!el) return;
-  var metricLabel = 'reach';   // 8 Sept: TikTok judged on REACH too (views only as a fallback when reach is 0) — Michael: views vs reach was confusing
-  var ENG_FLOOR = isTt ? 0.03 : 0.02;   // below platform norm = weak
-  var ENG_CRIT = isTt ? 0.015 : 0.01;   // truly dead
+  var metricLabel = 'views';   // 9 Sept: both tabs judged on VIEWS (reach only as a silent fallback) — Michael: views is the bigger, comparable number
+  var ENG_FLOOR = isTt ? 0.025 : 0.013; // below platform norm = weak (rescaled with the denominator, was 3% / 2% on reach)
+  var ENG_CRIT = isTt ? 0.0125 : 0.0065; // truly dead (was 1.5% / 1% on reach)
   var LIKES_FLOOR = 80;                 // hard floor — under this = straight-up CUT, no matter the rate
-  var floorTxt = (ENG_FLOOR * 100).toFixed(0) + '%';
+  var floorTxt = (ENG_FLOOR * 100).toFixed(1) + '%';
   var multTxt = OUTLIER_BAR_MULT.toFixed(1) + '×';
-  function metricOf(r) { return Number(r.reach) || (isTt ? Number(r.views) : 0) || 0; }
-  // Rate on the SAME denominator as the reach lens (reach; views only where a TikTok row has reach 0)
+  function metricOf(r) { return Number(r.views) || Number(r.reach) || 0; }
+  // Rate on the SAME denominator as the views lens
   function rateOf(r) { var m = metricOf(r); return m > 0 ? ((Number(r.likes) || 0) + (Number(r.comments) || 0) + (Number(r.saves) || 0) + (Number(r.shares) || 0)) / m : 0; }
   var valid = view.filter(function(r) { return metricOf(r) > 0; });
   var headHtml = '<div class="outlier-head"><span class="oh-title">Outliers</span>';
@@ -3410,13 +3417,13 @@ function renderOutliers(elId, view, isTt) {
   var barM = OUTLIER_BAR_MULT * med, barR = OUTLIER_BAR_MULT * medRate;
   var rateLabel = 'eng/' + metricLabel;
   headHtml += '<span class="subtle">expected = this window\'s median: ' + fmtN(med) + ' ' + metricLabel + ' · ' + fmtPct(medRate) + ' ' + rateLabel +
-    ' · standout bar ' + multTxt + ' either (' + fmtN(Math.round(barM)) + ' ' + metricLabel + ' or ' + fmtPct(barR) + ' ' + rateLabel + ', intent needs ≥ median ' + metricLabel + ') · underperformers vs the industry floor (IG 2% · TikTok 3%) and a hard ' + LIKES_FLOOR + '-likes floor</span></div>';
+    ' · standout bar ' + multTxt + ' either (' + fmtN(Math.round(barM)) + ' ' + metricLabel + ' or ' + fmtPct(barR) + ' ' + rateLabel + ', intent needs ≥ median ' + metricLabel + ') · underperformers vs the industry floor (IG 1.3% · TikTok 2.5% of views) and a hard ' + LIKES_FLOOR + '-likes floor</span></div>';
 
   function likesOk(r) { return (Number(r.likes) || 0) >= LIKES_FLOOR; }
-  function reachLens(r) { return metricOf(r) >= barM && likesOk(r); }
+  function viewsLens(r) { return metricOf(r) >= barM && likesOk(r); }
   function intentLens(r) { return rateOf(r) >= barR && metricOf(r) >= med && likesOk(r); }
-  // Standouts: either lens, but a reach-lens post under the engagement floor is a REACH SPIKE, not a win
-  var hits = valid.filter(function(r) { return reachLens(r) || intentLens(r); });
+  // Standouts: either lens, but a views-lens post under the engagement floor is a VIEW SPIKE, not a win
+  var hits = valid.filter(function(r) { return viewsLens(r) || intentLens(r); });
   var spike = hits.filter(function(r) { return !intentLens(r) && rateOf(r) < ENG_FLOOR; })
     .sort(function(a, b) { return metricOf(b) - metricOf(a); }).slice(0, 6);
   var spikeSet = {}; spike.forEach(function(r) { spikeSet[r.content_id] = 1; });
@@ -3432,23 +3439,23 @@ function renderOutliers(elId, view, isTt) {
     ];
   }
   function goodCard(r) {
-    var why = reachLens(r) && intentLens(r) ? 'REACH + INTENT' : (reachLens(r) ? 'REACH' : 'INTENT');
+    var why = viewsLens(r) && intentLens(r) ? 'VIEWS + INTENT' : (viewsLens(r) ? 'VIEWS' : 'INTENT');
     var badge = '<span class="mchip hot"><b>' + why + '</b></span>';
     var tag = isTt ? '<span class="tag tt">TIKTOK</span>' : typeTag(r.media_type);
     return contentCard(r, tag, [badge].concat(lensChips(r), isTt ? ttChips(r) : igChips(r)), 'hot');
   }
   function spikeCard(r) {
-    var badge = '<span class="mchip warn"><b>REACH SPIKE</b></span>';
+    var badge = '<span class="mchip warn"><b>VIEW SPIKE</b></span>';
     var tag = isTt ? '<span class="tag tt">TIKTOK</span>' : typeTag(r.media_type);
     return contentCard(r, tag, [badge].concat(lensChips(r), isTt ? ttChips(r) : igChips(r)), 'warm');
   }
 
-  // Underperformers — harsh: weak reach OR sub-floor engagement
+  // Underperformers — harsh: weak views OR sub-floor engagement
   function isBad(r) { return metricOf(r) <= 0.5 * med || r.engRate < ENG_FLOOR || !likesOk(r); }
   function sevOf(r) {
-    var lowReach = metricOf(r) <= 0.5 * med;
+    var lowViews = metricOf(r) <= 0.5 * med;
     if (!likesOk(r)) return 'CUT';
-    if (r.engRate < ENG_CRIT || (r.engRate < ENG_FLOOR && lowReach)) return 'CUT';
+    if (r.engRate < ENG_CRIT || (r.engRate < ENG_FLOOR && lowViews)) return 'CUT';
     return 'WEAK';
   }
   function badness(r) { return (r.engRate / ENG_FLOOR) + (med > 0 ? metricOf(r) / med : 0); }
@@ -3462,24 +3469,24 @@ function renderOutliers(elId, view, isTt) {
     var likes = Number(r.likes) || 0;
     var badge = '<span class="mchip ' + (sev === 'CUT' ? 'crit' : 'cold') + '"><b>' + sev + '</b></span>';
     var likesChip = likes < LIKES_FLOOR ? chip('likes · min ' + LIKES_FLOOR, fmtN(likes), 'cold') : '';
-    var reach = chip('vs median ' + metricLabel, ratio.toFixed(1) + '×', ratio <= 0.5 ? 'cold' : '');
-    var eng = chip('eng/reach · floor ' + floorTxt, fmtPct(r.engRate), r.engRate < ENG_FLOOR ? 'cold' : '');
+    var travelled = chip('vs median ' + metricLabel, ratio.toFixed(1) + '×', ratio <= 0.5 ? 'cold' : '');
+    var eng = chip('eng/views · floor ' + floorTxt, fmtPct(r.engRate), r.engRate < ENG_FLOOR ? 'cold' : '');
     var tag = isTt ? '<span class="tag tt">TIKTOK</span>' : typeTag(r.media_type);
-    return contentCard(r, tag, [badge, likesChip, reach, eng].concat(isTt ? ttChips(r) : igChips(r)), band);
+    return contentCard(r, tag, [badge, likesChip, travelled, eng].concat(isTt ? ttChips(r) : igChips(r)), band);
   }
 
   var html = headHtml;
   html += '<div class="outlier-group good"><div class="og-label"><span class="dot"></span>Standouts — ' + good.length + ' <span class="subtle">(≥' + multTxt + ' median ' + metricLabel + ', or ≥' + multTxt + ' median ' + rateLabel + ' on at least median ' + metricLabel + ')</span></div>';
-  html += '<div class="og-legend"><span><span class="sevtag good">REACH</span> cleared the ' + metricLabel + ' bar</span><span><span class="sevtag good">INTENT</span> cleared the ' + rateLabel + ' bar: shares, saves and comments doing the work</span></div>';
+  html += '<div class="og-legend"><span><span class="sevtag good">VIEWS</span> cleared the ' + metricLabel + ' bar</span><span><span class="sevtag good">INTENT</span> cleared the ' + rateLabel + ' bar: shares, saves and comments doing the work</span></div>';
   html += good.length ? '<div class="cardgrid">' + good.map(goodCard).join('') + '</div>'
     : '<div class="subtle" style="padding:2px 0 6px">No clear standouts in this window.</div>';
   html += '</div>';
   if (spike.length) {
-    html += '<div class="outlier-group warn"><div class="og-label"><span class="dot"></span>Reach spikes — ' + spike.length + ' <span class="subtle">(cleared the ' + metricLabel + ' bar but ' + rateLabel + ' under the ' + floorTxt + ' floor: borrowed reach, log the hook, don\'t chase)</span></div>';
+    html += '<div class="outlier-group warn"><div class="og-label"><span class="dot"></span>View spikes — ' + spike.length + ' <span class="subtle">(cleared the ' + metricLabel + ' bar but ' + rateLabel + ' under the ' + floorTxt + ' floor: borrowed views, log the hook, don\'t chase)</span></div>';
     html += '<div class="cardgrid">' + spike.map(spikeCard).join('') + '</div></div>';
   }
   html += '<div class="outlier-group bad"><div class="og-label"><span class="dot"></span>Underperformers — ' + bad.length + (nCut ? ' <span class="sevtag cut">' + nCut + ' CUT</span>' : '') + '</div>';
-  html += '<div class="og-legend"><span><span class="sevtag cut">CUT</span> under ' + LIKES_FLOOR + ' likes, eng/reach below ' + (ENG_CRIT * 100).toFixed(1) + '%, or below ' + floorTxt + ' with weak reach — pull it</span><span><span class="sevtag weak">WEAK</span> below the ' + floorTxt + ' floor or ≤½ median ' + metricLabel + '</span></div>';
+  html += '<div class="og-legend"><span><span class="sevtag cut">CUT</span> under ' + LIKES_FLOOR + ' likes, eng/views below ' + (ENG_CRIT * 100).toFixed(2) + '%, or below ' + floorTxt + ' with weak views — pull it</span><span><span class="sevtag weak">WEAK</span> below the ' + floorTxt + ' floor or ≤½ median ' + metricLabel + '</span></div>';
   html += bad.length ? '<div class="cardgrid">' + bad.map(badCard).join('') + '</div>'
     : '<div class="subtle" style="padding:2px 0 6px">Nothing below the industry floor this window — nice.</div>';
   html += '</div>';
@@ -3499,7 +3506,7 @@ function renderIg(ig) {
   renderOutliers('ig-outliers', view, false);
   var sorters = {
     date: function(a, b) { return String(b.posted_at).localeCompare(String(a.posted_at)); },
-    reach: function(a, b) { return (Number(b.reach) || 0) - (Number(a.reach) || 0); },
+    views: function(a, b) { return (Number(b.views) || Number(b.reach) || 0) - (Number(a.views) || Number(a.reach) || 0); },
     eng: function(a, b) { return (Number(b.engagement) || 0) - (Number(a.engagement) || 0); },
     engrate: function(a, b) { return b.engRate - a.engRate; },
     watch: function(a, b) { return (Number(b.avg_watch_time_ms) || 0) - (Number(a.avg_watch_time_ms) || 0); }
@@ -3535,7 +3542,7 @@ function renderTt(tt) {
   var sorters = {
     date: function(a, b) { return String(b.posted_at).localeCompare(String(a.posted_at)); },
     views: function(a, b) { return (Number(b.views) || 0) - (Number(a.views) || 0); },
-    reach: function(a, b) { return (Number(b.reach) || 0) - (Number(a.reach) || 0); },
+    views: function(a, b) { return (Number(b.views) || Number(b.reach) || 0) - (Number(a.views) || Number(a.reach) || 0); },
     eng: function(a, b) { return (Number(b.engagement) || 0) - (Number(a.engagement) || 0); },
     engrate: function(a, b) { return b.engRate - a.engRate; },
     watch: function(a, b) { return (Number(b.avg_watch_time_ms) || 0) - (Number(a.avg_watch_time_ms) || 0); },
