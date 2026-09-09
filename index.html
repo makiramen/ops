@@ -7001,11 +7001,12 @@ function renderCarry(d, dates){
   const curLive = curIdx>=0 && wkState[curIdx]!=="settled";
   const thisHead = curMon ? `This week · w/c ${carryShort(curMon)}<div style="font-size:10px;font-weight:600;text-transform:none;letter-spacing:0">${curLive?`<span style="color:#E8730C">● live · Mon to ${carryShort(through)}</span>`:`<span style="color:var(--rag-green)">✓ settled</span>`}</div>` : "This week";
   const prevHead = prevMon ? `Last week · w/c ${carryShort(prevMon)}<div style="font-size:10px;font-weight:600;text-transform:none;letter-spacing:0">${wkState[prevIdx]==="settled"?`<span style="color:var(--rag-green)">✓ settled</span>`:`<span style="color:var(--amber-ink)">⧗ awaiting KPI</span>`}</div>` : `Last week<div style="font-size:10px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--maki-muted)">first week of period</div>`;
-  { let cg=tbl.querySelector("colgroup"); if(!cg){ cg=document.createElement("colgroup"); tbl.insertBefore(cg, tbl.firstChild); } cg.innerHTML=`<col style="width:190px"><col><col><col><col><col><col style="width:220px">`; }
-  tbl.querySelector("thead").innerHTML=`<tr><th>Site</th><th class="num" style="color:#E8730C">Spent this week £</th><th class="num">Budget this week £</th><th class="num">Left this week £</th><th class="num">Carry from last week £</th><th class="num">Period left £</th><th>Period used</th></tr>
-    <tr><th style="font-weight:500;border-top:none;padding-top:0"></th><th colspan="3" class="num" style="font-weight:500;border-top:none;padding-top:0">${thisHead}</th><th class="num" style="font-weight:500;border-top:none;padding-top:0">${prevHead}</th><th colspan="2" class="num" style="font-weight:500;border-top:none;padding-top:0">${carryPeriodLabel(start)} · ${wkState.filter(s=>s==="settled").length} settled${curLive?" + live":""} of ${CARRY.weeks}</th></tr>`;
+  { let cg=tbl.querySelector("colgroup"); if(!cg){ cg=document.createElement("colgroup"); tbl.insertBefore(cg, tbl.firstChild); } cg.innerHTML=`<col style="width:175px"><col><col><col style="width:190px"><col><col><col>`; }
+  tbl.querySelector("thead").innerHTML=`<tr><th>Site</th><th class="num">Carry from last week</th><th class="num">Period left</th><th>Period used</th><th class="num" style="color:#E8730C">Spent this week £</th><th class="num">Budget this week £</th><th class="num">Left this week £</th></tr>
+    <tr><th style="font-weight:500;border-top:none;padding-top:0"></th><th class="num" style="font-weight:500;border-top:none;padding-top:0">${prevHead}</th><th colspan="2" class="num" style="font-weight:500;border-top:none;padding-top:0">${carryPeriodLabel(start)} · ${wkState.filter(s=>s==="settled").length} settled${curLive?" + live":""} of ${CARRY.weeks}</th><th colspan="3" class="num" style="font-weight:500;border-top:none;padding-top:0">${thisHead}</th></tr>`;
   const bar=(pct)=>{ if(pct==null) return '<span style="color:var(--maki-muted)">·</span>'; const col=pct>100?"var(--rag-red)":pct>92?"var(--rag-amber)":"var(--rag-green)"; return `<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:8px;background:var(--maki-soft);border-radius:4px;overflow:hidden"><div style="width:${Math.min(100,pct).toFixed(0)}%;height:100%;background:${col}"></div></div><span style="font-size:11px;font-weight:600;min-width:38px;text-align:right;color:${col}">${pct.toFixed(0)}%</span></div>`; };
   const counted=c=>c&&(c.state==="settled"||c.state==="live"||c.state==="awaiting");
+  const pctLine=(spend,sales)=>{ if(!(sales>0)) return ""; const p=spend/sales*100; return `<div style="font-size:10.5px;font-weight:600;color:${carryPctCol(p)}">${p.toFixed(1)}% <span style="font-weight:500;color:var(--maki-muted)">vs 25%</span></div>`; };
   const calc=r=>{
     const cells=weeks.map(m=>carrySiteWeek(d, r.code, m, through));
     const t={sales:0,spend:0,bud:0,left:0,counted:0,gaps:0,unrec:0};
@@ -7016,24 +7017,24 @@ function renderCarry(d, dates){
   const unrecBadge=c=> (c&&counted(c)&&c.unrecorded) ? `<div style="font-size:10.5px;color:var(--rag-red);font-weight:600">${c.unrecorded} day${c.unrecorded===1?"":"s"} unrecorded</div>` : "";
   const siteRow=(r,x)=>`<tr${x.t.counted?"":' class="nodata"'}>
       <td class="site-code">${r.code}${x.t.gaps?`<div style="font-size:10px;color:var(--amber-ink);font-weight:600">${x.t.gaps} wk${x.t.gaps===1?"":"s"} excluded</div>`:""}</td>
+      <td class="num" title="${x.prev&&counted(x.prev)?`Spent ${fmtGBP(x.prev.spend)} of ${fmtGBP(x.prev.bud)} on sales ${fmtGBP(x.prev.sales)}`:""}">${prevIdx<0?'<span style="color:var(--maki-muted)">·</span>':carryMoney(x.prev,"variance")}${x.prev&&counted(x.prev)?pctLine(x.prev.spend,x.prev.sales):""}</td>
+      <td class="num" style="font-weight:700" title="Spent ${fmtGBP(x.t.spend)} of ${fmtGBP(x.t.bud)} on sales ${fmtGBP(x.t.sales)} this period">${x.t.counted?carrySigned(x.t.left)+pctLine(x.t.spend,x.t.sales):'<span style="color:var(--maki-muted)">·</span>'}</td>
+      <td>${bar(x.t.used)}</td>
       <td class="num" title="${x.cur&&counted(x.cur)?`Sales to date ${fmtGBP(x.cur.sales)}`:""}">${carryMoney(x.cur,"spend")}${unrecBadge(x.cur)}</td>
       <td class="num">${carryMoney(x.cur,"bud")}</td>
       <td class="num">${x.cur&&!counted(x.cur)?'<span style="color:var(--maki-muted)">·</span>':carryMoney(x.cur,"variance")}</td>
-      <td class="num" title="${x.prev&&counted(x.prev)?`Spent ${fmtGBP(x.prev.spend)} of ${fmtGBP(x.prev.bud)} (${x.prev.pct.toFixed(1)}%)`:""}">${prevIdx<0?'<span style="color:var(--maki-muted)">·</span>':carryMoney(x.prev,"variance")}</td>
-      <td class="num" style="font-weight:700" title="Spent ${fmtGBP(x.t.spend)} of ${fmtGBP(x.t.bud)} this period">${x.t.counted?carrySigned(x.t.left):'<span style="color:var(--maki-muted)">·</span>'}</td>
-      <td>${bar(x.t.used)}</td>
     </tr>`;
   const subRow=(label,t)=>`<tr style="background:var(--maki-soft);font-weight:700">
       <td style="font-size:11px;letter-spacing:.04em">${label} · TOTAL</td>
+      <td class="num">${t.prev.n?carrySigned(t.prev.bud-t.prev.spend)+pctLine(t.prev.spend,t.prev.sales):"·"}${t.prev.gaps?`<div style="font-size:10.5px;font-weight:600;color:var(--amber-ink)">${t.prev.gaps} site${t.prev.gaps===1?"":"s"} out</div>`:""}</td>
+      <td class="num">${carrySigned(t.bud-t.spend)}${pctLine(t.spend,t.sales)}</td>
+      <td>${bar(t.bud>0?t.spend/t.bud*100:null)}</td>
       <td class="num">${t.cur.n?fmtGBP(t.cur.spend):"·"}${t.cur.gaps?`<div style="font-size:10.5px;font-weight:600;color:var(--amber-ink)">${t.cur.gaps} site${t.cur.gaps===1?"":"s"} out</div>`:""}</td>
       <td class="num">${t.cur.n?fmtGBP(t.cur.bud):"·"}</td>
       <td class="num">${t.cur.n?carrySigned(t.cur.bud-t.cur.spend):"·"}</td>
-      <td class="num">${t.prev.n?carrySigned(t.prev.bud-t.prev.spend):"·"}${t.prev.gaps?`<div style="font-size:10.5px;font-weight:600;color:var(--amber-ink)">${t.prev.gaps} site${t.prev.gaps===1?"":"s"} out</div>`:""}</td>
-      <td class="num">${carrySigned(t.bud-t.spend)}</td>
-      <td>${bar(t.bud>0?t.spend/t.bud*100:null)}</td>
     </tr>`;
-  const newTot=()=>({sales:0,spend:0,bud:0,cur:{n:0,spend:0,bud:0,gaps:0},prev:{n:0,spend:0,bud:0,gaps:0},gapsSites:0,unrec:0});
-  const addW=(w,c)=>{ if(counted(c)){ w.n++; w.spend+=c.spend; w.bud+=c.bud; } else if(c&&(c.state==="unsettled"||c.state==="unrecorded")) w.gaps++; };
+  const newTot=()=>({sales:0,spend:0,bud:0,cur:{n:0,spend:0,bud:0,sales:0,gaps:0},prev:{n:0,spend:0,bud:0,sales:0,gaps:0},gapsSites:0,unrec:0});
+  const addW=(w,c)=>{ if(counted(c)){ w.n++; w.spend+=c.spend; w.bud+=c.bud; w.sales+=c.sales; } else if(c&&(c.state==="unsettled"||c.state==="unrecorded")) w.gaps++; };
   const addTo=(t,x)=>{ t.sales+=x.t.sales; t.spend+=x.t.spend; t.bud+=x.t.bud; t.unrec+=x.t.unrec; if(x.t.gaps) t.gapsSites++; addW(t.cur,x.cur); addW(t.prev,x.prev); };
   const CLUSTER_ORDER=["scotland_newcastle","north_midlands","south"];
   const G=newTot(); let rows="";
@@ -7054,15 +7055,15 @@ function renderCarry(d, dates){
   tbl.querySelector("tbody").innerHTML = rows || `<tr><td colspan="${ncol}" style="text-align:center;color:var(--maki-muted)">No sites for this cluster</td></tr>`;
   const gLeft=G.bud-G.spend;
   document.getElementById("carryStats").innerHTML=[
+    {l:"Carry from last week", v:G.prev.n?carrySigned(G.prev.bud-G.prev.spend)+(G.prev.sales>0?` <span style="font-size:12px;color:${carryPctCol(G.prev.spend/G.prev.sales*100)}">${(G.prev.spend/G.prev.sales*100).toFixed(1)}%</span>`:""):"·"},
+    {l:"Period left", v:carrySigned(gLeft)+(G.sales>0?` <span style="font-size:12px;color:${carryPctCol(G.spend/G.sales*100)}">${(G.spend/G.sales*100).toFixed(1)}%</span>`:"")},
     {l:"Spent this week", v:fmtGBP(G.cur.spend)},
-    {l:"Left this week", v:carrySigned(G.cur.bud-G.cur.spend)},
-    {l:"Carry from last week", v:G.prev.n?carrySigned(G.prev.bud-G.prev.spend):"·"},
-    {l:"Period left", v:carrySigned(gLeft)}
+    {l:"Left this week", v:carrySigned(G.cur.bud-G.cur.spend)}
   ].map(x=>`<div class="tile-stat"><span>${x.l}</span><strong>${x.v}</strong></div>`).join("");
   const liveTxt = curLive ? ` This week is live: spent = ledger purchases Mon to ${carryShort(through)}, budget = 25% of cash-up sales for the same days, so both grow through the week; it settles to the KPI food cost once the week's KPI file lands.` : "";
   const unrecTxt = G.unrec ? ` <strong style="color:var(--rag-red)">${G.unrec} site-day${G.unrec===1?"":"s"} unrecorded</strong> this week: those sites' spend is understated, not under budget.` : "";
   const gapTxt = G.gapsSites ? ` ${G.gapsSites} site${G.gapsSites===1?" carries":"s carry"} an excluded week (unsettled KPI or nothing filed); their period figures cover the counted weeks only.` : "";
-  document.getElementById("carryNote").innerHTML = `Budget = 25% of actual sales. Left this week = budget minus spent. Carry from last week = what last week finished under (plus) or over (minus) its 25%, from the settled KPI. Period left = the same, cumulative from Mon ${carryShort(start)} across every counted week, including this one.${liveTxt}${unrecTxt}${gapTxt} Bar = spent vs budget for the period to date (red over 100%, amber over 92%). Hover any figure for the sales and £ behind it. Responds to the cluster pills below.`;
+  document.getElementById("carryNote").innerHTML = `Budget = 25% of actual sales. Left this week = budget minus spent. Carry from last week = what last week finished under (plus) or over (minus) its 25%, from the settled KPI. Period left = the same, cumulative from Mon ${carryShort(start)} across every counted week, including this one.${liveTxt}${unrecTxt}${gapTxt} The % under a carry figure is food cost as a share of sales for that span, against the 25% cap. Bar = spent vs budget for the period to date (red over 100%, amber over 92%). Hover any figure for the sales and £ behind it. Responds to the cluster pills below.`;
 }
 function initCarryPeriod(){ const el=document.getElementById("carryPeriod"); if(el) el.addEventListener("change", e=>{ CARRY.period=e.target.value; renderBudget(); }); }
 // ---- /CARRY-FORWARD BLOCK ----
