@@ -196,9 +196,14 @@ def main():
     except ValueError: log("reviews mirror header unexpected:", rh); raise SystemExit(12)
     per_date = collections.Counter(r[idate].strip() for r in rrows[1:] if len(r) > idate and r[idate].strip())
     R["reviews"]["mirror_sha"] = sha(rb)[:16]; R["reviews"]["rows"] = len(rrows) - 1
+    try: R["reviews"]["source"] = open(os.path.join(os.path.dirname(os.path.abspath(a.reviews[0])), "reviews_source.txt")).read().strip()
+    except Exception: R["reviews"]["source"] = "unknown"
     R["reviews"]["rows_D"] = per_date.get(dmy(D.isoformat()), 0); R["reviews"]["rows_D1"] = per_date.get(dmy(D1.isoformat()), 0)
-    if len(rrows) < 21 or (R["reviews"]["rows_D"] == 0 and R["reviews"]["rows_D1"] == 0):
-        R["warnings"].append(f"REVIEWS FEED LOOKS DARK: {len(rrows)-1} rows, {R['reviews']['rows_D']} on D, {R['reviews']['rows_D1']} on D-1 — ingestion at source has not run; not building reviews")
+    # 10/09/2026: this used to need BOTH D and D-1 empty. A source frozen exactly one day passed
+    # that test and shipped 09/09 as a zero-review day. 0 rows on D is enough to hold reviews back.
+    # Cash-up still builds and ships; only reviews wait, loudly, until the source catches up.
+    if len(rrows) < 21 or R["reviews"]["rows_D"] == 0:
+        R["warnings"].append(f"REVIEWS SOURCE IS BEHIND THE DAY: {len(rrows)-1} rows, 0 on D {D}, {R['reviews']['rows_D1']} on D-1, route {R['reviews']['source']} - NOT building reviews and NOT shipping a zero. Re-run once the source has caught up.")
         reviews_ok = False
     else:
         reviews_ok = True
