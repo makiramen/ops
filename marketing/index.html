@@ -562,6 +562,9 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 #tab-loyalty .kpi { background: #fff; border: 1px solid var(--rr-line); border-radius: 12px;
   padding: 12px 14px; box-shadow: 0 1px 3px rgba(16,24,40,.06); }
 #tab-loyalty .kpi.hot { border-color: var(--rr-accent); background: var(--rr-soft); }
+#tab-loyalty .kpi.rr-live { border-color: var(--rr-accent); border-style: dashed; background: #fff; }
+#tab-loyalty .kpi.rr-live .d { color: var(--rr-accent); font-weight: 600; }
+#tab-loyalty .rr-asof { color: var(--rr-accent); font-weight: 600; }
 #tab-loyalty .kpi .v { font-size: 23px; font-weight: 700; letter-spacing: -.02em;
   font-variant-numeric: tabular-nums; }
 #tab-loyalty .kpi .v small { font-size: 14px; font-weight: 600; }
@@ -1270,6 +1273,8 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
         <h3>Sign-ups in context <span id="rr-d-ctx1"></span></h3>
         <svg class="rrchart" id="rr-ch-signups" viewBox="0 0 560 180" preserveAspectRatio="none"></svg>
         <div class="legend"><span><i style="background:var(--rr-accent);opacity:.55"></i>New sign-ups</span><span><i style="background:var(--rr-accent)"></i>Selected day</span></div>
+        <p class="caveat"><b>How to read a sign-up number.</b> A day that has not finished shows a <b>running total, not the day's total</b>. On 12 September it stood near 500 at 2pm and closed at <b>776</b>, so the same dashboard read at lunchtime and at midnight gives two different, both correct, answers. The day view stamps the live day with the time its figure was taken: quote the stamp with the number, or quote a completed day.</p>
+        <p class="caveat"><b>Basis.</b> <span class="mono">new_members</span> on DAILY METRICS, which counts Trifft registrations by <span class="mono">registered_at</span>. Klaviyo's <span class="mono">Member verified</span> series runs a few per cent lower because it counts only registrations that verified (12 September: 776 here, 750 there). Both are defensible; they are not a contradiction. Never mix the two in one sentence, and name the source when the number goes in front of anyone.</p>
       </div>
       <div class="card">
         <h3>Redemptions in context <span id="rr-d-ctx2"></span></h3>
@@ -7192,6 +7197,24 @@ function rrDelta(cur, prev, unit) {
   return (cur >= prev ? '+' : '') + Math.round((cur - prev) / prev * 100) + '% on prev ' + unit;
 }
 
+// ---- LIVE-DAY AWARENESS ------------------------------------------------
+// The day axis runs launch -> today, so the last cell is a day that has not
+// finished. Its sign-up count is a RUNNING TOTAL and climbs all day: on
+// 12 Sept it read ~500 at 2pm and closed at 776. Rendered bare, it reads as
+// the day's total and contradicts anything quoted live from Klaviyo. Every
+// figure for that day is therefore stamped with the time it was taken.
+function rrTodayIx() {
+  var t;
+  try { t = new Date().toLocaleDateString('en-CA', {timeZone: 'Europe/London'}); } catch (e) { t = ''; }
+  var ix = RR.days.indexOf(t);
+  return ix >= 0 ? ix : RR.days.length - 1;
+}
+function rrAsOf() {
+  var m = String(RR.generated_at || '').match(/T(\d{2}:\d{2})/);
+  if (m) return m[1] + ' UK';
+  return String(RR.pulled_label || 'the last refresh');
+}
+
 // ---- namespaced SVG bar chart. The class is .cbar, NOT .bar: a page-level
 //      .bar{height:7px} also matches an SVG <rect class="bar"> and a CSS
 //      geometry property beats the attribute, which silently flattens it. ----
@@ -7416,11 +7439,18 @@ function rrDay_render() {
   rrEl('rr-dprev').disabled = (i === 0);
   rrEl('rr-dnext').disabled = (i === N - 1);
   var partial = (RR.bills[i] == null);
-  rrEl('rr-dstatus').textContent = partial ? 'trading data not in yet' : (RR.notes[i] || 'complete');
+  var live = (i === rrTodayIx());
+  rrEl('rr-dstatus').textContent = live
+    ? 'today, still counting. Sign-ups as of ' + rrAsOf() + ', trading data lands tomorrow morning'
+    : (partial ? 'trading data not in yet' : (RR.notes[i] || 'complete'));
+  var suCard = rrEl('rr-d-signups').parentNode;
+  suCard.className = live ? 'kpi hot rr-live' : 'kpi hot';
 
   var claimed = rrVsum('ca', i), redeemed = rrVsum('ra', i), p = (i > 0 ? i - 1 : null);
   rrEl('rr-d-signups').textContent = rrN(RR.signups[i]);
-  rrEl('rr-d-signups-d').textContent = p == null ? 'launch day' : rrDelta(RR.signups[i], RR.signups[p], 'day');
+  rrEl('rr-d-signups-d').textContent = live
+    ? 'running total at ' + rrAsOf() + ', not the day total'
+    : (p == null ? 'launch day' : rrDelta(RR.signups[i], RR.signups[p], 'day'));
   rrEl('rr-d-claimed').textContent = rrN(claimed);
   rrEl('rr-d-claimed-d').textContent = p == null ? '' : rrDelta(claimed, rrVsum('ca', p), 'day');
   rrEl('rr-d-redeemed').textContent = rrN(redeemed);
@@ -7482,8 +7512,12 @@ function rrWeek_render() {
   var su = rrSum(RR.signups, w.from, w.to), cl = rrVsumRange('ca', w.from, w.to),
       rd = rrVsumRange('ra', w.from, w.to), bi = rrSum(RR.bills, w.from, w.to), sp = rrSum(RR.spend, w.from, w.to);
 
+  var wLive = (rrTodayIx() >= w.from && rrTodayIx() <= w.to);
   rrEl('rr-w-signups').textContent = rrN(su);
-  rrEl('rr-w-signups-d').textContent = p ? rrDelta(su, rrSum(RR.signups, p.from, p.to), 'week') : '';
+  rrEl('rr-w-signups-d').textContent = wLive
+    ? 'includes today, still counting at ' + rrAsOf()
+    : (p ? rrDelta(su, rrSum(RR.signups, p.from, p.to), 'week') : '');
+  rrEl('rr-w-signups').parentNode.className = wLive ? 'kpi hot rr-live' : 'kpi hot';
   rrEl('rr-w-claimed').textContent = rrN(cl);
   rrEl('rr-w-claimed-d').textContent = p ? rrDelta(cl, rrVsumRange('ca', p.from, p.to), 'week') : '';
   rrEl('rr-w-redeemed').textContent = rrN(rd);
@@ -7517,7 +7551,8 @@ function rrWeek_render() {
 
   var rows = '';
   for (var i = w.from; i <= w.to; i++) {
-    rows += '<tr' + (RR.bills[i] == null ? ' class="dim"' : '') + '><td>' + rrDay(RR.days[i]) + '</td><td class="num">' + RR.signups[i] +
+    rows += '<tr' + (RR.bills[i] == null ? ' class="dim"' : '') + '><td>' + rrDay(RR.days[i]) +
+      (i === rrTodayIx() ? ' <span class="rr-asof">today, ' + rrAsOf() + '</span>' : '') + '</td><td class="num">' + RR.signups[i] +
       '</td><td class="num">' + rrVsum('ca', i) + '</td><td class="num">' + rrVsum('ra', i) + '</td><td class="num">' +
       (RR.bills[i] == null ? '—' : RR.bills[i]) + '</td><td class="num">' + (RR.spend[i] == null ? '—' : rrMoney(RR.spend[i])) + '</td></tr>';
   }
