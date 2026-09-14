@@ -5086,6 +5086,10 @@ function sortMetricValue(r, key) {
 }
 
 function renderMatrix() {
+  // v6.2: hydrate BEFORE the first paint. The init block also calls this, but
+  // the table renders first, so without this line the inline per-campaign recs
+  // paint from the old embedded snapshot and contradict the account block.
+  metaRecsHydrate();
   // Inverted 17 Aug: the board defaults to showing EVERY campaign. Hiding
   // settled KEEPs is now an opt-in filter, not the default — objective-aware
   // judging produces very few kills, so an action-only default reads as broken,
