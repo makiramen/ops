@@ -115,7 +115,7 @@ footer{border-top:1px solid var(--rule); padding-top:20px; color:var(--ink3); fo
   --ground:#FBFAF6; --surface:#FFFFFF; --sunk:#F4F0E7; --deep:#17140F;
   --ink:#1A1712; --ink2:#4B443A; --muted:#837868; --hair:#E4DCCC; --hair2:#F0EBE0;
   --maki:#D95E10; --maki-soft:#FBEFE4;
-  --s1:#D95E10; --s2:#0B6FA8; --s3:#6D8E1C; --s0:#A79C8A;
+  --s1:#D95E10; --s2:#4B443A; --s3:#6D8E1C; --s0:#A79C8A;
   --good:#4F6B12; --good-bg:#F0F3E2;
   --bad:#A4340B;  --bad-bg:#FBEAE2;
   --warn:#8A6412; --warn-bg:#F8F0DC;
@@ -129,7 +129,7 @@ footer{border-top:1px solid var(--rule); padding-top:20px; color:var(--ink3); fo
     --ground:#16140F; --surface:#1D1A14; --sunk:#232019; --deep:#0E0C09;
     --ink:#F2EDE2; --ink2:#CFC6B6; --muted:#968C7D; --hair:#332E25; --hair2:#282419;
     --maki:#E8783A; --maki-soft:#2C2016;
-    --s1:#E06A22; --s2:#3A93C9; --s3:#7FA22F; --s0:#6E6556;
+    --s1:#E06A22; --s2:#B9AE9B; --s3:#7FA22F; --s0:#6E6556;
     --good:#9DBE4E; --good-bg:#1E2513;
     --bad:#E4835C;  --bad-bg:#2E1C14;
     --warn:#D3A342; --warn-bg:#2A2113;
@@ -140,7 +140,7 @@ footer{border-top:1px solid var(--rule); padding-top:20px; color:var(--ink3); fo
   --ground:#16140F; --surface:#1D1A14; --sunk:#232019; --deep:#0E0C09;
   --ink:#F2EDE2; --ink2:#CFC6B6; --muted:#968C7D; --hair:#332E25; --hair2:#282419;
   --maki:#E8783A; --maki-soft:#2C2016;
-  --s1:#E06A22; --s2:#3A93C9; --s3:#7FA22F; --s0:#6E6556;
+  --s1:#E06A22; --s2:#B9AE9B; --s3:#7FA22F; --s0:#6E6556;
   --good:#9DBE4E; --good-bg:#1E2513;
   --bad:#E4835C;  --bad-bg:#2E1C14;
   --warn:#D3A342; --warn-bg:#2A2113;
@@ -179,13 +179,13 @@ header.top{padding-block:30px 0}
 #pegroot .bhead h2{font-size:clamp(26px,3.4vw,36px);line-height:1.1;font-weight:700}
 #pegroot .ansline{font-size:20px;line-height:1.45;color:var(--ink);max-width:60ch;border-left:3px solid var(--maki);padding-left:18px;margin:0 0 26px}
 #pegroot .ansline strong{font-weight:600;color:var(--maki)}
-#pegroot .note{font-size:14px;color:var(--muted);max-width:72ch;line-height:1.55;margin-top:14px}
+#pegroot .note{font-size:15px;color:var(--ink2);max-width:72ch;line-height:1.55;margin-top:14px}
 
 #pegroot /* figures */
 figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-radius:4px;padding:20px 20px 16px;box-shadow:var(--lift)}
 #pegroot figure + figure{margin-top:18px}
 #pegroot figure h3{font-size:17px;margin-bottom:4px;letter-spacing:-.012em}
-#pegroot .figsub{font-family:var(--mono);font-size:11.5px;color:var(--muted);line-height:1.5;margin-bottom:16px}
+#pegroot .figsub{font-family:var(--mono);font-size:12.5px;color:var(--ink2);line-height:1.5;margin-bottom:16px}
 #pegroot .legend{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;color:var(--ink2);margin-bottom:14px}
 #pegroot .legend span{display:inline-flex;align-items:center;gap:7px}
 #pegroot .sw{width:12px;height:12px;border-radius:2px;flex:none}
@@ -262,10 +262,37 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
 @media (prefers-reduced-motion:reduce){#pegroot *{transition:none!important;animation:none!important}}
 @media (max-width:620px){ #pegroot{font-size:16px} #pegroot th, #pegroot td{padding:8px 10px} #pegroot .ansline{font-size:18px} }
 
-#pegroot .wrap{max-width:none;padding-inline:0;padding-block:0 8px}
+#pegroot .wrap{max-width:940px;margin-inline:auto;padding-inline:0;padding-block:0 8px}
 #pegroot section{border-top:0;padding-block:56px 0}
 #pegroot header.top{padding-block:0}
 #panel-peg{margin-top:-14px}
+#pegroot .subtabs{position:sticky;top:0;z-index:20;display:flex;gap:2px;flex-wrap:nowrap;overflow-x:auto;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  background:var(--ground);border-bottom:1px solid var(--rule);margin:34px 0 26px;padding-bottom:0}
+#pegroot .subtabs::-webkit-scrollbar{display:none}
+#pegroot .stab{appearance:none;border:0;background:none;cursor:pointer;font-family:var(--disp);font-weight:600;
+  font-size:15px;letter-spacing:-.01em;color:var(--muted);padding:13px 16px 11px;white-space:nowrap;
+  border-bottom:2px solid transparent;display:inline-flex;align-items:baseline;gap:9px}
+#pegroot .stab:hover{color:var(--ink2)}
+#pegroot .stab[aria-selected="true"]{color:var(--maki);border-bottom-color:var(--maki)}
+#pegroot .stab .sn{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--muted);opacity:.8}
+#pegroot .stab[aria-selected="true"] .sn{color:var(--maki);opacity:1}
+#pegroot .spanel[hidden]{display:none}
+#pegroot .spanel > section.board{padding-block:0 0}
+#pegroot .spanel .bhead{border-top:0;padding-top:0}
+#pegroot .pgnav{display:flex;justify-content:space-between;gap:12px;margin-top:52px;padding-top:20px;border-top:1px solid var(--hair)}
+#pegroot .pgnav button{font-family:var(--disp);font-weight:600;font-size:14px;background:none;border:1px solid var(--hair);
+  border-radius:3px;padding:10px 15px;color:var(--ink2);cursor:pointer;max-width:46%;text-align:left}
+#pegroot .pgnav button:hover{border-color:var(--maki);color:var(--maki)}
+#pegroot .pgnav button[disabled]{opacity:0;pointer-events:none}
+@media (max-width:760px){
+  #pegroot .chartbox{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  #pegroot .chartbox > div{min-width:560px}
+  #pegroot table{min-width:560px}
+  #pegroot figure > table, #pegroot .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;display:block}
+  #pegroot .subtabs{margin:24px 0 20px}
+  #pegroot .stab{font-size:14px;padding:11px 12px 9px}
+}
 
 </style>
 <div class="wrap">
@@ -384,8 +411,16 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
     </div>
   </div>
 </header>
+<div class="subtabs" role="tablist" aria-label="Wage peg sections">
+  <button class="stab" id="st-1" role="tab" aria-selected="true" aria-controls="sp-1"><span class="sn">1</span>Cost</button>
+  <button class="stab" id="st-2" role="tab" aria-selected="false" aria-controls="sp-2"><span class="sn">2</span>Pay</button>
+  <button class="stab" id="st-3" role="tab" aria-selected="false" aria-controls="sp-3"><span class="sn">3</span>Other costs</button>
+  <button class="stab" id="st-4" role="tab" aria-selected="false" aria-controls="sp-4"><span class="sn">4</span>Covers</button>
+  <button class="stab" id="st-5" role="tab" aria-selected="false" aria-controls="sp-5"><span class="sn">5</span>Decision</button>
+</div>
 
 <!-- 1 -->
+<div class="spanel" id="sp-1" role="tabpanel" aria-labelledby="st-1">
 <section class="board">
   <div class="bhead"><span class="n">1</span><h2>What does the peg cost us?</h2></div>
   <p class="ansline">The April 2027 wage rise happens either way and costs us <strong>0.74 points</strong>. The peg costs a further <strong>2.66 points</strong> on top, and that is the part we choose.</p>
@@ -402,8 +437,14 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
 
   <p class="note">The honest comparison is the second bar against the third. Doing nothing still costs us margin, because the wage floor rises whatever we do. The peg's own price is <strong>£558,050 and 2.66 points</strong> on these eight sites. Scaled across the 18 corporate sites at the July 2026 run rate, the day-one revenue cut is <strong>£1.37m a year</strong>.</p>
 </section>
+<div class="pgnav">
+  <button type="button" disabled></button>
+  <button type="button" data-go="2">Pay &rarr;</button>
+</div>
+</div>
 
 <!-- 2 -->
+<div class="spanel" id="sp-2" role="tabpanel" aria-labelledby="st-2" hidden>
 <section class="board">
   <div class="bhead"><span class="n">2</span><h2>What do we actually pay the team?</h2></div>
   <p class="ansline">Under the law alone, our newest kitchen assistant gets a rise and our kitchen supervisor gets nothing. Holding the whole ladder instead costs <strong>£68k a year</strong>, which is two tenths of one per cent of sales.</p>
@@ -434,8 +475,14 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
 
   <p class="note">Costed on grade medians and Kobas hours, hourly roles only. Run on every individual rate rather than the grade median, the group totals are higher (about £181k statutory and £242k on a hold-the-ladder policy for April 2027) because roughly a third of staff sit below their grade median. The gap between the two policies is what the decision turns on, and it is the same shape either way. General Manager (£36,500), Assistant Manager (£32,000) and Head Chef (£36,000) are salaried and held flat throughout: 19.5% of hours and 20.8% of the wage bill, insulated by construction. One thing to diary: a £32,000 AGM breaches the floor above 46.7 hours a week in April 2027 and 45.2 in April 2028, and one AGM already records 46.7.</p>
 </section>
+<div class="pgnav">
+  <button type="button" data-go="1">&larr; Cost</button>
+  <button type="button" data-go="3">Other costs &rarr;</button>
+</div>
+</div>
 
 <!-- 3 -->
+<div class="spanel" id="sp-3" role="tabpanel" aria-labelledby="st-3" hidden>
 <section class="board">
   <div class="bhead"><span class="n">3</span><h2>What else is going up?</h2></div>
   <p class="ansline">Over two years our cost base rises <strong>£2.83m</strong>. The peg's own price rises give back <strong>£835k</strong>. It covers under a third of the problem and opens a £1.37m hole on day one to do it.</p>
@@ -460,8 +507,14 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
 
   <p class="note">Rate assumptions: hourly wages at the Low Pay Commission central path (3.7%); employer NI and pension above pay growth because the 15% rate, the £5,000 threshold and the pension bands are all frozen; food at the FDF forecast, which peaks at 6.4% in July 2027, with beef already up 12% year on year; property reflecting Edinburgh city-centre rateable values up 35.6%, the Scottish licensed hospitality relief capped at £110k across the group, and the English retail, hospitality and leisure additional reliefs excluding restaurants; energy from a bill already up around 25% since February 2026, with the business transmission charge rising from £3.84bn to £7.52bn from April 2026 and network costs locked in to 2031 regardless of wholesale prices. Card and cash handling rises with transaction volume, not with the peg.</p>
 </section>
+<div class="pgnav">
+  <button type="button" data-go="2">&larr; Pay</button>
+  <button type="button" data-go="4">Covers &rarr;</button>
+</div>
+</div>
 
 <!-- 4 -->
+<div class="spanel" id="sp-4" role="tabpanel" aria-labelledby="st-4" hidden>
 <section class="board">
   <div class="bhead"><span class="n">4</span><h2>How many more customers, and where?</h2></div>
   <p class="ansline">Turnover gets back to flat at <strong>+4.9%</strong> covers. Profit does not get back until <strong>+9.2%</strong>. Between those two points we are busier, taking the same money, and making less.</p>
@@ -503,8 +556,14 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
 
   <p class="note"><strong>Edinburgh carries the load.</strong> Four sites, 27,332 covers a month and £418k of the £1.67m the reprice costs us, and it needs 85 extra covers a day to stand still. Gateshead is the only market that breaks even below +7%. South Ikigai is shown on its own rather than folded into a city. Average bill is net of VAT.</p>
 </section>
+<div class="pgnav">
+  <button type="button" data-go="3">&larr; Other costs</button>
+  <button type="button" data-go="5">Decision &rarr;</button>
+</div>
+</div>
 
 <!-- 5 -->
+<div class="spanel" id="sp-5" role="tabpanel" aria-labelledby="st-5" hidden>
 <section class="board">
   <div class="bhead"><span class="n">5</span><h2>So what do we do?</h2></div>
   <p class="ansline">Two real choices. Doing nothing still costs us <strong>0.74 points</strong> to the April 2027 wage rise. The peg costs <strong>3.40 points</strong> and puts <strong>£1.67m</strong> of revenue on the table for a cover uplift we have no evidence we can win.</p>
@@ -549,6 +608,11 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
     Full working and the regional economic case: <a href="https://claude.ai/code/artifact/63993389-3afb-4080-92d6-03f9e8d75b65">One Hour, One Bowl</a>
   </div>
 </section>
+<div class="pgnav">
+  <button type="button" data-go="4">&larr; Covers</button>
+  <button type="button" disabled></button>
+</div>
+</div>
 
 </div>
 </div>
@@ -974,6 +1038,35 @@ function pos(v,f){var s=(v>=0?"+":"−");return s+f(Math.abs(v));}
     window.scrollTo(0,0);
   }
   T.forEach(function(t){document.getElementById(t.b).addEventListener("click",function(){show(t.b);});});
+  var ST=["1","2","3","4","5"];
+  function sshow(n,scroll){
+    ST.forEach(function(k){
+      var on=(k===n), btn=document.getElementById("st-"+k), pan=document.getElementById("sp-"+k);
+      if(!btn||!pan) return;
+      btn.setAttribute("aria-selected",String(on)); pan.hidden=!on;
+    });
+    try{history.replaceState(null,"","#peg-"+n);}catch(e){}
+    if(scroll){
+      var tb=document.querySelector("#pegroot .subtabs");
+      if(tb){var y=tb.getBoundingClientRect().top+window.pageYOffset-8; window.scrollTo({top:y,behavior:"smooth"});}
+    }
+  }
+  ST.forEach(function(k){
+    var b=document.getElementById("st-"+k);
+    if(b) b.addEventListener("click",function(){sshow(k,false);});
+  });
+  document.querySelectorAll("#pegroot .pgnav button[data-go]").forEach(function(b){
+    b.addEventListener("click",function(){sshow(b.getAttribute("data-go"),true);});
+  });
+  document.querySelector("#pegroot .subtabs")&&document.querySelector("#pegroot .subtabs").addEventListener("keydown",function(e){
+    var i=ST.indexOf((document.activeElement.id||"").replace("st-",""));
+    if(i<0) return;
+    var j=e.key==="ArrowRight"?i+1:e.key==="ArrowLeft"?i-1:-1;
+    if(j<0||j>=ST.length) return;
+    e.preventDefault(); sshow(ST[j],false); document.getElementById("st-"+ST[j]).focus();
+  });
+  var m=(location.hash||"").match(/^#peg-([1-5])$/);
+  if(m){ show("pt-peg"); sshow(m[1],false); }
 })();
 </script>
 </body>
