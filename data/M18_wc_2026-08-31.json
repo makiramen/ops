@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-09",
+  "generated_at": "2026-09-14",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-08-31 \u2013 2026-09-06",
@@ -55,7 +55,7 @@
       },
       "labour_split": {
         "split_status": "filed",
-        "days_with_split": 6,
+        "days_with_split": 7,
         "days_present": 7,
         "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
         "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
@@ -125,17 +125,24 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.3415,
-        "new_reviews": 41,
+        "week_avg_rating": 4.2857,
+        "new_reviews": 42,
         "star_breakdown": {
           "1": 4,
-          "2": 1,
+          "2": 2,
           "3": 4,
           "4": 0,
           "5": 32
         },
-        "negatives": 9,
+        "negatives": 10,
         "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "Ilyess Benali",
+            "text": "(Translated by Google) Very good, but the portions are too small.\n\n(Original)\nTres bon mais les quantit\u00e9 sont trop petite",
+            "date": "2026-09-05",
+            "url": null
+          },
           {
             "stars": 3,
             "author": "Zayana",
@@ -190,7 +197,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-09."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-08-31..2026-09-06 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-14."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-08-31.json (AGMM Task List Status). Open items only.",
