@@ -248,6 +248,23 @@ h2.histhead.closed .chev { transform: rotate(-90deg); }
 .mrbar { font-size: 11.5px; color: #4C1D95; background: #F5F3FF; border: 1px solid #DDD6FE;
   border-radius: 8px; padding: 7px 12px; margin: 8px 0; }
 .mrbar .mrnd { color: #64748B; }
+/* v6.2 14 Sept 2026 — sheet-driven Meta recs + weekly freshness. */
+.mrbarhead { display: block; margin-bottom: 6px; }
+.mrcycle { display: block; font-size: 10px; color: #7C6AA8; margin-top: 3px; font-weight: 400; }
+.mrfresh { display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; border-radius: 999px; padding: 1.5px 8px; margin-left: 6px; }
+.mrfresh.green { color: #166534; background: #DCFCE7; border: 1px solid #BBF7D0; }
+.mrfresh.amber { color: #92400E; background: #FEF3C7; border: 1px solid #FDE68A; }
+.mrfresh.red   { color: #B91C1C; background: #FEE2E2; border: 1px solid #FECACA; }
+.mrgrid { display: block; }
+.mrrow { display: block; padding: 5px 0; border-top: 1px dashed #DDD6FE; }
+.mrrow:first-child { border-top: 0; }
+.mrrt { font-weight: 600; color: #3B0764; margin-right: 6px; }
+.mrup, .mrent, .mrpts { display: inline-block; font-size: 10px; border-radius: 4px; padding: 1px 6px; margin-right: 4px; }
+.mrup  { color: #166534; background: #F0FDF4; }
+.mrent { color: #475569; background: #F1F5F9; }
+.mrpts { color: #92400E; background: #FFF7ED; font-weight: 700; }
+.mrfull { font-size: 10.5px; color: #64748B; margin-top: 2px; line-height: 1.4; }
 .recsblock { background: #FAFAFF; border: 1px solid #E2E8F0; border-radius: 8px; padding: 9px 12px; margin: 0 0 10px; }
 .recshead { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: #6D28D9; margin-bottom: 5px; }
 .recitem { font-size: 11.5px; color: #334155; margin: 4px 0; line-height: 1.45; }
@@ -4756,8 +4773,9 @@ function renderComplianceBar(view) {
 // Owners: Georgie/Summer = images & creative assets · Vidya = duplication,
 // headlines/text, budgets and all other campaign changes.
 // =====================================================================
-var META_RECS = {
+var META_RECS_EMBEDDED = {
   reviewed: '18 Aug 2026',
+  reviewedISO: '2026-08-18',
   score: '36 of 64 opportunity points',
   byCampaign: {
     'SHORE_TRAFFIC_DELIVEROO30_STATIC_AUG26': {flag: 'high cost', recs: [
@@ -4866,6 +4884,110 @@ var META_RECS = {
     'Set up partnership ads once Georgie confirms the partner.'
   ]
 };
+// =====================================================================
+// v6.2 — 14 Sept 2026 (Michael: "meta recommendations need updated on the
+// add/remove tab imo. this needs to be continual cyclical process").
+// The recs are no longer frozen in this file. They are read from the
+// MR_MetaRecs_SoT sheet via DATA.meta_recs and refreshed WEEKLY, so a
+// refresh is a sheet write, NOT a page deploy. The literal above is only
+// the fallback for a payload published before the WebApi patch.
+// Columns: reviewed score points_available scope campaign flag rec short
+//          uplift points entities owner status
+// =====================================================================
+var META_RECS_REFRESH_DAYS = 7;    // weekly cycle
+var META_RECS_RED_DAYS     = 14;   // two cycles missed
+var META_RECS = META_RECS_EMBEDDED;
+META_RECS.account = [{t: META_RECS_EMBEDDED.accountLevel, short: 'set up partnership ads', who: 'Vidya', s: '', uplift: '19% lower cost per result', points: '', entities: 'account-level'}];
+
+function metaRecsPretty(iso) {
+  if (!iso) return 'never';
+  var m = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var p = String(iso).slice(0, 10).split('-');
+  if (p.length !== 3) return String(iso);
+  return String(Number(p[2])) + ' ' + (m[Number(p[1]) - 1] || '') + ' ' + p[0];
+}
+function metaRecsAgeDays() {
+  var iso = META_RECS.reviewedISO;
+  if (!iso) return null;
+  var d = new Date(String(iso).slice(0, 10) + 'T00:00:00Z');
+  if (isNaN(d.getTime())) return null;
+  return Math.floor((Date.now() - d.getTime()) / 86400000);
+}
+function metaRecsFreshPill() {
+  var n = metaRecsAgeDays();
+  if (n === null) return '<span class="mrfresh red">no review on file</span>';
+  if (n <= META_RECS_REFRESH_DAYS) return '<span class="mrfresh green">current \u00b7 ' + n + 'd old</span>';
+  if (n < META_RECS_RED_DAYS) return '<span class="mrfresh amber">refresh due \u00b7 ' + n + 'd old</span>';
+  return '<span class="mrfresh red">overdue \u00b7 ' + n + 'd old \u00b7 chase the weekly pull</span>';
+}
+function metaRecsOwnerShort(who) {
+  who = String(who || '');
+  if (who.indexOf('/') > 0) return 'G/S';
+  if (/^Georgie/i.test(who)) return 'G';
+  if (/^Summer/i.test(who)) return 'S';
+  return 'V';
+}
+// Rebuild META_RECS from the sheet. Safe to call repeatedly.
+function metaRecsHydrate() {
+  var rows = (typeof DATA !== 'undefined' && DATA && DATA.meta_recs) || [];
+  if (!rows.length) return false;
+  var byCampaign = {}, account = [], reviewed = '', score = '', pts = '';
+  rows.forEach(function(r) {
+    var t = String(r.rec == null ? '' : r.rec).trim();
+    if (!t) return;
+    var d = String(r.reviewed == null ? '' : r.reviewed).slice(0, 10);
+    if (d > reviewed) { reviewed = d; }
+    if (r.score !== '' && r.score != null) score = r.score;
+    if (r.points_available !== '' && r.points_available != null) pts = r.points_available;
+    var rec = {
+      t: t,
+      short: String(r.short == null ? '' : r.short).trim(),
+      who: String(r.owner == null ? '' : r.owner).trim() || 'Vidya',
+      s: String(r.status == null ? '' : r.status).trim(),
+      uplift: String(r.uplift == null ? '' : r.uplift).trim(),
+      points: (r.points === '' || r.points == null) ? '' : r.points,
+      entities: String(r.entities == null ? '' : r.entities).trim(),
+      flag: String(r.flag == null ? '' : r.flag).trim()
+    };
+    var camp = String(r.campaign == null ? '' : r.campaign).trim();
+    if (camp) {
+      if (!byCampaign[camp]) byCampaign[camp] = {flag: rec.flag, recs: []};
+      byCampaign[camp].recs.push(rec);
+    } else {
+      account.push(rec);
+    }
+  });
+  META_RECS = {
+    reviewed: metaRecsPretty(reviewed),
+    reviewedISO: reviewed,
+    score: 'opportunity score ' + score + (pts !== '' ? ' \u00b7 ' + pts + ' points on the table' : ''),
+    byCampaign: byCampaign,
+    account: account
+  };
+  _metaRecsIdx = null;
+  return true;
+}
+// The account-level block: what to do, who owns it, and how stale it is.
+function metaRecsAccountHtml() {
+  var acc = META_RECS.account || [];
+  var open = acc.filter(function(r) { return !r.s; });
+  var head = '<div class="mrbar"><div class="mrbarhead"><b>\u26a1 Meta recommendations</b> \u00b7 reviewed ' +
+    escAttr(META_RECS.reviewed) + ' \u00b7 ' + escAttr(META_RECS.score) + metaRecsFreshPill() +
+    '<span class="mrcycle">Pulled from Ads Manager into the Meta recs sheet every Monday. ' +
+    'Owners: G = Georgie / Summer (images, video, creative assets) \u00b7 V = Vidya (budgets, goals, text, duplication, pixel). ' +
+    'Changing a rec is a sheet edit, not a page rebuild.</span></div>';
+  if (!open.length) return head + '<div class="mrnd">Nothing open at account level.</div></div>';
+  return head + '<div class="mrgrid">' + open.map(function(r) {
+    var w = metaRecsOwnerShort(r.who);
+    return '<div class="mrrow"><span class="recowner ' + (w === 'V' ? 'vidya' : 'georgie') +
+      '" title="' + escAttr(r.who) + '">' + w + '</span>' +
+      '<span class="mrrt">' + escAttr(r.short || metaRecShort(r.t)) + '</span>' +
+      (r.uplift ? '<span class="mrup">' + escAttr(r.uplift) + '</span>' : '') +
+      (r.entities ? '<span class="mrent">' + escAttr(r.entities) + '</span>' : '') +
+      (r.points !== '' ? '<span class="mrpts">+' + escAttr(r.points) + '</span>' : '') +
+      '<div class="mrfull">' + escAttr(r.t) + '</div></div>';
+  }).join('') + '</div></div>';
+}
 // Name lookup tolerant of the "Instagram post:" space-after-colon inconsistency.
 var _metaRecsIdx = null;
 function metaRecsFor(name) {
@@ -4905,7 +5027,7 @@ function metaRecsInline(r) {
     m.recs.map(function(x) {
       var w = x.who === 'Georgie/Summer' ? 'G/S' : x.who === 'Georgie' ? 'G' : 'V';
       return '<span class="mritem"><span class="recowner ' + (w === 'V' ? 'vidya' : 'georgie') +
-        '" title="' + escAttr(x.who) + '">' + w + '</span>' + escAttr(metaRecShort(x.t)) + '</span>';
+        '" title="' + escAttr(x.who) + '">' + w + '</span>' + escAttr(x.short || metaRecShort(x.t)) + '</span>';
     }).join('') +
     (moot ? '<span class="mrnote">campaign ends 20 Aug — no action needed</span>' : '') +
     '</div>';
@@ -5899,10 +6021,9 @@ function wireMatrixModal() {
   });
   // v2.5.1: account-level Meta items with no board row — one compact line.
   (function() {
+    metaRecsHydrate();
     var mr = document.getElementById('matrix-metarecs');
-    if (mr) mr.innerHTML = '<div class="mrbar"><b>⚡ Meta account-level</b> (reviewed ' +
-      META_RECS.reviewed + ' · ' + META_RECS.score + '): ' + escAttr(META_RECS.accountLevel) +
-      ' <span class="mrnd"><b>Not delivering — fix errors (Vidya):</b> Maki &amp; Ramen At The O2 · Byres Road Franchise · SOHO_TRAFFIC_SUSHIPOPS.</span></div>';
+    if (mr) mr.innerHTML = metaRecsAccountHtml();
   })();
   // v2.4: collapse / expand the decision history from its heading. Remembered.
   var histToggle = document.getElementById('hist-toggle');
