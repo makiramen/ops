@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-07-14",
-  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "generated_at": "2026-09-14",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract). | reviews restated 14/09/2026: IKI2 wired at source (label 'Ikigai'); reviews block only, no KPI touched.",
   "week": {
     "label": "Week of 2026-06-29 \u2013 2026-07-05",
     "commencing": "2026-06-29",
@@ -119,22 +119,30 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.75,
-        "new_reviews": 0,
+        "week_avg_rating": 4.7143,
+        "new_reviews": 7,
         "star_breakdown": {
-          "5": 7,
-          "4": 0,
-          "3": 1,
+          "1": 0,
           "2": 0,
-          "1": 0
+          "3": 1,
+          "4": 0,
+          "5": 6
         },
-        "negatives": null,
-        "negative_reviews": [],
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Xavier Vill\u00e0 Aguilar",
+            "text": "Not what it used to be when it was a tiny restaurant tucked away on a side street off Nicholson street. The place is much bigger and the ramen menu very much streamlined - only tantanmen broth as the base for everything, as opposed to it being only one of the options. They used to do a peppered beef ramen that was to die for, but it\u2019s now gone. The ramen is still tasty, but overpriced (\u00a316-\u00a318 plus 10% service charge). I don\u2019t think I\u2019ll come again as there are other better value options out there.",
+            "date": "2026-06-29",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Reviews sheet 1aFGfbGr... per-site 'Maki N -' star tabs (weekly avg rating / counts) + 'Raw Data' tab (negative comment text, rating<=3 + comment). Cumulative venue rating not in sheet (null)."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-06-29..2026-07-05 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-14."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-06-29.json (AGMM Task List Status). Open items only.",

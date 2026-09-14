@@ -1,7 +1,7 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-07-29",
-  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "generated_at": "2026-09-14",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract). | reviews restated 14/09/2026: IKI2 wired at source (label 'Ikigai'); reviews block only, no KPI touched.",
   "week": {
     "label": "Week of 2026-07-20 \u2013 2026-07-26",
     "commencing": "2026-07-20",
@@ -121,22 +121,30 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.785714286,
-        "new_reviews": 0,
+        "week_avg_rating": 4.6875,
+        "new_reviews": 16,
         "star_breakdown": {
-          "5": 11,
-          "4": 3,
-          "3": 0,
+          "1": 0,
           "2": 0,
-          "1": 0
+          "3": 1,
+          "4": 3,
+          "5": 12
         },
-        "negatives": null,
-        "negative_reviews": [],
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Annie",
+            "text": "I ordered the three small plates consisting of: Karaage chicken, prawn tempura and \"fish & chips\".\n\nThe chicken was tough and fried in oil that seriously needed changing. I found it barely edible so did not finish this plate. The prawn tempura wasn't anything special but the \"fish & chips\" was decent and I liked how the \"chips\" were prepared.\n\nThe reviews on here seem to be good so maybe I should have stuck with ordering ramen instead?\n\nThe good thing about this place is that it serves Kirin beer.",
+            "date": "2026-07-22",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Reviews sheet 1aFGfbGr... per-site 'Maki N -' star tabs (weekly avg rating / counts) + 'Raw Data' tab (negative comment text, rating<=3 + comment). Cumulative venue rating not in sheet (null)."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-07-20..2026-07-26 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-14."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-07-20.json (AGMM Task List Status). Open items only.",
