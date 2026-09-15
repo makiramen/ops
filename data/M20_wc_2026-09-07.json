@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-14",
+  "generated_at": "2026-09-15",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-07 \u2013 2026-09-13",
@@ -55,7 +55,7 @@
       },
       "labour_split": {
         "split_status": "filed",
-        "days_with_split": 6,
+        "days_with_split": 7,
         "days_present": 7,
         "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
         "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
@@ -67,14 +67,14 @@
           "within_band": null
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": 1.8,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-09-07"
       },
       "efficiency_score": {
-        "score": 55,
+        "score": 58,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -105,11 +105,15 @@
             "weight": 30,
             "value": 0.0,
             "basis": "29.36% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "1.80% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -146,7 +150,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-14."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -191,16 +195,37 @@
         "busy_mode_pct": 0.0
       },
       "gaps": [
-        "Stock-take \u2014 no variance entered this week",
         "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
       ],
       "notes": {
-        "issues": [],
-        "actions": [],
+        "issues": [
+          "The week was quiet outside the weekend and covers per head were lower.",
+          "High Deliveroo prep times are attributed to drivers arriving early and checking in on the tablet before they reach the restaurant, not to kitchen delays.",
+          "Labour was high because an extra person was added at lunch on advice and proved unnecessary; labour must now be actively managed down through the quiet periods.",
+          "The weekly sales projection carried in the tracker was too high and has been revised down.",
+          "General manager and head chef meetings are to move to Sundays so the preceding week can be reviewed properly.",
+          "Reviews for the week were overwhelmingly five star, with one two star complaining of salty ramen and dry salmon.",
+          "A B2B partnership event runs tomorrow afternoon with a family and lifestyle group introduced through Go Southampton, with a discount button set up on the till; some tables are booked and the rest will arrive as walk ins.",
+          "Maintenance: the kitchen sink has been fixed and an electrician is booked to repair a kitchen socket.",
+          "The site's own areas for improvement are review volume and cleanliness.",
+          "A new front of house starter began on Saturday.",
+          "Preparation is under way for the boat show, with a staff limit of three people and takeaway packaging being ordered in line with the other sites.",
+          "Region-wide (South England): A standing daily performance target of ten app signups and ten Google reviews per site has been set, with a proposal to gamify it so the teams engage with it.",
+          "Region-wide (South England): Front of house sometimes ask for a review from a table that has had a poor experience; staff must read the table and check satisfaction before asking, and management should routinely check in on section status.",
+          "Region-wide (South England): Sites must report the status of their envelope returns to the office."
+        ],
+        "actions": [
+          "Update the weekly sales projection in the tracker to the revised figure agreed in the meeting - Owner: M20 (15/09/2026)",
+          "Manage labour actively down through the quiet periods so the week lands on the agreed target - Owner: M20 (15/09/2026)",
+          "Hold the general manager and head chef meeting on Sundays from now on - Owner: M20 (15/09/2026)",
+          "Include the daily count of app signups and Google reviews in the end of day report, supported by the table flyers - Owner: M20 (15/09/2026)",
+          "Region-wide (South England): Report the status of site envelope returns to the office - Owner: The group (15/09/2026)",
+          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)"
+        ],
         "carryover": [],
-        "empty": true,
-        "docId": "",
-        "source": "KPI meeting notes for the week to 13/09/2026 had not been received when this week was built on Mon 14/09/2026. The cluster notes emails land on Wednesday, so this is a TIMING gap, not an empty meeting - it will be topped up on the Wednesday run."
+        "empty": false,
+        "docId": "14LvXoY71_AWMbLU26p0zxW4u_KzHYBOLZhKc9_a-fBA",
+        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England)"
       }
     }
   }

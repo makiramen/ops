@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-14",
+  "generated_at": "2026-09-15",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-07 \u2013 2026-09-13",
@@ -62,14 +62,14 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": 1.2,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": -0.1,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-09-07"
       },
@@ -105,11 +105,15 @@
             "weight": 30,
             "value": 100.0,
             "basis": "19.21% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-0.10% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -134,7 +138,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-14."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -175,19 +179,18 @@
         },
         "gmv_vs_4wk_pct": 10.4,
         "gmv_vs_ly_pct": 10.8,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Invoice Statement CSV (order-level, summed) - w/c 2026-09-07, file Deliveroo_2026-09-14_4432.14.csv, Drive id 1cDkp2NQDMINO9fEdNTanrNWBbjCQERiP, storefront 'Maki & Ramen Manchester'. Route: Google Drive MCP (no Chrome), read 15/09/2026 ~21:50 UK. SOURCE IS THE INVOICE STATEMENT CSV, NOT THE TAX INVOICE PDF: as at 15/09/2026 21:50 UK, ZERO Tax Invoice PDFs had been filed for period-end 2026-09-14 in any of the 18 AM entity folders. These four Invoice Statement CSVs were filed 15/09/2026 20:36-20:40 UTC by michael@makiramen.com. gmv = sum of the order-level 'Order Value (GBP)' column over the 'Orders and related adjustments' section, produced by builders/pull_deliveroo_invoices.py. Same basis as the Tax Invoice Total row 'Total Order Value' (proven identical for M1/M6/M9/M15 at w/c 31/08, upgraded CSV->PDF with no restatement). ORDERS HAND-CORRECTED: pull_deliveroo_invoices.py counts every row with a timestamp as an order, so blank-Order-Value adjustment rows (Refund commission, Partner funding from agreed voucher campaign, marketing contribution, invoice correction) are miscounted as orders. Orders here = count of rows with a NON-EMPTY Order Value only. Relay integrity gate PASSED: the CSV's Total Payable column sums exactly to the amount in the filename, to the penny, verified independently after the file was written to disk. Order dates verified 2026-09-07..2026-09-13; no unrecognised storefronts. Activity mix: Delivery 211, Pickup 2. Script said 381 orders (aov 18.32) against a real 213 (aov 32.77) - 173 blank-Order-Value adjustment rows, the worst instance of the bug in this batch. PARTIAL SLICE: 4 of 18 AM Deliveroo entities filed for period-end 2026-09-14. Filed: M1, M6, M9, M15. Not filed: M3, M8, M10, M11, M12, M13, M14, M16, M17, M18, M19, M20, IKI2, M21 - deliberately absent, never zero. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [],
         "actions": [],
         "carryover": [],
         "empty": true,
         "docId": "",
-        "source": "KPI meeting notes for the week to 13/09/2026 had not been received when this week was built on Mon 14/09/2026. The cluster notes emails land on Wednesday, so this is a TIMING gap, not an empty meeting - it will be topped up on the Wednesday run."
+        "source": "No Maki England KPI meeting notes had been circulated for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The cluster notes normally reach this account as a forwarded Gemini doc from Inka Cheung on the Tuesday (08/09 and 01/09 both landed that way). TIMING gap, not an empty meeting - chase Inka Cheung."
       }
     }
   }
