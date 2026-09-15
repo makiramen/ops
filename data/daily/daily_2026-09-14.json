@@ -1,11 +1,11 @@
 {
  "_source": "Auto Cash Up workbook 1T4TtCs-SkBjinToxG45oKksUiPPPIllo2Pqrqbaix6w, tab 'Raw Data 2' gid=1549502863. FOH/BOH ACTUAL split located structurally by percentage anchor (the header carries duplicate `FOH % `/`BOH % ` names and individual venue rows are shifted against it), then cross-validated against % x total labour.",
- "_generated_at": "2026-09-15T11:46:37",
+ "_generated_at": "2026-09-15T17:01:04",
  "date": "2026-09-14",
  "day": "Monday",
  "sites_reported": 20,
  "sites_expected": 20,
- "foh_boh_reported": 18,
+ "foh_boh_reported": 17,
  "unallocated_labour_total": 248.32,
  "clusters": [
   {
@@ -54,9 +54,11 @@
   "no_sales": [],
   "no_foh_boh_split": [
    "IKI2",
+   "M16",
    "M18"
   ],
   "warnings": [
+   "2026-09-14 M16: FOH £395.16 + BOH £510.32 exceeds total labour £817.11 - split rejected",
    "2026-09-14 M18: FOH £503.90/45.23% and BOH £610.10/54.77% do not resolve against total labour £1,170.98 - looks like projected, not actual - split rejected"
   ]
  },
@@ -286,13 +288,13 @@
     "total": 817.11,
     "hours": 61.8,
     "wage_pct": 15.48,
-    "foh": 395.16,
-    "foh_pct": 48.36,
-    "boh": 421.95,
-    "boh_pct": 51.64,
-    "unallocated": 0.0,
-    "unallocated_pct": 0.0,
-    "split_status": "ok"
+    "foh": null,
+    "foh_pct": null,
+    "boh": null,
+    "boh_pct": null,
+    "unallocated": null,
+    "unallocated_pct": null,
+    "split_status": "failed_validation"
    }
   },
   "M17": {
@@ -306,8 +308,8 @@
     "target": 3000.0,
     "vs_target_pct": -37.59
    },
-   "covers": null,
-   "avg_spend": null,
+   "covers": 71,
+   "avg_spend": 23.4,
    "labour": {
     "total": 592.34,
     "hours": 40.5,
@@ -585,14 +587,12 @@
  "totals": {
   "sales": 87021.14,
   "target": 91887.5,
-  "covers": 3630,
+  "covers": 3701,
   "labour": 21529.32,
-  "foh": 8676.71,
-  "boh": 10888.55,
+  "foh": 8281.55,
+  "boh": 10466.6,
   "wage_pct": 24.74,
-  "avg_spend": 23.46,
-  "covers_missing": [
-   "M17"
-  ]
+  "avg_spend": 23.51,
+  "covers_missing": null
  }
 }
