@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-15",
+  "generated_at": "2026-09-16",
   "week": {
     "label": "Week of 2026-09-07 \u2013 2026-09-13",
     "commencing": "2026-09-07",
@@ -137,7 +137,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -186,34 +186,18 @@
         },
         "gmv_vs_4wk_pct": 1.4,
         "gmv_vs_ly_pct": 1.4,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Invoice Statement CSV (order-level, summed) - w/c 2026-09-07, file Deliveroo_2026-09-14_4963.58.csv, Drive id 1I_CFumfOIy7ZJ8QC_HUUB79ySOHxW6E-, storefront 'Maki and Ramen (West Richmond)'. Route: Google Drive MCP (no Chrome), read 15/09/2026 ~21:50 UK. SOURCE IS THE INVOICE STATEMENT CSV, NOT THE TAX INVOICE PDF: as at 15/09/2026 21:50 UK, ZERO Tax Invoice PDFs had been filed for period-end 2026-09-14 in any of the 18 AM entity folders. These four Invoice Statement CSVs were filed 15/09/2026 20:36-20:40 UTC by michael@makiramen.com. gmv = sum of the order-level 'Order Value (GBP)' column over the 'Orders and related adjustments' section, produced by builders/pull_deliveroo_invoices.py. Same basis as the Tax Invoice Total row 'Total Order Value' (proven identical for M1/M6/M9/M15 at w/c 31/08, upgraded CSV->PDF with no restatement). ORDERS HAND-CORRECTED: pull_deliveroo_invoices.py counts every row with a timestamp as an order, so blank-Order-Value adjustment rows (Refund commission, Partner funding from agreed voucher campaign, marketing contribution, invoice correction) are miscounted as orders. Orders here = count of rows with a NON-EMPTY Order Value only. Relay integrity gate PASSED: the CSV's Total Payable column sums exactly to the amount in the filename, to the penny, verified independently after the file was written to disk. Order dates verified 2026-09-07..2026-09-13; no unrecognised storefronts. Activity mix: Delivery 213, Pickup 3. Script said 240 orders (aov 29.69); real 216. PARTIAL SLICE: 4 of 18 AM Deliveroo entities filed for period-end 2026-09-14. Filed: M1, M6, M9, M15. Not filed: M3, M8, M10, M11, M12, M13, M14, M16, M17, M18, M19, M20, IKI2, M21 - deliberately absent, never zero. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 ~07:0x UK by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_2175.03.pdf, Drive id 1mRPerAMdIIrC6XAth_ohXQIi_rO6Pau3, folder 1CwFwL3ZtLqKRG7i_WRW9NXmrEr3jmVc5 (M1TOO LTD), invoice serial res-uk-508514-76. Order-type mix: Delivery 213 / 6,989.53; Pickup 3 / 135.10. UPGRADED CSV -> PDF, NO RESTATEMENT: the Tuesday run derived 7124.63 / 216 from the Invoice Statement CSV with a hand-corrected order count. The Tax Invoice PDF that landed 2026-09-16 06:30 UTC gives 7,124.63 and a Total-row quantity of 216 - identical on both GMV and orders. Independently corroborated by the Weekly Dash Sales Overview (7,124.63 / AOV 32.98). Sub-rows sum to 216, so no food-remake +1 quirk on this invoice. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
         "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "Food cost came in far below the weekly plan after a mid week target adjustment and lighter ordering, which the BOH meeting flagged as an unusual variance needing review rather than a genuine gain.",
-          "The site was asked to hold a stable food cost percentage week to week, broadly in line with M3, rather than allowing material fluctuations.",
-          "The grease trap is broken and the engineer has been contacted and booked to fix it this week.",
-          "A recent Char Siu delivery of two packs was found to be of inconsistent quality.",
-          "A sushi chef is transferring in from another site and starts next week.",
-          "A back of house team member resigned during the week.",
-          "No customer complaints were reported for the week.",
-          "All site compliance areas covering pest control, fire safety, electrical, gas and ventilation were completed and swept, and no maintenance jobs were logged on the site's own log.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
-        "actions": [
-          "Open a full case of Char Siu on arrival, check packaging and product quality, and retain any defective cases for collection rather than accepting the batch - Owner: Derrick Cheung (15/09/2026)",
-          "Hold the site's food cost percentage stable week to week rather than letting it swing - Owner: Derrick Cheung (15/09/2026)",
-          "Confirm and progress the proposed back of house transfer into the site to cover the vacancy - Owner: Derrick Cheung (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "113u7H97X7pKG6t8pxNdY7OdRO9-4QCo2dj9okGeNV2E",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No EDI/NEW (Scotland & Newcastle) KPI meeting notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The last set from Oisin Darragh covered the week to 23/08/2026 and was sent on 01/09/2026, so this cluster is now three weeks unreported. Gap, not an empty meeting - chase Oisin Darragh."
       }
     },
     "M3": {
@@ -361,7 +345,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -424,37 +408,18 @@
         },
         "gmv_vs_4wk_pct": 7.9,
         "gmv_vs_ly_pct": -17.4,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 ~07:0x UK by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_2719.11.pdf, Drive id 10-ShgDDAIeWmjEKdB9XhBP-mDcwTkmX-, folder 1WO6w98hFeKBtXu4Sckkb0tzvJldaK6g- (Fountain Good Food Limited), invoice serial res-uk-29360-480. Order-type mix: Delivery 241 / 9,230.86; Pickup 4 / 164.39; Pickup-Deliveroo Signature 1 / 41.70; Storefront Partner Order-Deliveroo Signature 5 / 311.19. NEW THIS RUN - M3 had NO sales figure after the Tuesday run. Sub-rows sum to 251 and 9,748.14 exactly, so no food-remake +1 quirk. Corroborated by the Weekly Dash zip sales_overview.csv (9,748.14 / AOV 38.84 / 56 new customers); the Weekly Dash PDF text layer truncates this one value to '9,748.... GBP', which is why pipe 6/6b skips M3 by design - the PDF invoice is the exact source. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "The site passed its EHO inspection, with the regional head of kitchen attending in person and confirming the shop, food quality and Char Siu met the required standard.",
-          "Food cost ran above the weekly plan, the only site in the Scotland cluster to do so.",
-          "A three star Google review said the Char Siu was hard and the food too salty, and that the customer expected a more high end experience.",
-          "A staff transfer out to another site was confirmed and a further back of house team member may also transfer.",
-          "A front of house team member is leaving their second job in the next two to three weeks and will move to full time here.",
-          "The site is still unable to respond to Google reviews after account ownership was changed, and a year of review responses was deleted; access to manage the business account has been requested but not yet granted.",
-          "The Deliveroo report for the week is incomplete because Sunday's figures had not pulled through at the time of reporting.",
-          "Three Deliveroo refunds were recorded, one disputed with photo evidence, one disputed without, and one that could not be disputed.",
-          "Spend per head has dropped with the return of the lunch menu and heavy app voucher redemption.",
-          "Deliveroo prep time was affected by connectivity problems and the site wants it brought down.",
-          "App vouchers stay active on a customer's account until their expiry date rather than when they are redeemed in branch.",
-          "Pest control, fire safety, electrical, gas and ventilation compliance were all completed and signed off, and no maintenance jobs were logged.",
-          "XOXO, the Matcha specials and the Maki App are the live promotions.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
-        "actions": [
-          "Chase Google for the access needed to manage the business account and respond to reviews - Owner: Ross Ward (15/09/2026)",
-          "Finalise the following week's budget rota and draft the week after by end of day Tuesday - Owner: Rory Ferguson (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1B3WGWbQ-ecA7_OybeEv1J5ipJhZcpG03ncjH6ZXBr-8",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026, plus the site's GM and head chef meeting notes of 15/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No EDI/NEW (Scotland & Newcastle) KPI meeting notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The last set from Oisin Darragh covered the week to 23/08/2026 and was sent on 01/09/2026, so this cluster is now three weeks unreported. Gap, not an empty meeting - chase Oisin Darragh."
       }
     },
     "M6": {
@@ -587,7 +552,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -636,26 +601,18 @@
         },
         "gmv_vs_4wk_pct": 14.2,
         "gmv_vs_ly_pct": -14.7,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Invoice Statement CSV (order-level, summed) - w/c 2026-09-07, file Deliveroo_2026-09-14_2396.96.csv, Drive id 1Wg1rZf_kH4CTW-XG0aUHES-jEr3hye3y, storefront 'Maki & Ramen (Bath St)'. Route: Google Drive MCP (no Chrome), read 15/09/2026 ~21:50 UK. SOURCE IS THE INVOICE STATEMENT CSV, NOT THE TAX INVOICE PDF: as at 15/09/2026 21:50 UK, ZERO Tax Invoice PDFs had been filed for period-end 2026-09-14 in any of the 18 AM entity folders. These four Invoice Statement CSVs were filed 15/09/2026 20:36-20:40 UTC by michael@makiramen.com. gmv = sum of the order-level 'Order Value (GBP)' column over the 'Orders and related adjustments' section, produced by builders/pull_deliveroo_invoices.py. Same basis as the Tax Invoice Total row 'Total Order Value' (proven identical for M1/M6/M9/M15 at w/c 31/08, upgraded CSV->PDF with no restatement). ORDERS HAND-CORRECTED: pull_deliveroo_invoices.py counts every row with a timestamp as an order, so blank-Order-Value adjustment rows (Refund commission, Partner funding from agreed voucher campaign, marketing contribution, invoice correction) are miscounted as orders. Orders here = count of rows with a NON-EMPTY Order Value only. Relay integrity gate PASSED: the CSV's Total Payable column sums exactly to the amount in the filename, to the penny, verified independently after the file was written to disk. Order dates verified 2026-09-07..2026-09-13; no unrecognised storefronts. Activity mix: Delivery 94, Storefront Partner Order - Deliveroo Signature 2, Pickup 1, Pickup - Deliveroo Signature 1. Script said 115 orders (aov 30.12); real 98. PARTIAL SLICE: 4 of 18 AM Deliveroo entities filed for period-end 2026-09-14. Filed: M1, M6, M9, M15. Not filed: M3, M8, M10, M11, M12, M13, M14, M16, M17, M18, M19, M20, IKI2, M21 - deliberately absent, never zero. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 ~07:0x UK by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_1096.44.pdf, Drive id 1F3-oarqa2-ANi1CcPk2nvp_o1K4v_6ok, folder 1UqEHL2kEWDCi6L7XBgZuVG9mP8vMdDwj (MAKI 1HW LTD), invoice serial res-uk-529312-54. Order-type mix: Delivery 94 / 3,337.98; Pickup 1 / 29.00; Pickup-Deliveroo Signature 1 / 23.50; Storefront Partner Order-Deliveroo Signature 2 / 72.90. UPGRADED CSV -> PDF, NO RESTATEMENT: Tuesday's CSV-derived 3463.38 / 98 is identical to the Tax Invoice Total row. Corroborated by the Weekly Dash Sales Overview (3,463.38 / AOV 35.34). Sub-rows sum to 98, so no food-remake +1 quirk. NOTE: a separate 'Deliveroo commission on cancelled order' fee line (1 x GBP 5.00) sits in Additional Fees and correctly does NOT touch the Total-row quantity. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
         "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "The site remained stable through the week with no adverse reviews and no numerical concerns raised.",
-          "Both back of house and front of house teams were reported stable with no staffing changes.",
-          "All site compliance items were up to date and no maintenance jobs were logged.",
-          "It was agreed that the site's head chef does not need to join the weekly Scotland BOH meeting unless the numbers change materially, given her existing head chef and manager workload.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
+        "issues": [],
         "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1k8vnG2PyhkqHWZEXozNJetkxEiHbAsw4Bh1hEbM1CqU",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No per-site KPI notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. Ka Ho is on annual leave with Oisin Darragh deputising from 17/09/2026. Gap, not an empty meeting - chase Ka Ho, then Oisin Darragh."
       }
     },
     "M7": {
@@ -788,7 +745,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -839,30 +796,12 @@
         "Deliveroo \u2014 no storefront at this site, nothing to report (declared, not missing)"
       ],
       "notes": {
-        "issues": [
-          "Google review performance was strong for the week and the site achieved its sales target.",
-          "Maintenance requests were submitted for a broken grease trap and a faulty window and dispenser unit that needs replacing.",
-          "The glass washer has an occasional leak and the maintenance engineer is aware and attending to inspect it.",
-          "Around forty additional hours were requested to support a heavy preparation workload.",
-          "A front of house team member is being trained to provide kitchen cover over the holiday period.",
-          "A back of house team member transferred in from Ikigai the previous week.",
-          "Two front of house team members have returned, a third returns at the end of September 2026, and another has given notice to leave in October 2026.",
-          "Heavy app voucher redemption is pulling spend per head down, as most customers have now unlocked the free ramen and half price bill offers.",
-          "XOXO, the Matcha promotion and student night are live, but the site has no marketing materials for the student night running the following day.",
-          "All site compliance areas were completed and swept.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
-        "actions": [
-          "Confirm whether the site's wage revenue headroom can support roughly three additional hours per day before releasing the extra prep hours - Owner: Matt Polak (15/09/2026)",
-          "Chase the missing marketing materials for the student night - Owner: Rory Ferguson (15/09/2026)",
-          "Attend site to inspect and repair the leaking glass washer - Owner: Kris (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1UtaJM6KoZpJ_bEXLO0SvlLmpXLUymf0StIX9EcjIwIw",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No EDI/NEW (Scotland & Newcastle) KPI meeting notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The last set from Oisin Darragh covered the week to 23/08/2026 and was sent on 01/09/2026, so this cluster is now three weeks unreported. Gap, not an empty meeting - chase Oisin Darragh."
       }
     },
     "M8": {
@@ -1010,7 +949,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -1073,35 +1012,18 @@
         },
         "gmv_vs_4wk_pct": 15.2,
         "gmv_vs_ly_pct": 36,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_1699.58.pdf, Drive id 19gV0sXHa7IA-ZdbldhLSQCc_8ByWIzkM, folder 1Hf8v2JwfXiPWMA97GSz5ZdT-b7wJ3WHI (Renfield Delight LTD), invoice serial res-uk-536653-46. Order-type mix: Delivery 148 / 4,786.29; Pickup 4 / 151.99. PROMOTED from the Weekly Summary master (Deliveroo_Master_Consolidation.xlsx) to invoice-grade; the master and the Weekly Dash Sales Overview both already carried 4,938.28 / 152 / AOV 32.49, so the Tax Invoice CONFIRMS them with no restatement. Sub-rows sum to 152, so no food-remake +1 quirk. A 'Refund commission' Additional Payments line (53 x GBP 37.86) sits outside the Commission table and correctly does not affect orders. New-customer count 46 from the Weekly Dash sales_overview.csv. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.8
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "A one to two star review was received about sour Char Siu; the batch had been served without prior testing and the product has now been replaced by the supplier.",
-          "The site is short of a kitchen porter on weekdays and has been authorised to add three and a half kitchen porter hours per day, Monday to Sunday.",
-          "Temporary cover has been arranged from 24/09/2026, with one team member from Edinburgh supporting for three days followed by Newcastle and Aberdeen cover for the sushi section.",
-          "Ordering has been under close oversight for the last two weeks, with orders that look excessive queried or cancelled directly.",
-          "Stock issues remain ongoing and out of stock items on the bar are a significant problem, with little room for margin in the budget.",
-          "A manager is leaving, so the rota balance needs watching and a further supervisor or an internal promotion may be required.",
-          "Some low star ratings were attributed to staff training gaps and extra training is being given.",
-          "The app is running smoothly with freshers vouchers registering, and a further influx is expected as freshers continues.",
-          "Hires have been completed and onboarding is in progress on the talent funnel.",
-          "Hygiene checks, the waste log, sickness and lateness records and the budget and Kobas rotas were all complete for the week.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
-        "actions": [
-          "Finalise the hiring procedure by the end of the week - Owner: Scott Renwick (14/09/2026)",
-          "Schedule a management meeting to align the team on objectives for the rest of the quarter - Owner: Scott Renwick (14/09/2026)",
-          "Test Char Siu quality before serving and carry out random checks on new deliveries - Owner: Penny Fung (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1oOabv2vCA983uhRv4TNv3OECfvL8zz_efM5dF4o7RNc",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026, plus the site's GM and head chef meeting notes of 14/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No per-site KPI notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. Ka Ho is on annual leave with Oisin Darragh deputising from 17/09/2026. Gap, not an empty meeting - chase Ka Ho, then Oisin Darragh."
       }
     },
     "IKI2": {
@@ -1234,7 +1156,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -1290,23 +1212,17 @@
         },
         "gmv_vs_4wk_pct": -2.8,
         "gmv_vs_ly_pct": -25,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary."
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 ~07:0x UK by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_484.45.pdf, Drive id 1ynjKlrPAAlQMtTAR5VtE3thBnNrBA-XP, folder 1H17IYHfopjK5D4LhnA7_7Om5P74Wq0ye (SOUTH IKIGAI LIMITED), invoice serial res-uk-329908-227. Order-type mix: Delivery 45 / 1,361.05 (delivery only). NEW THIS RUN - IKI2 had NO sales figure after the Tuesday run, and IKI2 appears in NO other Deliveroo feed we hold this week: it is absent from the pipe-6c ops CSV, absent from the Weekly Dash Sales Overview, and absent from Matthew's Deliveroo RAG sheet. The Tax Invoice is the only machine-readable source that reaches it. Sub-row equals the Total row, so no food-remake +1 quirk. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV]",
+        "orders_estimated": false
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "The site was in scope for the Scotland BOH weekly KPI meeting on 15/09/2026 but no site specific issues, maintenance items or staffing changes were raised.",
-          "A back of house team member transferred out to M7 the previous week.",
-          "A BOH hygiene check was carried out at the site on 14/09/2026.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
+        "issues": [],
         "actions": [],
         "carryover": [],
         "empty": true,
-        "docId": "15a4Es7SWyRqT55KJEbgaN-ESuxjWsATi",
-        "source": "In scope for the Scotland BOH weekly KPI meeting 15/09/2026 but no site specific review; region wide items only. No EDI/NEW AM KPI meeting notes have been circulated since 01/09/2026."
+        "docId": "",
+        "source": "No EDI/NEW (Scotland & Newcastle) KPI meeting notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The last set from Oisin Darragh covered the week to 23/08/2026 and was sent on 01/09/2026, so this cluster is now three weeks unreported. Gap, not an empty meeting - chase Oisin Darragh."
       }
     },
     "M12": {
@@ -1449,7 +1365,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -1500,10 +1416,11 @@
         "week_ending": "2026-09-13",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
-        "new_customers": null,
+        "sales": 3915.37,
+        "orders": 115,
+        "orders_estimated": true,
+        "aov": 34.05,
+        "new_customers": 44,
         "rating": 4.45,
         "open_hours_pct": 97.2,
         "avg_prep_min": 12.1,
@@ -1519,41 +1436,17 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
         "busy_mode_pct": 0.0
       },
-      "gaps": [
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ],
+      "gaps": [],
       "notes": {
-        "issues": [
-          "Food cost and labour both ran elevated, attributed to ongoing promotional campaigns.",
-          "A two star Google review was received about watery sushi rice; the kitchen attributed it to ambient temperature, which was not accepted, and corrective follow up is required.",
-          "Approval was given to place additional backup stock orders ahead of the Fresh Fair event the following week.",
-          "Deliveroo order accuracy is worse than acceptable, with three refunds in the week covering a missing yasai roll, a katsu curry supplied with only one boiled egg after an extra was paid for, and a missing salmon avocado roll, all disputed by the site.",
-          "Deliveroo prep time has increased although it remains within range.",
-          "A bad batch of avocados was received from the supplier.",
-          "The candy floss used on cocktails sets solid faster than it can be delivered to the table, and one customer accepted the drink after being told the garnish was unavailable.",
-          "Labour ran high because of two student fairs held on 07/09/2026 and 09/09/2026.",
-          "The air conditioning has been out of service for around a year, needs full replacement, is rated ultra high priority and has still not been logged as a job.",
-          "The front door fault has not yet been logged as a job, and the disabled lift fault has been logged.",
-          "Back of house and front of house are settled, one team member is being trained towards supervisor level, and no recruitment is currently open.",
-          "Freshers fairs run the following week and a home match falls on 19/09/2026 at 15:00.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
-        "actions": [
-          "Resend the standard rice recipe to the site - Owner: Penny Fung (15/09/2026)",
-          "Post any additional stock orders in the group chat tagged to Penny or Matt for visibility - Owner: Erin Zhang (15/09/2026)",
-          "Brief and hold the team accountable for Deliveroo order accuracy given the site's reliance on delivery - Owner: Matt Polak (15/09/2026)",
-          "Resolve the bad avocado batch with the supplier - Owner: Erin Zhang (15/09/2026)",
-          "Log the outstanding air conditioning and front door maintenance jobs and progress the air conditioning replacement - Owner: Ross Ward (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1nN3laPp2o9oL1liuEi1g1o7xhYzdUqoYROdk-bd4rlA",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No EDI/NEW (Scotland & Newcastle) KPI meeting notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The last set from Oisin Darragh covered the week to 23/08/2026 and was sent on 01/09/2026, so this cluster is now three weeks unreported. Gap, not an empty meeting - chase Oisin Darragh."
       }
     },
     "M13": {
@@ -1686,7 +1579,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -1723,10 +1616,11 @@
         "week_ending": "2026-09-13",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
-        "new_customers": null,
+        "sales": 5896.44,
+        "orders": 178,
+        "orders_estimated": true,
+        "aov": 33.13,
+        "new_customers": 60,
         "rating": 4.44,
         "open_hours_pct": 99.9,
         "avg_prep_min": 13.0,
@@ -1742,34 +1636,17 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
         "busy_mode_pct": 0.1
       },
-      "gaps": [
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ],
+      "gaps": [],
       "notes": {
-        "issues": [
-          "The site had a positive week with no adverse reviews, and food quality was maintained while the head chef was on holiday.",
-          "A back of house team member was temporarily assigned from Glasgow to support M8, and the support period may be extended to assist Braehead.",
-          "The site does not want to run dry ice service.",
-          "An additional part time front of house team member is needed.",
-          "Heat lamps, the Kobas card machine and printer, and a stock room running too hot are all outstanding medium priority maintenance jobs.",
-          "Spend per head is being drained by the app and the lunch deal.",
-          "Freshers activity takes place the day after the meeting.",
-          "Hygiene compliance was completed for the week.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
-        "actions": [
-          "Progress the outstanding maintenance jobs covering heat lamps, the Kobas card machine and printer, and the stock room temperature - Owner: Joseph Herrera (15/09/2026)",
-          "Recruit an additional part time front of house team member - Owner: Joseph Herrera (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1nohgCP7uRl1B17okpa4DkbMcevZ8QruJpylBX_Xv8mw",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026, plus the site's GM and head chef meeting notes of 14/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No per-site KPI notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. Ka Ho is on annual leave with Oisin Darragh deputising from 17/09/2026. Gap, not an empty meeting - chase Ka Ho, then Oisin Darragh."
       }
     },
     "M15": {
@@ -1912,7 +1789,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -1958,8 +1835,9 @@
         "partial": false,
         "sales": 1308.83,
         "orders": 34,
+        "orders_estimated": false,
         "aov": 38.49,
-        "new_customers": null,
+        "new_customers": 12,
         "rating": 5.0,
         "open_hours_pct": 99.9,
         "avg_prep_min": 12.0,
@@ -1975,39 +1853,17 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo weekly Invoice Statement CSV (order-level, summed) - w/c 2026-09-07, file Deliveroo_2026-09-14_955.23.csv, Drive id 1BaMaFYriK66mXIfsC6RLWXw9JFl4mkr_, storefront 'Maki & Ramen - Metro'. Route: Google Drive MCP (no Chrome), read 15/09/2026 ~21:50 UK. SOURCE IS THE INVOICE STATEMENT CSV, NOT THE TAX INVOICE PDF: as at 15/09/2026 21:50 UK, ZERO Tax Invoice PDFs had been filed for period-end 2026-09-14 in any of the 18 AM entity folders. These four Invoice Statement CSVs were filed 15/09/2026 20:36-20:40 UTC by michael@makiramen.com. gmv = sum of the order-level 'Order Value (GBP)' column over the 'Orders and related adjustments' section, produced by builders/pull_deliveroo_invoices.py. Same basis as the Tax Invoice Total row 'Total Order Value' (proven identical for M1/M6/M9/M15 at w/c 31/08, upgraded CSV->PDF with no restatement). ORDERS HAND-CORRECTED: pull_deliveroo_invoices.py counts every row with a timestamp as an order, so blank-Order-Value adjustment rows (Refund commission, Partner funding from agreed voucher campaign, marketing contribution, invoice correction) are miscounted as orders. Orders here = count of rows with a NON-EMPTY Order Value only. Relay integrity gate PASSED: the CSV's Total Payable column sums exactly to the amount in the filename, to the penny, verified independently after the file was written to disk. Order dates verified 2026-09-07..2026-09-13; no unrecognised storefronts. Activity mix: Delivery 34. Script said 58 orders (aov 22.57); real 34. NOTE: 1308.83/34 is down 41.2% on GMV and 46.9% on orders vs w/c 31/08 (2227.77/64) on a like-for-like basis; a full Mon-Sun of order dates is present, so this is a genuine volume fall, not a part-week. Deliveroo ops for M15 that week were clean (rating 5.0, 0% inaccuracy), so the cause is demand, not service. PARTIAL SLICE: 4 of 18 AM Deliveroo entities filed for period-end 2026-09-14. Filed: M1, M6, M9, M15. Not filed: M3, M8, M10, M11, M12, M13, M14, M16, M17, M18, M19, M20, IKI2, M21 - deliberately absent, never zero. [sales/orders/AOV] + ops from Weekly Summary sheet",
-        "orders_estimated": false,
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. | Deliveroo weekly Invoice Statement CSV (order-level, summed) - w/c 2026-09-07, file Deliveroo_2026-09-14_955.23.csv, Drive id 1BaMaFYriK66mXIfsC6RLWXw9JFl4mkr_, storefront 'Maki & Ramen - Metro'. Route: Google Drive MCP (no Chrome), read 15/09/2026 ~21:50 UK. SOURCE IS THE INVOICE STATEMENT CSV, NOT THE TAX INVOICE PDF: as at 15/09/2026 21:50 UK, ZERO Tax Invoice PDFs had been filed for period-end 2026-09-14 in any of the 18 AM entity folders. These four Invoice Statement CSVs were filed 15/09/2026 20:36-20:40 UTC by michael@makiramen.com. gmv = sum of the order-level 'Order Value (GBP)' column over the 'Orders and related adjustments' section, produced by builders/pull_deliveroo_invoices.py. Same basis as the Tax Invoice Total row 'Total Order Value' (proven identical for M1/M6/M9/M15 at w/c 31/08, upgraded CSV->PDF with no restatement). ORDERS HAND-CORRECTED: pull_deliveroo_invoices.py counts every row with a timestamp as an order, so blank-Order-Value adjustment rows (Refund commission, Partner funding from agreed voucher campaign, marketing contribution, invoice correction) are miscounted as orders. Orders here = count of rows with a NON-EMPTY Order Value only. Relay integrity gate PASSED: the CSV's Total Payable column sums exactly to the amount in the filename, to the penny, verified independently after the file was written to disk. Order dates verified 2026-09-07..2026-09-13; no unrecognised storefronts. Activity mix: Delivery 34. Script said 58 orders (aov 22.57); real 34. NOTE: 1308.83/34 is down 41.2% on GMV and 46.9% on orders vs w/c 31/08 (2227.77/64) on a like-for-like basis; a full Mon-Sun of order dates is present, so this is a genuine volume fall, not a part-week. Deliveroo ops for M15 that week were clean (rating 5.0, 0% inaccuracy), so the cause is demand, not service. PARTIAL SLICE: 4 of 18 AM Deliveroo entities filed for period-end 2026-09-14. Filed: M1, M6, M9, M15. Not filed: M3, M8, M10, M11, M12, M13, M14, M16, M17, M18, M19, M20, IKI2, M21 - deliberately absent, never zero. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
         "busy_mode_pct": 0.0
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "The current head chef is leaving in two weeks and the incoming head chef and sushi chef will be trained personally by the regional head chef.",
-          "The departing head chef has stopped carrying out managerial tasks and the successor is already picking them up.",
-          "The site is still recruiting sushi chefs and is now also looking for two kitchen supervisors; headcount is enough for now but stretched.",
-          "One sushi team member turned down a kitchen supervisor offer because of a lack of confidence in their English.",
-          "A new site representative is joining the weekly Scotland BOH meeting for the first time and will be trained on how to prepare for and represent the site.",
-          "Deliveroo late prepared orders came down to zero and prep time is in a good place.",
-          "Labour ran slightly over because new staff were in training.",
-          "One new front of house team member started last week and a part time bartender starts on Friday.",
-          "The fire exit door repair is outstanding and the site is still waiting on the maintenance engineer.",
-          "There is a reporting issue with additionals not adding up correctly.",
-          "The lunch menu, XOXO and Matcha are live, with a student night on 24/09/2026.",
-          "Pest control, fire safety, electrical, gas and ventilation compliance were all completed and swept.",
-          "Region-wide (Scotland & Newcastle): Following a Char Siu quality problem traced to the supplier, all sites must stay vigilant when opening new Char Siu deliveries, carry out random quality checks and test product quality before serving.",
-          "Region-wide (Scotland & Newcastle): Frozen ramen, ramen bowls and inner containers are to be ordered exclusively from JFC, while takeaway packaging remains with Lynas because of JFC packaging quality inconsistencies.",
-          "Region-wide (Scotland & Newcastle): The weekly BOH KPI meeting reverts to its regular Tuesday 10:30 slot, with the next one on 22/09/2026."
-        ],
-        "actions": [
-          "Train the incoming head chef and sushi chef personally - Owner: Penny Fung (15/09/2026)",
-          "Contact Matt or Penny directly for urgent ordering or staffing issues rather than relying on the group chat - Owner: Howard Chan (15/09/2026)",
-          "Chase the outstanding fire exit door repair - Owner: Kris (15/09/2026)",
-          "Begin recruitment for two kitchen supervisors and continue the search for two full time sushi chefs - Owner: Kieran Day (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1hZkachXYh8igKPtyYbIGUn1aKC6kmpy3TAjwTu3XkAs",
-        "source": "Scotland BOH weekly KPI meeting 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026, plus the site's GM and head chef meeting notes of 15/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No EDI/NEW (Scotland & Newcastle) KPI meeting notes received for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The last set from Oisin Darragh covered the week to 23/08/2026 and was sent on 01/09/2026, so this cluster is now three weeks unreported. Gap, not an empty meeting - chase Oisin Darragh."
       }
     },
     "M9": {
@@ -2140,7 +1996,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -2181,38 +2037,18 @@
         },
         "gmv_vs_4wk_pct": 10.4,
         "gmv_vs_ly_pct": 10.8,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Invoice Statement CSV (order-level, summed) - w/c 2026-09-07, file Deliveroo_2026-09-14_4432.14.csv, Drive id 1cDkp2NQDMINO9fEdNTanrNWBbjCQERiP, storefront 'Maki & Ramen Manchester'. Route: Google Drive MCP (no Chrome), read 15/09/2026 ~21:50 UK. SOURCE IS THE INVOICE STATEMENT CSV, NOT THE TAX INVOICE PDF: as at 15/09/2026 21:50 UK, ZERO Tax Invoice PDFs had been filed for period-end 2026-09-14 in any of the 18 AM entity folders. These four Invoice Statement CSVs were filed 15/09/2026 20:36-20:40 UTC by michael@makiramen.com. gmv = sum of the order-level 'Order Value (GBP)' column over the 'Orders and related adjustments' section, produced by builders/pull_deliveroo_invoices.py. Same basis as the Tax Invoice Total row 'Total Order Value' (proven identical for M1/M6/M9/M15 at w/c 31/08, upgraded CSV->PDF with no restatement). ORDERS HAND-CORRECTED: pull_deliveroo_invoices.py counts every row with a timestamp as an order, so blank-Order-Value adjustment rows (Refund commission, Partner funding from agreed voucher campaign, marketing contribution, invoice correction) are miscounted as orders. Orders here = count of rows with a NON-EMPTY Order Value only. Relay integrity gate PASSED: the CSV's Total Payable column sums exactly to the amount in the filename, to the penny, verified independently after the file was written to disk. Order dates verified 2026-09-07..2026-09-13; no unrecognised storefronts. Activity mix: Delivery 211, Pickup 2. Script said 381 orders (aov 18.32) against a real 213 (aov 32.77) - 173 blank-Order-Value adjustment rows, the worst instance of the bug in this batch. PARTIAL SLICE: 4 of 18 AM Deliveroo entities filed for period-end 2026-09-14. Filed: M1, M6, M9, M15. Not filed: M3, M8, M10, M11, M12, M13, M14, M16, M17, M18, M19, M20, IKI2, M21 - deliberately absent, never zero. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_2268.31.pdf, Drive id 1O1G1Zkgb_Pw-CQhfRjbEI0XzGfp3moVB, folder 1hexX6XK1SaDjiIJJ20fzz3FFbQ75kyFU (Maki Manchester Ltd), invoice serial res-uk-422981-159. Order-type mix: Delivery 211 / 6,943.40; Pickup 2 / 36.90. UPGRADED CSV -> PDF, NO RESTATEMENT, AND IT VINDICATES THE TUESDAY HAND-CORRECTION: the raw Invoice Statement CSV parse said 381 orders (AOV 18.32) because 168 blank-Order-Value adjustment rows were miscounted; Tuesday hand-corrected it to 213 (AOV 32.77). The Tax Invoice Total row independently gives exactly 213 and 6,980.30. Sub-rows sum to 213, so no food-remake +1 quirk. New-customer count 86 from the Weekly Dash sales_overview.csv. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
         "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "Significant Char Siu wastage caused by supplier size inconsistency is pushing food cost up.",
-          "The deep fryer is leaking from the back; it was too hot to inspect when first found and is being checked again.",
-          "The bar renovation is a high priority maintenance job awaiting an update, and the ice machine is high priority and due to be purchased this week.",
-          "No bad reviews were received in the week.",
-          "Deliveroo prep time showed no improvement, with sushi delays at weekends the identified cause.",
-          "Four Deliveroo missing item claims were disputed and three were accepted.",
-          "Two team members returned from holiday, another is scheduled for holiday at the end of the month, and the rota is otherwise covered for the next two weeks.",
-          "A team member left the business, with their last day the day after the meeting.",
-          "Trade was very quiet on weekdays and busy at the weekend, helped by the Manchester derby on the Sunday.",
-          "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
-          "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
-        ],
-        "actions": [
-          "Locate and photograph the deep fryer leak and send the photographs to the regional head of kitchen - Owner: Avinash Peter (15/09/2026)",
-          "Call the engineer to diagnose the deep fryer oil leak - Owner: Avinash Peter (15/09/2026)",
-          "Manually measure frozen Char Siu weights and update Kobas until a new manufacturer is sourced - Owner: Sophie Wang (15/09/2026)",
-          "Run any single item Deliveroo tickets as soon as they arrive and keep one person on the pass during busy periods - Owner: Avinash Peter (15/09/2026)",
-          "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1ObHnbBbgbjhDBUfvREO0PjVbUP2bkNgsTGFfwrFZJ9I",
-        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No Maki England KPI meeting notes had been circulated for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The cluster notes normally reach this account as a forwarded Gemini doc from Inka Cheung on the Tuesday (08/09 and 01/09 both landed that way). TIMING gap, not an empty meeting - chase Inka Cheung."
       }
     },
     "M10": {
@@ -2360,7 +2196,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -2416,40 +2252,18 @@
         },
         "gmv_vs_4wk_pct": 4,
         "gmv_vs_ly_pct": -25.5,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_1812.86.pdf, Drive id 130idj-vhBjWuCQKq5Uxg5skwg7kgM5Fp, folder 1n7XTuNaeQQJ8CCCjAjq7bYpfmqNFycXX (Maki Leeds LTD), invoice serial res-uk-511811-72. Order-type mix: Delivery 170 / 5,245.38 (delivery only). PROMOTED from the Weekly Summary master to invoice-grade; master and Weekly Dash both carried 5,245.38 / 170 / AOV 30.86, so the Tax Invoice CONFIRMS them with no restatement. Single sub-row equals the Total row, so no food-remake +1 quirk. New-customer count 59 from the Weekly Dash sales_overview.csv. NOTE the invoice's printed trading address is a Birmingham one - that is a Deliveroo/finance address artefact on the Maki Leeds LTD entity, NOT a sign this is Birmingham/M21; the storefront billed is Leeds and M21 Birmingham has its own separate entity folder. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "Customer complaints covered a fifteen minute queue despite a table booking, food arriving lukewarm and at a different time to the rest of the table, and cold steak served on ramen.",
-          "The cause was a very busy Saturday, with Char Siu now pan fried to order for freshness and food sitting on the pass too long before pickup.",
-          "Front of house and the kitchen need to communicate so each table's dishes go out together, and food warmer lights for the pass were suggested.",
-          "An unusually high takeaway packaging order was flagged for return and a credit note.",
-          "Only small Kaiso salad paper sushi trays are restricted; medium and black trays remain available.",
-          "A back of house team member leaves on 24/10/2026, with a replacement starting on 05/11/2026 on a three month probation and training period.",
-          "A sushi trial candidate did not show for their scheduled shift and a new candidate is trialling on the Thursday.",
-          "Customers are deleting and reinstalling the app under new email addresses to reuse promotional offers; marketing is aware and no policy change is available yet.",
-          "No maintenance jobs were logged for the week and the pans were collected.",
-          "Reviews, Deliveroo performance and sales were flagged by the site as its areas of improvement.",
-          "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
-          "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
-        ],
-        "actions": [
-          "Call JFC to arrange the return of excess takeaway packaging and a credit note - Owner: Robert Cameron (15/09/2026)",
-          "Confirm the upstairs chicken broth stock level - Owner: Robert Cameron (15/09/2026)",
-          "Interview the sushi trial candidate on the Thursday and report back - Owner: Ken Wong (15/09/2026)",
-          "Confirm True World's product code for the small sushi trays and share it with sites - Owner: Sophie Wang (15/09/2026)",
-          "Begin delegating responsibility for reviews and Deliveroo to a named team member - Owner: Ninder Joshi (15/09/2026)",
-          "Confirm the address for the B2B event on 17/09/2026 - Owner: Amy Tang (15/09/2026)",
-          "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1fkymU4PssSza0fTxMoK06es38_roi4dQa216ApA-Eb4",
-        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No Maki England KPI meeting notes had been circulated for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The cluster notes normally reach this account as a forwarded Gemini doc from Inka Cheung on the Tuesday (08/09 and 01/09 both landed that way). TIMING gap, not an empty meeting - chase Inka Cheung."
       }
     },
     "M11": {
@@ -2599,7 +2413,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -2636,10 +2450,11 @@
         "week_ending": "2026-09-13",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
-        "new_customers": null,
+        "sales": 3396.2,
+        "orders": 112,
+        "orders_estimated": true,
+        "aov": 30.32,
+        "new_customers": 48,
         "rating": 4.9,
         "open_hours_pct": 97.8,
         "avg_prep_min": 15.6,
@@ -2655,41 +2470,17 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
         "busy_mode_pct": 4.3
       },
-      "gaps": [
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ],
+      "gaps": [],
       "notes": {
-        "issues": [
-          "Three negative reviews covered front of house service speed and attentiveness, and a heater needing replacement.",
-          "Reviews also raised badly scratched glassware, which has been thrown away with a replacement order placed.",
-          "A new cooking pot was bought, and the standard is now a maximum of two packs of chicken broth per cook rather than three.",
-          "Staff must taste test each new batch of broth before serving and avoid over preparing broth late at night, as it darkens overnight.",
-          "Stock cover was sufficient with no shortages in the week.",
-          "Weekday trade was very quiet with little town centre footfall while the weekend was busier than usual, and labour was cut back as far as possible.",
-          "New chairs and tables are outstanding with no stock available, so the site has asked whether it can buy ad hoc or borrow from another site.",
-          "Collection of recyclable items from the back of the restaurant has been requested.",
-          "A new freezer is outstanding and queued behind the Glasgow installation.",
-          "One team member continues to work three to four days a week here as their primary role, picking up extra hours elsewhere to meet their required hours.",
-          "Site level food cost figures remain a week behind pending head office data.",
-          "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
-          "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
-        ],
-        "actions": [
-          "Taste test each new batch of chicken broth before service and hold to two packs per cook - Owner: Jason (15/09/2026)",
-          "Confirm whether chairs and tables can be bought ad hoc or borrowed from another site - Owner: Francheska (15/09/2026)",
-          "Arrange collection of the recyclable items from the back of the restaurant - Owner: Francheska (15/09/2026)",
-          "Sort the new freezer for the site once the Glasgow installation is complete - Owner: Ross Ward (15/09/2026)",
-          "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1Kxo_OHfAoli0TOgd_SnOWO2kNy_s6Cc1JXRePrq-HhQ",
-        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No Maki England KPI meeting notes had been circulated for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The cluster notes normally reach this account as a forwarded Gemini doc from Inka Cheung on the Tuesday (08/09 and 01/09 both landed that way). TIMING gap, not an empty meeting - chase Inka Cheung."
       }
     },
     "M14": {
@@ -2824,7 +2615,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -2894,29 +2685,12 @@
         "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
       ],
       "notes": {
-        "issues": [
-          "Sushi is fully staffed with one team member returning at weekends, one staying through Christmas and one returning full time, so no further sushi hiring is needed.",
-          "Replacement induction pots are still outstanding, sourced from a non UK warehouse with no trackable shipping identifier, so broths are being swapped on induction one at a time.",
-          "Chicken broth usage has risen relative to tonkotsu since the steak tataki menu change increased its popularity.",
-          "The stock dashboard showed several chicken and katsu lines as low or zero, but actual stock was fine and the discrepancy was traced to delayed invoice uploads rather than a real shortage.",
-          "No bad reviews were received in the week.",
-          "A new sushi chef is being re enrolled through the talent funnel.",
-          "No maintenance jobs were logged for the week.",
-          "The team was reminded to be ready for a site visit from the owner this week.",
-          "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
-          "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
-        ],
-        "actions": [
-          "Chase the induction pot delivery estimate via Francheska - Owner: Sophie Wang (15/09/2026)",
-          "Be ready for the site visit this week and follow up on the induction pot estimate - Owner: Artur Mroczkowski (15/09/2026)",
-          "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1q4AZZix6gpezuqq4YSqixTxhbuCPMk-y2t2grHGNTmg",
-        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No Maki England KPI meeting notes had been circulated for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The cluster notes normally reach this account as a forwarded Gemini doc from Inka Cheung on the Tuesday (08/09 and 01/09 both landed that way). TIMING gap, not an empty meeting - chase Inka Cheung."
       }
     },
     "M16": {
@@ -3057,7 +2831,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -3087,10 +2861,11 @@
         "week_ending": "2026-09-13",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
-        "new_customers": null,
+        "sales": 3873.78,
+        "orders": 118,
+        "orders_estimated": true,
+        "aov": 32.83,
+        "new_customers": 55,
         "rating": 4.9,
         "open_hours_pct": 99.9,
         "avg_prep_min": 14.5,
@@ -3106,41 +2881,17 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
         "busy_mode_pct": 0.0
       },
-      "gaps": [
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ],
+      "gaps": [],
       "notes": {
-        "issues": [
-          "A three star review complained about the takoyaki soy sauce, an older three star review rated food above service, and a further complaint concerned the soba sauce with the same customer rating service very highly.",
-          "Saturday service was hectic and sushi fell behind the hot section, so cross section communication has been addressed with the team.",
-          "A sushi chef works fast but has ongoing attitude and communication issues with the team, with a formal conversation held and a one week review to 22/09/2026.",
-          "Contingency cover is in place if performance does not improve, with a chef returning on 25/10/2026 and another potentially brought in so earned holiday can be taken.",
-          "A request to move the sushi start time to 10:00 was previously declined, and there is no active sushi hiring at present.",
-          "The kitchen porter area drains are deteriorating daily, are logged as a high priority maintenance job, and a fix was hoped for the following day.",
-          "Trade was very quiet at the start of the week and extremely busy over the weekend, with students returning to the city.",
-          "Stock counts are inconsistent and are expected to be corrected next week.",
-          "Food cost reporting was distorted this week by an AA Factory delivery arriving in the week and an extra spirits order.",
-          "Three front of house team members joined or returned in the week and one back of house team member is returning.",
-          "A theatre show on the Thursday evening and a Sunday sports fixture are both expected to generate pre and post event trade.",
-          "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
-          "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
-        ],
-        "actions": [
-          "Hold the formal conversation with the sushi chef and follow up on 22/09/2026 - Owner: Maged Greige (15/09/2026)",
-          "Get the kitchen porter drains fixed as a high priority job - Owner: Emily (15/09/2026)",
-          "Rectify the stock discrepancies next week - Owner: Emily (15/09/2026)",
-          "Decide whether to recruit another bartender or a dual front of house position - Owner: Emily (15/09/2026)",
-          "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "18oCQgGj062_alBxxk2l7dLGX0x7C4kQpySHZg3OWvJ0",
-        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026, plus the site's GM and head chef KPI report for the same week"
+        "empty": true,
+        "docId": "",
+        "source": "No Maki England KPI meeting notes had been circulated for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The cluster notes normally reach this account as a forwarded Gemini doc from Inka Cheung on the Tuesday (08/09 and 01/09 both landed that way). TIMING gap, not an empty meeting - chase Inka Cheung."
       }
     },
     "M17": {
@@ -3284,7 +3035,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -3346,23 +3097,17 @@
           "The site took part in the shopping centre boat race and placed fourth.",
           "Region-wide (South England): A standing daily performance target of ten app signups and ten Google reviews per site has been set, with a proposal to gamify it so the teams engage with it.",
           "Region-wide (South England): Front of house sometimes ask for a review from a table that has had a poor experience; staff must read the table and check satisfaction before asking, and management should routinely check in on section status.",
-          "Region-wide (South England): Sites must report the status of their envelope returns to the office.",
-          "The back area must be kept clear and free of obstruction as a fire safety risk.",
-          "Google and Deliveroo review generation has slowed at the site.",
-          "A back of house team member may face termination if they fail their review of conduct, so back of house recruitment has been opened in anticipation.",
-          "The general manager is away for six days across the next fortnight because of freshers commitments, and cover has been arranged.",
-          "A full staff meeting was held on 07/09/2026 to work through the review situation with the team."
+          "Region-wide (South England): Sites must report the status of their envelope returns to the office."
         ],
         "actions": [
           "Allocate time to give the new assistant general manager the professional training they need - Owner: Kei Cannon (15/09/2026)",
           "Region-wide (South England): Report the status of site envelope returns to the office - Owner: The group (15/09/2026)",
-          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)",
-          "Complete the front of house training tracker alongside training a new team member - Owner: The assistant general manager (15/09/2026)"
+          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)"
         ],
         "carryover": [],
         "empty": false,
         "docId": "14LvXoY71_AWMbLU26p0zxW4u_KzHYBOLZhKc9_a-fBA",
-        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England), plus the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England)"
       }
     },
     "M18": {
@@ -3512,7 +3257,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -3534,10 +3279,11 @@
         "week_ending": "2026-09-13",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
-        "new_customers": null,
+        "sales": 1642.87,
+        "orders": 52,
+        "orders_estimated": true,
+        "aov": 31.59,
+        "new_customers": 32,
         "rating": 4.8,
         "open_hours_pct": 99.5,
         "avg_prep_min": 14.1,
@@ -3553,12 +3299,10 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
         "busy_mode_pct": 5.4
       },
-      "gaps": [
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [
           "Sales came in ahead of target and spend per head improved, while covers fell back after the soft launch offers ended.",
@@ -3576,13 +3320,7 @@
           "Google reviews have been consistently five star since Thursday, driven by good service during the lunch offers.",
           "Region-wide (South England): A standing daily performance target of ten app signups and ten Google reviews per site has been set, with a proposal to gamify it so the teams engage with it.",
           "Region-wide (South England): Front of house sometimes ask for a review from a table that has had a poor experience; staff must read the table and check satisfaction before asking, and management should routinely check in on section status.",
-          "Region-wide (South England): Sites must report the status of their envelope returns to the office.",
-          "The kitchen flooring is a high priority maintenance job and the male toilet sink is medium priority, both logged with operations.",
-          "Invoices are not being managed correctly, which is driving a significant wet stock difference.",
-          "Even where invoices are completed and double checked, Kobas frequently still shows them as pending for a whole week.",
-          "A front of house team member has left.",
-          "Bar training is being rolled out to the front of house team, with two team members in training on stock management, ramen and sushi.",
-          "The site will distribute sushi at the Freshers Festival London and has booked a discounted Thursday group event."
+          "Region-wide (South England): Sites must report the status of their envelope returns to the office."
         ],
         "actions": [
           "Review every inaccurate Deliveroo order, locate the supporting order photographs, identify the root cause and dispute the eligible claims so the weekly rating is corrected - Owner: M18 (15/09/2026)",
@@ -3592,14 +3330,12 @@
           "Include the daily count of app signups and Google reviews in the end of day report - Owner: M18 (15/09/2026)",
           "Provide the site with a method for tracking app signups - Owner: Kaitlin Docherty (15/09/2026)",
           "Region-wide (South England): Report the status of site envelope returns to the office - Owner: The group (15/09/2026)",
-          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)",
-          "Recruit a front of house team member through interviews and trials, with one candidate able to start immediately - Owner: Imre Balogh (15/09/2026)",
-          "Fix the invoice entry process so wet stock reconciles and chase the Kobas pending invoice lag - Owner: Imre Balogh (15/09/2026)"
+          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)"
         ],
         "carryover": [],
         "empty": false,
         "docId": "14LvXoY71_AWMbLU26p0zxW4u_KzHYBOLZhKc9_a-fBA",
-        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England), plus the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England)"
       }
     },
     "M19": {
@@ -3768,7 +3504,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -3850,14 +3586,7 @@
           "Recruitment continues to support restaurant operations.",
           "Region-wide (South England): A standing daily performance target of ten app signups and ten Google reviews per site has been set, with a proposal to gamify it so the teams engage with it.",
           "Region-wide (South England): Front of house sometimes ask for a review from a table that has had a poor experience; staff must read the table and check satisfaction before asking, and management should routinely check in on section status.",
-          "Region-wide (South England): Sites must report the status of their envelope returns to the office.",
-          "Customers have complained about raw karaage.",
-          "Front of house are not separating plates, bowls and food waste, which is slowing the kitchen porter operation.",
-          "The greeting is not being delivered consistently, loudly or clearly.",
-          "Two team members have still not submitted their resignations and no hours are being assigned to them in the meantime.",
-          "The women's toilet locker is outstanding on the maintenance log.",
-          "A new full time back of house team member has joined, and an assistant general manager has been placed on a one month probation with two weeks of training before full promotion.",
-          "The site is running the Shoreditch Town Hall discount code and the loyalty app is being introduced to guests."
+          "Region-wide (South England): Sites must report the status of their envelope returns to the office."
         ],
         "actions": [
           "Call the pest control provider today to book the overdue visit - Owner: M19 (15/09/2026)",
@@ -3870,17 +3599,12 @@
           "Instruct staff to encourage app signups and to ask for reviews daily, but only from tables that have had a good experience - Owner: M19 (15/09/2026)",
           "Continue recruiting to support restaurant operations - Owner: M19 (15/09/2026)",
           "Region-wide (South England): Report the status of site envelope returns to the office - Owner: The group (15/09/2026)",
-          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)",
-          "Separate all plates, bowls and food waste to ease the kitchen porter operation and support the kitchen porter section to bring back of house labour down - Owner: Front of house (15/09/2026)",
-          "Run vegan and vegetarian training with the back of house team - Owner: The head chef (15/09/2026)",
-          "Train front of house not to ask an unhappy customer for a review - Owner: The general manager (15/09/2026)",
-          "Take a photograph as proof whenever a complaint about raw karaage is received - Owner: The general manager (15/09/2026)",
-          "Schedule only two front of house after 21:30 - Owner: The general manager (15/09/2026)"
+          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)"
         ],
         "carryover": [],
         "empty": false,
         "docId": "14LvXoY71_AWMbLU26p0zxW4u_KzHYBOLZhKc9_a-fBA",
-        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England), plus the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England)"
       }
     },
     "M20": {
@@ -4025,7 +3749,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -4087,12 +3811,7 @@
           "Preparation is under way for the boat show, with a staff limit of three people and takeaway packaging being ordered in line with the other sites.",
           "Region-wide (South England): A standing daily performance target of ten app signups and ten Google reviews per site has been set, with a proposal to gamify it so the teams engage with it.",
           "Region-wide (South England): Front of house sometimes ask for a review from a table that has had a poor experience; staff must read the table and check satisfaction before asking, and management should routinely check in on section status.",
-          "Region-wide (South England): Sites must report the status of their envelope returns to the office.",
-          "No audit was carried out at the site this week.",
-          "A low rating review reported the food as too salty, specifically the seafood and squid, and the salmon as dry and tasting old.",
-          "The GM and head chef meeting notes linked in the weekly report are out of date and point to a June week rather than the week under review.",
-          "A new front of house team member has joined and cleaning has been set as an area of focus.",
-          "The site is preparing for the boat show and the freshers fair."
+          "Region-wide (South England): Sites must report the status of their envelope returns to the office."
         ],
         "actions": [
           "Update the weekly sales projection in the tracker to the revised figure agreed in the meeting - Owner: M20 (15/09/2026)",
@@ -4100,13 +3819,12 @@
           "Hold the general manager and head chef meeting on Sundays from now on - Owner: M20 (15/09/2026)",
           "Include the daily count of app signups and Google reviews in the end of day report, supported by the table flyers - Owner: M20 (15/09/2026)",
           "Region-wide (South England): Report the status of site envelope returns to the office - Owner: The group (15/09/2026)",
-          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)",
-          "Relink the weekly report to the current GM and head chef meeting notes - Owner: The general manager (15/09/2026)"
+          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)"
         ],
         "carryover": [],
         "empty": false,
         "docId": "14LvXoY71_AWMbLU26p0zxW4u_KzHYBOLZhKc9_a-fBA",
-        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England), plus the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England)"
       }
     },
     "M21": {
@@ -4256,7 +3974,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -4319,22 +4037,7 @@
           "General manager and head chef meetings surfaced past communication problems where several staff were distracting the kitchen at the same time.",
           "Region-wide (South England): A standing daily performance target of ten app signups and ten Google reviews per site has been set, with a proposal to gamify it so the teams engage with it.",
           "Region-wide (South England): Front of house sometimes ask for a review from a table that has had a poor experience; staff must read the table and check satisfaction before asking, and management should routinely check in on section status.",
-          "Region-wide (South England): Sites must report the status of their envelope returns to the office.",
-          "Two new starters joined the England BOH weekly meeting for the first time, covering the sushi section.",
-          "A sushi team member is leaving this month and another leaves on 29/09/2026, but the section is covered by a fully trained full time starter plus two part timers, so no further sushi hiring is needed.",
-          "The ramen and front of house team is still bedding in and ran out of some items several times over the past fortnight, affecting customers, so extra is being ordered from this week.",
-          "Ordering is not covering the full week, so the site runs out of stock every weekend.",
-          "The kitchen porter area drain issue has been repaired and the site sink was fixed on 14/09/2026.",
-          "Orders are being sent to the wrong tables, which is causing mistakes in the kitchen, and front of house are focusing on problems rather than food running.",
-          "Respect between the front of house and back of house teams needs to improve on both sides.",
-          "Staff food orders are being placed at busy times and very close to closing, and lateness has been frequent in the kitchen.",
-          "Low rating reviews cited slow speed of service and music being too loud front of house, and tough noodles and over salty karaage back of house.",
-          "A beef line showed as zero stock on the stock dashboard, which was confirmed accurate after a scheduled delivery did not arrive.",
-          "A Hungry Panda launch with a thirty percent delivery promotion goes live the following Monday and is expected to be popular with the local student population.",
-          "The site was called out in the England BOH meeting as a strong performer for a new team.",
-          "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
-          "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
+          "Region-wide (South England): Sites must report the status of their envelope returns to the office."
         ],
         "actions": [
           "Run allergen awareness sessions so the kitchen team know the dietary requirements - Owner: M21 (15/09/2026)",
@@ -4346,19 +4049,12 @@
           "Hold conversations with the team members causing the recurring lateness - Owner: M21 (15/09/2026)",
           "Verify the labour costs and the rota adjustments for accuracy - Owner: Ziang Lin (15/09/2026)",
           "Region-wide (South England): Report the status of site envelope returns to the office - Owner: The group (15/09/2026)",
-          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)",
-          "Speak to all sushi staff to confirm part time and full time status - Owner: Lina (15/09/2026)",
-          "Order extra takeaway packaging ahead of the Hungry Panda launch - Owner: Roger Costa (15/09/2026)",
-          "Include checking packaging in allergy training whenever the product is not the usual one, and re-train the team on allergies - Owner: Spencer Copley (14/09/2026)",
-          "Log waste nightly to keep tighter control - Owner: The general manager (14/09/2026)",
-          "Train the kitchen to send donburi section items out at the same time to speed up service - Owner: The general manager (14/09/2026)",
-          "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
+          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)"
         ],
         "carryover": [],
         "empty": false,
         "docId": "14LvXoY71_AWMbLU26p0zxW4u_KzHYBOLZhKc9_a-fBA",
-        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England), plus the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England)"
       }
     },
     "MakiNori": {
@@ -4481,7 +4177,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -4523,12 +4219,7 @@
           "The cocktail menu is being reworked, and the bar layout is inefficient because of where the cocktail sink and glass washer sit.",
           "Region-wide (South England): A standing daily performance target of ten app signups and ten Google reviews per site has been set, with a proposal to gamify it so the teams engage with it.",
           "Region-wide (South England): Front of house sometimes ask for a review from a table that has had a poor experience; staff must read the table and check satisfaction before asking, and management should routinely check in on section status.",
-          "Region-wide (South England): Sites must report the status of their envelope returns to the office.",
-          "No audit was carried out at the site this week.",
-          "A large share of the site's labour is still being covered by area managers rather than site staff.",
-          "The budget rota guidance sheet contains no data for the site.",
-          "Bar and kitchen wall painting is outstanding on the maintenance log, the glasswasher still needs swapping with the bar rail counter, and the floor still needs coating.",
-          "A new general manager, a supervisor and a waitress have joined."
+          "Region-wide (South England): Sites must report the status of their envelope returns to the office."
         ],
         "actions": [
           "Investigate the kitchen stock discrepancy and establish why the money value and the percentage variance disagree - Owner: MakiNori (15/09/2026)",
@@ -4541,13 +4232,12 @@
           "Finalise the new cocktail menu with the bar lead, including the plum wine cocktail ideas and improved presentation - Owner: Ziang Lin (14/09/2026)",
           "Reconfigure the cocktail sink and glass washer positions to improve bar efficiency, targeted for 08/10/2026 - Owner: Ziang Lin (14/09/2026)",
           "Region-wide (South England): Report the status of site envelope returns to the office - Owner: The group (15/09/2026)",
-          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)",
-          "Populate the budget rota guidance sheet for the site - Owner: The general manager (15/09/2026)"
+          "Region-wide (South England): Revise the labour target percentages for the coming week - Owner: Kei Cannon (15/09/2026)"
         ],
         "carryover": [],
         "empty": false,
         "docId": "14LvXoY71_AWMbLU26p0zxW4u_KzHYBOLZhKc9_a-fBA",
-        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England); merged with the dedicated 'Alignment Maki Nori' meeting notes 14/09/2026 (Otter, shared by Ziang Lin, Gmail thread 1a09f450b440abad), plus the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "source": "GM/AM KPI meeting notes 15/09/2026 (Weekly MR London Region KPI Meeting - South England); merged with the dedicated 'Alignment Maki Nori' meeting notes 14/09/2026 (Otter, shared by Ziang Lin, Gmail thread 1a09f450b440abad)"
       }
     }
   }

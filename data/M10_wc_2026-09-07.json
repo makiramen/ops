@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-15",
+  "generated_at": "2026-09-16",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-07 \u2013 2026-09-13",
@@ -153,7 +153,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-15."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -209,40 +209,18 @@
         },
         "gmv_vs_4wk_pct": 4,
         "gmv_vs_ly_pct": -25.5,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | Deliveroo weekly Tax Invoice PDF, 'Deliveroo Commission' table, Total row: 'Total Order Value' = GMV, Total-row Quantity = orders. Invoice issue date Mon 14 Sep 2026; period printed on the invoice: 'Mon, 07 Sep 00:00 - Sun, 13 Sep 23:59 (UTC)' = w/c 2026-09-07, verified on the face of each document (filename date 2026-09-14 is the period END; week_commencing = filename date - 7 days). Route: Google Drive MCP read_file_content (no Chrome), read 2026-09-16 by the Deliveroo data-pull subagent on the Wednesday top-up run. File Deliveroo_2026-09-14_1812.86.pdf, Drive id 130idj-vhBjWuCQKq5Uxg5skwg7kgM5Fp, folder 1n7XTuNaeQQJ8CCCjAjq7bYpfmqNFycXX (Maki Leeds LTD), invoice serial res-uk-511811-72. Order-type mix: Delivery 170 / 5,245.38 (delivery only). PROMOTED from the Weekly Summary master to invoice-grade; master and Weekly Dash both carried 5,245.38 / 170 / AOV 30.86, so the Tax Invoice CONFIRMS them with no restatement. Single sub-row equals the Total row, so no food-remake +1 quirk. New-customer count 59 from the Weekly Dash sales_overview.csv. NOTE the invoice's printed trading address is a Birmingham one - that is a Deliveroo/finance address artefact on the Maki Leeds LTD entity, NOT a sign this is Birmingham/M21; the storefront billed is Leeds and M21 Birmingham has its own separate entity folder. | WEDNESDAY 2026-09-16 TOP-UP, PIPE 6d COVERAGE: Tax Invoice PDFs for period-end 2026-09-14 are filed for 7 of the 18 AM Deliveroo entities - M1, M3, M6, M8, M9, M10, IKI2 (all seven landed this morning, 06:27-06:52 UTC, by junna@ / monica@ / michael@; finance was still filing during this run, so a later run may reach more). M15 remains on its Invoice Statement CSV figure from the Tuesday run; no Tax Invoice PDF is filed for it yet. NOT FILED AT ALL for period-end 2026-09-14: M11, M12, M13, M14, M16, M17, M18, M19, M20, M21 - deliberately absent, NEVER zero. Owner of the missing filings: finance, Junna Nakaya / Monica Lee. Validate gate PASSED: order dates 2026-09-07..2026-09-13, no unrecognised storefronts. [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
       "gaps": [],
       "notes": {
-        "issues": [
-          "Customer complaints covered a fifteen minute queue despite a table booking, food arriving lukewarm and at a different time to the rest of the table, and cold steak served on ramen.",
-          "The cause was a very busy Saturday, with Char Siu now pan fried to order for freshness and food sitting on the pass too long before pickup.",
-          "Front of house and the kitchen need to communicate so each table's dishes go out together, and food warmer lights for the pass were suggested.",
-          "An unusually high takeaway packaging order was flagged for return and a credit note.",
-          "Only small Kaiso salad paper sushi trays are restricted; medium and black trays remain available.",
-          "A back of house team member leaves on 24/10/2026, with a replacement starting on 05/11/2026 on a three month probation and training period.",
-          "A sushi trial candidate did not show for their scheduled shift and a new candidate is trialling on the Thursday.",
-          "Customers are deleting and reinstalling the app under new email addresses to reuse promotional offers; marketing is aware and no policy change is available yet.",
-          "No maintenance jobs were logged for the week and the pans were collected.",
-          "Reviews, Deliveroo performance and sales were flagged by the site as its areas of improvement.",
-          "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
-          "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
-        ],
-        "actions": [
-          "Call JFC to arrange the return of excess takeaway packaging and a credit note - Owner: Robert Cameron (15/09/2026)",
-          "Confirm the upstairs chicken broth stock level - Owner: Robert Cameron (15/09/2026)",
-          "Interview the sushi trial candidate on the Thursday and report back - Owner: Ken Wong (15/09/2026)",
-          "Confirm True World's product code for the small sushi trays and share it with sites - Owner: Sophie Wang (15/09/2026)",
-          "Begin delegating responsibility for reviews and Deliveroo to a named team member - Owner: Ninder Joshi (15/09/2026)",
-          "Confirm the address for the B2B event on 17/09/2026 - Owner: Amy Tang (15/09/2026)",
-          "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
-        ],
+        "issues": [],
+        "actions": [],
         "carryover": [],
-        "empty": false,
-        "docId": "1fkymU4PssSza0fTxMoK06es38_roi4dQa216ApA-Eb4",
-        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
+        "empty": true,
+        "docId": "",
+        "source": "No Maki England KPI meeting notes had been circulated for the week to 13/09/2026 as at the evening of Tue 15/09/2026. The cluster notes normally reach this account as a forwarded Gemini doc from Inka Cheung on the Tuesday (08/09 and 01/09 both landed that way). TIMING gap, not an empty meeting - chase Inka Cheung."
       }
     }
   }
