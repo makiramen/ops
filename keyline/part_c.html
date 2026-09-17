@@ -1,0 +1,515 @@
+<div class="wrap">
+  <div class="hd">
+    <div>
+      <span class="badge">Maki &amp; Ramen · Executive Chef</span>
+      <h1>Keyline Control</h1>
+      <p class="sub">13 keylines &times; 9 England sites, exactly the products on the EC stock monitoring sheet. Every line carries a PAR: the permanent stock holding for that site, signed off per site on the sheet. Weeks 1 and 2 of the trading period hold it; weeks 3 and 4 may run into it. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
+    </div>
+    <div class="clock"><b id="clk">--:--</b><span id="today">-</span></div>
+  </div>
+
+  <div id="gate"></div>
+  <div id="period"></div>
+  <div class="raghd"><h2>Site red light</h2><span class="legend"><span style="background:#D1240F"></span>red: urgent or order below the floor <span style="background:#E8730C"></span>amber: top-up order, watch or count <span style="background:#1F8A4C"></span>green: fine</span></div>
+  <div class="rag" id="siteRag"></div>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" data-view="today"  aria-selected="true">Today<span class="cnt" id="c-today">0</span></button>
+    <button class="tab" role="tab" data-view="sites"  aria-selected="false">By site</button>
+    <button class="tab" role="tab" data-view="nudges" aria-selected="false">Nudges<span class="cnt" id="c-nudge">0</span></button>
+    <button class="tab" role="tab" data-view="compl"  aria-selected="false">Order compliance<span class="cnt" id="c-compl">0</span></button>
+    <button class="tab" role="tab" data-view="close"  aria-selected="false">Closure<span class="cnt" id="c-close">0</span></button>
+    <button class="tab" role="tab" data-view="email"  aria-selected="false">Email preview</button>
+    <button class="tab" role="tab" data-view="excep"  aria-selected="false">Exceptions<span class="cnt" id="c-exc">0</span></button>
+    <button class="tab" role="tab" data-view="gaps"   aria-selected="false">Setup gaps<span class="cnt" id="c-gaps">0</span></button>
+  </div>
+
+  <section id="v-today">
+    <div class="tiles" id="tiles"></div>
+
+    <p class="closestrip" id="closestrip"></p>
+
+    <h2>What to order, and by when</h2>
+    <p class="ogsum" id="ogsum"></p>
+    <div class="chips" id="ogsortchips"></div>
+    <div class="tblwrap"><table id="t-order"><thead></thead><tbody></tbody></table></div>
+
+    <details class="watchbox" id="watchbox">
+      <summary id="watchsum">Not due yet</summary>
+      <p class="ogsum" style="margin:10px 0">These are covered for now. Nothing to place today, but they are the next lines to fall due, so order them at the cut-off shown rather than waiting for the run-out.</p>
+      <div class="tblwrap"><table id="t-watch"><thead></thead><tbody></tbody></table></div>
+    </details>
+
+    <p class="note">Full detail for every line, including the ones that are fine, the physical counts and the overstocks, is on the <b>By site</b> tab.</p>
+  </section>
+
+  <section id="v-sites" class="hide">
+    <div class="chips" id="sitechips"></div>
+    <div class="chips" id="filterchips"></div>
+    <div class="tblwrap"><table id="t-site"><thead><tr>
+      <th>Site</th><th>Item</th><th class="num">In stock now</th><th class="num">Used a day</th><th class="num">Days left</th>
+      <th class="num">Left on delivery day</th><th class="num">Baseline (PAR)</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="v-nudges" class="hide">
+    <p class="sub">Every message the system sends today, in order, with the exact conditions that fire or suppress it. Nothing sends to a supplier, ever.</p>
+    <div class="card" id="nudgelist"></div>
+    <div class="warnbox" id="nudgeblock"></div>
+  </section>
+
+  <section id="v-compl" class="hide">
+    <div id="compl"></div>
+  </section>
+
+  <section id="v-close" class="hide">
+    <div id="closure"></div>
+  </section>
+
+  <section id="v-email" class="hide">
+    <p class="sub">The 07:00 estate email to Sophie and O, rendered from live figures. Same content goes out as a PDF attachment.</p>
+    <div class="card" id="mailprev"></div>
+  </section>
+
+  <section id="v-excep" class="hide">
+    <div class="card" id="excep"></div>
+  </section>
+
+  <section id="v-gaps" class="hide">
+    <p class="sub">What is stopping the remaining lines from giving an instruction. Each one has an owner and closes on its own once answered.</p>
+    <div class="card" id="gaps"></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<script>
+/* ---------------- state ---------------- */
+let NOW = ukNow();
+let ROWS = [];
+let siteFilter = 'ALL', statusFilter = 'ALL';
+let ROLLED = false, ROLL_AGE = null;
+let ogSort = 'maki';                                 // order guide view: maki = grouped by site (default), cut / sup = one flat list
+
+/* ---------------- stale import roll-forward ---------------- */
+/* A Kobas position older than STALE_H hours is no longer thrown away. It is rolled forward: the site own
+   average daily usage since the pull comes off, anything booked in as delivered in Kobas since the pull goes
+   back on, and the page says out loud that stock is an estimate. Past DEAD_H the drift is too large to
+   instruct from and the page stops. Michael 14/09/2026. */
+const STALE_H = 18, DEAD_H = 72;
+function importAgeH(){
+  const t = window.KEYLINE_DATA.meta.importedAt ? new Date(window.KEYLINE_DATA.meta.importedAt) : null;
+  return t ? (NOW - t)/36e5 : null;
+}
+function rollForward(l, ageH){
+  const imported = new Date(window.KEYLINE_DATA.meta.importedAt);
+  const days = ageH/24;
+  const use  = (USAGE8M[l.site]||{})[l.item];
+  const landed = (typeof deliveredSinceTs==='function') ? deliveredSinceTs(l.site, l.item, imported) : 0;
+  if(l.stock==null || l.stock<0 || !(use>0)) return {...l, rolled:false, rolledIn:landed};
+  const est = Math.max(0, Math.round((l.stock - use*days + landed)*100)/100);
+  return {...l, stock:est,
+          cover:(l.cover!=null ? Math.max(0, l.cover - days) : l.cover),
+          rolled:true, rolledFrom:l.stock, rolledUsed:Math.round(use*days*100)/100, rolledIn:landed};
+}
+
+function recompute(){
+  NOW = ukNow();
+  const ageH = importAgeH();
+  ROLLED = (ageH!=null && ageH > STALE_H && ageH <= DEAD_H);
+  ROLL_AGE = ageH;
+  ROWS = window.KEYLINE_DATA.lines.map(l => evaluate(ROLLED ? rollForward(l, ageH) : l, NOW))
+          .sort((a,b)=> RANK[a.status]-RANK[b.status] || a.site.localeCompare(b.site) || a.cover-b.cover);
+  ROWS.forEach(r=>{ r.comp = (typeof complianceForRow==='function') ? complianceForRow(r) : null; });   // Kobas order history, part_e
+  /* What is actually left to order once genuinely inbound stock is counted. orderQty stays the gap to the
+     Baseline; netOrder is what a chef should place today. Michael's ruling 09/09/2026. */
+  ROWS.forEach(r=>{
+    const inb = (r.comp && r.comp.inbound) || 0;
+    r.inbound = inb;
+    r.netOrder = (r.orderQty!=null) ? Math.max(0, Math.round((r.orderQty - inb)*10)/10) : null;
+  });
+}
+const count = s => ROWS.filter(r=>r.status===s).length;
+const siteName = c => (SITES.find(s=>s.code===c)||{}).name || c;
+
+/* ---------------- freshness gate ---------------- */
+function gateState(){
+  const m = window.KEYLINE_DATA.meta;
+  const problems = [];
+  if(m.source !== 'kobas-live') problems.push({stop:true, msg:'This page is running on sample figures, not a Kobas pull. Do not order from it.'});
+  const staleSites = Object.entries(window.KEYLINE_DATA.siteMeta).filter(([,v])=>v.stale).map(([k])=>k);
+  if(staleSites.length) problems.push({stop:false, msg:'Stock check more than 8 days old at '+staleSites.join(', ')+'. Their lines are flagged and must be counted before ordering.'});
+  const ageH = importAgeH();
+  if(ageH!=null && ageH > DEAD_H){
+    problems.push({stop:true, msg:'The Kobas import is '+(Math.round(ageH/24*10)/10)+' days old. That is too far past to roll forward honestly. Re-run the pull before ordering.'});
+  } else if(ageH!=null && ageH > STALE_H){
+    const nR = ROWS.filter(r=>r.rolled).length;
+    const nD = ROWS.filter(r=>r.rolledIn>0).length;
+    problems.push({stop:false, msg:'Stock is an ESTIMATE. The Kobas import is '+Math.round(ageH)+' hours old, so '+nR+' of '+ROWS.length+' lines have been rolled forward by their own daily usage'+
+      (nD ? ' and '+nD+' credited with deliveries booked in Kobas since the pull' : '')+
+      '. Order quantities are still net of what is on order. Count anything marked urgent before you place it.'});
+  }
+  const routeless = count('ROUTE');
+  if(routeless) problems.push({stop:false, msg:routeless+' of '+ROWS.length+' lines have no usable supplier cut-off on the delivery schedule, so they show a provisional read only.'});
+  const assumed = ROWS.filter(r=>r.assumed && !['CHECK','DATA'].includes(r.status)).length;
+  if(assumed) problems.push({stop:false, msg:assumed+' lines run on an assumed cut-off time. Delivery days are confirmed, the time is not.'});
+  return problems;
+}
+function renderGate(){
+  const p = gateState(), el = document.getElementById('gate'), m = window.KEYLINE_DATA.meta;
+  if(!p.length){
+    el.innerHTML = '<div class="gate gate-ok"><span class="dot"></span><div><b>Safe to order</b>'+
+      '<small>Kobas position '+m.reportDate+', '+m.importedLabel+'. All nine sites present, all 13 keylines found.</small></div></div>';
+    return;
+  }
+  const stop = p.some(x=>x.stop);
+  el.innerHTML = '<div class="gate '+(stop?'gate-stop':'gate-warn')+'"><span class="dot"></span><div><b>'+
+    (stop?'Do not use for ordering':'Read with care')+'</b><small>'+
+    p.map(x=>x.msg).join('<br>')+'</small></div></div>';
+}
+
+/* ---------------- trading period banner ---------------- */
+function renderPeriod(){
+  const p = periodInfo(NOW), el = document.getElementById('period');
+  if(!el) return;
+  el.innerHTML = '<div class="gate gate-info"><span class="dot"></span><div><b>Trading period week '+p.week+' of 4 (w/c '+fmtDabs(p.monday)+'): '+
+    (p.reserveOpen ? 'reserve open' : 'hold the Baseline')+'</b><small>'+
+    (p.reserveOpen
+      ? 'Sites may run into their Baseline. Order only what reaches the delivery after next (the run-out floor). The Baseline is restored from '+fmtDabs(p.nextChange)+'.'
+      : 'Every line must be at or above its Baseline, the permanent holding for that site. Order = Baseline minus stock. The reserve opens '+fmtDabs(p.nextChange)+'.')+
+    '</small></div></div>';
+}
+
+/* ---------------- site red light ---------------- */
+function siteRag(code){
+  const rs = ROWS.filter(r=>r.site===code);
+  const u = rs.filter(r=>r.status==='URGENT').length, o = rs.filter(r=>r.status==='ORDER').length;
+  const w = rs.filter(r=>r.status==='WATCH').length,  k = rs.filter(r=>r.status==='CHECK').length;
+  const st = window.KEYLINE_DATA.siteMeta[code]||{};
+  /* RED = a line can run out (urgent, or an order today that is below the run-out floor). An order today that is
+     only a Baseline top-up, with the floor still covered, is AMBER: it must be placed, but nothing runs out. */
+  const oFloor = rs.filter(r=>r.status==='ORDER' && r.belowFloor).length;
+  let rag = 'GREEN';
+  if(u+oFloor) rag='RED'; else if(o+w+k) rag='AMBER';
+  if(st.stale && rag==='GREEN') rag='GREY';
+  const bits=[]; if(u) bits.push(u+' urgent'); if(o) bits.push(o+' order today'); if(w) bits.push(w+' watch'); if(k) bits.push(k+' count');
+  const worst = rs.filter(r=>['URGENT','ORDER'].includes(r.status)).slice(0,2).map(r=>r.item.name).join(', ');
+  return {rag,u,o,w,k,bits,worst,stale:!!st.stale};
+}
+function renderSiteRag(){
+  document.getElementById('siteRag').innerHTML = SITES.map(s=>{
+    const g = siteRag(s.code);
+    return '<button class="s '+g.rag+'" data-site="'+s.code+'"><b>'+s.code+'</b><i>'+s.name+'</i><small>'+
+      (g.stale?'stale count. ':'')+(g.bits.length? g.bits.join(' · ') : 'all 18 lines fine')+(g.worst? '<br>'+g.worst:'')+'</small></button>';
+  }).join('');
+  document.querySelectorAll('#siteRag .s').forEach(b=>b.onclick=()=>{siteFilter=b.dataset.site;statusFilter='ALL';show('sites');renderChips();renderSiteTable();});
+}
+
+/* ---------------- tiles ---------------- */
+const TILES = [
+  {k:'URGENT', l:'urgent',            c:'n-red'},
+  {k:'ORDER',  l:'order today',       c:'n-amber'},
+  {k:'WATCH',  l:'watch',             c:'n-blue'},
+  {k:'CHECK',  l:'physical check',    c:'n-red'},
+  {k:'ROUTE',  l:'route unverified',  c:'n-grey'},
+  {k:'OVER',   l:'overstocked',       c:'n-grey'},
+  {k:'OK',     l:'fine',              c:'n-green'}
+];
+function renderTiles(){
+  document.getElementById('tiles').innerHTML = TILES.map(t=>
+    '<button class="tile" data-status="'+t.k+'" aria-pressed="'+(statusFilter===t.k)+'">'+
+    '<div class="n '+t.c+'">'+count(t.k)+'</div><div class="l">'+t.l+'</div></button>').join('');
+  document.querySelectorAll('#tiles .tile').forEach(b=>b.onclick=()=>{
+    statusFilter = (statusFilter===b.dataset.status) ? 'ALL' : b.dataset.status;
+    siteFilter='ALL'; show('sites'); renderSiteTable(); renderChips();
+  });
+}
+
+/* ---------------- order guide (v1.7.0) ----------------
+   One table, five columns, answering the only four questions Sophie and O ask each morning:
+   what is on the shelf, how long it lasts, what to order, and by when. Usage a day, the Baseline
+   and what will be left when the delivery lands sit on the grey line under the item name, so the
+   table itself never gets wider. Three views: grouped by Maki site (default), or one flat list
+   sorted by cut-off or by supplier. Michael's ruling 09/09/2026. */
+function dayShort(d){
+  if(!d) return '';
+  const t = ukNow(); t.setHours(0,0,0,0);
+  const diff = Math.round((new Date(d).setHours(0,0,0,0) - t)/864e5);
+  if(diff===0) return 'today';
+  if(diff===1) return 'tomorrow';
+  if(diff===-1) return 'yesterday';
+  if(diff<0) return DAYNAME[d.getDay()].slice(0,3)+' (late)';
+  return DAYNAME[d.getDay()].slice(0,3);
+}
+function fmtLeft(h){
+  if(h==null) return 'no cut-off on file';
+  if(h<=0) return 'cut-off passed';
+  if(h<1)  return Math.round(h*60)+' min left';
+  if(h<24) return h.toFixed(1)+' h left';
+  {const d=Math.round(h/24); return d+(d===1?' day':' days')+' away';}
+}
+const OGVIEW  = {maki:'By Maki site', cut:'One list, soonest cut-off', sup:'One list, by supplier'};
+const unitWord = it => it.unit==='kg' ? 'kg' : (it.unit==='pack' ? 'packs' : 'cases');
+const seatOf = r => SITES.findIndex(s=>s.code===r.site);
+const hrsOf  = r => (r.del && r.del.hoursToCut!=null) ? r.del.hoursToCut : 1e9;
+const daysOf = r => (r.cover==null ? 1e9 : r.cover);
+const urgFirst = r => (r.status==='URGENT' ? 0 : 1);
+const cutIsToday = r => !!(r.del && r.del.cutIsToday && r.del.hoursToCut>0);
+function cutText(r){
+  if(!r.del) return (r.route && r.route.note) ? r.route.note : 'cut-off not confirmed';
+  return fmtD(r.del.next.cut)+' '+r.del.next.cutTime;
+}
+function cutSub(r){
+  if(!r.del) return '';
+  return fmtLeft(r.del.hoursToCut)+', lands '+fmtD(r.del.next.del)+
+         ((r.route && r.route.min) ? ', &pound;'+r.route.min+' min' : '');
+}
+
+/* --- the five cells --- */
+function cellItem(r, withSup){
+  const u = r.status==='URGENT';
+  const bits = [];
+  if(withSup) bits.push('<b>'+r.sup+'</b>');
+  if(r.usage!=null) bits.push((Math.round(r.usage*100)/100)+' '+unitWord(r.item)+' a day');
+  if(r.baseline!=null) bits.push('PAR '+fmtQty(r.baseline, r.item)+(r.baselineSource==='PAR sheet'?'':' calc'));
+  let land = '';
+  if(r.atDelivery!=null && r.del){
+    land = (r.atDelivery < 0)
+      ? '<span class="og-bad">Runs out '+fmtQty(-r.atDelivery, r.item)+' short before the next delivery lands.</span>'
+      : 'About '+fmtQty(r.atDelivery, r.item)+' left when the next delivery lands.';
+  }
+  return '<span class="og-item'+(u?' urgent':'')+'">'+r.item.name+(u?' &#9888; urgent':'')+'</span>'+
+    (bits.length ? '<span class="og-sub2">'+bits.join(' &middot; ')+'</span>' : '')+
+    (land ? '<span class="og-sub2">'+land+'</span>' : '')+
+    (r.stale ? '<span class="stale">stale count</span>' : '');
+}
+function cellStock(r){
+  let h = '<span class="qty">'+fmtQty(r.stock, r.item)+'</span>'+
+    (r.rolled ? '<span class="sub2" title="Kobas read '+fmtQty(r.rolledFrom, r.item)+' at the pull. Less '+fmtQty(r.rolledUsed, r.item)+' used since'+(r.rolledIn>0?', plus '+fmtQty(r.rolledIn, r.item)+' delivered since':'')+'.">estimated</span>' : '');
+  if(r.pctBaseline!=null){
+    const pct = Math.max(0, Math.min(100, Math.round(r.pctBaseline*100)));
+    const cls = pct<60 ? ' low' : (pct<100 ? ' mid' : '');
+    h += '<span class="bar'+cls+'" title="'+pct+'% of the baseline of '+fmtQty(r.baseline,r.item)+'"><i style="width:'+pct+'%"></i></span>'+
+      '<span class="sub2'+(r.vsBaseline<0?' warn':'')+'">'+(r.vsBaseline<0
+        ? fmtQty(-r.vsBaseline, r.item)+' under baseline'
+        : fmtQty(r.vsBaseline, r.item)+' over baseline')+'</span>';
+  }
+  return h;
+}
+function cellDays(r){
+  if(r.cover==null) return '<span class="sub2">no usage figure</span>';
+  return '<span class="qty'+(r.cover<3?' bad':'')+'">'+(r.cover<10 ? r.cover.toFixed(1) : Math.round(r.cover))+'</span>'+
+    (r.runOut ? '<span class="sub2'+(r.cover<7?' warn':'')+'">out '+fmtDabs(r.runOut).replace(/^(\w{3})\w*/, '$1')+'</span>' : '');
+}
+function cellOrder(r){
+  const cov = (r.netOrder===0 && r.inbound>0);
+  const main = cov ? '<span class="og-qty cov">covered</span>'
+    : ((r.netOrder!=null && r.netOrder>0) ? '<span class="og-qty">'+fmtQty(r.netOrder, r.item)+'</span>'
+                                          : '<span class="og-qty none">none</span>');
+  return main;
+}
+/* What the site has already asked for on this line, straight from Kobas order history. The part of it that is
+   still live is netted off the order quantity; anything past its delivery date is shown but deliberately not
+   counted as cover. Michael 14/09/2026: show the number, not only its effect. */
+function cellOnOrder(r){
+  const c = r.comp;
+  if(!c || !(c.onOrder>0)) return '<span class="og-qty none">none</span>';
+  const stuck = Math.round((c.onOrder - c.inbound)*100)/100;
+  const sub = [];
+  if(c.inbound>0) sub.push('due '+dayShort(c.inboundDue));
+  if(stuck>0.01) sub.push('<span class="og-bad">'+fmtQty(stuck, r.item)+' past its delivery date, not counted</span>');
+  if(c.lastOrder && c.lastOrder.sup && c.lastOrder.sup!==r.sup) sub.push('from '+c.lastOrder.sup);
+  return '<span class="og-qty'+(c.inbound>0?' cov':'')+'">'+fmtQty(c.onOrder, r.item)+'</span>'+
+    (sub.length ? '<span class="sub2">'+sub.join('<br>')+'</span>' : '');
+}
+function cellBy(r){
+  return '<span class="og-cut'+(cutIsToday(r)?' today':'')+'">'+cutText(r)+'</span>'+
+    (cutSub(r) ? '<span class="og-left">'+cutSub(r)+'</span>' : '')+
+    (r.assumed ? '<span class="asm" title="Delivery days are on the tab, the cut-off time is borrowed from the nearest tab that states one">TIME ASSUMED</span>' : '');
+}
+/* In the grouped view the cut-off sits on the supplier header and every line under it shares that
+   cut-off, so the Order by column would only repeat it. The flat list has no header, so it keeps it. */
+function fiveHead(withSite){
+  return '<tr>'+(withSite?'<th>Site</th>':'')+'<th>Item</th>'+
+    '<th class="num">In stock</th><th class="num">Days left</th><th class="num">On order</th><th class="num">To order</th>'+
+    (withSite?'<th>Order by</th>':'')+'</tr>';
+}
+function fiveRow(r, withSite, withSup){
+  return '<tr>'+
+    (withSite ? '<td class="nw"><b>'+r.site+'</b><span class="og-sub">'+siteName(r.site)+'</span></td>' : '')+
+    '<td class="itm">'+cellItem(r, withSup)+'</td>'+
+    '<td class="num" title="Kobas position for this line.">'+cellStock(r)+'</td>'+
+    '<td class="num" title="Stock divided by this site own average daily usage.">'+cellDays(r)+'</td>'+
+    '<td class="num" title="Already placed in Kobas and not yet delivered.">'+cellOnOrder(r)+'</td>'+
+    '<td class="num" title="Net of stock in hand and of anything already on its way.">'+cellOrder(r)+'</td>'+
+    (withSite ? '<td class="nw">'+cellBy(r)+'</td>' : '')+'</tr>';
+}
+
+/* One renderer, three views. maki = site header, supplier header, then the lines. */
+function renderFive(tblId, rows, view, emptyMsg){
+  const tbl = document.getElementById(tblId);
+  if(!tbl) return;
+  const withSite = (view!=='maki'), cols = withSite ? 7 : 5;
+  tbl.querySelector('thead').innerHTML = fiveHead(withSite);
+  const tb = tbl.querySelector('tbody');
+  if(!rows.length){ tb.innerHTML = '<tr><td colspan="'+cols+'" class="empty">'+emptyMsg+'</td></tr>'; return; }
+
+  if(view==='maki'){
+    let html = '';
+    SITES.forEach(s=>{
+      const rs = rows.filter(r=>r.site===s.code);
+      if(!rs.length) return;
+      const g = siteRag(s.code), sups = {};
+      rs.forEach(r=>{ (sups[r.sup] = sups[r.sup] || []).push(r); });
+      const keys = Object.keys(sups).sort((a,b)=> hrsOf(sups[a][0])-hrsOf(sups[b][0]) || a.localeCompare(b));
+      const nUrg = rs.filter(r=>r.status==='URGENT').length;
+      html += '<tr class="sitehd"><td colspan="'+cols+'">'+
+        '<span class="dotrag '+g.rag+'"></span><b>'+s.code+' '+s.name+'</b>'+
+        '<span class="sh-sub">'+rs.length+' line'+(rs.length===1?'':'s')+', '+keys.length+' supplier'+(keys.length===1?'':'s')+
+        (nUrg ? ', <b class="og-bad">'+nUrg+' urgent</b>' : '')+
+        (g.stale ? ', <b class="og-bad">count first</b>' : '')+'</span></td></tr>';
+      keys.forEach(sup=>{
+        const list = sups[sup].slice().sort((a,b)=> urgFirst(a)-urgFirst(b) || daysOf(a)-daysOf(b) || a.item.name.localeCompare(b.item.name));
+        const f = list[0];
+        html += '<tr class="suphd"><td colspan="'+cols+'"><b>'+sup+'</b>'+
+          '<span class="sh-cut'+(cutIsToday(f)?' today':'')+'">order by '+cutText(f)+'</span>'+
+          (cutSub(f) ? '<span class="sh-sub">'+cutSub(f)+'</span>' : '')+'</td></tr>';
+        html += list.map(r=>fiveRow(r, false, false)).join('');
+      });
+    });
+    tb.innerHTML = html;
+    return;
+  }
+  const BY = {
+    cut: (a,b)=> hrsOf(a)-hrsOf(b) || seatOf(a)-seatOf(b) || a.sup.localeCompare(b.sup) || urgFirst(a)-urgFirst(b) || daysOf(a)-daysOf(b) || a.item.name.localeCompare(b.item.name),
+    sup: (a,b)=> a.sup.localeCompare(b.sup) || hrsOf(a)-hrsOf(b) || seatOf(a)-seatOf(b) || urgFirst(a)-urgFirst(b) || daysOf(a)-daysOf(b) || a.item.name.localeCompare(b.item.name)
+  };
+  tb.innerHTML = rows.slice().sort(BY[view] || BY.cut).map(r=>fiveRow(r, true, true)).join('');
+}
+
+/* Called renderSupCards because the boot sequence in part_d calls it by that name. */
+function renderSupCards(){
+  const rows = ROWS.filter(r=>['URGENT','ORDER'].includes(r.status));
+  const sum  = document.getElementById('ogsum');
+  document.getElementById('ogsortchips').innerHTML = Object.keys(OGVIEW).map(k=>
+    '<button class="chip" data-ogsort="'+k+'" aria-pressed="'+(ogSort===k)+'">'+OGVIEW[k]+'</button>').join('');
+  document.querySelectorAll('#ogsortchips .chip').forEach(x=>x.onclick=()=>{ ogSort = x.dataset.ogsort; renderSupCards(); });
+
+  if(!rows.length){
+    sum.innerHTML = 'Nothing to order today.';
+  } else {
+    const nSites = new Set(rows.map(r=>r.site)).size;
+    const nSups  = new Set(rows.map(r=>r.sup)).size;
+    const todayN = new Set(rows.filter(r=>cutIsToday(r)).map(r=>r.site+'|'+r.sup)).size;
+    const urg    = rows.filter(r=>r.status==='URGENT').length;
+    sum.innerHTML = '<b>'+rows.length+' line'+(rows.length===1?'':'s')+' to order</b> across '+nSites+' site'+(nSites===1?'':'s')+
+      ' and '+nSups+' supplier'+(nSups===1?'':'s')+'. '+
+      (todayN ? '<b>'+todayN+' cut-off'+(todayN>1?'s':'')+' fall'+(todayN>1?'':'s')+' today.</b> ' : 'No cut-off falls today. ')+
+      (urg ? '<b class="og-bad">'+urg+' line'+(urg>1?'s':'')+' cannot be reached by the next delivery, so call the AM as well as ordering.</b>' : '');
+  }
+  renderFive('t-order', rows, ogSort,
+    'Nothing to order today. No line at any of the nine sites falls below its trigger before the next reachable delivery. The 07:00 email will not send.');
+  renderWatchTable();
+}
+
+/* Covered for now, but next in line. Same five columns, same view. */
+function renderWatchTable(){
+  const box = document.getElementById('watchbox');
+  if(!box) return;
+  const rows = ROWS.filter(r=>r.status==='WATCH');
+  const nSites = new Set(rows.map(r=>r.site)).size;
+  document.getElementById('watchsum').innerHTML = 'Not due yet: <b>'+rows.length+' line'+(rows.length===1?'':'s')+
+    '</b> to watch across '+nSites+' site'+(nSites===1?'':'s')+'. Click to open.';
+  renderFive('t-watch', rows, ogSort, 'Nothing on watch.');
+}
+
+/* ---------------- tables ---------------- */
+function rowHtml(r, withSite){
+  const pill = '<span class="pill p-'+r.status+'">'+LABEL[r.status]+'</span>';
+  const prov = r.provisional ? '<div class="prov">PROVISIONAL: '+r.provStatus+'</div>' : '';
+  const stale = r.stale ? '<span class="stale">stale count</span>' : '';
+  const asm   = r.assumed ? '<span class="asm" title="Delivery days are on the tab, the cut-off time is borrowed from the nearest tab that states one">CUT-OFF ASSUMED</span>' : '';
+  const cause = (r.comp && r.comp.cause) ? '<div class="why" style="margin-top:3px"><i>Kobas orders: '+r.comp.cause+'</i></div>' : '';
+
+  /* 1. what is on the shelf now, with a bar against the Baseline */
+  let stockCell = '<span class="qty">'+fmtQty(r.stock, r.item)+'</span>';
+  if(r.pctBaseline!=null){
+    const pct = Math.max(0, Math.min(100, Math.round(r.pctBaseline*100)));
+    const cls = pct<60 ? ' low' : (pct<100 ? ' mid' : '');
+    stockCell += '<span class="bar'+cls+'" title="'+pct+'% of the Baseline of '+fmtQty(r.baseline,r.item)+'"><i style="width:'+pct+'%"></i></span>'+
+      '<span class="sub2'+(r.vsBaseline<0?' warn':'')+'">'+(r.vsBaseline<0
+        ? fmtQty(-r.vsBaseline, r.item)+' under Baseline'
+        : fmtQty(r.vsBaseline, r.item)+' over Baseline')+'</span>';
+  }
+
+  /* 2. usage a day */
+  const usageCell = r.usage!=null
+    ? '<span class="qty">'+(Math.round(r.usage*100)/100)+'</span><span class="sub2">'+(r.item.unit==='kg'?'kg':(r.item.unit==='pack'?'packs':'cases'))+' a day</span>'
+    : '<span class="sub2">no usage</span>';
+
+  /* 3. days left on that usage, and the day it runs out */
+  const daysCell = (r.cover==null) ? '-'
+    : '<span class="qty">'+(r.cover<10? r.cover.toFixed(1): Math.round(r.cover))+'</span>'+
+      (r.runOut ? '<span class="sub2'+(r.cover<7?' warn':'')+'">out '+fmtDabs(r.runOut).replace(/^(\w{3})\w*/, '$1')+'</span>' : '');
+
+  /* 4. what is left the day the next possible delivery lands */
+  let arriveCell = '-';
+  if(r.atDelivery!=null && r.del){
+    const v = r.atDelivery;
+    arriveCell = (v < 0)
+      ? '<span class="qty" style="color:#D1240F">runs out first</span><span class="sub2 warn">short '+fmtQty(-v, r.item)+' by '+fmtD(r.del.next.del)+'</span>'
+      : '<span class="qty">'+fmtQty(v, r.item)+'</span><span class="sub2">left on '+fmtD(r.del.next.del)+'</span>';
+  }
+
+  /* 5. Baseline, from Sophie's PAR sheet where there is one */
+  const parTitle = (r.baselineSource==='PAR sheet')
+    ? 'PAR level from the EC stock monitoring sheet: 7 days cover. '
+    : 'No PAR on the sheet for this line, so it is computed: '+(r.usage!=null ? (Math.round(r.usage*100)/100)+' '+r.item.unit+' a day ('+r.usageSource+') x ' : '')+(r.baselineDays!=null? r.baselineDays.toFixed(1):'?')+' days (longest routine delivery gap + buffer), rounded up. ';
+  const baseCell = '<span class="qty">'+(r.baseline!=null? fmtQty(r.baseline, r.item) : '-')+'</span>'+
+    (r.baselineSource==='PAR sheet' ? '<span class="parflag" title="From the PAR sheet">PAR</span>' : '<span class="parflag" title="Computed, not on the PAR sheet" style="color:var(--muted)">CALC</span>')+
+    (r.period && r.period.reserveOpen && r.floor!=null ? '<span class="sub2">floor '+fmtQty(r.floor, r.item)+'</span>' : '');
+
+  return '<tr><td>'+(withSite? r.site+' '+siteName(r.site) : r.site)+stale+'</td>'+
+    '<td><b>'+r.item.name+'</b><div class="why">'+r.why+'</div>'+cause+prov+'</td>'+
+    '<td class="num">'+stockCell+'</td>'+
+    '<td class="num" title="'+(r.usageSource||'')+'">'+usageCell+'</td>'+
+    '<td class="num"'+(r.usageHist!=null && r.coverKobas!=null ? ' title="Stock / 8-month average daily usage. Kobas itself reports '+fmtDays(r.coverKobas)+' remaining."' : '')+'>'+daysCell+'</td>'+
+    '<td class="num" title="Stock now minus usage between today and the earliest delivery this route can still make.">'+arriveCell+'</td>'+
+    '<td class="num" title="'+parTitle+'Run-out floor today '+(r.floor!=null? fmtQty(r.floor, r.item):'-')+'.">'+baseCell+'</td>'+
+    '<td class="num" title="'+(r.period && r.period.reserveOpen ? 'Reserve open: run-out floor minus stock' : 'Baseline minus stock')+(r.inbound>0 ? ', minus '+fmtQty(r.inbound, r.item)+' already on its way. Gap to the '+(r.period&&r.period.reserveOpen?'floor':'Baseline')+' is '+fmtQty(r.orderQty, r.item)+'.' : '')+'">'+(r.netOrder!=null ? (r.netOrder>0 ? '<b class="oq">'+fmtQty(r.netOrder, r.item)+'</b>' : '<span style="color:var(--muted)">0</span>') : '-')+(r.comp && r.comp.onOrder>0 ? '<span class="onord'+(r.comp.covered?' cov':'')+'" title="Open Kobas order">'+fmtQty(r.comp.onOrder, r.item)+' on order'+(r.comp.due? ', due '+DAYNAME[r.comp.due.getDay()].slice(0,3)+' '+r.comp.due.getDate() : '')+'</span>' : '')+'</td>'+
+    '<td>'+pill+'</td><td>'+r.sup+asm+'</td></tr>';
+}
+function renderActionTable(){
+  const rows = ROWS.filter(r=>['URGENT','ORDER','WATCH','CHECK'].includes(r.status));
+  const tb = document.querySelector('#t-action tbody');
+  if(!tb) return;                                   // the dense decision table left the Today tab in v1.7.0
+  tb.innerHTML = rows.length ? rows.map(r=>rowHtml(r,true)).join('')
+    : '<tr><td colspan="10" class="empty">Nothing needs a decision today.</td></tr>';
+}
+function renderSiteTable(){
+  let rows = ROWS;
+  if(siteFilter!=='ALL')  rows = rows.filter(r=>r.site===siteFilter);
+  if(statusFilter!=='ALL')rows = rows.filter(r=>r.status===statusFilter);
+  const tb = document.querySelector('#t-site tbody');
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="10" class="empty">Nothing matches that filter.</td></tr>'; return; }
+  let html='', last=null;
+  rows.forEach(r=>{
+    if(siteFilter==='ALL' && r.site!==last){ html+='<tr class="sitehd"><td colspan="10">'+r.site+' '+siteName(r.site)+'</td></tr>'; last=r.site; }
+    html += rowHtml(r,false);
+  });
+  tb.innerHTML = html;
+}
+function renderChips(){
+  document.getElementById('sitechips').innerHTML =
+    ['ALL'].concat(SITES.map(s=>s.code)).map(c=>{
+      const n = c==='ALL'? ROWS.filter(r=>RANK[r.status]<3).length
+                         : ROWS.filter(r=>r.site===c && RANK[r.status]<3).length;
+      return '<button class="chip" data-site="'+c+'" aria-pressed="'+(siteFilter===c)+'">'+
+        (c==='ALL'?'All sites':c+' '+siteName(c))+'<span class="b">'+n+'</span></button>';
+    }).join('');
+  document.getElementById('filterchips').innerHTML =
+    ['ALL'].concat(TILES.map(t=>t.k)).map(k=>
+      '<button class="chip" data-status="'+k+'" aria-pressed="'+(statusFilter===k)+'">'+
+      (k==='ALL'?'All statuses':LABEL[k])+'</button>').join('');
+  document.querySelectorAll('#sitechips .chip').forEach(b=>b.onclick=()=>{siteFilter=b.dataset.site;renderChips();renderSiteTable();});
+  document.querySelectorAll('#filterchips .chip').forEach(b=>b.onclick=()=>{statusFilter=b.dataset.status;renderChips();renderSiteTable();renderTiles();});
+}

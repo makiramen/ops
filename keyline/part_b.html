@@ -1,0 +1,373 @@
+<script>
+/* ============================================================
+   MAKI & RAMEN: KEYLINE CONTROL
+   Single-file front end. All logic client-side so the page
+   re-evaluates live as cut-offs pass through the day.
+   Replace window.KEYLINE_DATA.lines with the Kobas pull.
+   ============================================================ */
+
+const SITES = [
+  {code:'M9',  name:'Manchester',   venue:2},
+  {code:'M10', name:'Leeds',        venue:13},
+  {code:'M11', name:'Leicester',    venue:24},
+  {code:'M14', name:'Meadowhall',   venue:37},
+  {code:'M16', name:'Nottingham',   venue:42},
+  {code:'M17', name:'Lakeside',     venue:49},
+  {code:'M18', name:'Soho',         venue:51},
+  {code:'M19', name:'Shoreditch',   venue:58},
+  {code:'M20', name:'Southampton',  venue:60}
+];
+
+/* 13 keylines: exactly the products on Sophie's EC stock monitoring sheet.
+   buffer = safety days (7 for every line). unit = how the chef counts it; everything
+   shows as CASE except rump, which is 3kg per pack. Michael 10 Sep 2026: salmon and
+   True World removed with pork belly diced, chicken paste, sushi rice and vegan
+   tonkotsu paste, because none of them is on the sheet. Prawn, ebi and squid went
+   on 09 Sep. Do not add any of them back without a sheet row. */
+const ITEMS = [
+  {id:'tonkotsu',  name:'Tonkotsu broth concentrate', pack:'8 x 1800g case', unit:'case', buffer:7,   crit:'Critical'},
+  {id:'chkbroth',  name:'Chicken broth concentrate',  pack:'8 x 1800g case', unit:'case', buffer:7,   crit:'Critical'},
+  {id:'karaage',   name:'Chicken karaage',            pack:'10 x 1000g case',unit:'case', buffer:7,   crit:'Core'},
+  {id:'katsu',     name:'Chicken katsu',              pack:'10 x 1000g case',unit:'case', buffer:7,   crit:'Core'},
+  {id:'pbsliced',  name:'Pork belly sliced',          pack:'10 x 1000g case',unit:'case', buffer:7,   crit:'Core'},
+  {id:'noodle',    name:'Ramen noodle',               pack:'10 x 5 case',    unit:'case', buffer:7,   crit:'Critical'},
+  {id:'rump',      name:'Steak rump',                 pack:'3kg per pack',   unit:'pack', buffer:7,   crit:'Core'},
+  {id:'chkfillet', name:'Chicken fillet (6mm)',       pack:'2 x 2500g case', unit:'case', buffer:7,   crit:'Core'},
+  {id:'soba',      name:'Soba sauce',                 pack:'2kg tub',        unit:'case', buffer:7,   crit:'Core'},
+  {id:'teriyaki',  name:'Spicy teriyaki sauce',       pack:'2kg tub',        unit:'case', buffer:7,   crit:'Core'},
+  {id:'tataki',    name:'Beef tataki chilled',        pack:'2kg tub',        unit:'case', buffer:7, crit:'Non-core'},
+  {id:'hell',      name:'Hell sauce',                 pack:'2kg tub',        unit:'case', buffer:7,   crit:'Core'},
+  {id:'gyoza',     name:'Chicken and veg gyoza',      pack:'10 x 600g case', unit:'case', buffer:7,   crit:'Core'}
+];
+
+/* Estate supplier map. Evidence: M9 and M18 stock lists agree on 16 of 18.
+   siteOverride carries the two known exceptions. */
+const SUPPLIER_OF = {
+  tonkotsu:'JFC', chkbroth:'JFC', karaage:'JFC', katsu:'JFC', pbsliced:'JFC',
+  soba:'JFC', teriyaki:'JFC', tataki:'JFC', hell:'JFC', chkfillet:'JFC',
+  noodle:'JFE',
+  gyoza:'Harro',
+  rump:'Dunster Farm'
+};
+const SUPPLIER_OVERRIDE = { 'M17|rump':'Brakes', 'M18|rump':'Brakes', 'M19|rump':'Brakes', 'M20|rump':'Brakes' };
+const UNMAPPED = [];
+
+/* Supplier routes, read from the delivery schedule sheet
+   (1EtSW6mw9Zl3dEG9idM7F_C1JP0deHBZYobpohxPFDr8), re-read 07 Sep 2026 (evening)
+   after Sophie's update: every England site tab now states delivery days AND a
+   cut-off time for all four remaining keyline suppliers, so nothing is assumed any
+   more. True World routes were deleted on 10 Sep 2026 with salmon. Dunsters and Brakes:
+   14:00 business day before (M20 Brakes) or 12:00 the day before (London Brakes).
+   verified:false is kept only for a tab that gives no usable cut-off. */
+const H_MWF16 = [{day:5,time:'16:00',dev:1},{day:2,time:'16:00',dev:3},{day:4,time:'16:00',dev:5}];
+const H_WF12  = [{day:1,time:'12:00',dev:3},{day:3,time:'12:00',dev:5}];
+const H_TF14  = [{day:1,time:'14:00',dev:2},{day:4,time:'14:00',dev:5}];
+const JFE_MWF = [{day:5,time:'12:00',dev:1},{day:2,time:'12:00',dev:3},{day:4,time:'12:00',dev:5}];
+const JFE_TF  = [{day:1,time:'12:00',dev:2},{day:4,time:'12:00',dev:5}];
+const JFE_WF  = [{day:2,time:'12:00',dev:3},{day:4,time:'12:00',dev:5}];
+const JFE_MON_FRI12 = [{day:5,time:'12:00',dev:1}];                       // Monday delivery, Friday 12:00 cut-off (M10, M14)
+const BRAKES  = {verified:true, assumed:false, cutoffs:JFE_MWF};             // London: Mon/Wed/Fri, 12:00 the day before
+const BRAKES_M20 = {verified:true, assumed:false, cutoffs:[{day:5,time:'14:00',dev:1},{day:2,time:'14:00',dev:3},{day:4,time:'14:00',dev:5}]};
+const DUNST   = {verified:true, assumed:false, cutoffs:[{day:5,time:'14:00',dev:1},{day:2,time:'14:00',dev:3},{day:4,time:'14:00',dev:5}]};
+/* JFC routes at M9, M10, M11, M14 and M16 corrected 09/09/2026 (Michael's instruction), fromKobas:true.
+   Sophie's delivery schedule sheet had all five on ONE JFC order a week, which built Baselines of 17 to 20
+   days. Six weeks of Kobas orders (27/07 to 08/09, part_orders) show the real routine: only order-day to
+   delivery-day pairs seen 3 times or more in that window are kept, one-offs discarded.
+     M9  Tue -> Fri (4) and Thu -> Tue (4). Discarded: Fri -> Tue (2), three singles.
+     M10 Tue -> Wed (5) and Fri -> Sat (3). Discarded: Thu -> Fri (2), Mon -> Fri (2), three singles.
+     M11 Sun -> Wed (4), still weekly but Sunday for Wednesday, not Tuesday for Friday. Only 6 JFC orders
+         in the window, so this is the thinnest evidence of the five. Discarded: Sun -> Thu, Mon -> Wed.
+     M14 Tue -> Fri (5) and Fri -> Tue (5). Discarded: six singles.
+     M16 Mon -> Tue (5) and Fri -> Sat (3). Discarded: Thu -> Fri (2), Sun -> Sun (1).
+   Cut-off TIMES are unchanged, they still come from Sophie's sheet, and the observed placing times support
+   them everywhere except M9, which places at 20:30 to 22:30 every time and so stays late by the sheet.
+   Still on the sheet and NOT corrected: M17 JFC (sheet Fri -> Mon, Kobas Sun -> Mon x3), and M18 and M19,
+   which are modelled as rolling next-day but actually order on three fixed days (M18 Mon/Wed/Fri) and two
+   (M19 Sun and Thu), so their Baselines are understated rather than overstated. */
+const ROUTES = [
+  /* M9 Manchester, tab MA313A */
+  {site:'M9',  sup:'Harro', verified:true, min:350, cutoffs:H_WF12},
+  {site:'M9',  sup:'JFE',   verified:true, min:null, cutoffs:JFE_WF},
+  {site:'M9',  sup:'JFC',   verified:true, min:200, fromKobas:true, cutoffs:[{day:2,time:'12:00',dev:5},{day:4,time:'12:00',dev:2}]},
+  {site:'M9',  sup:'Dunster Farm', ...DUNST},
+  /* M10 Leeds, tab MAK7A */
+  {site:'M10', sup:'Harro', verified:true, min:350, cutoffs:H_WF12},
+  {site:'M10', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MON_FRI12},
+  {site:'M10', sup:'JFC',   verified:true, min:200, fromKobas:true, cutoffs:[{day:2,time:'10:00',dev:3},{day:5,time:'10:00',dev:6}]},
+  {site:'M10', sup:'Dunster Farm', ...DUNST},
+  /* M11 Leicester, tab MA314 */
+  {site:'M11', sup:'Harro', verified:true, min:350, cutoffs:H_TF14},
+  {site:'M11', sup:'JFE',   verified:true, min:null, cutoffs:JFE_TF},
+  {site:'M11', sup:'JFC',   verified:true, min:200, fromKobas:true, cutoffs:[{day:0,time:'10:00',dev:3}]},
+  {site:'M11', sup:'Dunster Farm', ...DUNST},
+  /* M14 Meadowhall, tab MA317 */
+  {site:'M14', sup:'Harro', verified:true, min:350, cutoffs:[{day:4,time:'12:00',dev:1},{day:1,time:'12:00',dev:3},{day:3,time:'12:00',dev:5}]},
+  {site:'M14', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MON_FRI12},
+  {site:'M14', sup:'JFC',   verified:true, min:200, fromKobas:true, cutoffs:[{day:2,time:'12:00',dev:5},{day:5,time:'12:00',dev:2}]},
+  {site:'M14', sup:'Dunster Farm', ...DUNST},
+  /* M16 Nottingham, tab MA319 */
+  {site:'M16', sup:'Harro', verified:true, min:350, cutoffs:H_TF14},
+  {site:'M16', sup:'JFE',   verified:true, min:null, cutoffs:JFE_TF},
+  {site:'M16', sup:'JFC',   verified:true, min:200, fromKobas:true, cutoffs:[{day:1,time:'12:00',dev:2},{day:5,time:'12:00',dev:6}]},
+  {site:'M16', sup:'Dunster Farm', ...DUNST},
+  /* M17 Lakeside, tab MA320 */
+  {site:'M17', sup:'Harro', verified:true, min:200, cutoffs:[{day:5,time:'16:00',dev:1},{day:2,time:'16:00',dev:3},{day:3,time:'16:00',dev:4}]},
+  {site:'M17', sup:'JFE',   verified:true, min:null, cutoffs:[{day:5,time:'12:00',dev:1},{day:2,time:'12:00',dev:3}]},
+  {site:'M17', sup:'JFC',   verified:true, min:200, cutoffs:[{day:5,time:'12:00',dev:1},{day:3,time:'12:00',dev:4}]},
+  {site:'M17', sup:'Brakes', ...BRAKES},
+  /* M18 Soho, tab MA321 */
+  {site:'M18', sup:'Harro', verified:true, min:200, cutoffs:H_MWF16},
+  {site:'M18', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MWF},
+  {site:'M18', sup:'JFC',   verified:true, min:100, rolling:true, rollingTime:'12:00', noDeliver:[3]},
+  {site:'M18', sup:'Brakes', ...BRAKES},
+  /* M19 Shoreditch, tab MA323 */
+  {site:'M19', sup:'Harro', verified:true, min:200, cutoffs:H_MWF16},
+  {site:'M19', sup:'JFE',   verified:true, min:null, cutoffs:JFE_MWF},
+  {site:'M19', sup:'JFC',   verified:true, min:100, rolling:true, rollingTime:'12:00', noDeliver:[3]},
+  {site:'M19', sup:'Brakes', ...BRAKES},
+  /* M20 Southampton, tab MA324 (updated by Sophie 07 Sep) */
+  {site:'M20', sup:'Harro', verified:true, min:300, cutoffs:[{day:5,time:'14:00',dev:1},{day:3,time:'14:00',dev:4}]},
+  {site:'M20', sup:'JFE',   verified:true, min:null, cutoffs:[{day:0,time:'12:00',dev:1}]},
+  {site:'M20', sup:'JFC',   verified:true, min:200, cutoffs:[{day:1,time:'12:00',dev:3}]},
+  {site:'M20', sup:'Brakes', ...BRAKES_M20},
+];
+const UNKNOWN_SITES = [];          // every England site now has a tab (07 Sep)
+const NO_CUTOFF_SUPPLIERS = [];
+
+const DAYNAME = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtD(d){
+  const t=ukNow(); t.setHours(0,0,0,0);
+  const diff=Math.round((new Date(d).setHours(0,0,0,0)-t)/864e5);
+  const base=DAYNAME[d.getDay()];
+  if(diff===0) return base+' (today)';
+  if(diff>0 && diff<7) return base;
+  return base+' '+d.getDate()+' '+MON[d.getMonth()];
+}
+
+function fmtDabs(d){ return DAYNAME[d.getDay()]+' '+d.getDate()+' '+MON[d.getMonth()]; }
+
+/* ---------------- route resolution ---------------- */
+function routeFor(site, sup){
+  if(NO_CUTOFF_SUPPLIERS.includes(sup))
+    return {verified:false, note:sup+' has no cut-off time recorded anywhere'};
+  if(UNKNOWN_SITES.includes(site))
+    return {verified:false, note:site+' has no tab in the delivery schedule'};
+  const r = ROUTES.find(x=>x.site===site && x.sup===sup);
+  if(!r) return {verified:false, note:'No route on file for '+site+' / '+sup};
+  return r;
+}
+const startOfDay = d => {const x=new Date(d); x.setHours(0,0,0,0); return x;};
+const addDays = (d,n) => {const x=new Date(d); x.setDate(x.getDate()+n); return x;};
+const hhmm = t => {const [h,m]=t.split(':').map(Number); return h+m/60;};
+
+/* Next reachable cut-off and the delivery it buys, plus the one after. */
+function nextDeliveries(route, now){
+  if(!route || route.verified===false) return null;
+  const today = startOfDay(now), hourNow = now.getHours()+now.getMinutes()/60;
+  const events = [];
+  for(let k=0;k<21;k++){
+    const d = addDays(today,k), dow = d.getDay();
+    if(route.rolling){
+      if(!route.anyDay && (dow===0 || dow===6)) continue;   // business-day cut-offs unless anyDay
+      if(k===0 && hourNow >= hhmm(route.rollingTime)) continue;
+      let del = addDays(d,1);
+      let guard=0;
+      while((route.noDeliver||[]).includes(del.getDay()) || del.getDay()===0){
+        del = addDays(del,1); if(++guard>7) break;
+      }
+      events.push({cut:d, cutTime:route.rollingTime, del, cutDow:dow});
+    } else {
+      for(const c of route.cutoffs){
+        if(c.day!==dow) continue;
+        if(k===0 && hourNow >= hhmm(c.time)) continue;
+        let ahead = (c.dev - dow + 7) % 7; if(ahead===0) ahead = 7;
+        events.push({cut:d, cutTime:c.time, del:addDays(d,ahead), cutDow:dow});
+      }
+    }
+    if(events.length>=6) break;
+  }
+  events.sort((a,b)=> a.cut-b.cut || hhmm(a.cutTime)-hhmm(b.cutTime));
+  if(!events.length) return null;
+  const now1 = events[0];
+  const skip = events.find(e=> startOfDay(e.del) > startOfDay(now1.del)) || null;   // next delivery strictly later than the one we can still catch
+  const dd = t => Math.round((startOfDay(t)-startOfDay(now))/864e5);
+  return {
+    next: now1, skip,
+    Rnow:  dd(now1.del),
+    Rskip: skip ? dd(skip.del) : dd(now1.del)+7,
+    cutIsToday: dd(now1.cut)===0,
+    hoursToCut: (startOfDay(now1.cut)/1 + hhmm(now1.cutTime)*36e5 - now)/36e5
+  };
+}
+
+/* ---------------- PAR levels (Sophie, "EC stock monitoring info" sheet, 09/09/2026) ----------------
+   Per site and line, the permanent holding that covers 7 days. Every keyline has a PAR; nothing is computed.
+   Sheet units: case, rump by 3kg pack. The PAR IS the Baseline. The computed fallback is kept in
+   the engine but no line uses it any more. Sheet also carries M21, held for later. */
+const PAR = {
+  tonkotsu: {M9:14,M10:9,M11:5,M14:10,M16:7,M17:6,M18:7,M19:5,M20:9,M21:12},
+  chkbroth: {M9:6,M10:3,M11:2,M14:4,M16:3,M17:4,M18:4,M19:3,M20:6,M21:6},
+  karaage:  {M9:19,M10:10,M11:7,M14:17,M16:10,M17:12,M18:10,M19:8,M20:14,M21:18},
+  katsu:    {M9:5,M10:3,M11:2,M14:2,M16:2,M17:2,M18:2,M19:2,M20:2,M21:3},
+  pbsliced: {M9:5,M10:3,M11:2,M14:3,M16:3,M17:3,M18:3,M19:2,M20:3,M21:3},
+  noodle:   {M9:40,M10:16,M11:15,M14:26,M16:18,M17:13,M18:23,M19:17,M20:20,M21:30},
+  rump:     {M9:17,M10:7,M11:8,M14:11,M16:7,M17:8,M18:12,M19:8,M20:20,M21:20},
+  chkfillet:{M9:2,M10:1,M11:1,M14:1,M16:1,M17:2,M18:2,M19:1,M20:2,M21:2},
+  soba:     {M9:4,M10:2,M11:2,M14:3,M16:3,M17:1,M18:2,M19:2,M20:2,M21:3},
+  teriyaki: {M9:4,M10:1,M11:2,M14:2,M16:3,M17:1,M18:1,M19:1,M20:1,M21:2},
+  tataki:   {M9:3,M10:2,M11:2,M14:2,M16:3,M17:1,M18:2,M19:2,M20:2,M21:3},
+  hell:     {M9:2,M10:2,M11:1,M14:2,M16:2,M17:1,M18:1,M19:1,M20:2,M21:2},
+  gyoza:    {M9:5,M10:2,M11:2,M14:3,M16:3,M17:3,M18:2,M19:1,M20:4,M21:4}
+};
+function parFor(site,item){ const r=PAR[item]; return (r && r[site]!=null) ? r[site] : null; }
+
+/* ---------------- trading period and the Baseline ----------------
+   Michael, 08/09/2026: no min bottom line, no max bottom line. One BASELINE per site and line: the permanent
+   stock holding that must be in store, built from the 8-month average usage and the delivery route.
+   Baseline = usage x (longest routine gap to the delivery after next on this route + item buffer), rounded UP.
+   It does not move with the day of the week. Weeks 1 and 2 of the 4-week trading period: hold the Baseline,
+   Order = Baseline - stock. Weeks 3 and 4: the reserve is open, sites may run into the Baseline down to the
+   run-out floor (usage x days to the delivery after next + buffer, the old daily bottom line), Order = floor - stock.
+   The Baseline is topped back up from week 1 of the next period, not before. */
+const PERIOD_ANCHOR = new Date(2026, 7, 31);   // Monday 31/08/2026 = week 1 of a 4-week trading period. Change here only.
+function periodWeek(now){
+  const d = Math.floor((startOfDay(now) - startOfDay(PERIOD_ANCHOR)) / 864e5);
+  const w = Math.floor(d / 7);
+  return ((w % 4) + 4) % 4 + 1;              // 1..4
+}
+function periodInfo(now){
+  const wk = periodWeek(now);
+  const dow = (startOfDay(now).getDay() + 6) % 7;                 // Monday = 0
+  const monday = addDays(startOfDay(now), -dow);
+  const reserveOpen = wk >= 3;
+  const nextChange = addDays(monday, reserveOpen ? (5 - wk) * 7 : (3 - wk) * 7);   // Monday the mode flips
+  return {week: wk, monday, reserveOpen, nextChange};
+}
+const _BLD = {};
+/* Longest routine gap to the delivery after next on this route, probed at 09:00 on each of the next 7 days. */
+function baselineDays(route, B){
+  if(!route || route.verified===false) return null;
+  const key = JSON.stringify([route.cutoffs||null, route.rolling||null, route.rollingTime||null, route.anyDay||null, route.noDeliver||null]);
+  if(_BLD[key]==null){
+    let worst = 0;
+    for(let k=0;k<7;k++){
+      const probe = addDays(startOfDay(NOW_FOR_BASELINE()), k); probe.setHours(9,0,0,0);
+      const d = nextDeliveries(route, probe);
+      if(d && d.Rskip > worst) worst = d.Rskip;
+    }
+    _BLD[key] = worst || null;
+  }
+  return _BLD[key]!=null ? _BLD[key] + B : null;
+}
+// The engine runs on UK wall clock whatever the viewer's zone (Michael views from Dubai, +3h): Kobas
+// timestamps and the cut-offs are UK wall clock compared as naive dates, so NOW must be too.
+function ukNow(){ try{ const p=new Intl.DateTimeFormat('en-GB',{timeZone:'Europe/London',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()); const g=t=>+p.find(x=>x.type===t).value; return new Date(g('year'),g('month')-1,g('day'),g('hour')%24,g('minute'),g('second')); }catch(e){ return new Date(); } }
+function NOW_FOR_BASELINE(){ return (typeof NOW !== 'undefined' && NOW) ? NOW : ukNow(); }
+
+/* 8-month average daily usage per site and line, in the line's keyline unit per day (cases, packs, kg).
+   Source: Kobas Stock Ingredient Movements, 1 Jan to 16 Aug 2026 (last two weeks of August excluded, Sophie's
+   definition), one report per site per two-month block, Units Used x measure per unit summed across pack rows and
+   divided by the keyline pack. Pulled 07 Sep 2026. Trading days per site in USAGE8M_DAYS. A missing key falls
+   back to the usage Kobas implies from the current position. */
+const USAGE8M = {"M9":{"tonkotsu":1.782,"chkbroth":0.703,"karaage":2.933,"katsu":0.571,"pbsliced":0.643,"noodle":5.652,"rump":2.042,"chkfillet":0.208,"soba":1.14,"teriyaki":0.91,"tataki":1.15,"hell":1.191,"gyoza":0.656},"M10":{"tonkotsu":0.927,"chkbroth":0.305,"karaage":1.765,"katsu":0.305,"pbsliced":0.377,"noodle":2.934,"rump":1.013,"chkfillet":0.089,"soba":0.567,"teriyaki":0.522,"tataki":0.547,"hell":0.628,"gyoza":0.353},"M11":{"tonkotsu":0.463,"chkbroth":0.298,"karaage":1.287,"katsu":0.251,"pbsliced":0.164,"noodle":1.788,"rump":0.736,"chkfillet":0.107,"soba":0.528,"teriyaki":0.465,"tataki":0.394,"hell":0.371,"gyoza":0.295},"M14":{"tonkotsu":0.816,"chkbroth":0.564,"karaage":2.207,"katsu":0.355,"pbsliced":0.279,"noodle":3.019,"rump":1.463,"chkfillet":0.16,"soba":1.085,"teriyaki":0.71,"tataki":0.781,"hell":0.513,"gyoza":0.493},"M16":{"tonkotsu":0.882,"chkbroth":0.517,"karaage":1.804,"katsu":0.316,"pbsliced":0.343,"noodle":3.198,"rump":1.121,"chkfillet":0.15,"soba":0.793,"teriyaki":0.585,"tataki":0.616,"hell":0.659,"gyoza":0.415},"M17":{"tonkotsu":0.517,"chkbroth":0.5,"karaage":1.81,"katsu":0.276,"pbsliced":0.188,"noodle":2.108,"rump":1.008,"chkfillet":0.133,"soba":0.839,"teriyaki":0.574,"tataki":0.438,"hell":0.471,"gyoza":0.356},"M18":{"tonkotsu":1.024,"chkbroth":0.642,"karaage":1.372,"katsu":0.252,"pbsliced":0.357,"noodle":3.419,"rump":1.324,"chkfillet":0.143,"soba":0.514,"teriyaki":0.321,"tataki":0.665,"hell":0.729,"gyoza":0.315},"M19":{"tonkotsu":0.717,"chkbroth":0.372,"karaage":1.077,"katsu":0.283,"pbsliced":0.21,"noodle":1.947,"rump":1.916,"chkfillet":0.083,"soba":0.535,"teriyaki":0.31,"tataki":0.556,"hell":0.394,"gyoza":0.261},"M20":{"tonkotsu":1.275,"chkbroth":0.901,"karaage":2.13,"katsu":0.413,"pbsliced":0.403,"noodle":3.864,"rump":2.074,"chkfillet":0.164,"soba":1.073,"teriyaki":0.524,"tataki":0.964,"hell":0.671,"gyoza":0.463}};
+const USAGE8M_DAYS = {"M9":228,"M10":228,"M11":228,"M14":228,"M16":228,"M17":192,"M18":164,"M19":51,"M20":45};
+const USAGE8M_META = {"from":"2026-01-01","to":"2026-08-16","pulled":"2026-09-07","firstTradingDay":{"M17":"2026-02-06","M18":"2026-03-06","M19":"2026-06-27","M20":"2026-07-03"},"source":"Kobas Stock Ingredient Movements, one report per site per two-month block (Jan-Feb, Mar-Apr, May-Jun, Jul to 16 Aug); Units Used x measure per unit summed across pack rows, divided by the keyline pack; trading days = days with sales > 0 in Mona Lisa"};
+
+/* ---------------- the status engine ---------------- */
+function evaluate(line, now){
+  const item = ITEMS.find(i=>i.id===line.item);
+  const sup  = SUPPLIER_OVERRIDE[line.site+'|'+line.item] || SUPPLIER_OF[line.item];
+  const route= routeFor(line.site, sup);
+  const del  = nextDeliveries(route, now);
+  const B    = (line.bufferOverride!=null) ? line.bufferOverride : item.buffer;
+  /* Days left: stock / 8-month average daily usage where the site has history (USAGE8M),
+     otherwise the days remaining Kobas reports. Kobas's own figure is kept as coverKobas. */
+  const hist = (USAGE8M[line.site]||{})[line.item];
+  const Dk   = line.cover;
+  const D    = (hist>0 && line.stock!=null && line.stock>=0) ? line.stock/hist : Dk;
+  const site = window.KEYLINE_DATA.siteMeta[line.site] || {};
+  const out  = {...line, item, sup, route, del, B, cover:D, coverKobas:Dk, usageHist:(hist>0?hist:null), stale:!!site.stale, assumed:!!(route&&route.assumed)};
+
+  if(line.stock < 0 || line.negative){
+    out.status='CHECK';
+    out.why='Kobas shows '+fmtQty(line.stock,item)+'. You cannot hold negative stock. Count it physically, then tell Ross if the count and Kobas still disagree.';
+    return out;
+  }
+  if(UNMAPPED.includes(line.item)){
+    out.status='CHECK'; out.why='This line is not mapped to a supplier tab at any site. Ross to confirm the SKU before it can be ordered.'; return out;
+  }
+  if(line.note && line.stock>=0 && D<=90){ out.noteExtra=line.note; }
+  if(line.missing){ out.status='DATA'; out.why='Not returned by the Kobas report for this site.'; return out; }
+  if(D > 90){ out.status='DATA'; out.why=Math.round(D)+' days of stock is not credible. Usage or unit of measure is wrong, not the stock.'; return out; }
+
+  if(!del){
+    out.status='ROUTE';
+    out.why=(route.note||'Supplier route unverified')+'. '+fmtDays(D)+' left. Nothing is instructed until the cut-off is confirmed.';
+    out.provisional=true;
+    out.provStatus = D < 3 ? 'would be URGENT' : (D < 7 ? 'would be ORDER TODAY' : 'looks fine');
+    return out;
+  }
+
+  const threshold = del.Rskip + B;
+  out.threshold = threshold; out.Rnow = del.Rnow; out.Rskip = del.Rskip;
+  /* Usage is the 8-month Kobas average (USAGE8M, 1 Jan to 16 Aug 2026). Where a site has no history it falls
+     back to the usage Kobas implies from the current position (stock / days remaining). */
+  const usage = (hist>0) ? hist : ((line.stock > 0 && Dk > 0) ? line.stock / Dk : null);
+  out.usage = usage; out.usageSource = (hist>0) ? '8-month average' : 'implied from the Kobas position';
+  /* Baseline: permanent holding, fixed per site and line. Floor: the run-out level for today's route position. */
+  const per = periodInfo(now);
+  const bDays = baselineDays(route, B);
+  out.period = per; out.baselineDays = bDays;
+  const parLvl = parFor(line.site, line.item);
+  out.par = parLvl;
+  out.baseline = (parLvl!=null) ? parLvl
+               : ((usage!=null && bDays!=null) ? Math.ceil(usage * bDays - 1e-9) : null);
+  out.baselineSource = (parLvl!=null) ? 'PAR sheet' : 'computed';
+  out.floor    = usage!=null ? Math.ceil(usage * threshold - 1e-9) : null;
+  out.required = per.reserveOpen ? out.floor : out.baseline;
+  /* Clarity figures (Michael, 09/09/2026): what is on the shelf, what the usage says is left, what will be
+     left the day the next possible delivery lands, and how that sits against the Baseline / PAR. */
+  out.runOut     = (D!=null && isFinite(D)) ? addDays(now, Math.floor(D)) : null;
+  out.atDelivery = (usage!=null && del) ? (line.stock - usage * del.Rnow) : null;   // stock on the delivery day
+  out.vsBaseline = (out.baseline!=null) ? (line.stock - out.baseline) : null;
+  out.pctBaseline= (out.baseline>0) ? (line.stock / out.baseline) : null;
+  out.bottomLine = out.baseline;   // legacy name kept for render.py and the mail builder
+  const stockWhole = Math.floor(line.stock);
+  out.orderQty = out.required!=null ? Math.max(0, out.required - stockWhole) : null;
+  const short = out.required!=null && stockWhole < out.required;
+  out.belowFloor = out.floor!=null && stockWhole < out.floor;   // real run-out risk, not just a Baseline top-up
+  const modeTxt = per.reserveOpen
+    ? 'Week '+per.week+' of 4, reserve open: order only to the run-out floor of '+(out.floor!=null? fmtQty(out.floor,item):'?')+', the Baseline of '+(out.baseline!=null? fmtQty(out.baseline,item):'?')+' is restored from '+fmtDabs(per.nextChange)+'.'
+    : 'Week '+per.week+' of 4: hold the Baseline of '+(out.baseline!=null? fmtQty(out.baseline,item):'?')+'.';
+
+  if(D < del.Rnow){
+    out.status='URGENT';
+    out.why=fmtDays(D)+' left. The earliest possible delivery is '+fmtD(del.next.del)+', '+del.Rnow+' days away, so routine ordering will not reach you in time. Order at the next cut-off ('+fmtD(del.next.cut)+' '+del.next.cutTime+') AND contact your AM now to arrange a transfer, approved local sourcing or menu mitigation.';
+  } else if(del.cutIsToday && short){
+    out.status='ORDER';
+    out.why=fmtQty(line.stock,item)+' in stock, '+fmtDays(D)+' left. '+modeTxt+' Order '+fmtQty(out.orderQty,item)+' by '+del.next.cutTime+' today for delivery '+fmtD(del.next.del)+'; miss it and the next is '+del.Rskip+' days out.';
+  } else if(short){
+    out.status='WATCH';
+    out.why=fmtQty(line.stock,item)+' in stock, '+fmtDays(D)+' left. '+modeTxt+' You do not need to order today. Order '+fmtQty(out.orderQty,item)+' by '+fmtD(del.next.cut)+' '+del.next.cutTime+' for delivery '+fmtD(del.next.del)+'.';
+  } else if(D > 21 && out.baseline!=null && stockWhole > out.baseline){
+    out.status='OVER';
+    out.why=Math.round(D)+' days of stock, '+fmtQty(line.stock - out.baseline,item)+' above the Baseline. Stop ordering and propose a transfer to a tighter site.';
+  } else {
+    out.status='OK';
+    out.why=fmtQty(line.stock,item)+' in stock, '+fmtDays(D)+' left. '+modeTxt;
+  }
+  if(out.noteExtra) out.why += ' ' + out.noteExtra;
+  return out;
+}
+
+function fmtDays(d){ return (d<10 ? d.toFixed(1) : Math.round(d)) + ' days'; }
+function fmtQty(v,item){
+  if(v==null) return '-';
+  const u = item.unit==='kg' ? 'kg' : (item.unit==='pack' ? (Math.abs(v)===1?'pack':'packs') : (Math.abs(v)===1?'case':'cases'));
+  return (Math.round(v*10)/10) + ' ' + u;
+}
+const RANK = {URGENT:0, ORDER:1, WATCH:2, CHECK:3, ROUTE:4, DATA:5, OVER:6, OK:7};
+const LABEL = {URGENT:'Urgent', ORDER:'Order today', WATCH:'Watch', CHECK:'Physical check',
+               ROUTE:'Route unverified', DATA:'Data check', OVER:'Overstocked', OK:'OK'};
+</script>

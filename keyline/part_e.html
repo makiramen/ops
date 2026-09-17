@@ -1,0 +1,452 @@
+/* ============================================================
+   ORDER COMPLIANCE LAYER (added 08 Sep 2026, v1.3.0)
+   Scores every site on what it actually ordered in Kobas against the
+   Baseline and the supplier cut-off, so a red light can be traced to
+   its cause: a missed cut-off, an order placed late, a line left off the
+   order, or an order below the Baseline.
+   Data: window.KEYLINE_ORDERS (part_orders.html) = Kobas stock orders and
+   the deliveries received against them for the nine sites.
+   ============================================================ */
+const ORD = (window.KEYLINE_ORDERS && window.KEYLINE_ORDERS.orders) ? window.KEYLINE_ORDERS.orders : [];
+const ORD_META = (window.KEYLINE_ORDERS && window.KEYLINE_ORDERS.meta) ? window.KEYLINE_ORDERS.meta : {source:'none'};
+const LOOKBACK_DAYS = 28;
+/* A pending order whose delivery date is more than a day gone was never booked in as delivered. It is not stock
+   on its way; it is a Kobas discipline gap, and it is scored as such. */
+function isUnbooked(o){ const d = parseTs(o.reqDel); return o.status==='pending' && d && dayDiff(NOW, d) > 1; }
+function isOpen(o){ const d = parseTs(o.reqDel); return o.status==='pending' && d && dayDiff(NOW, d) <= 1; }
+
+/* Kobas timestamps are UK wall-clock strings ("2026-09-04 11:32"). Cut-offs are UK wall-clock too, so both
+   sides are built as naive local dates and compared as such; the viewer's own time zone never enters. */
+function parseTs(s){
+  if(!s) return null;
+  const m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
+  if(!m) return null;
+  return new Date(+m[1], +m[2]-1, +m[3], m[4]!=null? +m[4] : 0, m[5]!=null? +m[5] : 0, 0, 0);
+}
+const sameDay = (a,b) => a && b && startOfDay(a).getTime()===startOfDay(b).getTime();
+const dayDiff = (a,b) => Math.round((startOfDay(a)-startOfDay(b))/864e5);
+
+/* Every cut-off window on a route between two dates: {cut, cutTime, del}. Rolling routes give one window per
+   order day; fixed routes give one per scheduled cut-off. Mirrors nextDeliveries(), but over the past. */
+function windowsBetween(route, from, to){
+  if(!route || route.verified===false) return [];
+  const out = [];
+  for(let d = startOfDay(from); d <= to; d = addDays(d,1)){
+    const dow = d.getDay();
+    if(route.rolling){
+      if(!route.anyDay && (dow===0 || dow===6)) continue;
+      let del = addDays(d,1), guard=0;
+      while((route.noDeliver||[]).includes(del.getDay()) || del.getDay()===0){ del = addDays(del,1); if(++guard>7) break; }
+      const cut = new Date(d); const [h,mi] = route.rollingTime.split(':').map(Number); cut.setHours(h,mi,0,0);
+      out.push({cut, cutTime:route.rollingTime, del, rolling:true});
+    } else {
+      for(const c of route.cutoffs){
+        if(c.day!==dow) continue;
+        let ahead = (c.dev - dow + 7) % 7; if(ahead===0) ahead = 7;
+        const cut = new Date(d); const [h,mi] = c.time.split(':').map(Number); cut.setHours(h,mi,0,0);
+        out.push({cut, cutTime:c.time, del:addDays(d,ahead), rolling:false});
+      }
+    }
+  }
+  return out.sort((a,b)=>a.cut-b.cut);
+}
+
+/* The window an order was aimed at: the one whose delivery day equals the requested delivery date. */
+function windowForOrder(route, o){
+  const created = parseTs(o.created), req = parseTs(o.reqDel) || parseTs(o.deliveredAt);
+  if(!created || !req) return {kind:'nodate'};
+  if(!route || route.verified===false) return {kind:'noroute', created, req};
+  const ws = windowsBetween(route, addDays(req,-10), addDays(req,1));
+  const w = ws.find(x=>sameDay(x.del, req));
+  if(!w){
+    /* delivery requested on a day this route never delivers: an ad hoc or emergency order */
+    return {kind:'adhoc', created, req};
+  }
+  const late = created > w.cut;
+  return {kind: late ? 'late' : 'ontime', w, created, req, hoursLate: late ? (created - w.cut)/36e5 : 0};
+}
+
+/* Estimated stock of a line at the moment an order was placed: today's Kobas position, plus what has been used
+   since, minus what was delivered since. Labelled an estimate wherever it is shown. */
+function stockAtOrder(site, itemId, when, stockNow, usage){
+  if(stockNow==null || usage==null) return null;
+  const days = Math.max(0, (NOW - when)/864e5);
+  let deliveredSince = 0;
+  ORD.forEach(o=>{
+    if(o.site!==site || !o.deliveredAt) return;
+    const d = parseTs(o.deliveredAt); if(!d || d <= when || d > NOW) return;
+    const l = o.lines[itemId]; if(l && l.del!=null) deliveredSince += l.del;
+  });
+  return Math.max(0, stockNow + usage*days - deliveredSince);
+}
+
+/* Keyline units of a line booked in as delivered at a site strictly after a timestamp. Used to roll a stale
+   Kobas position forward: what was used since comes off, what landed since goes back on. Michael 14/09/2026. */
+function deliveredSinceTs(site, itemId, since){
+  let n = 0;
+  ORD.forEach(o=>{
+    if(o.site!==site || !o.deliveredAt) return;
+    const d = parseTs(o.deliveredAt); if(!d || d <= since || d > NOW) return;
+    const l = o.lines[itemId]; if(l && l.del!=null) n += l.del;
+  });
+  return Math.round(n*100)/100;
+}
+
+/* Per line: open orders (pending) and the last order that carried the line. */
+function lineOrders(site, itemId, sup){
+  /* every order at the site from the keyline supplier for this line, plus any other supplier's order that carried
+     the line (a site may buy karaage from Dunsters instead of JFC; that still counts as ordered) */
+  const mine = ORD.filter(o=>o.site===site && (o.sup===sup || (o.lines[itemId] && o.lines[itemId].ord>0))).sort((a,b)=>parseTs(b.created)-parseTs(a.created));
+  const open = mine.filter(o=>isOpen(o) && o.lines[itemId] && o.lines[itemId].ord>0);
+  const unbooked = mine.filter(o=>isUnbooked(o) && o.lines[itemId] && o.lines[itemId].ord>0);
+  const onOrder = open.reduce((n,o)=>n + o.lines[itemId].ord, 0);
+  const due = open.length ? open.map(o=>parseTs(o.reqDel)).filter(Boolean).sort((a,b)=>a-b)[0] : null;
+  const lastWith = mine.find(o=>o.lines[itemId] && o.lines[itemId].ord>0) || null;
+  const lastAny  = mine[0] || null;
+  return {mine, open, unbooked, onOrder, due, lastWith, lastAny};
+}
+
+/* Order compliance for one evaluated row (from evaluate()). Adds:
+   onOrder, due, covered, lastOrder, cause (a sentence naming why the line is short, if it is). */
+function complianceForRow(r){
+  const c = {onOrder:0, due:null, inbound:0, inboundDue:null, covered:false, cause:null, kind:null, lastOrder:null, lastKind:null};
+  if(ORD_META.source!=='kobas-live' || !r.route || r.route.verified===false) return c;
+  const lo = lineOrders(r.site, r.item.id, r.sup);
+  c.onOrder = lo.onOrder; c.due = lo.due;
+  /* INBOUND = the part of onOrder that may be netted off today's order quantity. Michael's ruling 09/09/2026.
+     An order still pending more than a day after the delivery date it asked for is not stock on its way, so it
+     must never reduce an order: that would hide a real shortage behind an order nobody chased. isOpen() already
+     applies exactly that cut-off, so inbound currently equals onOrder; the filter is kept explicit so the rule
+     survives any future loosening of isOpen. */
+  const live = lo.open.filter(o=>!isUnbooked(o));
+  c.inbound = Math.round(live.reduce((n,o)=>n + o.lines[r.item.id].ord, 0)*100)/100;
+  c.inboundDue = live.length ? live.map(o=>parseTs(o.reqDel)).filter(Boolean).sort((a,b)=>a-b)[0] : null;
+  const stockWhole = Math.floor(r.stock||0);
+  if(r.required!=null) c.covered = (stockWhole + lo.onOrder) >= r.required && lo.due!=null && (r.cover==null || dayDiff(lo.due, NOW) <= Math.ceil(r.cover));
+  if(lo.lastWith){
+    c.lastOrder = lo.lastWith;
+    const wf = windowForOrder(r.route, lo.lastWith);
+    c.lastKind = wf.kind;
+  }
+  if(!['URGENT','ORDER','WATCH'].includes(r.status)) return c;
+  /* attribution, most specific first */
+  const since = lo.lastAny ? dayDiff(NOW, parseTs(lo.lastAny.created)) : null;
+  if(lo.onOrder>0 && c.covered){
+    c.kind='covered'; c.cause = fmtQty(lo.onOrder, r.item)+' on order, due '+fmtDabs(lo.due)+'. Covered if it lands.';
+  } else if(lo.onOrder>0){
+    c.kind='under'; c.cause = 'Only '+fmtQty(lo.onOrder, r.item)+' on order (due '+(lo.due? fmtDabs(lo.due):'?')+'); '+(r.required!=null? 'the '+(r.period&&r.period.reserveOpen?'floor':'Baseline')+' needs '+fmtQty(Math.max(0,r.required-stockWhole), r.item) : '')+'. Under-ordered.';
+  } else if(!lo.lastAny){
+    c.kind='none'; c.cause = 'No '+r.sup+' order in Kobas for this site in the last '+LOOKBACK_DAYS+' days. Either nothing was ordered or orders are placed outside Kobas.';
+  } else if(!lo.lastWith){
+    c.kind='left'; c.cause = r.sup+' was ordered '+fmtDabs(parseTs(lo.lastAny.created))+' but this line was not on the order. Left off.';
+  } else {
+    const wf = windowForOrder(r.route, lo.lastWith);
+    const est = stockAtOrder(r.site, r.item.id, parseTs(lo.lastWith.created), r.stock, r.usage);
+    const ordered = lo.lastWith.lines[r.item.id].ord;
+    const need = (r.baseline!=null && est!=null) ? Math.max(0, r.baseline - Math.floor(est)) : null;
+    let s = 'Last ordered '+fmtDabs(parseTs(lo.lastWith.created))+' ('+fmtQty(ordered, r.item)+(lo.lastWith.sup!==r.sup? ' from '+lo.lastWith.sup : '')+')';
+    c.kind = wf.kind==='late' ? 'late' : (wf.kind==='adhoc' ? 'adhoc' : 'other');
+    if(wf.kind==='late') s += ', '+(wf.hoursLate<24? Math.round(wf.hoursLate*10)/10+' h' : Math.round(wf.hoursLate/24)+' days')+' after the '+wf.w.cutTime+' cut-off';
+    if(wf.kind==='adhoc') s += ', for a day this route does not deliver (ad hoc)';
+    const dl = lo.lastWith.lines[r.item.id].del;
+    if(lo.lastWith.status==='delivered' && dl!=null && dl < ordered - 1e-9) s += ', only '+fmtQty(dl, r.item)+' delivered';
+    if(isUnbooked(lo.lastWith)){ s += ', never booked in as delivered (Kobas still shows it pending)'; c.kind='unbooked'; }
+    if(need!=null && ordered < need){ if(c.kind==='other') c.kind='under'; s += '; the Baseline needed about '+fmtQty(need, r.item)+' (stock then est. '+fmtQty(est, r.item)+'). Under-ordered'; }
+    else if(since!=null && since>7) s += '; nothing since, '+since+' days ago';
+    c.cause = s+'.';
+  }
+  return c;
+}
+
+/* Site scorecard over the lookback window. */
+function siteCompliance(code){
+  const from = addDays(startOfDay(NOW), -LOOKBACK_DAYS);
+  const rows = ROWS.filter(r=>r.site===code);
+  const orders = ORD.filter(o=>o.site===code && parseTs(o.created) && parseTs(o.created) >= from);
+  const sc = {site:code, orders:orders.length, unbooked:orders.filter(isUnbooked).length, onTime:0, late:0, adhoc:0, nodate:0, timed:0,
+              linesOrdered:0, linesToBaseline:0, keylinesCovered:0, keylinesShort:0, keylinesTotal:0,
+              windows:0, windowsOrdered:0, bySup:{}, score:null, rag:'GREY', worst:[]};
+  if(ORD_META.source!=='kobas-live'){ return sc; }
+  /* timing: every order judged against its route */
+  orders.forEach(o=>{
+    const route = routeFor(code, o.sup);
+    const wf = windowForOrder(route, o);
+    const b = sc.bySup[o.sup] = sc.bySup[o.sup] || {orders:0,onTime:0,late:0,adhoc:0,windows:0,windowsOrdered:0,last:null};
+    b.orders++;
+    if(!b.last || parseTs(o.created) > parseTs(b.last.created)) b.last = o;
+    if(wf.kind==='ontime'){ sc.onTime++; b.onTime++; sc.timed++; }
+    else if(wf.kind==='late'){ sc.late++; b.late++; sc.timed++; }
+    else if(wf.kind==='adhoc'){ sc.adhoc++; b.adhoc++; }
+    else if(wf.kind==='noroute'){ sc.noroute=(sc.noroute||0)+1; b.noroute=(b.noroute||0)+1; }
+    else sc.nodate++;
+    /* baseline: every keyline on the order, ordered to at least the Baseline gap at the time (estimate) */
+    Object.keys(o.lines).forEach(itemId=>{
+      const r = rows.find(x=>x.item.id===itemId); if(!r || r.baseline==null || r.usage==null) return;
+      const l = o.lines[itemId]; if(!l || !(l.ord>0)) return;
+      const est = stockAtOrder(code, itemId, parseTs(o.created), r.stock, r.usage);
+      if(est==null) return;
+      const need = Math.max(0, r.baseline - Math.floor(est));
+      sc.linesOrdered++;
+      if(l.ord >= need - 1e-9) sc.linesToBaseline++;
+    });
+  });
+  /* windows: scheduled cut-offs in the lookback that carried an order (fixed routes only) */
+  const sups = Array.from(new Set(rows.map(r=>r.sup)));
+  sups.forEach(sup=>{
+    const route = routeFor(code, sup); if(!route || route.verified===false || route.rolling) return;
+    const ws = windowsBetween(route, from, NOW).filter(w=>w.cut <= NOW);
+    const b = sc.bySup[sup] = sc.bySup[sup] || {orders:0,onTime:0,late:0,adhoc:0,windows:0,windowsOrdered:0,last:null};
+    ws.forEach(w=>{
+      sc.windows++; b.windows++;
+      const hit = orders.some(o=>o.sup===sup && parseTs(o.reqDel) && sameDay(parseTs(o.reqDel), w.del));
+      if(hit){ sc.windowsOrdered++; b.windowsOrdered++; }
+    });
+    b.windowList = ws.map(w=>({w, hit: orders.some(o=>o.sup===sup && parseTs(o.reqDel) && sameDay(parseTs(o.reqDel), w.del)),
+                              late: orders.some(o=>o.sup===sup && parseTs(o.reqDel) && sameDay(parseTs(o.reqDel), w.del) && parseTs(o.created) > w.cut)}));
+  });
+  /* today: keylines covered (stock, or stock plus what is on order, reaches the requirement) */
+  rows.forEach(r=>{
+    if(!['URGENT','ORDER','WATCH','OK','OVER'].includes(r.status)) return;
+    sc.keylinesTotal++;
+    const short = ['URGENT','ORDER','WATCH'].includes(r.status);
+    if(!short || (r.comp && r.comp.covered)) sc.keylinesCovered++; else sc.keylinesShort++;
+  });
+  const pTime = sc.timed ? sc.onTime/sc.timed : null;
+  const pBase = sc.linesOrdered ? sc.linesToBaseline/sc.linesOrdered : null;
+  const pCov  = sc.keylinesTotal ? sc.keylinesCovered/sc.keylinesTotal : null;
+  sc.pTime=pTime; sc.pBase=pBase; sc.pCov=pCov;
+  /* score: 40 cut-off discipline, 30 ordered to Baseline, 30 keylines covered today. A missing component renormalises. */
+  const parts = [[pTime,40],[pBase,30],[pCov,30]].filter(x=>x[0]!=null);
+  const wsum = parts.reduce((n,x)=>n+x[1],0);
+  sc.score = wsum ? Math.round(parts.reduce((n,x)=>n+x[0]*x[1],0)/wsum*100) : null;
+  if(sc.score==null) sc.rag='GREY'; else sc.rag = sc.score>=85 ? 'GREEN' : (sc.score>=65 ? 'AMBER' : 'RED');
+  if(!orders.length) { sc.rag = 'RED'; sc.worst.push('no Kobas orders in '+LOOKBACK_DAYS+' days'); }
+  if(sc.late) sc.worst.push(sc.late+' of '+sc.timed+' orders after the cut-off');
+  if(sc.adhoc && sc.adhoc >= Math.max(3, (sc.timed+sc.adhoc)/2)) sc.worst.push(sc.adhoc+' orders for delivery days the schedule does not list (schedule on file or ordering is off-route)');
+  if(sc.linesOrdered && pBase < 0.7) sc.worst.push(Math.round((1-pBase)*100)+'% of keyline order lines below the Baseline');
+  if(sc.keylinesShort) sc.worst.push(sc.keylinesShort+' keyline'+(sc.keylinesShort>1?'s':'')+' short with nothing on order');
+  if(sc.unbooked) sc.worst.push(sc.unbooked+' order'+(sc.unbooked>1?'s':'')+' past delivery date never booked in');
+  return sc;
+}
+
+/* ---------------- render: Order compliance tab ---------------- */
+function pct(p){ return p==null ? '-' : Math.round(p*100)+'%'; }
+function renderCompliance(){
+  const el = document.getElementById('compl'); if(!el) return;
+  const tabCnt = document.getElementById('c-compl');
+  if(ORD_META.source!=='kobas-live'){
+    el.innerHTML = '<div class="gate gate-warn"><span class="dot"></span><div><b>No Kobas order history loaded</b><small>The compliance layer reads the stock orders and deliveries pulled from Kobas (Operations, Orders and Deliveries). Nothing has been pulled yet, so no site is scored.</small></div></div>';
+    if(tabCnt) tabCnt.textContent = '0';
+    return;
+  }
+  const scs = SITES.map(s=>siteCompliance(s.code)).sort((a,b)=>(a.score==null?101:a.score)-(b.score==null?101:b.score));
+  const below = scs.filter(s=>s.rag==='RED'||s.rag==='AMBER').length;
+  if(tabCnt) tabCnt.textContent = below;
+  const from = addDays(startOfDay(NOW), -LOOKBACK_DAYS);
+  const nIn = ORD.filter(o=>parseTs(o.created) && parseTs(o.created) >= from).length;
+  let html = '<p class="sub">Kobas stock orders '+fmtDabs(from)+' to today ('+nIn+' orders across the nine sites; '+ORD.length+' held since '+fmtDabs(parseTs(ORD_META.since))+' for the stock estimates; pulled '+(ORD_META.pulledLabel||'')+'). '+
+    'Cut-off discipline = orders placed before the supplier cut-off for the delivery day they asked for. Ordered to Baseline = keyline lines on those orders that brought the estimated stock at the time up to the Baseline. Covered today = keylines at or above requirement once open orders are counted. Score = 40 / 30 / 30.</p>';
+  /* league */
+  html += '<h2>Site league</h2><div class="tblwrap"><table class="league"><thead><tr><th>Site</th><th class="num">Score</th><th class="num">Orders</th><th class="num">Before cut-off</th><th class="num">Late</th><th class="num">Off schedule</th><th class="num">Not booked in</th><th class="num">To Baseline</th><th class="num">Covered today</th><th>What is wrong</th></tr></thead><tbody>'+
+    scs.map(s=>'<tr><td><span class="ragdot '+s.rag+'"></span><b>'+s.site+'</b> '+siteName(s.site)+'</td>'+
+      '<td class="num"><b>'+(s.score==null?'-':s.score)+'</b></td><td class="num" title="'+(s.noroute||0)+' from suppliers with no cut-off on file">'+s.orders+'</td>'+
+      '<td class="num">'+pct(s.pTime)+'</td><td class="num">'+(s.late||'')+'</td><td class="num">'+(s.adhoc||'')+'</td><td class="num">'+(s.unbooked||'')+'</td>'+
+      '<td class="num" title="'+s.linesToBaseline+' of '+s.linesOrdered+' keyline order lines">'+pct(s.pBase)+'</td>'+
+      '<td class="num" title="'+s.keylinesCovered+' of '+s.keylinesTotal+'">'+pct(s.pCov)+'</td>'+
+      '<td class="why">'+(s.worst.length? s.worst.join('; ') : 'ordering to plan')+'</td></tr>').join('')+
+    '</tbody></table></div>';
+  /* run-out attribution */
+  const shorts = ROWS.filter(r=>['URGENT','ORDER'].includes(r.status) && r.comp && r.comp.cause);
+  const nWatch = ROWS.filter(r=>r.status==='WATCH').length;
+  html += '<h2>Where the run-outs come from</h2><p class="sub">Every urgent and order-today line, with what Kobas says was ordered for it. Watch lines ('+nWatch+') carry the same read in their row on the By site tab.</p>';
+  if(!shorts.length) html += '<p class="empty">No line is short today.</p>';
+  else {
+    const kinds = {covered:'Covered by an open order', under:'Under-ordered', late:'Ordered after the cut-off', left:'Left off the order', none:'Nothing ordered', adhoc:'Off-schedule ordering', unbooked:'Ordered, never booked in', other:'Ordered to plan, used faster'};
+    const counts = {}; shorts.forEach(r=>{ const k=r.comp.kind||'other'; counts[k]=(counts[k]||0)+1; });
+    html += '<div class="tiles">'+Object.keys(kinds).filter(k=>counts[k]).map(k=>'<div class="tile"><div class="n '+(k==='covered'?'n-green':(k==='other'?'n-grey':'n-red'))+'">'+counts[k]+'</div><div class="l">'+kinds[k]+'</div></div>').join('')+'</div>';
+    html += '<div class="tblwrap"><table><thead><tr><th>Site</th><th>Item</th><th>Status</th><th class="num">Stock</th><th class="num">Need</th><th class="num">On order</th><th>Cause</th></tr></thead><tbody>'+
+      shorts.sort((a,b)=>RANK[a.status]-RANK[b.status]||a.site.localeCompare(b.site)).map(r=>'<tr><td>'+r.site+'</td><td><b>'+r.item.name+'</b><div class="why">'+r.sup+'</div></td><td><span class="pill p-'+r.status+'">'+LABEL[r.status]+'</span></td>'+
+        '<td class="num">'+fmtQty(r.stock,r.item)+'</td><td class="num">'+(r.required!=null? fmtQty(r.required,r.item):'-')+'</td>'+
+        '<td class="num">'+(r.comp.onOrder? fmtQty(r.comp.onOrder,r.item)+(r.comp.due? '<div class="why">due '+fmtDabs(r.comp.due)+'</div>':'') : '<span style="color:var(--muted)">none</span>')+'</td>'+
+        '<td class="why">'+r.comp.cause+'</td></tr>').join('')+'</tbody></table></div>';
+  }
+  /* cut-off log per site and supplier */
+  html += '<h2>Cut-off log, last '+LOOKBACK_DAYS+' days</h2><p class="sub">One cell per scheduled cut-off on fixed routes: green = an order was placed before it for that delivery, amber = placed after it, grey = no order for that delivery (fine when stock was covered). Rolling next-day routes list their orders instead.</p>';
+  html += SITES.map(s=>{
+    const sc = scs.find(x=>x.site===s.code);
+    const sups = Object.keys(sc.bySup).sort();
+    return '<div class="card"><h3>'+s.code+' '+siteName(s.code)+' <span class="pill p-'+(sc.rag==='RED'?'URGENT':(sc.rag==='AMBER'?'ORDER':'OK'))+'">'+(sc.score==null?'-':sc.score)+'</span></h3>'+
+      (sups.length? '<table class="clog">'+sups.map(sup=>{
+        const b = sc.bySup[sup];
+        const cells = b.windowList ? b.windowList.map(x=>'<span class="cw '+(x.late?'late':(x.hit?'hit':'miss'))+'" title="'+fmtDabs(x.w.cut)+' '+x.w.cutTime+' for '+fmtDabs(x.w.del)+(x.late?': ordered after the cut-off':(x.hit?': ordered':': no order'))+'">'+DAYNAME[x.w.cut.getDay()].slice(0,2)+'</span>').join('')
+                     : (routeFor(s.code,sup).rolling
+                          ? '<span class="why">rolling next-day route: '+b.orders+' order'+(b.orders===1?'':'s')+(b.late? ', '+b.late+' after '+ (routeFor(s.code,sup).rollingTime||'') : '')+'</span>'
+                          : '<span class="why">no cut-off on file for this supplier at this site</span>');
+        return '<tr><td class="cs">'+sup+'</td><td>'+cells+'</td><td class="why">'+b.orders+' order'+(b.orders===1?'':'s')+(b.late?', '+b.late+' late':'')+(b.adhoc?', '+b.adhoc+' ad hoc':'')+(b.last? ', last '+fmtDabs(parseTs(b.last.created)) : '')+'</td></tr>';
+      }).join('')+'</table>' : '<p class="note">No orders from this site in the window.</p>')+'</div>';
+  }).join('');
+  /* schedule on file vs what Kobas shows */
+  html += '<h2>Schedule on file vs what Kobas shows</h2><p class="sub">Order day and delivery day pairs actually used since '+fmtDabs(parseTs(ORD_META.since))+', per site and supplier. A pair the delivery schedule does not list is marked. Where a site orders more often than the schedule says, the Baseline on file is too high; where the schedule lists a day nobody uses, the cut-off log shows grey.</p>';
+  html += '<div class="tblwrap"><table><thead><tr><th>Site</th><th>Supplier</th><th>On file</th><th>Kobas, order day to delivery day (count)</th></tr></thead><tbody>'+
+    SITES.map(s=>{
+      const sups = Array.from(new Set(ORD.filter(o=>o.site===s.code).map(o=>o.sup))).filter(sup=>ROUTES.some(r=>r.site===s.code && r.sup===sup)).sort();
+      return sups.map(sup=>{
+        const route = routeFor(s.code, sup);
+        const onFile = route.rolling ? 'next day, cut-off '+route.rollingTime : (route.cutoffs||[]).map(c=>DAYNAME[c.day].slice(0,3)+' '+c.time+' to '+DAYNAME[c.dev].slice(0,3)).join(', ');
+        const pat = {};
+        ORD.filter(o=>o.site===s.code && o.sup===sup).forEach(o=>{
+          const cr = parseTs(o.created), rq = parseTs(o.reqDel); if(!cr||!rq) return;
+          const k = DAYNAME[cr.getDay()].slice(0,3)+' to '+DAYNAME[rq.getDay()].slice(0,3);
+          const wf = windowForOrder(route, o);
+          pat[k] = pat[k] || {n:0, onfile:false}; pat[k].n++; if(wf.kind==='ontime'||wf.kind==='late') pat[k].onfile = true;
+        });
+        const top = Object.keys(pat).sort((a,b)=>pat[b].n-pat[a].n).slice(0,5).map(k=>'<span class="cw '+(pat[k].onfile?'hit':'miss')+'" style="min-width:0;padding:3px 7px" title="'+(pat[k].onfile?'on the schedule':'not on the schedule')+'">'+k+' ('+pat[k].n+')</span>').join(' ');
+        return '<tr><td>'+s.code+'</td><td>'+sup+'</td><td class="why">'+onFile+'</td><td>'+top+'</td></tr>';
+      }).join('');
+    }).join('')+'</tbody></table></div>';
+  el.innerHTML = html;
+}
+
+/* ================= CLOSURE ==================================================================
+   The loop does not end when the email goes out. Each morning the run writes down exactly what it asked each
+   site to order (part_asks.html, written by render.py and rolled forward by build_asks.py). The NEXT morning,
+   with a fresh Kobas order pull in hand, it checks whether that ask turned into a real order. That is the
+   closure step of the cycle: deviation, action, ownership, closure.
+
+   Two rules keep it honest.
+   1. An ask is only judged once its cut-off has passed. An order placed after this mornings pull cannot be
+      seen yet, so asks still inside their window read as OPEN, never as missed.
+   2. Any order at that site carrying that line counts, whoever the supplier was. A site that bought karaage
+      from Dunsters instead of JFC still acted on the ask.
+========================================================================================== */
+const ASKS      = (window.KEYLINE_ASKS && window.KEYLINE_ASKS.asks) ? window.KEYLINE_ASKS.asks : [];
+const ASKS_META = (window.KEYLINE_ASKS && window.KEYLINE_ASKS.meta) ? window.KEYLINE_ASKS.meta : {source:'none'};
+const p2c = n => (n<10 ? '0' : '') + n;
+const dayKey = d => d.getFullYear() + '-' + p2c(d.getMonth()+1) + '-' + p2c(d.getDate());
+
+/* Did this one ask turn into an order? */
+function askVerdict(a){
+  const since = parseTs(a.ts);
+  const cut   = a.cut ? parseTs(a.cut) : null;
+  const hits  = ORD.filter(o => o.site===a.site && o.lines[a.key] && o.lines[a.key].ord>0
+                             && parseTs(o.created) && since && parseTs(o.created) > since)
+                   .sort((x,y)=>parseTs(x.created)-parseTs(y.created));
+  const placed = Math.round(hits.reduce((n,o)=>n + o.lines[a.key].ord, 0)*100)/100;
+  let v;
+  if(a.qty>0 && placed >= a.qty*0.9) v = 'placed';
+  else if(cut && cut > NOW)          v = 'open';
+  else if(placed > 0)                v = 'part';
+  else                               v = 'none';
+  return {ask:a, placed, verdict:v, first:hits.length ? hits[0] : null};
+}
+
+/* Every ask day held in the store, newest first, each with its verdicts. */
+function closureDays(){
+  const byDay = {};
+  ASKS.forEach(a=>{ (byDay[a.d] = byDay[a.d] || []).push(a); });
+  return Object.keys(byDay).sort().reverse().map(d=>({d, rows: byDay[d].map(askVerdict)}));
+}
+
+/* The day this mornings closure report is about: the most recent ask day before today. */
+function closureDay(){
+  const today = dayKey(NOW);
+  return closureDays().find(x => x.d < today) || null;
+}
+
+/* How many ask days in a row this site and this line came back short, counting back from day d. */
+function missStreak(site, key, d){
+  const days = closureDays().filter(x => x.d <= d);
+  let n = 0;
+  for(let i=0; i<days.length; i++){
+    const row = days[i].rows.find(r => r.ask.site===site && r.ask.key===key);
+    if(!row) break;
+    if(row.verdict==='none' || row.verdict==='part') n++; else break;
+  }
+  return n;
+}
+
+function closureSummary(){
+  const day = closureDay();
+  if(!day) return null;
+  const open   = day.rows.filter(r=>r.verdict==='open');
+  const judged = day.rows.filter(r=>r.verdict!=='open');
+  const placed = judged.filter(r=>r.verdict==='placed');
+  const part   = judged.filter(r=>r.verdict==='part');
+  const none   = judged.filter(r=>r.verdict==='none');
+  const short  = none.concat(part).sort((a,b)=> missStreak(b.ask.site,b.ask.key,day.d) - missStreak(a.ask.site,a.ask.key,day.d));
+  return {d:day.d, rows:day.rows, open, judged, placed, part, none, short,
+          pct: judged.length ? Math.round(placed.length/judged.length*100) : null};
+}
+
+/* One plain sentence for the top of the email and the Today strip. Returns '' when there is nothing to close. */
+function closureLine(){
+  const s = closureSummary();
+  if(!s || !s.judged.length) return '';
+  const when = fmtDabs(parseTs(s.d));
+  let t = when + ': ' + s.judged.length + ' lines asked for, ' + s.placed.length + ' ordered';
+  if(s.part.length) t += ', ' + s.part.length + ' under-ordered';
+  if(s.none.length) t += ', ' + s.none.length + ' not ordered';
+  t += '.';
+  if(s.short.length){
+    const names = s.short.slice(0,5).map(r=>{
+      const st = missStreak(r.ask.site, r.ask.key, s.d);
+      return r.ask.site + ' ' + r.ask.name.toLowerCase() + (st>1 ? ' (' + st + ' days running)' : '');
+    });
+    t += ' Still open: ' + names.join(', ') + (s.short.length>5 ? ' and ' + (s.short.length-5) + ' more' : '') + '.';
+  }
+  return t;
+}
+
+const CLOSE_LABEL = {placed:'Ordered', part:'Under-ordered', none:'Not ordered', open:'Still open'};
+const CLOSE_CLASS = {placed:'cl-ok', part:'cl-part', none:'cl-none', open:'cl-open'};
+
+function renderClosure(){
+  const el = document.getElementById('closure'); if(!el) return;
+  const cnt = document.getElementById('c-close');
+  const s = closureSummary();
+  if(!s){
+    if(cnt) cnt.textContent = '0';
+    el.innerHTML = '<p class="sub">No earlier ask is on file yet. From the next run onward this tab shows, line by line, whether what the estate was asked to order the previous morning was actually ordered in Kobas.</p>';
+    return;
+  }
+  if(cnt) cnt.textContent = String(s.short.length);
+  const itemOf = k => (typeof ITEMS!=='undefined') ? (ITEMS.find(i=>i.id===k) || null) : null;
+  const q = (v,k) => { const it = itemOf(k); return it ? fmtQty(v, it) : String(v); };
+
+  let h = '<p class="sub">Closure on the asks of <b>' + fmtDabs(parseTs(s.d)) + '</b>, checked against the Kobas order pull of ' +
+          (ORD_META.pulledLabel || 'this morning') + '. A line counts as ordered when an order was raised at that site carrying that line after the email went out, whoever the supplier was. Lines whose cut-off has not passed yet are left open rather than marked missed.</p>';
+  h += '<div class="tiles">' +
+       '<div class="tile"><b>' + (s.pct!=null ? s.pct + '%' : '-') + '</b><span>acted on</span></div>' +
+       '<div class="tile"><b>' + s.placed.length + '</b><span>ordered</span></div>' +
+       '<div class="tile"><b>' + s.part.length + '</b><span>under-ordered</span></div>' +
+       '<div class="tile"><b>' + s.none.length + '</b><span>not ordered</span></div>' +
+       '<div class="tile"><b>' + s.open.length + '</b><span>still in window</span></div>' +
+       '</div>';
+
+  const bySite = {};
+  s.rows.forEach(r=>{ (bySite[r.ask.site] = bySite[r.ask.site] || []).push(r); });
+  const order = ['none','part','open','placed'];
+  h += '<div class="tblwrap"><table id="t-close"><thead><tr><th>Site</th><th>Item</th><th>Supplier asked</th>' +
+       '<th class="num">Asked</th><th class="num">Placed</th><th>Result</th><th>Evidence</th></tr></thead><tbody>';
+  SITES.forEach(site=>{
+    const rows = (bySite[site.code] || []).sort((a,b)=> order.indexOf(a.verdict) - order.indexOf(b.verdict));
+    rows.forEach((r,i)=>{
+      const st = missStreak(r.ask.site, r.ask.key, s.d);
+      const ev = r.first
+        ? 'Order ' + r.first.id + ', ' + r.first.sup + ', raised ' + fmtDabs(parseTs(r.first.created)) + ' ' + String(r.first.created).slice(11,16)
+        : (r.verdict==='open' ? 'Cut-off ' + (r.ask.cut ? fmtDabs(parseTs(r.ask.cut)) + ' ' + String(r.ask.cut).slice(11,16) : 'not confirmed') + ', not due yet'
+                              : 'No order at ' + r.ask.site + ' carrying this line since the email');
+      h += '<tr class="' + CLOSE_CLASS[r.verdict] + '">' +
+           '<td>' + (i===0 ? '<b>' + site.code + '</b>' : '') + '</td>' +
+           '<td>' + r.ask.name + (st>1 ? ' <span class="streak">' + st + ' days running</span>' : '') + '</td>' +
+           '<td>' + r.ask.sup + '</td>' +
+           '<td class="num">' + q(r.ask.qty, r.ask.key) + '</td>' +
+           '<td class="num">' + (r.placed>0 ? q(r.placed, r.ask.key) : '<span style="color:var(--muted)">none</span>') + '</td>' +
+           '<td><b>' + CLOSE_LABEL[r.verdict] + '</b></td>' +
+           '<td class="why">' + ev + '</td></tr>';
+    });
+  });
+  h += '</tbody></table></div>';
+  h += '<p class="note">A line that reads <b>not ordered</b> two or more days running is no longer a reminder problem. It is an ownership problem, and it belongs in the weekly review with the site named.</p>';
+  el.innerHTML = h;
+}
