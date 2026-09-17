@@ -1,0 +1,108 @@
+name: Keyline daily (Kobas pull, board, 07:00 email)
+
+# The Keyline morning, offline (17/09/2026). No Mac, no Chrome, no saved password, no Claude session:
+# this job logs into Kobas with the keyline bot user, pulls the nine stock positions and six weeks of
+# orders and deliveries, builds keyline.html, emails Sophie and O, and pushes the board and its state.
+# Two slots because GitHub drops and delays cron. The guard step makes the second slot a no-op once the
+# day has shipped (keyline/pull-<today>.txt exists on main), so Sophie never gets two emails.
+on:
+  schedule:
+    - cron: '55 5 * * *'      # 06:55 UK in BST (05:55 UTC); the email lands about 07:10
+    - cron: '40 6 * * *'      # retry slot 07:40 UK, skipped when the first slot shipped
+  workflow_dispatch:
+    inputs:
+      no_email:
+        description: 'Build and ship the board but do not email Sophie and O'
+        type: boolean
+        default: false
+      force:
+        description: 'Run even if today already shipped'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: keyline-daily
+  cancel-in-progress: false
+
+jobs:
+  keyline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Already shipped today?
+        id: guard
+        env:
+          FORCE: ${{ inputs.force }}
+        run: |
+          today=$(TZ=Europe/London date +%F)
+          if [ -f "keyline/pull-$today.txt" ] && [ "$FORCE" != "true" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"; echo "keyline/pull-$today.txt is on main already, nothing to do" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/setup-python@v5
+        if: steps.guard.outputs.skip == 'false'
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          pip install --quiet requests playwright beautifulsoup4 reportlab
+          python -m playwright install --with-deps chromium
+
+      - name: Pull Kobas, build, email, ship
+        if: steps.guard.outputs.skip == 'false'
+        id: run
+        env:
+          TZ: Europe/London
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+          NO_EMAIL: ${{ inputs.no_email }}
+        run: |
+          set +e
+          cd keyline
+          flag=""; [ "$NO_EMAIL" = "true" ] && flag="--no-email"
+          python3 keyline_cloud_run.py $flag --report /tmp/keyline_report.json > /tmp/keyline_out.json 2> /tmp/keyline.err
+          code=$?
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          echo "## Keyline run (exit $code)" >> "$GITHUB_STEP_SUMMARY"
+          python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          try: R = json.load(open('/tmp/keyline_report.json'))
+          except Exception as e: print('no report:', e); raise SystemExit
+          print(f"- {R.get('run_at')} · **{R.get('result')}** · email: {R.get('email')} · commit `{(R.get('commit') or '')[:7]}` pushed {R.get('pushed')}")
+          print(f"- subject: {R.get('subject')}")
+          if R.get('counts'): print(f"- counts: {R['counts']}")
+          if R.get('rag'): print(f"- rag: {R['rag']}")
+          p = R.get('pull') or {}
+          if p.get('orders'): print(f"- orders: {p['orders']}")
+          for w in R.get('warnings', []): print('- WARNING', w)
+          PY
+          echo '### log tail' >> "$GITHUB_STEP_SUMMARY"; tail -n 40 /tmp/keyline.err >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+
+      - name: Keep the report and logs
+        if: always() && steps.guard.outputs.skip == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: keyline-run-${{ github.run_id }}
+          path: |
+            /tmp/keyline_report.json
+            /tmp/keyline_out.json
+            /tmp/keyline.err
+            /tmp/kobas_pull_report.json
+          retention-days: 14
