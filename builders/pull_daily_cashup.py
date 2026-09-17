@@ -121,7 +121,7 @@ VENUE_TO_CODE = {
 # 24/08/2026 — South England, live site #20 from 21/08 — so it has moved into
 # VENUE_TO_CODE and CLUSTERS as M21 and is NO LONGER ignored. The fleet is 20
 # sites from 21/08/2026 onward; days before that legitimately carry 19.
-VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2"}
+VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2", "Maki Braehead"}  # Braehead: rows since 14/09/2026, all zero, not trading yet; ignore until a code is ruled (17/09/2026)
 
 # ---- org map ----------------------------------------------------------------
 # Regions, Area Managers and Deputy Area Managers, from the Area Management
