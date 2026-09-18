@@ -9,6 +9,7 @@ on:
   schedule:
     - cron: '55 5 * * *'      # 06:55 UK in BST (05:55 UTC); the email lands about 07:10
     - cron: '40 6 * * *'      # retry slot 07:40 UK, skipped when the first slot shipped
+    - cron: '20 7 * * *'      # third slot 08:20 UK (added 18 Sep 2026, GitHub dropped both slots that morning); guard skips it once shipped
   workflow_dispatch:
     inputs:
       no_email:
