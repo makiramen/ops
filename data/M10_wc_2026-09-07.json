@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-16",
+  "generated_at": "2026-09-21",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-07 \u2013 2026-09-13",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": 19.44,
+          "actual": 25.59,
           "target": 23.0,
           "gated": false
         },
@@ -74,7 +74,7 @@
         "week_commencing": "2026-09-07"
       },
       "efficiency_score": {
-        "score": 94,
+        "score": 92,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -98,8 +98,8 @@
           },
           "food": {
             "weight": 30,
-            "value": 100.0,
-            "basis": "19.44% vs 25% baseline, -8/pp over"
+            "value": 95.28,
+            "basis": "25.59% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -118,21 +118,23 @@
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
-        "status": "green",
-        "triggers": [],
+        "status": "red",
+        "triggers": [
+          "food 25.6%"
+        ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4,
-        "new_reviews": 6,
+        "week_avg_rating": 3.5714,
+        "new_reviews": 7,
         "star_breakdown": {
-          "1": 1,
+          "1": 2,
           "2": 0,
           "3": 1,
           "4": 0,
           "5": 4
         },
-        "negatives": 2,
+        "negatives": 3,
         "negative_reviews": [
           {
             "stars": 3,
@@ -147,13 +149,20 @@
             "text": "Went there with my friends while I ordered a black garlic Ramen with ex. Noodles and cha siu.\n\nHad to wait double the waiting time what my friends had, gave me the wrong food the first time, and when they got it right, the cha siu is warm at best. The bamboo is too salty as well.\n\nAt least the vibes are good. And I got 1 more cha siu for the wait. But the quality doesn't help.\n\nFor the 21 quid I spent this only worth 1 star.",
             "date": "2026-09-12",
             "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Chloe green",
+            "text": "Appalling service. The staff who served us had no manners, she was swaying and holding the tablet so far in front of her it was  close to touching my own face and I had to lean away, it was uncomfortable. We felt so awkward the whole time and she didn\u2019t smile or ask how we are. She seemed fed up when walking around and staring at you. Food took ages and arrived at different times. By the time you are waiting the food was cold. Then with the sides 15 minutes later showing up, no communication. Nobody checked on us, and the bill was tossed onto the table. Horrible experience and very disappointing. Never coming back.",
+            "date": "2026-09-10",
+            "url": null
           }
         ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-16."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-07..2026-09-13 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-21."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-07.json (AGMM Task List Status). Open items only.",
@@ -228,11 +237,7 @@
           "Reviews, Deliveroo performance and sales were flagged by the site as its areas of improvement.",
           "Region-wide (England): The prep level list in the daily Mapal chef report is being replaced by a nightly main protein stock count, recorded on a printed sheet in the kitchen and photographed and uploaded to Mapal every night by whoever closes.",
           "Region-wide (England): The AI daily stock ordering dashboard is only as accurate as the daily stock counts and timely invoice entry into Kobas, and two sites this week showed false shortage flags caused by invoice upload lag.",
-          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost.",
-          "Frontage cleaning has been completed.",
-          "The drinks stock count spiked at minus 8.7 per cent, traced to miscounted soft drinks.",
-          "A red flag was raised on service after multiple customer complaints in a single week.",
-          "North England cluster: The first Back to Basics brand standards training session was delivered and all managers are now aware of the site presentation standards."
+          "Region-wide (England): Operations is sourcing a new Char Siu and karaage manufacturer after supplier size inconsistency drove wastage and food cost."
         ],
         "actions": [
           "Call JFC to arrange the return of excess takeaway packaging and a credit note - Owner: Robert Cameron (15/09/2026)",
@@ -242,16 +247,12 @@
           "Begin delegating responsibility for reviews and Deliveroo to a named team member - Owner: Ninder Joshi (15/09/2026)",
           "Confirm the address for the B2B event on 17/09/2026 - Owner: Amy Tang (15/09/2026)",
           "Region-wide (England): Print and laminate the new stock tracking sheet and post it visibly in the kitchen - Owner: All sites (15/09/2026)",
-          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)",
-          "Recount the drinks stock following the minus 8.7 per cent discrepancy - Owner: M10 team (15/09/2026)",
-          "Assist the site in addressing the service complaints behind the red flag - Owner: Amy Tang (15/09/2026)",
-          "North England cluster: Put a site presentation action plan in place against the Maki and Ramen brand standards - Owner: All managers (22/09/2026)",
-          "North England cluster: Send a shop frontage photograph to the area manager on the first of every month - Owner: All teams (01/10/2026)"
+          "Region-wide (England): Count main protein and prep stock on every closing shift and upload the photographed sheets to Mapal nightly - Owner: All sites (15/09/2026)"
         ],
         "carryover": [],
         "empty": false,
         "docId": "1fkymU4PssSza0fTxMoK06es38_roi4dQa216ApA-Eb4",
-        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026, plus the North England AM KPI meeting minutes of 15/09/2026"
+        "source": "England BOH weekly report 15/09/2026 and the site's own weekly KPI report for 07/09/2026 to 13/09/2026"
       }
     }
   }
