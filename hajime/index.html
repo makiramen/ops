@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Hajime Owari Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=Shippori+Mincho+B1:wght@600;800&display=swap">
+<style>
+:root{
+  --bg:#faf7f4;--card:#ffffff;--card2:#f5f0eb;--line:#e8dfd7;--txt:#1d1714;--mut:#76695e;
+  --acc:#E94E1B;--accd:#b93a10;--tint:#fff0e8;--onacc:#ffffff;
+  --rd:#c62828;--amb:#c98a0b;--grn:#2f8f5b;--shadow:0 1px 2px rgba(60,30,10,.06);
+  --disp:"Shippori Mincho B1","Hiragino Mincho ProN","Yu Mincho",Georgia,serif;
+  --body:"IBM Plex Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141110;--card:#1d1917;--card2:#26201d;--line:#3a312c;--txt:#f3ede8;--mut:#ab9e93;
+  --acc:#F2692F;--accd:#ff8a5c;--tint:#3a2116;--onacc:#1a0d06;
+  --rd:#ef5a57;--amb:#e3a92c;--grn:#4fb47f;--shadow:none}}
+:root[data-theme="dark"]{
+  --bg:#141110;--card:#1d1917;--card2:#26201d;--line:#3a312c;--txt:#f3ede8;--mut:#ab9e93;
+  --acc:#F2692F;--accd:#ff8a5c;--tint:#3a2116;--onacc:#1a0d06;
+  --rd:#ef5a57;--amb:#e3a92c;--grn:#4fb47f;--shadow:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 var(--body);padding-bottom:88px}
+#barBtns{display:flex;gap:8px}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px;padding-block:18px 8px}
+h1,h2{font-family:var(--disp);text-wrap:balance;margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+
+/* masthead */
+.mast{display:grid;grid-template-columns:1fr auto;gap:14px 24px;align-items:end;padding-block:8px 18px;border-bottom:2px solid var(--txt)}
+.mast .eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);font-weight:600}
+.mast h1{font-size:clamp(28px,6vw,44px);font-weight:800;line-height:1.05;margin-top:4px}
+.mast .sub{color:var(--mut);font-size:13.5px;margin-top:6px}
+.pct{text-align:right}
+.pct b{font:500 34px/1 var(--mono);font-variant-numeric:tabular-nums}
+.pct span{display:block;font-size:11.5px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase;margin-top:4px}
+.meter{grid-column:1/-1;height:6px;background:var(--card2);border-radius:6px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--acc);transition:width .3s}
+
+/* phase rail */
+.rail{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin:18px 0 6px;border:1px solid var(--line);border-radius:12px;overflow:hidden;background:var(--card)}
+.ph{padding:12px 14px;border-right:1px solid var(--line);cursor:pointer;background:none;border-top:0;border-bottom:0;border-left:0;text-align:left}
+.ph:last-child{border-right:0}
+.ph .k{font:800 26px/1 var(--disp);color:var(--mut)}
+.ph .n{font-weight:600;font-size:14px;margin-top:6px}
+.ph .d{font-size:12px;color:var(--mut);margin-top:2px}
+.ph.on{background:var(--tint)}
+.ph.on .k{color:var(--acc)}
+.ph.done .k{color:var(--grn)}
+.railnote{font-size:12px;color:var(--mut);margin:0 0 4px}
+
+/* key dates */
+.dates{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 4px}
+.dt{flex:1 1 150px;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:var(--card)}
+.dt b{display:block;font:500 13px/1.2 var(--mono);color:var(--acc)}
+.dt span{font-size:12.5px}
+.dt.warn{border-color:var(--amb)}
+.dt.warn b{color:var(--amb)}
+
+/* nav */
+nav.toc{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;background:var(--bg);border-bottom:1px solid var(--line);margin:14px -16px 0;padding:8px 16px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.toc a{flex:0 0 auto;font-size:12.5px;text-decoration:none;color:var(--mut);padding:5px 10px;border-radius:20px;border:1px solid var(--line);background:var(--card)}
+nav.toc a:hover{color:var(--txt);border-color:var(--acc)}
+
+section{padding-block:22px 6px;border-bottom:1px solid var(--line)}
+section:last-of-type{border-bottom:0}
+.sh{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.sh .no{font:500 12px var(--mono);color:var(--acc)}
+.sh h2{font-size:21px;font-weight:800}
+.lead{font-size:13.5px;color:var(--mut);margin:2px 0 12px;max-width:68ch}
+h3{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin:18px 0 4px;font-weight:600}
+label{display:block;font-size:11.5px;color:var(--mut);margin:0 0 4px;letter-spacing:.05em;text-transform:uppercase}
+input,select,textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+input:hover,select:hover,textarea:hover{border-color:color-mix(in srgb,var(--acc) 40%,var(--line))}
+textarea{min-height:70px;resize:vertical}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+
+/* checklist */
+.list{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:2px 12px}
+.it{display:flex;gap:11px;align-items:flex-start;border-bottom:1px solid var(--line);padding:10px 0}
+.it:last-child{border-bottom:0}
+.tk{flex:0 0 24px;width:24px;height:24px;border-radius:6px;border:1.5px solid var(--line);background:var(--card2);cursor:pointer;color:transparent;font:700 14px/1 var(--body);padding:0;margin-top:1px}
+.tk:hover{border-color:var(--acc)}
+.tk.on{background:var(--grn);border-color:var(--grn);color:#fff}
+.bd{flex:1;min-width:0}
+.bd .t{font-size:14px;margin-bottom:5px}
+.it.done .t{color:var(--mut)}
+.bd .g{font-size:12px;color:var(--mut);margin:-2px 0 6px}
+.bd input{padding:6px 9px;font-size:13px}
+.cnt{font:500 12px var(--mono);color:var(--mut);float:right;letter-spacing:0;text-transform:none}
+
+/* rag */
+.rag{display:flex;gap:4px;flex:0 0 auto}
+.rag button{width:34px;height:32px;background:var(--card2);border:1px solid var(--line);border-radius:7px;color:var(--mut);font:600 12px/1 var(--mono);cursor:pointer}
+.rag button.on{color:#fff;border-color:transparent}
+.rag button.on[data-v="R"]{background:var(--rd)}
+.rag button.on[data-v="A"]{background:var(--amb)}
+.rag button.on[data-v="G"]{background:var(--grn)}
+.mrow{display:flex;gap:11px;align-items:flex-start;border-bottom:1px solid var(--line);padding:11px 0}
+.mrow:last-child{border-bottom:0}
+.grp{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--acc);font-weight:600;padding:14px 0 2px;border-bottom:1px solid var(--line)}
+.chip{display:inline-block;border:1px solid var(--line);border-radius:20px;padding:1px 8px;font-size:11px;color:var(--mut);margin-left:6px;vertical-align:1px}
+.flds{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.flds>div{flex:0 1 170px}
+.flds>div.wide{flex:1 1 100%}
+.flds label{text-transform:none;letter-spacing:0;font-size:12px}
+
+/* tally */
+.tally{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.tag{border:1px solid var(--line);background:var(--card);border-radius:20px;padding:3px 10px;font-size:12px;color:var(--mut)}
+.tag b{color:var(--txt);font-family:var(--mono);font-weight:500}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.dR{background:var(--rd)}.dA{background:var(--amb)}.dG{background:var(--grn)}
+
+/* owari weeks */
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:760px;font-variant-numeric:tabular-nums}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);text-align:left;font-weight:600;padding:9px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:0}
+td input{padding:6px 7px;font:500 13px var(--mono)}
+td.wk{font:500 13px var(--mono);color:var(--mut);white-space:nowrap}
+.st{display:inline-block;min-width:74px;text-align:center;border-radius:20px;padding:3px 8px;font-size:11.5px;font-weight:600;color:var(--mut);border:1px solid var(--line)}
+.st.G{background:var(--grn);color:#fff;border-color:transparent}
+.st.R{background:var(--rd);color:#fff;border-color:transparent}
+.st.A{background:var(--amb);color:#fff;border-color:transparent}
+.streak{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:12px 0 2px}
+.pips{display:flex;gap:5px}
+.pips i{width:30px;height:10px;border-radius:3px;background:var(--card2);border:1px solid var(--line)}
+.pips i.on{background:var(--grn);border-color:var(--grn)}
+.streak p{margin:0;font-size:13.5px}
+
+/* actions */
+.act{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--line);border-radius:10px;padding:10px 12px 12px;margin:8px 0;position:relative}
+.act[data-rag="R"]{border-left-color:var(--rd)}
+.act[data-rag="A"]{border-left-color:var(--amb)}
+.act[data-rag="G"]{border-left-color:var(--grn)}
+.act .del{position:absolute;top:6px;right:8px;background:none;border:0;color:var(--mut);font-size:20px;cursor:pointer;line-height:1}
+.act .n{font:500 11px var(--mono);color:var(--mut)}
+.act .row{display:grid;grid-template-columns:2fr 1.3fr 1fr .6fr;gap:8px;margin-top:8px}
+@media (max-width:620px){.act .row{grid-template-columns:1fr 1fr}}
+.add{background:none;border:1px dashed var(--line);border-radius:10px;padding:11px;width:100%;cursor:pointer;color:var(--mut)}
+.add:hover{border-color:var(--acc);color:var(--acc)}
+
+.dec{display:flex;gap:8px;flex-wrap:wrap}
+.dec button{flex:1 1 220px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px;cursor:pointer;text-align:left}
+.dec button.on{border-color:var(--acc);background:var(--tint);box-shadow:inset 0 0 0 1px var(--acc)}
+.sign{display:grid;grid-template-columns:1.4fr .7fr .9fr;gap:8px;border-bottom:1px solid var(--line);padding:9px 0}
+@media (max-width:560px){.sign{grid-template-columns:1fr 1fr}.sign>div:first-child{grid-column:1/-1}}
+
+.sigwrap{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-end;margin-top:10px}
+.sigbox{flex:0 1 300px}
+.sigline{font:400 32px/1.1 "Snell Roundhand","Segoe Script","Brush Script MT","Apple Chancery",cursive;padding:2px 4px 6px}
+.sigrule{border-bottom:1.5px solid var(--txt);margin-bottom:7px}
+.signame{font-weight:600;font-size:13.5px}
+.sigrole{font-size:12px;color:var(--mut)}
+.sigmeta{flex:1 1 280px;font-size:12px;color:var(--mut);border-left:3px solid var(--acc);padding-left:12px}
+.sigmeta div{padding:2px 0}
+.sigmeta span{display:inline-block;min-width:84px;color:var(--txt);font-weight:600}
+
+/* bar */
+.bar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--line);padding:9px 16px calc(9px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:center}
+.bar .stat{flex:1;font-size:12.5px;color:var(--mut);min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar .stat i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--mut);margin-right:6px}
+.bar .stat.ok i{background:var(--grn)}
+.bar .stat.busy i{background:var(--amb)}
+.bar .btn{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:10px 14px;font-weight:600;font-size:13px;cursor:pointer}
+.bar .pri{background:var(--acc);color:var(--onacc);border-color:transparent}
+#toast{position:fixed;bottom:78px;left:50%;transform:translateX(-50%);background:var(--txt);color:var(--bg);padding:8px 16px;border-radius:20px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:40}
+#toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+@media print{body{padding:0;background:#fff;color:#000}.bar,.add,.del,nav.toc,#toast{display:none}section{break-inside:avoid-page}}
+</style>
+<style>
+/* home */
+.homehead{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;padding-block:8px 18px;border-bottom:2px solid var(--txt)}
+.homehead h1{font-size:clamp(28px,6vw,44px);font-weight:800;line-height:1.05;margin-top:4px}
+.homehead .eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);font-weight:600}
+.homehead .sub{color:var(--mut);font-size:13.5px;margin-top:6px;max-width:60ch}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:9px;padding:10px 14px;font-weight:600;font-size:13px;cursor:pointer}
+.btn.pri{background:var(--acc);color:var(--onacc);border-color:transparent}
+.btn.ghost{background:none}
+.btn.danger{color:var(--rd);border-color:color-mix(in srgb,var(--rd) 45%,var(--line))}
+.btn.danger.arm{background:var(--rd);color:#fff;border-color:transparent}
+.newform{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-top:16px}
+.newform h2{font-size:19px;margin-bottom:10px}
+.newform .acts{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.err{color:var(--rd);font-size:13px;margin-top:8px;min-height:1em}
+.phgroup{margin-top:22px}
+.phgroup>h3{display:flex;align-items:baseline;gap:8px;margin:0 0 10px}
+.phgroup>h3 .kj{font:800 18px var(--disp);color:var(--acc);text-transform:none;letter-spacing:0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+.rc{display:block;text-decoration:none;color:inherit;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow);transition:border-color .15s}
+.rc:hover{border-color:var(--acc)}
+.rc .top{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}
+.rc .nm{font:800 20px/1.15 var(--disp)}
+.rc .cl{font-size:12.5px;color:var(--mut);margin-top:3px}
+.rc .kj{font:800 26px/1 var(--disp);color:var(--acc)}
+.rc .kj.done{color:var(--grn)}
+.rc .m{height:5px;background:var(--card2);border-radius:5px;overflow:hidden;margin:12px 0 8px}
+.rc .m i{display:block;height:100%;background:var(--acc)}
+.rc .row2{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--mut)}
+.rc .row2 b{font-family:var(--mono);font-weight:500;color:var(--txt)}
+.rc .foot{font-size:11.5px;color:var(--mut);margin-top:10px;border-top:1px solid var(--line);padding-top:8px;display:flex;justify-content:space-between;gap:8px}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:22px;text-align:center;color:var(--mut);margin-top:18px}
+.back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--mut);text-decoration:none;margin-bottom:10px}
+.back:hover{color:var(--acc)}
+.miles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.dt.none b{color:var(--mut)}
+.danger-zone{margin-top:26px;display:flex;justify-content:flex-end}
+</style>
+</head>
+<body>
+<div class="wrap" id="view"></div>
+<div class="bar" id="bar">
+  <div class="stat" id="stat"><i></i><span>Loading</span></div>
+  <span id="barBtns"></span>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+(function(){
+var COL='reports', LKEY='maki_hajime_owari_reports_v1';
+var CLUSTERS={
+  "Scotland & Newcastle":{am:"Ka Ho",dam:"Óisín Patrick Darragh"},
+  "North England & Midlands":{am:"Inka Cheung",dam:"Amy Tang"},
+  "South England":{am:"Lincoln (Ziang)",dam:"Kaitlin Docherty"},
+  "Franchise":{am:"",dam:""}
+};
+var PHASES=[["Hajime","始","Opening","Ross + region AM · ends at Project Sign-Off"],["Owari","終","Stabilisation","Owari GM · ends at 4 weeks green on AMO1"],["Kiban","基盤","Ongoing","Region AM + DAM · permanent rhythm"]];
+var MILES=[["m_kit","Kitchen access, BOH day zero"],["m_foh","Partial handover, FOH activates"],["m_ff","Friends & family"],["c_open","Opening"],["c_hdate","Handover to Owari"],["m_oclose","Owari closed (4 green)"],["m_kiban","Kiban sign-off"]];
+
+var BOH=["Full BOH onboarding, recipes and prep training","Station layout set (Wok, Ramen, Fryer, Cold)","Food safety and allergen protocols complete","Mapal BOH training modules assigned and complete","JIT and stock systems live (Kobas / Mapal)","Prep / par sheets drafted and tested","BOH mock service run","Opening stock baseline created","Prep yield checks complete","Waste baseline set","Opening stocktake complete","BOH systems report prepared"];
+var FOH=["Full FOH onboarding, service flow and brand training","POS, payment and printer setup tested","FOH Mapal modules assigned and complete","Host / waiter / expo / runner positions assigned","Table-flow system created and tested","Mock service delivered and scored","POS menu tested (categories, modifiers, item logic)","Service charge set to 10% on the till","FOH readiness log generated","FOH cleaning structure and checklists started"];
+var SYS=["Compliance documents (EHO, H&S, Fire) complete and filed","All compliance documents uploaded to Mapal","Mapal folders created for FOH / BOH","Kobas live (stock, variances, sales)","Hubdoc → Xero integration checked","Site code ruled and added to Raw Data 2 / dashboard","Google Business listing live and mapped to reviews","Deliveroo storefront live","Snagging logged and sent to contractors","Operational readiness walkthrough complete"];
+var AUD=[["BOH operational audit","Station strength, prep yields, portioning, timing and workflow across Wok, Ramen, Fryer, Cold."],["BOH quality audit","Broth, toppings, proteins, noodles and overall execution."],["EHO compliance audit","Food safety, allergen controls, hygiene routines, cleaning and temperature logs, documentation."],["FOH operational audit","Service flow, expo, FOH to BOH communication, order accuracy, guest interaction."],["FOH food quality audit","Plate presentation, speed of service, consistency across dishes, guest response."],["FLO audit","Hosting, greeting, seating times, floor management, guest flow."]];
+var MTX=[
+ ["Financial success","SPH £22 · 20% margin · 27% wage · 25% food cost · ±5% variance","Variance tracking, waste checks, rota efficiency",
+  [["SPH £","n","target 22"],["Margin %","n","target 20"],["Wage %","n","target 27"],["Food cost %","n","target 25"],["Food variance %","n","±5"],["Drinks variance %","n","±5"],["Waste %","n","5 to 7"]]],
+ ["Customer engagement","4.8★ reviews · 500 CIC sign-ups · 2,500 data points","Soft-opening review, feedback trends",
+  [["Google rating","n","target 4.8"],["Review count","n",""],["CIC sign-ups","n","target 500"],["Data touch points","n","target 2,500"],["Mystery shopper %","n","target 95"]]],
+ ["Operational efficiency","Ticket times · error rate · scheduling","Service-flow monitoring, FOH / BOH logs",
+  [["Ticket avg (min)","n","under 10"],["Ticket peak (min)","n","under 12"],["Error rate %","n","under 3"],["Table turn","t","e.g. 45 min"],["Floor and kitchen observations","a","What is actually happening in service"]]],
+ ["Brand visibility","Opening awareness · social reach · conversion","Campaign activation, PR mentions, menu box",
+  [["Campaign","s","Not started|In progress|Live|Red light"],["Social reach","t","e.g. 42k"],["PR mentions","n","count"],["Notes","a","Owner and what is outstanding"]]],
+ ["Compliance & quality","H&S · QA checks · incident logs","Audit reviews, cleaning and compliance logs",
+  [["H&S compliance %","n","target 100"],["Incident logs","s","Live|Gaps|Not started"],["QA audit","s","Complete|Partial|Not done"],["Mapal uploads","s","Complete|Outstanding|Not started"],["Cleaning score %","n","target 95"]]],
+ ["Staff engagement","Training completion · retention · morale","Daily huddles, performance reviews",
+  [["FOH Mapal %","n","target 85"],["BOH Mapal %","n","target 85"],["Sushi Mapal %","n","target 85"],["Team morale","s","Strong|Stable|Strained|At risk"],["Notes","a","Leavers, gaps, morale drivers"]]]
+];
+var RM=[
+ ["Operations · BOH kitchen",[["Ticket time (avg)","Under 10 mins"],["Ticket time (peak)","Under 12 mins"],["Station strength","Wok, Ramen, Fryer, Cold fully competent"],["BOH error rate","Under 3%"],["Prep accuracy","Correct par levels"],["Portion consistency","Tight portion control"]]],
+ ["Operations · Sushi",[["Sushi ticket time","Under 10 mins"],["Sushi error rate","Under 2%"],["Knife work and prep accuracy","Clean cuts, consistent sizing"],["Sushi station setup","Clean layout, correct flow"],["Sushi yield","Low wastage, high accuracy"]]],
+ ["Operations · FOH",[["FOH service flow","Batman, Robin, link to BOH"],["Table turn time","Target set and met"],["Order accuracy","Minimal FOH mistakes"],["FOH runner performance","Strong communication with BOH"]]],
+ ["Customer · Experience",[["Google rating","4.7★ to 4.8★"],["Daily complaints","Under 3 a day, no repeating themes"],["Guest sentiment","Majority positive, speed and quality praised"]]],
+ ["Customer · Engagement",[["CIC sign-ups","Trending toward 500+"],["QR scans","Steady daily uptake"],["Opening campaign data","Captured and shared with Marketing"]]],
+ ["People · Leadership",[["GM / FOH supervisor independence","Running shifts confidently","FOH"],["Head chef leadership","Stable BOH, strong control","BOH"],["Sushi lead capability","Consistent quality and training","Sushi"]]],
+ ["People · Competency",[["Station competency","All kitchen staff signed off","BOH"],["Sushi competency","Full sushi team trained to standard","Sushi"],["FOH competency","Hosts, servers, expo trained","FOH"],["Training completion (Mapal)","85%+","All"]]],
+ ["People · Staffing",[["FOH staffing levels","Staffed to forecast","FOH"],["FOH retention","Low turnover in first 4 to 6 weeks","FOH"],["BOH staffing levels","Full cover for Wok, Ramen, Fryer, Prep","BOH"],["BOH retention","No early churn","BOH"],["Sushi staffing and retention","Full team, no losses in Owari","Sushi"]]],
+ ["People · Culture",[["Team morale","Stable, positive, low stress","All"],["Communication","Clear FOH, BOH, Sushi comms","All"],["Behaviour and discipline","Consistent standards and routines","All"]]],
+ ["Systems · Stability",[["POS functionality","No recurring issues"],["KDS / printer reliability","Fully stable"],["Mapal compliance","All checks completed"],["JIT ordering","Accurate, consistent"]]],
+ ["Systems · Safety & QA",[["H&S logs","Completed daily"],["Temperature logs","No gaps"],["Cleaning standards","All checklists complete"]]],
+ ["Systems · Stock & ordering",[["Stock variance","Near zero"],["Waste %","5 to 7% target"],["Ordering behaviour","Accurate, no over-ordering"]]],
+ ["Deliveroo",[["Deliveroo ticket time","Under 12 mins"],["Packaging accuracy","Zero wrong orders"],["Handoff flow","Smooth, no congestion"],["Deliveroo revenue build","90% of forecast by week 4"]]]
+];
+var SIGN=["Hajime lead · Setup / Ops","Hajime lead · BOH","Hajime lead · FOH","Hajime lead · Sushi","Owari lead / GM (receiving)","AGM","DAM sign-off","Region AM sign-off","Operations Director"];
+var WEEKS=8;
+var DEPTS=['Operations','AM','AM / Marketing','Marketing','Exec Chef','BOH Kitchen','BOH Sushi','FOH','Systems','Compliance','People / HR','Finance','Maintenance','Supply chain','Deliveroo'];
+
+/* ---------- utils ---------- */
+function $(id){return document.getElementById(id)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}
+function hhmm(t){var d=new Date(t);return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+function ukDate(iso){if(!iso)return '';var p=iso.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:iso}
+function ago(t){if(!t)return 'never saved';var d=new Date(t);return ukDate(d.toISOString().slice(0,10))+' '+hhmm(t)}
+function slug(s){return String(s).toLowerCase().normalize('NFKD').replace(/[^\w\s-]/g,'').trim().replace(/[\s_]+/g,'-').replace(/-+/g,'-').slice(0,60)||'site'}
+function toast(m){var e=$('toast');e.textContent=m;e.classList.add('on');setTimeout(function(){e.classList.remove('on')},1800)}
+function setStat(cls,msg){var s=$('stat');s.className='stat '+cls;s.lastChild.textContent=msg}
+
+/* ---------- store: Google Sheet via Apps Script, local cache ---------- */
+var API='https://script.google.com/macros/s/AKfycbwttmXDnxS6zSOXF6UPHFmjFZnkgRw9mezBADlS-U-9X3zkQQ63YX9lgtd2lvsRzUs-LA/exec', online=false, reports={};
+function localAll(){try{return JSON.parse(localStorage.getItem(LKEY)||'{}')}catch(e){return {}}}
+function localPut(id,d){try{var a=localAll();a[id]=d;localStorage.setItem(LKEY,JSON.stringify(a))}catch(e){}}
+function localDel(id){try{var a=localAll();delete a[id];localStorage.setItem(LKEY,JSON.stringify(a))}catch(e){}}
+function code(){try{return localStorage.getItem('ho_team_code')||''}catch(e){return window.__code||''}}
+function setCode(c){window.__code=c;try{localStorage.setItem('ho_team_code',c)}catch(e){}}
+function post(body){body.key=code();return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){if(!j.ok)throw j;return j})}
+function fetchAll(){return fetch(API+'?key='+encodeURIComponent(code())+'&t='+Date.now()).then(function(r){return r.json()})}
+function storeSet(id,d){localPut(id,d);return post({action:'set',id:id,doc:d}).then(function(){online=true;return 'shared'})}
+function storeDel(id){localDel(id);return post({action:'delete',id:id})}
+/* ---------- routing ---------- */
+var cur=null; // current report id
+var docUnsub=null;
+function route(){
+  if(docUnsub){try{docUnsub()}catch(e){}docUnsub=null}
+  var m=location.hash.match(/^#\/r\/([\w.~:@+-]+)/);
+  if(m){openReport(m[1])}else{cur=null;renderHome()}
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+
+/* ================= HOME ================= */
+function renderHome(){
+  document.title='Hajime Owari Reports';
+  if(needCode){renderGate();return}
+  $('barBtns').innerHTML='';
+  var ids=Object.keys(reports);
+  var h='<a class="back" href="../">← AM Control Centre</a><header class="homehead"><div><div class="eyebrow">Area Management · Site Lifecycle</div><h1>Hajime → Owari Reports</h1>'+
+    '<div class="sub">One live handover report per opening. Hajime fills the checklist and scores the site; Owari runs it to four green weeks; Kiban signs it off.</div></div>'+
+    '<button type="button" class="btn pri" data-act="new">+ New report</button></header>'+
+    '<div id="newSlot"></div>';
+  if(!ids.length){h+='<div class="empty">No reports yet. Start one with <b>New report</b>.</div>'}
+  PHASES.forEach(function(p){
+    var list=ids.map(function(id){return reports[id]}).filter(function(r){return (r.meta&&r.meta.phase||'Hajime')===p[0]});
+    if(!list.length)return;
+    list.sort(function(a,b){return String(b.meta.open||'').localeCompare(String(a.meta.open||''))});
+    h+='<div class="phgroup"><h3><span class="kj">'+p[1]+'</span>'+p[0]+' · '+p[2]+' <span class="cnt">'+list.length+'</span></h3><div class="cards">'+list.map(card).join('')+'</div></div>';
+  });
+  $('view').innerHTML=h;
+}
+function card(r){
+  var m=r.meta||{},ph=PHASES.filter(function(p){return p[0]===(m.phase||'Hajime')})[0];
+  return '<a class="rc" href="#/r/'+esc(r.id)+'"><div class="top"><div><div class="nm">'+esc(m.site||r.id)+(m.code?' <span class="chip">'+esc(m.code)+'</span>':'')+'</div>'+
+    '<div class="cl">'+esc(m.cluster||'Cluster TBC')+(m.am?' · '+esc(m.am):'')+'</div></div><div class="kj'+(m.phase==='Kiban'?' done':'')+'">'+ph[1]+'</div></div>'+
+    '<div class="m"><i style="width:'+(m.pct||0)+'%"></i></div>'+
+    '<div class="row2"><span><b>'+(m.pct||0)+'%</b> complete</span><span>· <i class="dot dR"></i><b>'+(m.r||0)+'</b></span><span><i class="dot dA"></i><b>'+(m.a||0)+'</b></span><span><i class="dot dG"></i><b>'+(m.g||0)+'</b></span><span>· Owari <b>'+Math.min(m.streak||0,4)+'/4</b></span><span>· open actions <b>'+(m.openActs||0)+'</b></span></div>'+
+    '<div class="foot"><span>Opening '+(m.open?ukDate(m.open):'TBC')+'</span><span>Saved '+ago(r.savedAt)+'</span></div></a>';
+}
+function showNew(){
+  var slot=$('newSlot');if(!slot){location.hash='';setTimeout(showNew,50);return}
+  var opts=Object.keys(CLUSTERS).map(function(c){return '<option>'+esc(c)+'</option>'}).join('');
+  slot.innerHTML='<div class="newform"><h2>New Hajime → Owari report</h2><div class="grid">'+
+    '<div><label for="nf_site">Site name</label><input id="nf_site" placeholder="e.g. Maki Bluewater"></div>'+
+    '<div><label for="nf_code">Site code</label><input id="nf_code" placeholder="Leave blank until ruled"></div>'+
+    '<div><label for="nf_cluster">Cluster</label><select id="nf_cluster">'+opts+'</select></div>'+
+    '<div><label for="nf_open">Planned opening</label><input id="nf_open" type="date"></div>'+
+    '<div><label for="nf_haj">Hajime lead</label><input id="nf_haj" placeholder="e.g. Ross / Ka Ho"></div>'+
+    '</div><div class="err" id="nf_err"></div><div class="acts"><button type="button" class="btn ghost" data-act="cancelnew">Cancel</button><button type="button" class="btn pri" data-act="create">Create report</button></div></div>';
+  $('nf_site').focus();
+}
+function createReport(){
+  var site=$('nf_site').value.trim();if(!site){$('nf_err').textContent='Give the site a name first.';return}
+  var cl=$('nf_cluster').value,c=CLUSTERS[cl]||{am:'',dam:''};
+  var id=slug(site.replace(/^maki\s*(&|and)?\s*(ramen)?\s*/i,'')||site),base=id,n=2;
+  while(reports[id])id=base+'-'+(n++);
+  var f={c_site:site,c_code:$('nf_code').value.trim(),c_cluster:cl,c_am:c.am,c_dam:c.dam,c_haj:$('nf_haj').value.trim(),c_open:$('nf_open').value,c_close:'4 consecutive weeks green (AMO1)'};
+  var sg=['Ross','','','','','',c.dam,c.am,'Lincoln'];sg.forEach(function(v,i){f['sg_n'+i]=v});
+  var d={id:id,tick:{},rag:{},dec:'',phase:'Hajime',acts:[1],nextAct:2,fields:f,savedAt:Date.now(),created:Date.now()};
+  d.meta={site:site,code:f.c_code,cluster:cl,am:c.am,phase:'Hajime',open:f.c_open,pct:0,r:0,a:0,g:0,streak:0,openActs:0};
+  reports[id]=d;
+  pending[id]=true;storeSet(id,d).then(function(){pending[id]=false;toast('Report created')},function(e){toast('Saved on this device, will retry')});
+  location.hash='#/r/'+id;
+}
+
+/* ================= REPORT ================= */
+var S=null, dirtyAt=0, saveTimer=null, saving=false, lastSaved=0, delArm=0;
+function reportHTML(){
+  var rail=PHASES.map(function(p){return '<button class="ph" data-p="'+p[0]+'" type="button"><div class="k">'+p[1]+'</div><div class="n">'+p[0]+' · '+p[2]+'</div><div class="d">'+p[3]+'</div></button>'}).join('');
+  var clopts='<option value=""></option>'+Object.keys(CLUSTERS).map(function(c){return '<option>'+esc(c)+'</option>'}).join('');
+  var milesIn=MILES.map(function(m){return '<div><label for="'+m[0]+'">'+esc(m[1])+'</label><input id="'+m[0]+'" type="date"></div>'}).join('');
+  return '<a class="back" href="#/">← All reports</a>'+
+  '<header class="mast"><div><div class="eyebrow">Area Management · Hajime → Owari handover</div><h1 id="hTitle">Report</h1><div class="sub" id="hSub"></div></div>'+
+  '<div class="pct"><b id="pctv">0%</b><span>Complete</span></div><div class="meter"><i id="pbar"></i></div></header>'+
+  '<div class="rail">'+rail+'</div><p class="railnote">Tap a phase to set where the site is now.</p>'+
+  '<div class="dates" id="strip"></div>'+
+  '<nav class="toc" aria-label="Sections"><a href="#s0">Cover</a><a href="#s1">Hajime checklist</a><a href="#s2">Success matrix</a><a href="#s3">Owari weeks</a><a href="#s41">Audits</a><a href="#s42">Actions</a><a href="#s43">Readiness</a><a href="#s44">Sign-off</a></nav>'+
+  '<section id="s0"><div class="sh"><span class="no">0.0</span><h2>Handover cover</h2></div>'+
+  '<p class="lead">Hajime records every opening task, audit and systems check, then scores the site against the success matrix. Owari uses this record to close the gaps and hold four consecutive green weeks before Kiban sign-off.</p>'+
+  '<div class="grid">'+
+   '<div><label for="c_site">Site</label><input id="c_site"></div>'+
+   '<div><label for="c_code">Site code</label><input id="c_code" placeholder="Not ruled yet"></div>'+
+   '<div><label for="c_cluster">Cluster</label><select id="c_cluster">'+clopts+'</select></div>'+
+   '<div><label for="c_am">Region AM</label><input id="c_am"></div>'+
+   '<div><label for="c_dam">DAM / DEC</label><input id="c_dam"></div>'+
+   '<div><label for="c_gm">GM (Owari lead)</label><input id="c_gm" placeholder="Name"></div>'+
+   '<div><label for="c_haj">Hajime lead</label><input id="c_haj"></div>'+
+   '<div><label for="c_agm">AGM</label><input id="c_agm" placeholder="Name"></div>'+
+   '<div><label for="c_next">Next review</label><input id="c_next" type="date"></div>'+
+   '<div><label for="c_close">Owari close target</label><input id="c_close"></div>'+
+  '</div><h3>Key dates</h3><div class="miles">'+milesIn+'</div>'+
+  '<h3>Hajime team and assessment areas</h3><div class="grid">'+
+   [1,2,3,4].map(function(i){return '<div><input id="c_h'+i+'" aria-label="Hajime team '+i+'" placeholder="'+['Name · Setup / Ops','Name · BOH','Name · FOH','Name · Sushi'][i-1]+'"></div>'}).join('')+
+  '</div><div class="tally" id="tally"></div></section>'+
+  '<section id="s1"><div class="sh"><span class="no">1.0</span><h2>Hajime completion</h2></div><p class="lead">Tick each item once Hajime confirms it. Anything outstanding gets a note and an owner so it carries into Owari.</p>'+
+   '<h3>1.1 BOH · Kitchen <span class="cnt" id="cB"></span></h3><div class="list" id="s11"></div>'+
+   '<h3>1.2 FOH · Service <span class="cnt" id="cF"></span></h3><div class="list" id="s12"></div>'+
+   '<h3>1.3 Systems · Ops, admin, compliance <span class="cnt" id="cY"></span></h3><div class="list" id="s13"></div></section>'+
+  '<section id="s2"><div class="sh"><span class="no">2.0</span><h2>Opening success matrix</h2></div><p class="lead">Hajime scores each area at handover. Leave fields blank for Owari to complete during stabilisation.</p><div class="list" id="s20"></div>'+
+   '<div class="grid" style="margin-top:14px"><div><label for="l_okr">OKR / efficiency sheet</label><input id="l_okr" placeholder="Paste link"></div><div><label for="l_owari">Owari team review sheet</label><input id="l_owari" placeholder="Paste link"></div></div></section>'+
+  '<section id="s3"><div class="sh"><span class="no">3.0</span><h2>Owari weeks: AMO1 run to close</h2></div><p class="lead">One row per trading week. A week is green when every figure entered hits target: sales at or above target, wage 27% or under, food cost 25% or under, Google rating 4.7 or higher. Owari closes after four greens in a row.</p>'+
+   '<div class="tblwrap"><table><thead><tr><th>Week</th><th>W/c</th><th>Sales £</th><th>Target £</th><th>Covers</th><th>Wage %</th><th>Food %</th><th>Google ★</th><th>Status</th></tr></thead><tbody id="weeks"></tbody></table></div>'+
+   '<div class="streak"><div class="pips" id="pips"></div><p id="streakTxt"></p></div></section>'+
+  '<section id="s41"><div class="sh"><span class="no">4.1</span><h2>Audits to complete <span class="cnt" id="cAU"></span></h2></div><div class="list" id="s41l"></div></section>'+
+  '<section id="s42"><div class="sh"><span class="no">4.2</span><h2>Issues &amp; action tracker</h2></div><p class="lead">Data → Diagnosis → Action → Owner → Follow-up → Closure. Every issue gets an owner, a due date and a RAG; Owari drives each one to green.</p><div id="actions"></div><button class="add" type="button" data-act="addact">+ Add issue / action</button></section>'+
+  '<section id="s43"><div class="sh"><span class="no">4.3</span><h2>Full readiness matrix</h2></div><p class="lead">Score every line at handover. Owari takes reds and ambers to green before Kiban sign-off.</p><div class="list" id="s43l"></div></section>'+
+  '<section id="s44"><div class="sh"><span class="no">4.4</span><h2>Sign-off &amp; decision</h2></div><div id="s44l"></div><h3>Handover decision</h3>'+
+   '<div class="dec" id="dec"><button type="button" data-d="Proceed to Owari"><b>Proceed to Owari</b><br><span class="lead" style="margin:0">Hajime complete, GM takes the site</span></button><button type="button" data-d="Hold: actions outstanding (see 4.2)"><b>Hold</b><br><span class="lead" style="margin:0">Actions outstanding, see 4.2</span></button></div>'+
+   '<h3><label for="f_risks" style="margin:0;font-size:inherit;letter-spacing:inherit">Key risks and watch-items carried into Owari</label></h3><textarea id="f_risks" style="min-height:96px"></textarea>'+
+   '<div class="sigwrap" style="margin-top:22px"><div class="sigbox"><div class="sigline">Michael Salvador</div><div class="sigrule"></div><div class="signame">Michael Salvador</div><div class="sigrole">Chief Operating Officer · Maki &amp; Ramen</div></div>'+
+   '<div class="sigmeta"><div><span>Function</span>Area Management</div><div><span>Document</span>Hajime → Owari Handover, <b id="sigSite"></b></div><div><span>Template</span>v1.1 · live form</div><div><span>Source</span>AM Function Operational Manual v1.0</div></div></div>'+
+   '<div class="danger-zone"><button type="button" class="btn danger" data-act="delete" id="bDel">Delete this report</button></div></section>';
+}
+function ticks(el,items,pfx,withG){
+  $(el).innerHTML=items.map(function(t,i){
+    var k=pfx+i,lab=withG?t[0]:t,g=withG?'<div class="g">'+esc(t[1])+'</div>':'';
+    return '<div class="it" data-k="'+k+'"><button type="button" class="tk" data-k="'+k+'" aria-label="Mark done: '+esc(lab)+'">&#10003;</button><div class="bd"><div class="t">'+esc(lab)+'</div>'+g+'<input id="n_'+k+'" aria-label="Notes for '+esc(lab)+'" placeholder="'+(withG?'Date / owner':'Notes / owner')+'"></div></div>';
+  }).join('');
+}
+function ragbtns(k,label){return '<div class="rag" role="group" aria-label="RAG for '+esc(label)+'">'+['R','A','G'].map(function(v){return '<button type="button" data-v="'+v+'" data-k="'+k+'">'+v+'</button>'}).join('')+'</div>'}
+function flds(k,list){
+  return list.map(function(f,j){
+    var id=k+'_'+j,ty=f[1],ph=f[2]||'';
+    var h='<div'+(ty==='a'?' class="wide"':'')+'><label for="'+id+'">'+esc(f[0])+'</label>';
+    if(ty==='s'){h+='<select id="'+id+'"><option value=""></option>'+ph.split('|').map(function(o){return '<option>'+esc(o)+'</option>'}).join('')+'</select>'}
+    else if(ty==='a'){h+='<textarea id="'+id+'" placeholder="'+esc(ph)+'" style="min-height:56px"></textarea>'}
+    else{h+='<input id="'+id+'"'+(ty==='n'?' inputmode="decimal"':'')+' placeholder="'+esc(ph)+'">'}
+    return h+'</div>';
+  }).join('');
+}
+function buildReport(){
+  $('view').innerHTML=reportHTML();
+  ticks('s11',BOH,'B');ticks('s12',FOH,'F');ticks('s13',SYS,'Y');ticks('s41l',AUD,'AU',true);
+  $('s20').innerHTML=MTX.map(function(m,i){var k='MX'+i;return '<div class="mrow" data-label="'+esc(m[0])+'"><div class="bd"><div class="t"><b>'+esc(m[0])+'</b></div><div class="g">'+esc(m[1])+'</div><div class="g">'+esc(m[2])+'</div><div class="flds">'+flds(k,m[3])+'</div></div>'+ragbtns(k,m[0])+'</div>'}).join('');
+  var h='',n=0;RM.forEach(function(g){h+='<div class="grp">'+esc(g[0])+'</div>';g[1].forEach(function(r){var k='RM'+(n++);h+='<div class="mrow" data-label="'+esc(r[0])+'"><div class="bd"><div class="t">'+esc(r[0])+(r[2]?'<span class="chip">'+esc(r[2])+'</span>':'')+'</div><div class="g">'+esc(r[1])+'</div><input id="n_'+k+'" aria-label="Status note for '+esc(r[0])+'" placeholder="Status note (optional)"></div>'+ragbtns(k,r[0])+'</div>'})});
+  $('s43l').innerHTML=h;
+  $('s44l').innerHTML=SIGN.map(function(s,i){return '<div class="sign"><div><label for="sg_n'+i+'">'+esc(s)+'</label><input id="sg_n'+i+'"></div><div><label for="sg_s'+i+'">Initials</label><input id="sg_s'+i+'"></div><div><label for="sg_d'+i+'">Date</label><input id="sg_d'+i+'" type="date"></div></div>'}).join('');
+  var w='';for(var i=0;i<WEEKS;i++){w+='<tr><td class="wk">W'+(i+1)+'</td><td><input id="w'+i+'_wc" type="date" aria-label="Week '+(i+1)+' commencing"></td>'+['sales','tgt','cov','wage','food','star'].map(function(f){return '<td><input id="w'+i+'_'+f+'" inputmode="decimal" aria-label="Week '+(i+1)+' '+f+'"></td>'}).join('')+'<td><span class="st" id="w'+i+'_st">No data</span></td></tr>'}
+  $('weeks').innerHTML=w;
+  $('barBtns').innerHTML='<button type="button" class="btn" data-act="copy">Copy summary</button> <button type="button" class="btn pri" data-act="print">Print / PDF</button>';
+}
+function actRow(id){
+  var d=document.createElement('div');d.className='act';d.dataset.id=id;d.dataset.rag='R';
+  d.innerHTML='<button type="button" class="del" aria-label="Remove action">&times;</button><div class="n">#'+id+'</div>'+
+   '<div class="row"><div><label for="a'+id+'_i">Issue / action</label><input id="a'+id+'_i"></div>'+
+   '<div><label for="a'+id+'_d">Dept · owner</label><div style="display:flex;gap:6px"><select id="a'+id+'_d" style="flex:0 0 46%">'+DEPTS.map(function(x){return '<option>'+esc(x)+'</option>'}).join('')+'</select><input id="a'+id+'_o" placeholder="Owner"></div></div>'+
+   '<div><label for="a'+id+'_u">Due</label><input id="a'+id+'_u" type="date"></div>'+
+   '<div><label for="a'+id+'_r">RAG</label><select id="a'+id+'_r"><option>R</option><option>A</option><option>G</option></select></div></div>';
+  return d;
+}
+function openReport(id){
+  cur=id;dirtyAt=0;lastSaved=0;delArm=0;
+  if(needCode){renderGate();return}
+  var d=reports[id];
+  if(!d){$('view').innerHTML='<a class="back" href="#/">← All reports</a><div class="empty">'+(loaded?'This report does not exist or was deleted.':'Loading report…')+'</div>';setStat('busy',loaded?'Report not found':'Loading');return}
+  buildReport();apply(d);lastSaved=d.savedAt||0;
+  setStat(online?'ok':'',online?'Shared record · saved '+ago(d.savedAt):'Offline copy on this device · changes sync when back online');
+}
+function apply(d){
+  S={tick:d.tick||{},rag:d.rag||{},dec:d.dec||'',phase:d.phase||'Hajime',acts:[],nextAct:1};
+  $('actions').innerHTML='';
+  (d.acts||[]).forEach(function(id){S.acts.push(id);$('actions').appendChild(actRow(id))});
+  S.nextAct=Math.max(d.nextAct||1,S.acts.length?Math.max.apply(null,S.acts)+1:1);
+  var f=d.fields||{};
+  document.querySelectorAll('#view input[id],#view select[id],#view textarea[id]').forEach(function(e){e.value=f[e.id]!=null?f[e.id]:''});
+  for(var k in f){var e=$(k);if(e&&e.tagName==='SELECT'&&f[k]&&e.value!==f[k]){var o=document.createElement('option');o.textContent=f[k];e.appendChild(o);e.value=f[k]}}
+  S.acts.forEach(function(id){var r=$('a'+id+'_r');if(r)r.closest('.act').dataset.rag=r.value||'R'});
+  paint();
+}
+function paint(){
+  document.querySelectorAll('.tk').forEach(function(b){var on=!!S.tick[b.dataset.k];b.classList.toggle('on',on);b.closest('.it').classList.toggle('done',on)});
+  document.querySelectorAll('.rag button').forEach(function(b){b.classList.toggle('on',S.rag[b.dataset.k]===b.dataset.v)});
+  document.querySelectorAll('#dec button').forEach(function(b){b.classList.toggle('on',b.dataset.d===S.dec)});
+  var pi=PHASES.map(function(p){return p[0]}).indexOf(S.phase);
+  document.querySelectorAll('.ph').forEach(function(b,i){b.classList.toggle('on',i===pi);b.classList.toggle('done',i<pi);b.setAttribute('aria-pressed',i===pi)});
+  upd();
+}
+function num(id){var e=$(id);var v=(e&&e.value||'').replace(/[£,%★\s]/g,'');return v===''?null:parseFloat(v)}
+function weekStatus(i){
+  var s=num('w'+i+'_sales'),t=num('w'+i+'_tgt'),w=num('w'+i+'_wage'),fd=num('w'+i+'_food'),st=num('w'+i+'_star'),c=[];
+  if(s!==null&&t!==null)c.push(s>=t);if(w!==null)c.push(w<=27);if(fd!==null)c.push(fd<=25);if(st!==null)c.push(st>=4.7);
+  if(!c.length)return '';var miss=c.filter(function(x){return !x}).length;return miss===0?'G':(miss===1?'A':'R');
+}
+function v(id){var e=$(id);return e?e.value.trim():''}
+function metrics(){
+  var cnt=function(arr,p){var d=0;arr.forEach(function(_,i){if(S.tick[p+i])d++});return d};
+  var b=cnt(BOH,'B'),fh=cnt(FOH,'F'),y=cnt(SYS,'Y'),au=cnt(AUD,'AU');
+  var tot=BOH.length+FOH.length+SYS.length+AUD.length,done=b+fh+y+au;
+  var ragTotal=MTX.length;RM.forEach(function(x){ragTotal+=x[1].length});
+  var r=0,a=0,g=0,rt=0;for(var k in S.rag){rt++;var x=S.rag[k];if(x==='R')r++;else if(x==='A')a++;else g++}
+  var streak=0,best=0,lastIdx=-1;for(var i=0;i<WEEKS;i++)if(weekStatus(i))lastIdx=i;
+  for(var j=0;j<=lastIdx;j++){if(weekStatus(j)==='G'){streak++;best=Math.max(best,streak)}else streak=0}
+  var openActs=S.acts.filter(function(id){return v('a'+id+'_i')&&v('a'+id+'_r')!=='G'}).length;
+  return {b:b,fh:fh,y:y,au:au,tot:tot,done:done,ragTotal:ragTotal,rt:rt,r:r,a:a,g:g,streak:streak,best:best,any:lastIdx>=0,openActs:openActs,pct:Math.round((done+rt)/(tot+ragTotal)*100)};
+}
+function upd(){
+  var M=metrics(),site=v('c_site')||'Untitled site';
+  document.title=site+' · Hajime Owari';
+  $('hTitle').textContent=site+' Hajime → Owari';
+  $('hSub').textContent=[v('c_cluster')||'Cluster TBC',v('c_code')?'Site code '+v('c_code'):'Site code not ruled',v('c_am')?'AM '+v('c_am'):''].filter(Boolean).join(' · ');
+  $('sigSite').textContent=site+(v('c_code')?' ('+v('c_code')+')':'');
+  $('cB').textContent=M.b+' / '+BOH.length;$('cF').textContent=M.fh+' / '+FOH.length;$('cY').textContent=M.y+' / '+SYS.length;$('cAU').textContent=M.au+' / '+AUD.length;
+  $('pbar').style.width=M.pct+'%';$('pctv').textContent=M.pct+'%';
+  $('tally').innerHTML='<span class="tag">Hajime items <b>'+M.done+' / '+M.tot+'</b></span><span class="tag">Scored <b>'+M.rt+' / '+M.ragTotal+'</b></span><span class="tag"><i class="dot dR"></i>Red <b>'+M.r+'</b></span><span class="tag"><i class="dot dA"></i>Amber <b>'+M.a+'</b></span><span class="tag"><i class="dot dG"></i>Green <b>'+M.g+'</b></span><span class="tag">Open actions <b>'+M.openActs+'</b></span>';
+  for(var i=0;i<WEEKS;i++){var s=weekStatus(i),el=$('w'+i+'_st');el.className='st '+s;el.textContent=s==='G'?'Green':s==='A'?'1 miss':s==='R'?'Red':'No data'}
+  var pips='';for(var p=0;p<4;p++)pips+='<i class="'+(p<Math.min(M.streak,4)?'on':'')+'"></i>';$('pips').innerHTML=pips;
+  $('streakTxt').innerHTML=!M.any?'No trading weeks logged yet. Enter W1 once the site has a full week of cash-ups.':M.streak>=4?'<b>Four green weeks in a row.</b> Owari can close: book the Kiban sign-off.':'<b>'+M.streak+' of 4</b> consecutive green weeks'+(M.best>M.streak?' (best run '+M.best+')':'')+'.';
+  $('strip').innerHTML=MILES.map(function(m){var d=v(m[0]);return '<div class="dt'+(d?'':' none')+'"><b>'+(d?ukDate(d).slice(0,5):'TBC')+'</b><span>'+esc(m[1])+'</span></div>'}).join('');
+  return M;
+}
+function collect(){
+  var f={};document.querySelectorAll('#view input[id],#view select[id],#view textarea[id]').forEach(function(e){if(e.value!=='')f[e.id]=e.value});
+  var M=metrics();
+  return {id:cur,tick:S.tick,rag:S.rag,dec:S.dec,phase:S.phase,acts:S.acts.slice(),nextAct:S.nextAct,fields:f,savedAt:Date.now(),created:(reports[cur]&&reports[cur].created)||Date.now(),
+    meta:{site:v('c_site'),code:v('c_code'),cluster:v('c_cluster'),am:v('c_am'),phase:S.phase,open:v('c_open'),pct:M.pct,r:M.r,a:M.a,g:M.g,streak:M.streak,openActs:M.openActs}};
+}
+function touch(){if(!cur)return;dirtyAt=Date.now();upd();clearTimeout(saveTimer);setStat('busy','Unsaved changes');saveTimer=setTimeout(save,1200)}
+function save(){
+  if(!cur)return;if(saving){saveTimer=setTimeout(save,800);return}
+  var id=cur,d=collect();reports[id]=d;pending[id]=true;saving=true;setStat('busy','Saving');
+  storeSet(id,d).then(function(){lastSaved=d.savedAt;pending[id]=false;setStat('ok','Saved to shared record · '+hhmm(d.savedAt))},
+    function(e){pending[id]=true;setStat('','Not saved to shared record'+(e&&e.error?' ('+e.error+')':'')+' · kept on this device, retrying')}).then(function(){saving=false});
+}
+
+/* ---------- summary ---------- */
+function block(title,items,pfx,g){var o='\n'+title.toUpperCase()+'\n';items.forEach(function(t,i){var k=pfx+i,n=v('n_'+k);o+='  ['+(S.tick[k]?'x':' ')+'] '+(g?t[0]:t)+(n?'  ('+n+')':'')+'\n'});return o}
+function buildText(){
+  var t='MAKI & RAMEN · HAJIME → OWARI HANDOVER\n';
+  t+='Site: '+v('c_site')+'   Code: '+(v('c_code')||'not ruled')+'   Cluster: '+(v('c_cluster')||'TBC')+'   Phase: '+S.phase+'\n';
+  t+='Region AM: '+(v('c_am')||'TBC')+'   DAM: '+(v('c_dam')||'TBC')+'   GM (Owari lead): '+(v('c_gm')||'TBC')+'   AGM: '+(v('c_agm')||'TBC')+'\n';
+  t+='Hajime lead: '+(v('c_haj')||'TBC')+'   Team: '+['c_h1','c_h2','c_h3','c_h4'].map(v).filter(Boolean).join(', ')+'\n';
+  t+='Key dates: '+MILES.map(function(m){return m[1]+' '+(ukDate(v(m[0]))||'TBC')}).join(' · ')+'\n';
+  t+=block('1.1 BOH kitchen',BOH,'B')+block('1.2 FOH service',FOH,'F')+block('1.3 Systems',SYS,'Y');
+  t+='\n2.0 OPENING SUCCESS MATRIX\n';
+  MTX.forEach(function(m,i){var k='MX'+i;t+='  ['+(S.rag[k]||' ')+'] '+m[0]+'\n';m[3].forEach(function(fd,j){var val=v(k+'_'+j);if(val)t+='      '+fd[0]+': '+val.replace(/\n/g,' / ')+'\n'})});
+  t+='\n3.0 OWARI WEEKS\n';var anyw=false;
+  for(var i=0;i<WEEKS;i++){var s=weekStatus(i);if(!s&&!v('w'+i+'_wc'))continue;anyw=true;t+='  W'+(i+1)+' '+ukDate(v('w'+i+'_wc'))+'  sales '+(v('w'+i+'_sales')||'-')+' / target '+(v('w'+i+'_tgt')||'-')+'  covers '+(v('w'+i+'_cov')||'-')+'  wage '+(v('w'+i+'_wage')||'-')+'%  food '+(v('w'+i+'_food')||'-')+'%  ★ '+(v('w'+i+'_star')||'-')+'  ['+(s||'-')+']\n'}
+  if(!anyw)t+='  (no trading weeks logged)\n';
+  t+=block('4.1 Audits',AUD,'AU',true)+'\n4.2 ISSUES & ACTIONS\n';
+  var al=S.acts.filter(function(id){return v('a'+id+'_i')});if(!al.length)t+='  (none)\n';
+  al.forEach(function(id,i){t+='  '+(i+1)+'. ['+v('a'+id+'_r')+'] '+v('a'+id+'_i')+'\n     '+v('a'+id+'_d')+' · owner '+(v('a'+id+'_o')||'TBC')+' · due '+(ukDate(v('a'+id+'_u'))||'TBC')+'\n'});
+  t+='\n4.3 READINESS MATRIX\n';var n=0;
+  RM.forEach(function(g){t+='  '+g[0]+'\n';g[1].forEach(function(rw){var k='RM'+(n++),nt=v('n_'+k);t+='    ['+(S.rag[k]||' ')+'] '+rw[0]+(nt?'  ('+nt+')':'')+'\n'})});
+  t+='\n4.4 SIGN-OFF\n';SIGN.forEach(function(s,i){t+='  '+s+': '+(v('sg_n'+i)||'TBC')+'  initials: '+(v('sg_s'+i)||'-')+'  date: '+(ukDate(v('sg_d'+i))||'-')+'\n'});
+  t+='  Decision: '+(S.dec||'not set')+'\n  Risks / watch-items:\n'+(v('f_risks')||'(none)').split('\n').map(function(l){return '    '+l}).join('\n')+'\n';
+  var r=[];for(var k in S.rag)if(S.rag[k]==='R'){var el=document.querySelector('.rag button[data-k="'+k+'"]');if(el)r.push(el.closest('.mrow').dataset.label)}
+  if(r.length)t+='\nREDS TO CLOSE:\n'+r.map(function(x){return '  - '+x}).join('\n')+'\n';
+  return t+'\nMichael Salvador · Chief Operating Officer · Maki & Ramen\n';
+}
+function copyOut(){
+  var t=buildText();
+  function fb(){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy');toast('Summary copied')}catch(e){toast('Copy blocked by the browser')}a.remove()}
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(function(){toast('Summary copied')},fb);else fb();
+}
+
+/* ---------- events ---------- */
+document.addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  var act=b.dataset.act;
+  if(act==='new'){showNew();return}
+  if(act==='cancelnew'){$('newSlot').innerHTML='';return}
+  if(act==='create'){createReport();return}
+  if(act==='copy'){copyOut();return}
+  if(act==='print'){try{window.print()}catch(x){toast('Printing is blocked here, use Copy summary')}return}
+  if(!cur||!S)return;
+  if(act==='addact'){var id=S.nextAct++;S.acts.push(id);$('actions').appendChild(actRow(id));touch();$('a'+id+'_i').focus();return}
+  if(act==='delete'){
+    if(Date.now()-delArm>4000){delArm=Date.now();b.classList.add('arm');b.textContent='Tap again to delete for everyone';setTimeout(function(){if(b.isConnected){b.classList.remove('arm');b.textContent='Delete this report'}},4000);return}
+    var gone=cur;clearTimeout(saveTimer);cur=null;delete reports[gone];storeDel(gone).then(function(){toast('Report deleted')},function(){toast('Delete refused')});location.hash='#/';return}
+  if(b.classList.contains('tk')){S.tick[b.dataset.k]=!S.tick[b.dataset.k];if(!S.tick[b.dataset.k])delete S.tick[b.dataset.k];paint();touch()}
+  else if(b.closest('.rag')){var k=b.dataset.k;if(S.rag[k]===b.dataset.v)delete S.rag[k];else S.rag[k]=b.dataset.v;paint();touch()}
+  else if(b.closest('#dec')){S.dec=S.dec===b.dataset.d?'':b.dataset.d;paint();touch()}
+  else if(b.classList.contains('ph')){S.phase=b.dataset.p;paint();touch()}
+  else if(b.classList.contains('del')){var row=b.closest('.act'),rid=+row.dataset.id;S.acts=S.acts.filter(function(x){return x!==rid});row.remove();touch()}
+});
+document.addEventListener('input',function(e){if(cur&&e.target.closest('#view')&&!e.target.closest('.newform'))touch()});
+document.addEventListener('change',function(e){
+  if(!cur||!e.target.closest('#view'))return;
+  if(/^a\d+_r$/.test(e.target.id))e.target.closest('.act').dataset.rag=e.target.value;
+  if(e.target.id==='c_cluster'){var c=CLUSTERS[e.target.value];if(c){if(!v('c_am'))$('c_am').value=c.am;if(!v('c_dam'))$('c_dam').value=c.dam}}
+  touch();
+});
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.closest&&e.target.closest('.newform')){e.preventDefault();createReport()}});
+
+/* ---------- gate ---------- */
+var needCode=false, loaded=false, pending={};
+function renderGate(){
+  $('barBtns').innerHTML='';
+  $('view').innerHTML='<header class="homehead"><div><div class="eyebrow">Area Management · Site Lifecycle</div><h1>Hajime → Owari Reports</h1><div class="sub">Enter the team code to open the shared reports. You only need to do this once on each device.</div></div></header>'+
+   '<div class="newform" style="max-width:420px"><label for="gate_code">Team code</label><input id="gate_code" autocomplete="off"><div class="err" id="gate_err"></div><div class="acts"><button type="button" class="btn pri" data-act="unlock">Open reports</button></div></div>';
+  setTimeout(function(){var g=$('gate_code');if(g)g.focus()},30);
+}
+function unlock(){var c=($('gate_code').value||'').trim();if(!c)return;setCode(c);$('gate_err').textContent='Checking…';refresh(true)}
+
+/* ---------- sync ---------- */
+function refresh(first){
+  return fetchAll().then(function(j){
+    if(!j.ok){if(j.error==='bad_code'){needCode=true;online=false;if($('gate_err')&&code())$('gate_err').textContent='That code did not work.';else route();setStat('','Team code needed');return}throw j}
+    var wasGate=needCode;needCode=false;online=true;loaded=true;
+    var next={};(j.docs||[]).forEach(function(d){next[d.id]=d});
+    // keep local edits that never reached the sheet
+    var loc=localAll();Object.keys(pending).forEach(function(id){if(pending[id]&&loc[id])next[id]=loc[id]});
+    var curRemote=cur&&next[cur];
+    reports=next;
+    Object.keys(pending).forEach(function(id){if(pending[id]&&!saving&&next[id]){storeSet(id,next[id]).then(function(){pending[id]=false},function(){})}});
+    if(first||wasGate){route()}
+    else if(!cur){renderHome();setStat('ok','Shared · '+Object.keys(next).length+' reports · checked '+hhmm(Date.now()))}
+    else if(!$('hTitle')&&curRemote){openReport(cur)}
+    else if(curRemote&&(curRemote.savedAt||0)>lastSaved&&Date.now()-dirtyAt>5000&&!saving&&!pending[cur]){lastSaved=curRemote.savedAt;apply(curRemote);setStat('ok','Updated by a teammate · '+hhmm(curRemote.savedAt))}
+    if(!cur&&!first)return;
+    if(!cur)setStat('ok','Shared · '+Object.keys(next).length+' reports');
+  }).catch(function(){online=false;if(!loaded){reports=localAll();loaded=true;route()}setStat('','Offline · showing this device’s copy')});
+}
+
+/* ---------- boot ---------- */
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id==='gate_code'){e.preventDefault();unlock()}});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-act="unlock"]');if(b)unlock()});
+setStat('busy','Loading shared reports');
+if(!code()){needCode=true;renderGate();setStat('','Team code needed')}
+else{$('view').innerHTML='<div class="empty">Loading reports…</div>';refresh(true)}
+setInterval(function(){if(!needCode&&document.visibilityState==='visible')refresh(false)},30000);
+document.addEventListener('visibilitychange',function(){if(!needCode&&document.visibilityState==='visible')refresh(false)});
+})();
+</script>
+</body>
+</html>
