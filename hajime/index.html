@@ -310,7 +310,8 @@ function renderHome(){
   document.title='Hajime Owari Reports';
   if(needCode){renderGate();return}
   $('barBtns').innerHTML='';
-  var ids=Object.keys(reports);
+  var allIds=Object.keys(reports),hidN=allIds.filter(function(id){return reports[id].hidden}).length;
+  var ids=allIds.filter(function(id){return window.__showHidden||!reports[id].hidden});
   var h='<a class="back" href="../">← AM Control Centre</a><header class="homehead"><div><div class="eyebrow">Area Management · Site Lifecycle</div><h1>Hajime → Owari Reports</h1>'+
     '<div class="sub">One live handover report per opening. Hajime fills the checklist and scores the site; Owari runs it to four green weeks; Kiban signs it off.</div></div>'+
     '<button type="button" class="btn pri" data-act="new">+ New report</button></header>'+
@@ -322,11 +323,12 @@ function renderHome(){
     list.sort(function(a,b){return String(b.meta.open||'').localeCompare(String(a.meta.open||''))});
     h+='<div class="phgroup"><h3><span class="kj">'+p[1]+'</span>'+p[0]+' · '+p[2]+' <span class="cnt">'+list.length+'</span></h3><div class="cards">'+list.map(card).join('')+'</div></div>';
   });
+  if(hidN)h+='<div style="margin-top:22px;text-align:center"><button type="button" class="btn ghost" data-act="togglehidden">'+(window.__showHidden?'Hide drafts':'Show '+hidN+' hidden draft'+(hidN>1?'s':''))+'</button></div>';
   $('view').innerHTML=h;
 }
 function card(r){
   var m=r.meta||{},ph=PHASES.filter(function(p){return p[0]===(m.phase||'Hajime')})[0];
-  return '<a class="rc" href="#/r/'+esc(r.id)+'"><div class="top"><div><div class="nm">'+esc(m.site||r.id)+(m.code?' <span class="chip">'+esc(m.code)+'</span>':'')+'</div>'+
+  return '<a class="rc" href="#/r/'+esc(r.id)+'"'+(r.hidden?' style="opacity:.6"':'')+'><div class="top"><div><div class="nm">'+esc(m.site||r.id)+(m.code?' <span class="chip">'+esc(m.code)+'</span>':'')+(r.hidden?' <span class="chip">Hidden draft</span>':'')+'</div>'+
     '<div class="cl">'+esc(m.cluster||'Cluster TBC')+(m.am?' · '+esc(m.am):'')+'</div></div><div class="kj'+(m.phase==='Kiban'?' done':'')+'">'+ph[1]+'</div></div>'+
     '<div class="m"><i style="width:'+(m.pct||0)+'%"></i></div>'+
     '<div class="row2"><span><b>'+(m.pct||0)+'%</b> complete</span><span>· <i class="dot dR"></i><b>'+(m.r||0)+'</b></span><span><i class="dot dA"></i><b>'+(m.a||0)+'</b></span><span><i class="dot dG"></i><b>'+(m.g||0)+'</b></span><span>· Owari <b>'+Math.min(m.streak||0,4)+'/4</b></span><span>· open actions <b>'+(m.openActs||0)+'</b></span></div>'+
@@ -404,7 +406,7 @@ function reportHTML(){
    '<h3><label for="f_risks" style="margin:0;font-size:inherit;letter-spacing:inherit">Key risks and watch-items carried into Owari</label></h3><textarea id="f_risks" style="min-height:96px"></textarea>'+
    '<div class="sigwrap" style="margin-top:22px"><div class="sigbox"><div class="sigline">Michael Salvador</div><div class="sigrule"></div><div class="signame">Michael Salvador</div><div class="sigrole">Chief Operating Officer · Maki &amp; Ramen</div></div>'+
    '<div class="sigmeta"><div><span>Function</span>Area Management</div><div><span>Document</span>Hajime → Owari Handover, <b id="sigSite"></b></div><div><span>Template</span>v1.1 · live form</div><div><span>Source</span>AM Function Operational Manual v1.0</div></div></div>'+
-   '<div class="danger-zone"><button type="button" class="btn danger" data-act="delete" id="bDel">Delete this report</button></div></section>';
+   '<div class="danger-zone" style="gap:8px"><button type="button" class="btn" data-act="hidetoggle" id="bHide">Hide from list</button><button type="button" class="btn danger" data-act="delete" id="bDel">Delete this report</button></div></section>';
 }
 function ticks(el,items,pfx,withG){
   $(el).innerHTML=items.map(function(t,i){
@@ -452,6 +454,7 @@ function openReport(id){
   setStat(online?'ok':'',online?'Shared record · saved '+ago(d.savedAt):'Showing saved copy · syncing');
 }
 function apply(d){
+  var bh=$('bHide');if(bh)bh.textContent=d.hidden?'Show in list':'Hide from list';
   S={tick:d.tick||{},rag:d.rag||{},dec:d.dec||'',phase:d.phase||'Hajime',acts:[],nextAct:1};
   $('actions').innerHTML='';
   (d.acts||[]).forEach(function(id){S.acts.push(id);$('actions').appendChild(actRow(id))});
@@ -506,7 +509,7 @@ function upd(){
 function collect(){
   var f={};document.querySelectorAll('#view input[id],#view select[id],#view textarea[id]').forEach(function(e){if(e.value!=='')f[e.id]=e.value});
   var M=metrics();
-  return {id:cur,tick:S.tick,rag:S.rag,dec:S.dec,phase:S.phase,acts:S.acts.slice(),nextAct:S.nextAct,fields:f,savedAt:Date.now(),created:(reports[cur]&&reports[cur].created)||Date.now(),
+  return {id:cur,hidden:!!(reports[cur]&&reports[cur].hidden),tick:S.tick,rag:S.rag,dec:S.dec,phase:S.phase,acts:S.acts.slice(),nextAct:S.nextAct,fields:f,savedAt:Date.now(),created:(reports[cur]&&reports[cur].created)||Date.now(),
     meta:{site:v('c_site'),code:v('c_code'),cluster:v('c_cluster'),am:v('c_am'),phase:S.phase,open:v('c_open'),pct:M.pct,r:M.r,a:M.a,g:M.g,streak:M.streak,openActs:M.openActs}};
 }
 function touch(){if(!cur)return;dirtyAt=Date.now();upd();clearTimeout(saveTimer);setStat('busy','Unsaved changes');saveTimer=setTimeout(save,1200)}
@@ -553,6 +556,8 @@ document.addEventListener('click',function(e){
   var b=e.target.closest('button');if(!b)return;
   var act=b.dataset.act;
   if(act==='new'){showNew();return}
+  if(act==='togglehidden'){window.__showHidden=!window.__showHidden;renderHome();return}
+  if(act==='hidetoggle'&&cur&&reports[cur]){reports[cur].hidden=!reports[cur].hidden;b.textContent=reports[cur].hidden?'Show in list':'Hide from list';touch();toast(reports[cur].hidden?'Hidden from the list':'Showing in the list');return}
   if(act==='cancelnew'){$('newSlot').innerHTML='';return}
   if(act==='create'){createReport();return}
   if(act==='copy'){copyOut();return}
