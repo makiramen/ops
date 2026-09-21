@@ -290,8 +290,8 @@ function localPut(id,d){try{var a=localAll();a[id]=d;localStorage.setItem(LKEY,J
 function localDel(id){try{var a=localAll();delete a[id];localStorage.setItem(LKEY,JSON.stringify(a))}catch(e){}}
 function code(){try{return localStorage.getItem('ho_team_code')||''}catch(e){return window.__code||''}}
 function setCode(c){window.__code=c;try{localStorage.setItem('ho_team_code',c)}catch(e){}}
-function post(body){body.key=code();return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){if(!j.ok)throw j;return j})}
-function fetchAll(){return fetch(API+'?key='+encodeURIComponent(code())+'&t='+Date.now()).then(function(r){return r.json()})}
+function post(body){body.key=code();return fetch(API,{method:'POST',credentials:'omit',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json()}).then(function(j){if(!j.ok)throw j;return j})}
+function fetchAll(){return fetch(API+'?key='+encodeURIComponent(code())+'&t='+Date.now(),{credentials:'omit'}).then(function(r){return r.json()})}
 function storeSet(id,d){localPut(id,d);return post({action:'set',id:id,doc:d}).then(function(){online=true;return 'shared'})}
 function storeDel(id){localDel(id);return post({action:'delete',id:id})}
 /* ---------- routing ---------- */
