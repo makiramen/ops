@@ -1022,6 +1022,18 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 <!-- BUDGET TAB                                                        -->
 <!-- ================================================================ -->
 <div id="tab-budget" class="tabpane">
+  <!-- ============ 2026 BUDGET TRACKER (password locked, encrypted payload) ============ -->
+  <div class="section" id="mbt">
+    <h2>2026 marketing budget tracker</h2>
+    <div class="src">Locked: spend and wages. Data is encrypted in <code>budget.enc.json</code> and only opens with the password.</div>
+    <form id="mbt-lock" autocomplete="off" onsubmit="mbtUnlock(event)">
+      <input type="password" id="mbt-pw" placeholder="Password" aria-label="Budget password">
+      <button type="submit">Unlock</button>
+      <span id="mbt-msg" class="subtle"></span>
+    </form>
+    <div id="mbt-body" hidden></div>
+  </div>
+
   <div class="cards" id="budget-cards"><div class="loading">Loading budget board…</div></div>
 
   <div class="grid2">
@@ -8167,5 +8179,147 @@ function rrBuild() {
 })();
 
 </script>
+<style>
+#mbt [hidden] { display:none !important; }
+#mbt form { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin:8px 0; }
+#mbt input[type=password] { padding:8px 10px; border:1px solid #D6CCC2; border-radius:8px; font-size:13px; min-width:200px; }
+#mbt button { background:#F28C28; color:#fff; border:0; border-radius:8px; padding:8px 14px; font-weight:600; cursor:pointer; }
+#mbt .mbt-ctl { display:flex; gap:12px; align-items:center; flex-wrap:wrap; font-size:12px; margin:10px 0; }
+#mbt select { padding:5px 8px; border-radius:8px; border:1px solid #D6CCC2; }
+#mbt .mbt-scroll { overflow-x:auto; }
+#mbt table { width:100%; border-collapse:collapse; font-size:12px; }
+#mbt th, #mbt td { padding:5px 7px; border-bottom:1px solid #F1EAE2; white-space:nowrap; }
+#mbt th { text-align:left; color:#64748B; font-weight:600; font-size:11px; }
+#mbt td.num, #mbt th.num { text-align:right; font-variant-numeric:tabular-nums; }
+#mbt tr.tot td { font-weight:700; border-top:2px solid #EBE4DC; }
+#mbt .neg { color:#B91C1C; } #mbt .pos { color:#15803D; } #mbt .part { color:#B45309; }
+#mbt h3 { font-size:13px; margin:18px 0 6px; }
+#mbt .mbt-sub td:first-child { padding-left:22px; color:#64748B; }
+#mbt tr.mbt-cat { cursor:pointer; } #mbt tr.mbt-cat td:first-child::before { content:'▸ '; color:#F28C28; }
+#mbt tr.mbt-cat.open td:first-child::before { content:'▾ '; }
+#mbt .mbt-notes { font-size:11px; color:#64748B; margin-top:10px; }
+</style>
+<script>
+(function(){
+  var MB = null, MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function b64(s){ var b = atob(s), a = new Uint8Array(b.length); for (var i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; }
+  async function decrypt(pw){
+    var r = await fetch('budget.enc.json?t=' + Date.now(), {cache:'no-store'});
+    if (!r.ok) throw new Error('Could not load the budget file (' + r.status + ')');
+    var e = await r.json();
+    var base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+    var key = await crypto.subtle.deriveKey({name:'PBKDF2', salt:b64(e.salt), iterations:e.iter, hash:'SHA-256'}, base, {name:'AES-GCM', length:256}, false, ['decrypt']);
+    var pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:b64(e.iv)}, key, b64(e.ct));
+    return JSON.parse(new TextDecoder().decode(pt));
+  }
+  window.mbtUnlock = async function(ev){
+    if (ev) ev.preventDefault();
+    var pwEl = document.getElementById('mbt-pw'), msg = document.getElementById('mbt-msg');
+    var pw = pwEl.value; if (!pw) return;
+    msg.textContent = 'Unlocking…';
+    try {
+      MB = await decrypt(pw);
+      try { sessionStorage.setItem('mbt-pw', pw); } catch(e) {}
+      document.getElementById('mbt-lock').hidden = true;
+      render();
+    } catch(e) {
+      MB = null; msg.textContent = (e && e.name === 'OperationError') ? 'Wrong password.' : (e.message || 'Could not unlock.');
+      try { sessionStorage.removeItem('mbt-pw'); } catch(x) {}
+    }
+  };
+  function sum(a, from, to){ var s=0; for (var i=from;i<to;i++) s += (a[i]||0); return s; }
+  function g(n){ return typeof fmtGbp === 'function' ? fmtGbp(n) : '£' + Math.round(n).toLocaleString('en-GB'); }
+  function sg(n){ var c = n < -0.5 ? 'neg' : (n > 0.5 ? 'pos' : ''); return '<span class="' + c + '">' + (n < 0 ? '-' : '') + g(Math.abs(n)) + '</span>'; }
+  function kcard(l, v, cls){ return '<div class="card"><div class="label">' + l + '</div><div class="value' + (cls ? ' ' + cls : '') + '">' + v + '</div></div>'; }
+  function render(){
+    var body = document.getElementById('mbt-body'); body.hidden = false;
+    var sel = MB._mv || MB.months_closed, carry = MB._carry !== false, C = MB.months_closed, cats = MB.cats;
+    var annual = 0, ytdA = 0, ytdB = 0, remB = 0;
+    cats.forEach(function(c){ annual += sum(MB.budget[c],0,12); ytdA += sum(MB.actual[c],0,C); ytdB += sum(MB.budget[c],0,C); remB += sum(MB.budget[c],C,12); });
+    var wagesYtd = 0; MB.wages.forEach(function(p){ wagesYtd += sum(p.m,0,C); });
+    var fc = ytdA + remB, partialMonth = sum(cats.map(function(c){return MB.actual[c][C]||0;}),0,cats.length);
+    var h = '';
+    h += '<div class="notice"><b>Source rule:</b> ' + MB.rule + ' Months closed: Jan to ' + MON[C-1] + '. ' +
+         (partialMonth ? MON[C] + ' is month to date (' + g(partialMonth) + ', latest transaction ' + MB.last_txn + ').' : '') +
+         ' Built ' + MB.built + '.</div>';
+    h += '<div class="cards">' +
+      kcard('Annual budget (lines)', g(annual)) + kcard('Envelope', g(MB.envelope)) +
+      kcard('YTD actual (Jan to ' + MON[C-1] + ')', g(ytdA)) + kcard('YTD budget', g(ytdB)) +
+      kcard('YTD over / under', sg(ytdB - ytdA)) + kcard('Full-year forecast', g(fc)) +
+      kcard('Forecast vs envelope', sg(MB.envelope - fc)) + kcard('YTD wages', g(wagesYtd)) +
+      kcard('YTD fully loaded', g(ytdA + wagesYtd)) + '</div>';
+    h += '<div class="src">Forecast = actuals for closed months + budget for the remaining months.</div>';
+    // month in view
+    h += '<h3>Month in view: what can be spent</h3><div class="mbt-ctl">Month <select id="mbt-mv">' +
+      MON.map(function(m,i){ return '<option value="' + (i+1) + '"' + (i+1 === sel ? ' selected' : '') + '>' + m + (i+1 > C ? (i === C && partialMonth ? ' (to date)' : ' (open)') : '') + '</option>'; }).join('') +
+      '</select><label><input type="checkbox" id="mbt-carry"' + (carry ? ' checked' : '') + '> Include carry-over from earlier months</label></div>';
+    h += '<div class="mbt-scroll"><table><thead><tr><th>Category</th><th class="num">Month budget</th><th class="num">Carry-over</th><th class="num">Available</th><th class="num">Actual</th><th class="num">Remaining</th></tr></thead><tbody>';
+    var T = [0,0,0,0,0];
+    cats.forEach(function(c){
+      var mb = MB.budget[c][sel-1] || 0, co = carry ? sum(MB.budget[c],0,sel-1) - sum(MB.actual[c],0,sel-1) : 0, av = mb + co, a = MB.actual[c][sel-1] || 0;
+      if (!mb && !a && Math.abs(co) < 0.5) return;
+      T[0]+=mb; T[1]+=co; T[2]+=av; T[3]+=a; T[4]+=av-a;
+      h += '<tr><td>' + c + '</td><td class="num">' + g(mb) + '</td><td class="num">' + sg(co) + '</td><td class="num">' + sg(av) + '</td><td class="num">' + g(a) + '</td><td class="num">' + sg(av-a) + '</td></tr>';
+    });
+    h += '<tr class="tot"><td>Total</td><td class="num">' + g(T[0]) + '</td><td class="num">' + sg(T[1]) + '</td><td class="num">' + sg(T[2]) + '</td><td class="num">' + g(T[3]) + '</td><td class="num">' + sg(T[4]) + '</td></tr></tbody></table></div>';
+    h += '<div class="src">Carry-over = budget for the months before the month in view minus what was spent in them (negative = overspent).</div>';
+    // category x month
+    var last = Math.min(12, C + (partialMonth ? 1 : 0));
+    h += '<h3>Actual spend by category and month (click a category for sub-channels)</h3><div class="mbt-scroll"><table><thead><tr><th>Category</th><th class="num">Annual budget</th>';
+    for (var m=0;m<last;m++) h += '<th class="num' + (m >= C ? ' part' : '') + '">' + MON[m] + (m >= C ? '*' : '') + '</th>';
+    h += '<th class="num">YTD</th><th class="num">YTD budget</th><th class="num">Over / under</th></tr></thead><tbody>';
+    var colT = new Array(12).fill(0), tA=0, tY=0, tB=0;
+    cats.forEach(function(c, ci){
+      var A = MB.actual[c], ann = sum(MB.budget[c],0,12), y = sum(A,0,C), yb = sum(MB.budget[c],0,C);
+      if (!ann && !sum(A,0,12)) return;
+      tA += ann; tY += y; tB += yb;
+      h += '<tr class="mbt-cat" data-ci="' + ci + '"><td>' + c + '</td><td class="num">' + g(ann) + '</td>';
+      for (var m=0;m<last;m++){ colT[m] += A[m]||0; h += '<td class="num' + (m >= C ? ' part' : '') + '">' + (A[m] ? g(A[m]) : '') + '</td>'; }
+      h += '<td class="num">' + g(y) + '</td><td class="num">' + g(yb) + '</td><td class="num">' + sg(yb - y) + '</td></tr>';
+      var S = (MB.sub||{})[c] || {};
+      Object.keys(S).sort(function(a,b){ return sum(S[b],0,12) - sum(S[a],0,12); }).forEach(function(s){
+        h += '<tr class="mbt-sub" data-p="' + ci + '" hidden><td>' + s + '</td><td></td>';
+        for (var m=0;m<last;m++) h += '<td class="num">' + (S[s][m] ? g(S[s][m]) : '') + '</td>';
+        h += '<td class="num">' + g(sum(S[s],0,C)) + '</td><td></td><td class="num subtle">' + (y ? Math.round(sum(S[s],0,C) / y * 100) + '%' : '') + '</td></tr>';
+      });
+    });
+    h += '<tr class="tot"><td>Total</td><td class="num">' + g(tA) + '</td>';
+    for (var m=0;m<last;m++) h += '<td class="num">' + g(colT[m]) + '</td>';
+    h += '<td class="num">' + g(tY) + '</td><td class="num">' + g(tB) + '</td><td class="num">' + sg(tB - tY) + '</td></tr></tbody></table></div>';
+    if (partialMonth) h += '<div class="src">* ' + MON[C] + ' is month to date and not in YTD until the month is closed.</div>';
+    // wages
+    h += '<h3>Marketing wages (gross + employer NI + pension)</h3><div class="mbt-scroll"><table><thead><tr><th>Name</th><th>Role</th>';
+    for (var m=0;m<C;m++) h += '<th class="num">' + MON[m] + '</th>';
+    h += '<th class="num">YTD</th></tr></thead><tbody>';
+    var wT = new Array(12).fill(0);
+    MB.wages.forEach(function(p){
+      h += '<tr><td>' + p.name + '</td><td class="subtle">' + (p.role||'') + '</td>';
+      for (var m=0;m<C;m++){ wT[m] += p.m[m]||0; h += '<td class="num">' + (p.m[m] ? g(p.m[m]) : '') + '</td>'; }
+      h += '<td class="num">' + g(sum(p.m,0,C)) + '</td></tr>';
+    });
+    h += '<tr class="tot"><td>Total</td><td></td>';
+    for (var m=0;m<C;m++) h += '<td class="num">' + g(wT[m]) + '</td>';
+    h += '<td class="num">' + g(wagesYtd) + '</td></tr></tbody></table></div>';
+    h += '<div class="mbt-notes">' + (MB.notes||[]).map(function(n){ return '• ' + n; }).join('<br>') +
+         '<br><a href="#" id="mbt-lockagain">Lock</a></div>';
+    body.innerHTML = h;
+    document.getElementById('mbt-mv').onchange = function(){ MB._mv = +this.value; render(); };
+    document.getElementById('mbt-carry').onchange = function(){ MB._carry = this.checked; render(); };
+    body.querySelectorAll('tr.mbt-cat').forEach(function(tr){ tr.onclick = function(){
+      tr.classList.toggle('open'); var open = tr.classList.contains('open');
+      body.querySelectorAll('tr[data-p="' + tr.dataset.ci + '"]').forEach(function(r){ r.hidden = !open; });
+    }; });
+    document.getElementById('mbt-lockagain').onclick = function(e){ e.preventDefault(); MB = null;
+      try { sessionStorage.removeItem('mbt-pw'); } catch(x) {}
+      body.innerHTML = ''; body.hidden = true; document.getElementById('mbt-lock').hidden = false;
+      document.getElementById('mbt-pw').value = ''; document.getElementById('mbt-msg').textContent = ''; };
+  }
+  document.addEventListener('DOMContentLoaded', function(){
+    var saved = null; try { saved = sessionStorage.getItem('mbt-pw'); } catch(e) {}
+    if (saved) { document.getElementById('mbt-pw').value = saved; mbtUnlock(); }
+  });
+})();
+</script>
+
 </body>
 </html>
