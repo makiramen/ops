@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex">
 <title>Hajime Owari Reports</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=Shippori+Mincho+B1:wght@600;800&display=swap">
+<link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600&family=Shippori+Mincho+B1:wght@600;800&display=swap">
 <style>
 :root{
   --bg:#faf7f4;--card:#ffffff;--card2:#f5f0eb;--line:#e8dfd7;--txt:#1d1714;--mut:#76695e;
@@ -449,7 +449,7 @@ function openReport(id){
   var d=reports[id];
   if(!d){$('view').innerHTML='<a class="back" href="#/">← All reports</a><div class="empty">'+(loaded?'This report does not exist or was deleted.':'Loading report…')+'</div>';setStat('busy',loaded?'Report not found':'Loading');return}
   buildReport();apply(d);lastSaved=d.savedAt||0;
-  setStat(online?'ok':'',online?'Shared record · saved '+ago(d.savedAt):'Offline copy on this device · changes sync when back online');
+  setStat(online?'ok':'',online?'Shared record · saved '+ago(d.savedAt):'Showing saved copy · syncing');
 }
 function apply(d){
   S={tick:d.tick||{},rag:d.rag||{},dec:d.dec||'',phase:d.phase||'Hajime',acts:[],nextAct:1};
@@ -588,8 +588,10 @@ function renderGate(){
 function unlock(){var c=($('gate_code').value||'').trim();if(!c)return;setCode(c);$('gate_err').textContent='Checking…';refresh(true)}
 
 /* ---------- sync ---------- */
+var inflight=null;
 function refresh(first){
-  return fetchAll().then(function(j){
+  if(inflight)return inflight;
+  inflight=fetchAll().then(function(j){
     if(!j.ok){if(j.error==='bad_code'){needCode=true;online=false;if($('gate_err')&&code())$('gate_err').textContent='That code did not work.';else route();setStat('','Team code needed');return}throw j}
     var wasGate=needCode;needCode=false;online=true;loaded=true;
     var next={};(j.docs||[]).forEach(function(d){next[d.id]=d});
@@ -597,14 +599,17 @@ function refresh(first){
     var loc=localAll();Object.keys(pending).forEach(function(id){if(pending[id]&&loc[id])next[id]=loc[id]});
     var curRemote=cur&&next[cur];
     reports=next;
+    try{localStorage.setItem(LKEY,JSON.stringify(next))}catch(e){}
     Object.keys(pending).forEach(function(id){if(pending[id]&&!saving&&next[id]){storeSet(id,next[id]).then(function(){pending[id]=false},function(){})}});
     if(first||wasGate){route()}
-    else if(!cur){renderHome();setStat('ok','Shared · '+Object.keys(next).length+' reports · checked '+hhmm(Date.now()))}
+    else if(!cur){if(!($('newSlot')&&$('newSlot').innerHTML))renderHome();setStat('ok','Shared · '+Object.keys(next).length+' reports · synced '+hhmm(Date.now()))}
     else if(!$('hTitle')&&curRemote){openReport(cur)}
     else if(curRemote&&(curRemote.savedAt||0)>lastSaved&&Date.now()-dirtyAt>5000&&!saving&&!pending[cur]){lastSaved=curRemote.savedAt;apply(curRemote);setStat('ok','Updated by a teammate · '+hhmm(curRemote.savedAt))}
+    else if(cur&&!saving&&!pending[cur]&&Date.now()-dirtyAt>5000&&/Offline|syncing|Loading/.test($('stat').textContent))setStat('ok','Shared record · synced '+hhmm(Date.now()));
     if(!cur&&!first)return;
     if(!cur)setStat('ok','Shared · '+Object.keys(next).length+' reports');
-  }).catch(function(){online=false;if(!loaded){reports=localAll();loaded=true;route()}setStat('','Offline · showing this device’s copy')});
+  }).catch(function(){online=false;if(!loaded){reports=localAll();loaded=true;route()}setStat('','Offline · showing this device’s copy')}).then(function(){inflight=null});
+  return inflight;
 }
 
 /* ---------- boot ---------- */
@@ -612,8 +617,8 @@ document.addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.id=
 document.addEventListener('click',function(e){var b=e.target.closest('[data-act="unlock"]');if(b)unlock()});
 setStat('busy','Loading shared reports');
 if(!code()){needCode=true;renderGate();setStat('','Team code needed')}
-else{$('view').innerHTML='<div class="empty">Loading reports…</div>';refresh(true)}
-setInterval(function(){if(!needCode&&document.visibilityState==='visible')refresh(false)},30000);
+else{var cached=localAll();if(Object.keys(cached).length){reports=cached;loaded=true;route();setStat('busy','Showing saved copy · syncing');refresh(false)}else{$('view').innerHTML='<div class="empty">Loading reports…</div>';refresh(true)}}
+setInterval(function(){if(!needCode&&document.visibilityState==='visible')refresh(false)},60000);
 document.addEventListener('visibilitychange',function(){if(!needCode&&document.visibilityState==='visible')refresh(false)});
 })();
 </script>
