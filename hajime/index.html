@@ -514,7 +514,7 @@ function save(){
   if(!cur)return;if(saving){saveTimer=setTimeout(save,800);return}
   var id=cur,d=collect();reports[id]=d;pending[id]=true;saving=true;setStat('busy','Saving');
   storeSet(id,d).then(function(){lastSaved=d.savedAt;pending[id]=false;setStat('ok','Saved to shared record · '+hhmm(d.savedAt))},
-    function(e){pending[id]=true;setStat('','Not saved to shared record'+(e&&e.error?' ('+e.error+')':'')+' · kept on this device, retrying')}).then(function(){saving=false});
+    function(e){pending[id]=true;setStat('busy','Save did not reach the shared record'+(e&&e.error?' ('+e.error+')':'')+' · retrying');if(cur===id){clearTimeout(saveTimer);saveTimer=setTimeout(save,4000)}}).then(function(){saving=false});
 }
 
 /* ---------- summary ---------- */
