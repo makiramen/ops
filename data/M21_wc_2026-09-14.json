@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-21",
+  "generated_at": "2026-09-22",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-14 \u2013 2026-09-20",
@@ -55,7 +55,7 @@
       },
       "labour_split": {
         "split_status": "filed",
-        "days_with_split": 4,
+        "days_with_split": 7,
         "days_present": 7,
         "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
         "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
@@ -67,14 +67,14 @@
           "within_band": false
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": -4.8,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-09-14"
       },
       "efficiency_score": {
-        "score": 69,
+        "score": 70,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -105,11 +105,15 @@
             "weight": 30,
             "value": 23.05,
             "basis": "26.13% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-4.80% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -152,7 +156,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-14..2026-09-20 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-21."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-14..2026-09-20 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-22."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-14.json (AGMM Task List Status). Open items only.",
@@ -174,9 +178,9 @@
         "week_ending": "2026-09-20",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
+        "sales": 1622.39,
+        "orders": 63,
+        "aov": 25.75,
         "new_customers": null,
         "rating": 3.33,
         "open_hours_pct": 100.0,
@@ -193,13 +197,11 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo Tax Invoice PDF (Restaurant Hub), 'Deliveroo Commission' Total row \u2014 Total Order Value = GMV, Total Quantity = orders. Period Mon 14 Sep 00:00 \u2013 Sun 20 Sep 23:59 UTC. Filed to Drive by finance 22/09/2026. Read via Drive MCP by the DRIVE-ROUTE data-pull subagent, Tue 22/09/2026 (authoritative run). Invoice serial res-uk-583623-9; Drive file Deliveroo_2026-09-21_715.58.pdf (id 1iq6rWESpAjD_-p-QGtAVD0bm4H7sd5UM). [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 2.1
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week",
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [],
         "actions": [],
