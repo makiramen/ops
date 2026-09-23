@@ -249,6 +249,7 @@ h2.histhead.closed .chev { transform: rotate(-90deg); }
   border-radius: 8px; padding: 7px 12px; margin: 8px 0; }
 .mrbar .mrnd { color: #64748B; }
 /* v6.2 14 Sept 2026 — sheet-driven Meta recs + weekly freshness. */
+/* v6.3 23 Sept 2026 — gender split on IG + TikTok content tabs from demo.json (DemoGender.gs). */
 .mrbarhead { display: block; margin-bottom: 6px; }
 .mrcycle { display: block; font-size: 10px; color: #7C6AA8; margin-top: 3px; font-weight: 400; }
 .mrfresh { display: inline-block; font-size: 9.5px; font-weight: 700; letter-spacing: .04em;
@@ -360,6 +361,16 @@ tr.hiddenrow { display: none; }
 .ccard.warm { border-left-color: #EA580C; background: #FFF7ED; }
 .mchip.warn { background: #EA580C; border-color: #EA580C; color: #fff; }
 .mchip.warn b { color: #fff; }
+/* v6.3 23 Sept 2026 — gender split (demo.json). Male share in MAKI ORANGE, female neutral. */
+.mchip.gender { background: #FFF7ED; border-color: #FED7AA; color: #64748B; }
+.mchip.gender b.m { color: #E0600B; }
+.mchip.gender b.f { color: #334155; }
+.gstrip { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.gstrip .stat .value { display: flex; gap: 10px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.gstrip .stat .value .m { color: #E0600B; }
+.gstrip .stat .value .f { color: #334155; font-weight: 500; }
+.gstrip .stat .value .n { font-size: 11px; color: #94A3B8; font-weight: 400; }
+.gstrip .gnote { font-size: 11px; color: #94A3B8; align-self: center; max-width: 420px; }
 .sevtag.good { background: #DCFCE7; color: #15803D; }
 
 /* ════ INFLUENCER TAB (v5.2 design, scoped) ════ */
@@ -774,6 +785,8 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
         <option value="watch">Watch time</option>
       </select>
     </div>
+    <div class="subhead" style="margin-top:4px">Audience gender <span class="sub">— account level; Meta gives no per-post split</span></div>
+    <div class="gstrip" id="ig-gender"><div class="subtle">Loading…</div></div>
     <div class="statrow" id="ig-summary" style="margin-bottom:10px"></div>
     <div class="outlier-sec" id="ig-outliers"></div>
     <div class="subhead">All posts</div>
@@ -809,6 +822,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
         <option value="engrate">Eng/Views</option>
         <option value="watch">Watch time</option>
         <option value="followers">Followers +</option>
+        <option value="malesh">Male share</option>
       </select>
     </div>
     <div class="statrow" id="tt-summary" style="margin-bottom:10px"></div>
@@ -3063,6 +3077,31 @@ var _dataPromise = null;
 // Tabs render once from whatever loads first; a fresher payload arriving later
 // is cached and offered via the "newer data" bar (reload = instant from cache).
 var STATIC_URL = 'https://makiramen.github.io/ops/marketing/data.json';
+var DEMO_URL = 'https://makiramen.github.io/ops/marketing/demo.json';   // v6.3 gender split, DemoGender.gs daily
+var _demoPromise = null;
+function loadDemo() {
+  if (_demoPromise) return _demoPromise;
+  _demoPromise = fetch(DEMO_URL + '?t=' + Math.floor(Date.now() / 6e5), { cache: 'no-store' })
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(d) { return (d && d.tiktok && d.instagram) ? d : null; })
+    .catch(function() { return null; });
+  return _demoPromise;
+}
+function fmtShare(x) { return (x == null || isNaN(+x)) ? '—' : Math.round(Number(x) * 100) + '%'; }
+function genderChip(g) {
+  if (!g || (g.m == null && g.f == null)) return '';
+  return '<span class="mchip gender" title="share of views by viewer gender (TikTok)"><b class="m">♂ ' + fmtShare(g.m) + '</b> <b class="f">♀ ' + fmtShare(g.f) + '</b></span>';
+}
+// views-weighted male / female share across a set of cards that carry .gender
+function weightedGender(rows) {
+  var v = 0, m = 0, f = 0, n = 0;
+  rows.forEach(function(r) {
+    if (!r.gender || r.gender.m == null) return;
+    var w = Number(r.views) || Number(r.reach) || 0;
+    v += w; m += w * (r.gender.m || 0); f += w * (r.gender.f || 0); n++;
+  });
+  return v ? { m: m / v, f: f / v, n: n } : null;
+}
 var STATIC_MAX_AGE_H = 6;   // 8 Sept 2026: publish cadence moved hourly -> every 4 h, so 3 h would judge a healthy file stale and fall back to /exec on every open
 var HUB_DB = 'mrhub-cache', HUB_STORE = 'payload', HUB_KEY = 'latest';
 
@@ -3702,8 +3741,33 @@ function annotationMaps(ann) {
   return byId;
 }
 
+function renderIgGender(demo) {
+  var el = document.getElementById('ig-gender');
+  if (!el) return;
+  var ig = demo && demo.instagram;
+  if (!ig) { el.innerHTML = '<div class="subtle">Gender split not available yet (demo.json missing)</div>'; return; }
+  function cell(label, sp, sub) {
+    if (!sp || sp.m_share == null) return '';
+    return '<div class="stat"><div class="label">' + label + '</div><div class="value">' +
+      '<span class="m">♂ ' + fmtShare(sp.m_share) + '</span><span class="f">♀ ' + fmtShare(sp.f_share) + '</span>' +
+      '<span class="n">' + fmtK(sp.total) + (sub ? ' ' + sub : '') + (sp.u_share ? ' · ' + fmtShare(sp.u_share) + ' unknown' : '') + '</span></div></div>';
+  }
+  var html = '';
+  html += cell('Engaged · 30d', ig.engaged_30d, 'accounts');
+  html += cell('Reached · 30d', ig.reached_30d, 'accounts');
+  html += cell('Engaged · 90d', ig.engaged_90d, 'accounts');
+  html += cell('Reached · 90d', ig.reached_90d, 'accounts');
+  html += cell('Followers', ig.followers, 'followers');
+  var note = '';
+  if (ig.source !== 'meta') note = 'Reached / engaged split needs a Meta token with insights permission in the SOT project (IG_ACCESS_TOKEN)' + (ig.meta_error ? ' — ' + escAttr(ig.meta_error) : '') + '. Followers only for now.';
+  else note = 'Meta Graph, share of known gender (unknown excluded). Reached = saw content in the window; engaged = liked, commented, saved or shared.';
+  html += '<div class="gnote">' + note + (demo.generated_at ? ' Updated ' + fmtDate(String(demo.generated_at).slice(0, 10)) + '.' : '') + '</div>';
+  el.innerHTML = html || '<div class="subtle">No gender data</div>';
+}
+
 async function loadInstagram() {
   var r = await loadLibraryAndAnnotations();
+  loadDemo().then(renderIgGender);   // v6.3 — audience gender strip, non-blocking
   var annById = annotationMaps(r.ann);
   var ig = r.lib.filter(function(x) { return x.platform === 'instagram'; }).map(function(x) {
     var a = annById[x.content_id] || {};
@@ -3748,6 +3812,10 @@ function renderContentSummary(elId, view, win, isTt) {
   stats.push(stat('Total views', fmtN(totViews)));
   stats.push(stat('Total engagement', fmtN(totEng)));
   stats.push(stat('Median eng/views', medEng != null ? fmtPct(medEng) : '—'));
+  if (isTt) {
+    var wg = weightedGender(view);
+    stats.push(stat('Male share of views', wg ? '<span style="color:#E0600B">' + fmtShare(wg.m) + '</span> <span class="sub" style="font-size:11px">♀ ' + fmtShare(wg.f) + ' · ' + wg.n + '/' + view.length + ' videos</span>' : '—'));
+  }
   el.innerHTML = stats.join('');
 }
 
@@ -3773,7 +3841,8 @@ function ttChips(r) {
     chip('saves', fmtK(r.saves)),
     (Number(r.avg_watch_time_ms) ? chip('watch', fmtWatch(r.avg_watch_time_ms)) : ''),
     (Number(r.full_watch_rate) ? chip('full-watch', fmtPct(Number(r.full_watch_rate))) : ''),
-    (Number(r.new_followers) ? chip('followers +', fmtK(r.new_followers)) : '')
+    (Number(r.new_followers) ? chip('followers +', fmtK(r.new_followers)) : ''),
+    genderChip(r.gender)
   ];
 }
 function igCardHtml(r) { return contentCard(r, typeTag(r.media_type), igChips(r)); }
@@ -3917,12 +3986,15 @@ function renderIg(ig) {
 
 async function loadTikTok() {
   var r = await loadLibraryAndAnnotations();
+  var demo = await loadDemo();   // v6.3 — per-video viewer gender, null if demo.json is missing
+  var gById = (demo && demo.tiktok && demo.tiktok.videos) || {};
   var annById = annotationMaps(r.ann);
   var tt = r.lib.filter(function(x) { return x.platform === 'tiktok'; }).map(function(x) {
     var a = annById[x.content_id] || {};
     return Object.assign({}, x, {
       teamNote: a.note || '',
-      engRate: computeEngRate(x)
+      engRate: computeEngRate(x),
+      gender: gById[String(x.content_id)] || null
     });
   });
   ['tt-range', 'tt-sort'].forEach(function(id) {
@@ -3944,7 +4016,8 @@ function renderTt(tt) {
     eng: function(a, b) { return (Number(b.engagement) || 0) - (Number(a.engagement) || 0); },
     engrate: function(a, b) { return b.engRate - a.engRate; },
     watch: function(a, b) { return (Number(b.avg_watch_time_ms) || 0) - (Number(a.avg_watch_time_ms) || 0); },
-    followers: function(a, b) { return (Number(b.new_followers) || 0) - (Number(a.new_followers) || 0); }
+    followers: function(a, b) { return (Number(b.new_followers) || 0) - (Number(a.new_followers) || 0); },
+    malesh: function(a, b) { return ((b.gender && b.gender.m) || -1) - ((a.gender && a.gender.m) || -1); }
   };
   view.sort(sorters[sort] || sorters.date);
   var grid = document.getElementById('tt-cards');
