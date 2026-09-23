@@ -3757,10 +3757,9 @@ function renderIgGender(demo) {
   html += cell('Reached · 30d', ig.reached_30d, 'accounts');
   html += cell('Engaged · 90d', ig.engaged_90d, 'accounts');
   html += cell('Reached · 90d', ig.reached_90d, 'accounts');
-  html += cell('Followers', ig.followers, 'followers');
   var note = '';
-  if (ig.source !== 'meta') note = 'Reached / engaged split needs a Meta token with insights permission in the SOT project (IG_ACCESS_TOKEN)' + (ig.meta_error ? ' — ' + escAttr(ig.meta_error) : '') + '. Followers only for now.';
-  else note = 'Meta Graph, share of known gender (unknown excluded). Reached = saw content in the window; engaged = liked, commented, saved or shared.';
+  if (ig.source !== 'meta') { el.innerHTML = '<div class="subtle">Reached / engaged gender split needs a Meta token with insights permission (IG_ACCESS_TOKEN in the SOT project)' + (ig.meta_error ? ': ' + escAttr(ig.meta_error) : '') + '</div>'; return; }
+  note = 'Meta Graph, share of known gender (unknown excluded). Reached = saw content in the window; engaged = liked, commented, saved or shared.';
   html += '<div class="gnote">' + note + (demo.generated_at ? ' Updated ' + fmtDate(String(demo.generated_at).slice(0, 10)) + '.' : '') + '</div>';
   el.innerHTML = html || '<div class="subtle">No gender data</div>';
 }
