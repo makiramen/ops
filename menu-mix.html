@@ -93,6 +93,7 @@ table.split td.mix{width:130px; padding-left:16px;}
 .mini{background:var(--track); height:9px; border-radius:2px;}
 .mini i{display:block; background:var(--bar); height:9px; border-radius:0 2px 2px 0;}
 .empty{color:var(--ink3); font-size:14px; padding:18px 0;}
+.subh{font-family:Archivo,sans-serif; font-size:17px; font-weight:700; margin:34px 0 4px; padding-top:22px; border-top:1px solid var(--rule);}
 
 .months{display:grid; grid-template-columns:repeat(12,1fr); gap:6px; align-items:end;}
 .mcol{display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0;}
@@ -347,6 +348,10 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
 
     <p class="summary" id="summary"></p>
     <div id="listwrap" role="tabpanel" aria-labelledby="tab-units"></div>
+
+    <h3 class="subh">Bottom 10</h3>
+    <p class="note" id="bsummary"></p>
+    <div id="bottomwrap"></div>
   </section>
 
   <section>
@@ -633,9 +638,8 @@ function fmtM(v){
 function fmt(v){ return state.measure ? fmtM(v) : fmtU(v); }
 function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function catName(c){ return c ? c : 'Uncategorised'; }
+function vals(it){ return it[(state.per === 6 ? 4 : 2) + (state.measure ? 1 : 0)]; }
 function render(){
-  var base = state.per === 6 ? 4 : 2;
-  var vals = function(it){ return it[base + (state.measure ? 1 : 0)]; };
   var rows = ITEMS.filter(function(it){ return !state.cat || it[1] === state.cat; });
   var pick = function(it){
     var v = vals(it);
@@ -655,9 +659,19 @@ function render(){
     (state.measure ? 'net sales' : 'units sold') + ' across ' + scope +
     ' · ' + (state.per === 6 ? 'last 6 months' : 'last 12 months') +
     (state.top && rows.length > state.top ? ' · showing the top ' + state.top : '');
+  $('listwrap').innerHTML = build(cut, max, 'Nothing sold in that combination.');
+  var pos = rows.filter(function(r){ return r.t > 0; });
+  var bot = pos.slice(-10).reverse();
+  var bmax = bot.length ? Math.max.apply(null, bot.map(function(r){ return r.t; })) : 0;
+  $('bsummary').innerHTML = 'The ' + bot.length + ' lowest-selling item' + (bot.length===1?'':'s') + ' by ' +
+    (state.measure ? 'net sales' : 'units sold') + ' for the same filters, lowest first. Only items that sold at least once' +
+    (state.measure ? ' at a positive net value' : '') + '. Bars scale to this list, not the top list.';
+  $('bottomwrap').innerHTML = build(bot, bmax, 'Nothing to show.');
+}
+function build(cut, max, emptyMsg){
   var out;
   if (!cut.length){
-    out = '<p class="empty">Nothing sold in that combination.</p>';
+    out = '<p class="empty">' + emptyMsg + '</p>';
   } else if (state.reg === 'split'){
     var body = cut.map(function(r){
       var v = vals(r.it), t = r.t, w = max ? Math.max(Math.abs(t)/max*100, 1) : 0;
@@ -678,7 +692,7 @@ function render(){
         '<div class="val">' + fmt(r.t) + '</div></div>';
     }).join('') + '</div>';
   }
-  $('listwrap').innerHTML = out;
+  return out;
 }
 function setTab(m){
   state.measure = m;
