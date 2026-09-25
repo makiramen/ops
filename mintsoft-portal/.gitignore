@@ -1,0 +1,25 @@
+# Discovery dumps contain live warehouse data and customer addresses.
+# They must never be committed. Phase 0 writes here.
+discovery/
+
+node_modules/
+dist/
+.wrangler/
+
+# Local secrets. Never commit. Real values live as Cloudflare secrets.
+.dev.vars
+.env
+.env.local
+
+# Real seed data carries staff email addresses. Templates are committed instead.
+seed/sites.csv
+seed/users.csv
+seed/seed.sql
+
+# Review agents occasionally drop probe files here; never commit them.
+tests/zz-*.test.ts
+tests/_*.test.ts
+
+# Preview screenshots are generated on demand, not committed.
+preview/
+seed/demo.sql
