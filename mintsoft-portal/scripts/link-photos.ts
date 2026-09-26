@@ -1,0 +1,172 @@
+/**
+ * Matches product photos on disk to Maki products, and emits the SQL to link them.
+ *
+ *   npm run photos              # report what is matched and what is still missing
+ *   npm run photos -- --out seed/photos.sql
+ *   npm run photos -- --local   # against the local database instead of the live one
+ *
+ * The product list comes from the deployed database, read through wrangler.
+ *
+ * Mintsoft cannot supply these. 135 of its 337 lines carry an ImageURL, but every one
+ * points at om.mintsoft.co.uk/Image/GetImage/<id>, which answers 500 both anonymously
+ * and with a valid API key — it is the web UI's host and wants a browser session, not
+ * an API key. So the photos are ours to hold, which DISCOVERY.md left open and this
+ * settles.
+ *
+ * Drop files in public/products/ named after the ITEM CODE, which is the SKU with the
+ * MRK<shipment> prefix stripped:
+ *
+ *     MRK005-BCB, MRK010-BCB, MRK011-BCB   ->   BCB.jpg
+ *
+ * One photo covers every shipment of the same item, which is the whole point of the
+ * mapping: a GM sees one product, not eight. Matching is case-insensitive and accepts
+ * .jpg .jpeg .png .webp.
+ *
+ * Vite copies public/ into dist/, so a photo is live at /products/<CODE>.jpg the next
+ * time the portal is deployed. No object store, no upload endpoint, no extra
+ * credentials — a photo is a commit, the same way a stock refresh is.
+ */
+import { readdirSync, writeFileSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+
+const DIR = new URL('../public/products/', import.meta.url).pathname
+const ACCEPTED = /\.(jpe?g|png|webp)$/i
+
+/** The SKU with its shipment prefix removed — the same stem the mapping groups on. */
+export const itemCode = (sku: string) =>
+  sku.trim().toUpperCase().replace(/^MRK\d+[-\s]+/i, '').trim()
+
+interface Row { id: number; name: string; a_sku: string; lines: number }
+
+function photosOnDisk(): Map<string, string> {
+  const found = new Map<string, string>()
+  let files: string[] = []
+  try { files = readdirSync(DIR) } catch { return found }
+  for (const f of files) {
+    if (!ACCEPTED.test(f)) continue
+    found.set(f.replace(ACCEPTED, '').trim().toUpperCase(), f)
+  }
+  return found
+}
+
+function main(rows: Row[]) {
+  const photos = photosOnDisk()
+  const outIndex = process.argv.indexOf('--out')
+  const out = outIndex >= 0 ? process.argv[outIndex + 1] : undefined
+
+  const matched: { id: number; code: string; file: string; name: string }[] = []
+  const missing: { code: string; name: string; lines: number }[] = []
+  const ambiguous: { code: string; file: string; products: Row[] }[] = []
+
+  // A stem is not an identity. Mercium reuses one across unrelated items, so two
+  // products can want the same code — STS is both a sakura tree and a square tabletop.
+  // Linking one file to both would put the wrong picture on a product silently, which
+  // is worse than no picture, so a shared code is reported and neither is linked.
+  const byCode = new Map<string, Row[]>()
+  for (const r of rows) {
+    const code = itemCode(r.a_sku)
+    const sharing = byCode.get(code)
+    if (sharing) sharing.push(r)
+    else byCode.set(code, [r])
+  }
+
+  for (const [code, sharing] of byCode) {
+    // A file named after the product itself settles a shared code, and overrides the
+    // stem for anything the stem cannot tell apart.
+    for (const r of sharing) {
+      const own = photos.get(`P${r.id}`)
+      if (own) matched.push({ id: r.id, code: `P${r.id}`, file: own, name: r.name })
+    }
+
+    // Whoever is left is who the stem file would have to mean. One claimant: link it.
+    // More than one: it is guesswork, so hold it back and say who is competing.
+    const unsettled = sharing.filter((r) => !photos.has(`P${r.id}`))
+    const file = photos.get(code)
+    if (!file) {
+      for (const r of unsettled) missing.push({ code, name: r.name, lines: r.lines })
+    } else if (unsettled.length === 1) {
+      matched.push({ id: unsettled[0]!.id, code, file, name: unsettled[0]!.name })
+    } else if (unsettled.length > 1) {
+      ambiguous.push({ code, file, products: unsettled })
+    }
+  }
+
+  // A file nobody claims is worth naming: it is usually a typo in the filename, and
+  // silence would leave the product looking un-photographed for no visible reason.
+  const claimed = new Set([...matched.map((m) => m.file), ...ambiguous.map((a) => a.file)])
+  const orphans = [...photos.values()].filter((f) => !claimed.has(f))
+
+  console.log(`\n${matched.length} of ${rows.length} products have a photo.`)
+  if (missing.length) {
+    console.log(`\nStill missing (${missing.length}) — name the file after the code:`)
+    for (const m of missing.slice(0, 40)) {
+      console.log(`  ${m.code.padEnd(16)}${m.name.slice(0, 46)}`)
+    }
+    if (missing.length > 40) console.log(`  … and ${missing.length - 40} more`)
+  }
+  if (orphans.length) {
+    console.log(`\n${orphans.length} file(s) match no product — check the filename:`)
+    for (const f of orphans) console.log(`  ${f}`)
+  }
+  if (ambiguous.length) {
+    console.log(`\n${ambiguous.length} file(s) claimed by more than one product — NOT linked.`)
+    console.log('Name a file after the product instead, e.g. P103.jpg, and it wins over the code:')
+    for (const a of ambiguous) {
+      console.log(`  ${a.file}`)
+      for (const r of a.products) console.log(`      P${r.id}  ${r.name.slice(0, 46)}`)
+    }
+  }
+
+  if (!matched.length) { console.log('\nNothing to link yet.\n'); return }
+
+  const sql = matched
+    .map((m) => `UPDATE products SET image_url = '/products/${m.file.replace(/'/g, "''")}' WHERE id = ${m.id};`)
+    .join('\n') + '\n'
+
+  if (out) { writeFileSync(out, sql); console.log(`\nWrote ${matched.length} statement(s) to ${out}\n`) }
+  else console.log(`\nRun again with --out <file> to write the ${matched.length} UPDATE statement(s).\n`)
+}
+
+// The product list lives in the deployed database. The script fetches it itself with
+// wrangler, which holds the Cloudflare credentials, so this needs none of its own — and
+// nobody has to remember an undocumented SQL query to run it.
+const QUERY = `
+  SELECT p.id,
+         p.name,
+         (SELECT m.sku FROM product_mintsoft_map m
+           WHERE m.product_id = p.id ORDER BY m.is_primary DESC, m.id LIMIT 1) AS a_sku,
+         (SELECT COUNT(*) FROM product_mintsoft_map m WHERE m.product_id = p.id) AS lines
+    FROM products p
+   WHERE p.active = 1
+   ORDER BY p.id`
+
+function rowsFrom(raw: string): Row[] {
+  const parsed: unknown = JSON.parse(raw)
+  const first = (Array.isArray(parsed) ? parsed[0] : (parsed as { result: unknown[] }).result?.[0]) as
+    { results: Row[] }
+  return first.results
+}
+
+function fromWrangler(): Row[] {
+  const local = process.argv.includes('--local')
+  const out = execFileSync(
+    'npx',
+    ['wrangler', 'd1', 'execute', 'mintsoft-portal', local ? '--local' : '--remote', '--json', '--command', QUERY],
+    { encoding: 'utf8', maxBuffer: 32 * 1024 * 1024 },
+  )
+  // wrangler prints warnings above the JSON, so start at the array.
+  return rowsFrom(out.slice(out.indexOf('[')))
+}
+
+if (process.stdin.isTTY) {
+  main(fromWrangler())
+} else {
+  // Still accepts a piped wrangler --json dump, for a database this machine cannot reach.
+  let raw = ''
+  process.stdin.setEncoding('utf8')
+  process.stdin.on('data', (c) => { raw += c })
+  process.stdin.on('end', () => {
+    if (!raw.trim()) { main(fromWrangler()); return }
+    main(rowsFrom(raw))
+  })
+}

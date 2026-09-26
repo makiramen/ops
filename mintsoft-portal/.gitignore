@@ -1,0 +1,34 @@
+# Discovery dumps contain live warehouse data and customer addresses.
+# They must never be committed. Phase 0 writes here.
+discovery/
+
+node_modules/
+dist/
+.wrangler/
+
+# Local secrets. Never commit. Real values live as Cloudflare secrets.
+.dev.vars
+.env
+.env.local
+
+# Real seed data carries staff email addresses. Templates are committed instead.
+seed/sites.csv
+seed/users.csv
+# Same addresses again, as one pasteable block. `npm run testers`.
+seed/google-test-users.txt
+
+# Generated SQL. All of it is derived — from the CSVs above, or from a live read of
+# Mintsoft — and a committed stock snapshot is wrong within the hour. Regenerate with
+# `npm run seed`, `npm run demo`, or the catalogue build; the feed that IS meant to be
+# committed is data/ops_command/mintsoft_stock.json, which carries its own timestamp.
+seed/*.sql
+
+# Review agents occasionally drop probe files here; never commit them.
+tests/zz-*.test.ts
+tests/_*.test.ts
+
+# Preview screenshots and hand-off spreadsheets are generated on demand.
+preview/
+
+# Product photos ARE committed — they are the catalogue, and Pages serves them as
+# static assets. public/products/ is deliberately not ignored.
