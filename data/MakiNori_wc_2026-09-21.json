@@ -1,0 +1,172 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-09-28",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-09-21 \u2013 2026-09-27",
+    "commencing": "2026-09-21",
+    "ending": "2026-09-27"
+  },
+  "sites": {
+    "MakiNori": {
+      "code": "MakiNori",
+      "name": "Maki Nori",
+      "gm": "(confirm)",
+      "gm_confirm": false,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 22700.42,
+          "target": null,
+          "var_pct": null,
+          "prev": 21783.69,
+          "wow_abs": 916.73,
+          "wow_pct": 4.21
+        },
+        "covers": {
+          "actual": 621,
+          "prev": 598,
+          "wow_abs": 23,
+          "wow_pct": 3.85
+        },
+        "sph": {
+          "actual": 36.55,
+          "prev": 36.43,
+          "wow_abs": 0.12,
+          "wow_pct": 0.33,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 36.41,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 537.7
+        },
+        "waste": {
+          "actual": 11.62
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-09-21"
+      },
+      "efficiency_score": {
+        "score": 29,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sph": {
+            "weight": 15,
+            "value": 85.99,
+            "basis": "\u00a336.55 vs \u00a335 tgt \u2014 level 100, WoW +0.33% \u2192 mom 53"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "36.41% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "sales",
+          "food",
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "wage 36.4%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7333,
+        "new_reviews": 15,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 14
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Nikita Patel",
+            "text": "Extremely disappointed in the service we received.  We had a reservation for 6, it took them such a long time to take our order. Once we ordered our bottle of white wine it took such a long time to come.\nOne of our glasses was cracked and the wine came warm so we sent it back and requested a cold one which took around 30 minutes to come. By this time we were so fed up because NO waiter came to take our order for food or attend to us.\n\nThe service overall was practically nonexistent. There seemed to be a huge focus on influencers and people filming with cameras, flashlights, and content setups, while our table was repeatedly ignored. It genuinely felt like unless you were there creating content, you weren\u2019t a priority.\n\nWe had also specifically asked to sit at the bar but were instead given a regular table, despite having a reservation. To make matters worse, the bathrooms were disgusting and clearly had not been maintained.\n\nBetween the 40-minute wait, cracked glassware, dirty bathrooms, and lack of service, the experience was terrible from start to finish. Would not recommend.\n\nDO NOT GO IF YOU AREN\u2019T AN INFLUENCER.",
+            "date": "2026-09-21",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-21..2026-09-27 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-28."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-09-21.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+      ],
+      "notes": {
+        "issues": [],
+        "actions": [],
+        "carryover": [],
+        "empty": true,
+        "docId": null,
+        "source": "No KPI meeting notes received yet for w/c 21/09/2026. Cluster KPI meetings run Tuesday 29/09; the notes run fills this block."
+      }
+    }
+  }
+}
