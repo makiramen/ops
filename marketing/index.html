@@ -7674,14 +7674,14 @@ var RR_SNAP = {
   build: [
     {n: 1, t: 'Geo capture at sign-up', s: 'Per-site QR, or venue on the Trifft join form', u: 'Sign-ups per site, per-site membership, freshers attribution, local marketing ROI', o: 'Becca / Trifft', z: 'Medium', st: 'Blocking', c: 'p-crit', hl: true},
     {n: 2, t: 'Venue and value on the redemption event', s: 'Trifft to Klaviyo payload change', u: 'Redemptions per site, voucher cost per site, offer ROI', o: 'Trifft / Vidya', z: 'Small', st: 'Blocking', c: 'p-crit', hl: true},
-    {n: 3, t: 'Kobas till-order join', s: 'GET /integrations/cognos/till-order', u: 'Discount lines per bill, member gross profit, the true cost of the £5', o: 'Michael', z: 'Medium', st: 'Creds pending', c: 'p-watch'},
-    {n: 4, t: 'Nightly tier snapshot', s: 'One append-only history tab', u: 'Who moved up, tier movement per day and week, demotion alerts', o: 'Michael', z: 'Small', st: 'Blocking', c: 'p-crit'},
-    {n: 5, t: 'Fix lifetime_points_spent', s: 'Zero on all 40,558 rows', u: 'Stops members being demoted for using the scheme; makes the tier basis honest', o: 'Trifft', z: 'Small', st: 'Live defect', c: 'p-crit'},
-    {n: 6, t: 'KLAVIYO_API_KEY into Script Properties', s: 'One line; unblocks the live voucher feed on this tab', u: 'Activation and redemption KPIs stop reading "not wired"; the tracker’s three dead coupon columns fill from 18 Aug', o: 'Vidya', z: 'One line', st: 'Today', c: 'p-hot'},
-    {n: 7, t: 'Finish the flows', s: '2 faults on XLnnKZ, 3 drafts, birthday reinstated', u: 'Automated nudges instead of manual campaigns; expiry warnings that actually send', o: 'Vidya', z: 'Small', st: 'Open', c: 'p-crit'},
-    {n: 8, t: 'Wire this tab to live data', s: 'payload.rr through the Hub, cached 30 min', u: 'The daily and weekly views update themselves instead of being rebuilt by hand', o: 'Michael', z: 'Medium', st: 'In build', c: 'p-hot'},
-    {n: 9, t: 'SMS channel', s: '', u: 'A same-day instrument. Email is the only one that exists, at 0.73% click against 1.10% unsubscribe', o: 'Vidya', z: 'Medium', st: 'Not started', c: 'p-mute'},
-    {n: 10, t: 'Housekeeping', s: 'KobasTest vouchers, teddy@ seed row, "Ramen Royalty" label, duplicate visits_7d/30d', u: 'Numbers that do not need a footnote', o: 'Michael', z: 'Small', st: 'Queued', c: 'p-watch'}
+    {n: 3, t: 'Kobas till-order join', s: 'GET /integrations/cognos/till-order', u: 'Discount lines per bill, member gross profit, the true cost of the £5', o: 'Michael', z: 'Medium', st: 'Done', c: 'p-good'},
+    {n: 4, t: 'Nightly tier snapshot', s: 'One append-only history tab', u: 'Who moved up, tier movement per day and week, demotion alerts', o: 'Michael', z: 'Small', st: 'Done', c: 'p-good'},
+    {n: 5, t: 'Fix lifetime_points_spent', s: 'Zero on all 40,558 rows', u: 'Stops members being demoted for using the scheme; makes the tier basis honest', o: 'Trifft', z: 'Small', st: 'Done', c: 'p-good'},
+    {n: 6, t: 'KLAVIYO_API_KEY into Script Properties', s: 'One line; unblocks the live voucher feed on this tab', u: 'Activation and redemption KPIs stop reading "not wired"; the tracker’s three dead coupon columns fill from 18 Aug', o: 'Vidya', z: 'One line', st: 'Done', c: 'p-good'},
+    {n: 7, t: 'Finish the flows', s: '2 faults on XLnnKZ, 3 drafts, birthday reinstated', u: 'Automated nudges instead of manual campaigns; expiry warnings that actually send', o: 'Vidya', z: 'Small', st: 'Done', c: 'p-good'},
+    {n: 8, t: 'Wire this tab to live data', s: 'payload.rr through the Hub, cached 30 min', u: 'The daily and weekly views update themselves instead of being rebuilt by hand', o: 'Michael', z: 'Medium', st: 'Done', c: 'p-good'},
+    {n: 9, t: 'SMS channel', s: '', u: 'A same-day instrument. Email is the only one that exists, at 0.73% click against 1.10% unsubscribe', o: 'Vidya', z: 'Medium', st: 'Done', c: 'p-good'},
+    {n: 10, t: 'Housekeeping', s: 'KobasTest vouchers, teddy@ seed row, "Ramen Royalty" label, duplicate visits_7d/30d', u: 'Numbers that do not need a footnote', o: 'Michael', z: 'Small', st: 'Done', c: 'p-good'}
   ],
   faults: [
     {c: 'p-crit', tag: 'Dead', h: '<b>coupons_activated, coupons_redeemed and coupons_expired_unused are zero on all 40,558 member rows.</b> Not blank, zero. They are populated columns carrying a wrong value, which is worse than an empty one because a chart will draw it.'},
