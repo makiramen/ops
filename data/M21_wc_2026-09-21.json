@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-28",
+  "generated_at": "2026-09-29",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-21 \u2013 2026-09-27",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
+          "actual": 21.66,
           "target": 23.0,
           "gated": false
         },
@@ -62,19 +62,19 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": -7.3,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": false
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": -18.7,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": false
         },
         "week_commencing": "2026-09-21"
       },
       "efficiency_score": {
-        "score": 60,
+        "score": 70,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -96,16 +96,24 @@
             "value": 100.0,
             "basis": "\u00a323.44 vs \u00a322 tgt \u2014 level 100, WoW +8.27% \u2192 mom 100"
           },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "21.66% vs 25% baseline, -8/pp over"
+          },
           "wage": {
             "weight": 30,
             "value": 27.1,
             "basis": "25.86% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 0.0,
+            "basis": "-18.70% outside \u00b15% band"
           }
         },
         "components_dropped": [
-          "food",
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -115,22 +123,30 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.9091,
-        "new_reviews": 33,
+        "week_avg_rating": 4.8043,
+        "new_reviews": 46,
         "star_breakdown": {
-          "1": 0,
+          "1": 1,
           "2": 0,
           "3": 0,
-          "4": 3,
-          "5": 30
+          "4": 5,
+          "5": 40
         },
-        "negatives": 0,
-        "negative_reviews": [],
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Mohammed Rahman",
+            "text": "First time visiting with my siblings, we brought in drinks from outside, as we didn\u2019t see the sign on the outside saying no drinks from outside. We were told this by the staff which we understood, we put the drinks away after being told and didn\u2019t bring them out after. However if you are going to impose this rule then at least bring out the water we requested when we ordered the meal. All our food came out but the water didn\u2019t. Lacking in customer servicing when you were happy to tell us to put the drinks away but we\u2019re not providing us water when asked during order taking.\n\nNonetheless the food was good the sushi was nice and the beef ramen was good, the chicken however was bland. Looking at other reviews, I can see people had similar issues.\n\nAtmosphere is nice and calm, chill and the decor is beautiful, especially the post stick note wall.",
+            "date": "2026-09-27",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-21..2026-09-27 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-28."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-21..2026-09-27 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-29."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-21.json (AGMM Task List Status). Open items only.",
@@ -175,8 +191,6 @@
         "busy_mode_pct": 0.0
       },
       "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
-        "Stock-take \u2014 no variance entered this week",
         "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
       ],
       "notes": {

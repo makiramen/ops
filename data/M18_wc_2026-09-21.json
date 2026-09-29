@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-28",
+  "generated_at": "2026-09-29",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-21 \u2013 2026-09-27",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
+          "actual": 18.25,
           "target": 23.0,
           "gated": false
         },
@@ -62,19 +62,19 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": 1.9,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": 0.8,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-09-21"
       },
       "efficiency_score": {
-        "score": 58,
+        "score": 74,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -96,16 +96,24 @@
             "value": 76.6,
             "basis": "\u00a320.84 vs \u00a322 tgt \u2014 level 81, WoW +1.71% \u2192 mom 67"
           },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.25% vs 25% baseline, -8/pp over"
+          },
           "wage": {
             "weight": 30,
             "value": 35.05,
             "basis": "25.33% vs 21% target, -15/pp over"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "0.80% inside \u00b15% band"
           }
         },
         "components_dropped": [
-          "food",
-          "weekly_star",
-          "food_var"
+          "weekly_star"
         ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
@@ -115,17 +123,24 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.7143,
-        "new_reviews": 21,
+        "week_avg_rating": 4.6,
+        "new_reviews": 25,
         "star_breakdown": {
-          "1": 0,
+          "1": 1,
           "2": 1,
           "3": 1,
           "4": 1,
-          "5": 18
+          "5": 21
         },
-        "negatives": 2,
+        "negatives": 3,
         "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Robyn Gibson",
+            "text": "If I could give less than 1 star I would.\n\nI made a reservation the day before requesting a booth table. Host had no idea and sat us elsewhere. We walk in not greeted in a nice manner and waited over 35 mins to not even be offered a drink or even a glass of water so we left. I said to the waitress we\u2019re going to leave and she said that she\u2019s sorry but didn\u2019t offer to try and make us stay. Quite honestly the worst introduction to a business I had been looking forward to visiting. \ud83d\udc4e",
+            "date": "2026-09-26",
+            "url": null
+          },
           {
             "stars": 3,
             "author": "david tapp",
@@ -138,7 +153,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-21..2026-09-27 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-28."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-21..2026-09-27 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-29."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-21.json (AGMM Task List Status). Open items only.",
@@ -205,10 +220,7 @@
         "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
         "busy_mode_pct": 6.4
       },
-      "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [],
         "actions": [],
