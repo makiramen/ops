@@ -309,6 +309,17 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
 #panel-dxb table.split{min-width:0;}
 #panel-dxb table.split td.mix{width:40%;}
 #panel-dxb .dexp{appearance:none; border:1px solid var(--rule); background:var(--field); color:var(--accent); font:600 12.5px Archivo,sans-serif; border-radius:3px; padding:4px 10px; margin-left:8px; cursor:pointer;}
+
+#panel-dxb .dchips{display:flex;flex-wrap:wrap;gap:8px;margin:22px 0 4px}
+#panel-dxb .dchip{font:inherit;font-size:13px;line-height:1;padding:9px 12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);border-radius:999px;cursor:pointer;display:inline-flex;gap:6px;align-items:baseline}
+#panel-dxb .dchip b{font-weight:600;color:var(--ink2);font-size:12px}
+#panel-dxb .dchip:hover{border-color:var(--bar)}
+#panel-dxb .dchip.on{background:var(--bar);border-color:var(--bar);color:#fff}
+#panel-dxb .dchip.on b{color:#fff}
+#panel-dxb .bars .row{cursor:pointer}
+#panel-dxb .bars .row:hover .nm{color:var(--bar)}
+#panel-dxb .bars .row.on .nm{color:var(--bar)}
+#panel-dxb #dall{scroll-margin-top:16px}
 </style>
 <div class="wrap">
   <div class="tabs" role="tablist" aria-label="Dashboard">
@@ -415,13 +426,15 @@ figure{margin:0;background:var(--surface);border:1px solid var(--hair);border-ra
     <div class="tile"><div class="t">Top seller</div><div class="b">563</div><div class="s">Beef Steak Tataki Ramen</div></div>
   </div>
 
+  <nav class="dchips" id="dchips" aria-label="Jump to a category"></nav>
+
   <section>
     <h2>Items sold by category</h2>
     <p class="note">Units sold in Dubai.</p>
     <div class="bars"><div class="row"><div class="rl"><span class="nm">Ramen</span><span class="sb">10 items</span></div><div class="track"><div class="fill" style="width:100.00%"></div></div><div class="val">1,954</div></div><div class="row"><div class="rl"><span class="nm">Small Plates &amp; Sides</span><span class="sb">16 items</span></div><div class="track"><div class="fill" style="width:58.55%"></div></div><div class="val">1,144</div></div><div class="row"><div class="rl"><span class="nm">Sushi Rolls</span><span class="sb">14 items</span></div><div class="track"><div class="fill" style="width:39.41%"></div></div><div class="val">770</div></div><div class="row"><div class="rl"><span class="nm">Soft Drinks &amp; Water</span><span class="sb">16 items</span></div><div class="track"><div class="fill" style="width:32.24%"></div></div><div class="val">630</div></div><div class="row"><div class="rl"><span class="nm">Rice, Curry &amp; Yakisoba</span><span class="sb">9 items</span></div><div class="track"><div class="fill" style="width:23.49%"></div></div><div class="val">459</div></div><div class="row"><div class="rl"><span class="nm">Juices &amp; Mocktails</span><span class="sb">9 items</span></div><div class="track"><div class="fill" style="width:15.10%"></div></div><div class="val">295</div></div><div class="row"><div class="rl"><span class="nm">Nigiri, Sashimi &amp; Crudo</span><span class="sb">16 items</span></div><div class="track"><div class="fill" style="width:12.95%"></div></div><div class="val">253</div></div><div class="row"><div class="rl"><span class="nm">Tea, Matcha &amp; Milk Tea</span><span class="sb">8 items</span></div><div class="track"><div class="fill" style="width:12.54%"></div></div><div class="val">245</div></div><div class="row"><div class="rl"><span class="nm">Sets, Platters &amp; Combos</span><span class="sb">16 items</span></div><div class="track"><div class="fill" style="width:12.38%"></div></div><div class="val">242</div></div><div class="row"><div class="rl"><span class="nm">Add-ons &amp; Extras</span><span class="sb">11 items</span></div><div class="track"><div class="fill" style="width:11.92%"></div></div><div class="val">233</div></div><div class="row"><div class="rl"><span class="nm">Sushi Pop</span><span class="sb">6 items</span></div><div class="track"><div class="fill" style="width:3.22%"></div></div><div class="val">63</div></div><div class="row"><div class="rl"><span class="nm">Temaki &amp; Handrolls</span><span class="sb">5 items</span></div><div class="track"><div class="fill" style="width:2.56%"></div></div><div class="val">50</div></div><div class="row"><div class="rl"><span class="nm">Desserts</span><span class="sb">4 items</span></div><div class="track"><div class="fill" style="width:2.00%"></div></div><div class="val">39</div></div><div class="row"><div class="rl"><span class="nm">Open Items</span><span class="sb">2 items</span></div><div class="track"><div class="fill" style="width:0.51%"></div></div><div class="val">10</div></div></div>
   </section>
 
-  <section>
+  <section id="dall">
     <h2>Every item, by category</h2>
     <p class="note">Units sold in Dubai, highest first. Tap a category to open it.
     <button type="button" id="dexp" class="dexp">Expand all</button></p>
@@ -1133,6 +1146,23 @@ function pos(v,f){var s=(v>=0?"+":"−");return s+f(Math.abs(v));}
 <script>
 (function(){var b=document.getElementById("dexp");if(!b)return;
 b.addEventListener("click",function(){var ds=document.querySelectorAll("#dgroups details"),o=b.textContent==="Expand all";ds.forEach(function(d){d.open=o;});b.textContent=o?"Collapse all":"Expand all";});})();
+</script>
+<script>
+(function(){var nav=document.getElementById("dchips"),box=document.getElementById("dgroups"),sec=document.getElementById("dall"),exp=document.getElementById("dexp");if(!nav||!box)return;
+var ds=[].slice.call(box.querySelectorAll("details.dgrp")),rows=[].slice.call(document.querySelectorAll("#panel-dxb .bars .row"));
+function nm(d){return d.querySelector(".gn").textContent.trim()}
+function chip(label,count,key){var b=document.createElement("button");b.type="button";b.className="dchip";b.dataset.k=key;b.innerHTML="<span></span><b></b>";b.firstChild.textContent=label;b.lastChild.textContent=count;nav.appendChild(b);return b}
+var total=0;ds.forEach(function(d){total+=parseInt(d.querySelector(".gm b").textContent.replace(/[^0-9]/g,""),10)||0});
+chip("All items",total.toLocaleString("en-GB"),"*");
+ds.forEach(function(d){chip(nm(d),d.querySelector(".gm b").textContent.replace(/ sold/,""),nm(d))});
+function pick(k,go){ds.forEach(function(d){var m=(k==="*"||nm(d)===k);d.hidden=!m;d.open=m});
+[].forEach.call(nav.children,function(c){c.classList.toggle("on",c.dataset.k===k)});
+rows.forEach(function(r){r.classList.toggle("on",k!=="*"&&r.querySelector(".nm").textContent.trim()===k)});
+if(exp){exp.hidden=(k!=="*");exp.textContent="Collapse all"}
+if(go&&sec)sec.scrollIntoView({behavior:"smooth",block:"start"})}
+nav.addEventListener("click",function(e){var b=e.target.closest(".dchip");if(b)pick(b.dataset.k,true)});
+rows.forEach(function(r){r.setAttribute("role","button");r.tabIndex=0;var k=r.querySelector(".nm").textContent.trim();r.addEventListener("click",function(){pick(k,true)});r.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();pick(k,true)}})});
+})();
 </script>
 </body>
 </html>
