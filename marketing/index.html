@@ -900,6 +900,14 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 <div class="cards" id="kpis"></div>
 <div class="hygstrip" id="hygStrip"></div>
 
+<!-- ══ 2b. TWO FRONT DOORS: we invite (IG DMs) vs they apply (Joli) ══ -->
+<div class="section" id="srcCmp">
+  <h2>Two front doors: we invite vs they apply</h2>
+  <div class="src">Instagram DMs = Georgie invites them · Joli = creators apply to our campaigns, we approve</div>
+  <div class="lede" id="cmpLede"></div>
+  <table id="cmpTable"></table>
+</div>
+
 <!-- ══ 2c. JOLI (second source, added 30 Sep 2026) ══ -->
 <div class="section" id="joliSec">
   <h2 class="fold" data-fold="joli">
@@ -6386,7 +6394,11 @@ function wireMatrixModal() {
       const p = b.filter(m => { const v = ms(m.visit_date); return v != null && v <= asOf; });
       const c = b.filter(m => m.posted === 'YES');
       return { threads: rows.length, booked: b.length, passed: p.length, content: c.length,
-        conv: b.length ? Math.round(c.length / b.length * 100) : 0 };
+        conv: b.length ? Math.round(c.length / b.length * 100) : 0,
+        reached: rows.filter(m => m.box === 'JOLI' || m.invited).length,
+        yes: rows.filter(m => m.terms_confirmed).length,
+        cancelled: rows.filter(m => m.box === 'JOLI' && /cancel|reject/i.test(m.owner_notes || '')).length,
+        views: rows.reduce((t, m) => { const x = /([\d,]+) views/.exec(m.owner_notes || ''); return t + (x ? Number(x[1].replace(/,/g, '')) : 0); }, 0) };
     };
     const split = { ig: splitOf(igRows, asofMs), joli: splitOf(joliRows, Date.now()) };
     const funnelTop = joliRows.length
@@ -7658,6 +7670,40 @@ const MROWS = IDATA.table.map(a => Object.fromEntries(MCOLS.map((k, i) => [k, a[
     ['Actions', 'Chase state lives in a separate DYI_CHASE_LEDGER tab keyed on the thread, never in the master. The master is rebuilt from scratch every week, so anything written into it would be wiped. A chase is recorded when a new outbound message appears on the thread in the next export — no buttons. This is what makes the loop closed.'],
   ];
   items.forEach(([h, b]) => { const r = el('div', 'methodrow'); r.append(el('b', null, h), el('span', null, b)); mb.append(r); });
+}
+
+/* ═══════════ 2b. TWO FRONT DOORS ═══════════ */
+{
+  const S = IDATA.split || {};
+  const sec = $('#srcCmp');
+  if (!S.joli || !S.joli.threads || !S.ig.threads) { sec.remove(); }
+  else {
+    const I = S.ig, J = S.joli;
+    const pct = (a, b) => b ? Math.round(a / b * 100) + '%' : '—';
+    const rows = [
+      { k: 'In the door', a: I.reached, an: 'we invited', b: J.reached, bn: 'applied to us' },
+      { k: 'Said yes / approved', a: I.yes, ar: pct(I.yes, I.reached), b: J.yes, br: pct(J.yes, J.reached) },
+      { k: 'Visit date booked', a: I.booked, ar: pct(I.booked, I.yes), b: J.booked, br: pct(J.booked, J.yes) },
+      { k: 'Visit date passed', a: I.passed, ar: pct(I.passed, I.booked), b: J.passed, br: pct(J.passed, J.booked) },
+      { k: 'Posted content', a: I.content, ar: pct(I.content, I.passed), b: J.content, br: pct(J.content, J.passed) },
+    ];
+    const mx = Math.max(...rows.map(r => Math.max(r.a, r.b)), 1);
+    build('#cmpTable', [
+      { h: 'Stage', k: 'k' },
+      { h: 'Instagram DMs', num: true, cell: r => fillCell(r.a, mx, { colour: '#E2E8F0', text: fmt(r.a) + (r.an ? ' ' + r.an : '') }) },
+      { h: 'Rate', num: true, f: r => r.ar || '' },
+      { h: 'Joli', num: true, cell: r => fillCell(r.b, mx, { colour: '#FDE8D7', text: fmt(r.b) + (r.bn ? ' ' + r.bn : '') }) },
+      { h: 'Rate', num: true, f: r => r.br || '' },
+    ], rows);
+    const total = I.reached + J.reached;
+    $('#cmpLede').innerHTML = '<b>' + fmt(I.reached) + '</b> creators came from us inviting them and <b>' + fmt(J.reached)
+      + '</b> applied through Joli (' + pct(J.reached, total) + ' of everyone in the door, and Joli only went live on 10 Sep). '
+      + 'Invites leak at the yes: <b>' + pct(I.yes, I.reached) + '</b> accept. Joli applicants are already a yes, so <b>'
+      + pct(J.booked, J.reached) + '</b> end up with a date. The last row is the one to watch: Joli has '
+      + fmt(J.booked - J.passed) + ' visits still to come, so its posting rate is too early to judge'
+      + (J.cancelled ? ' (' + fmt(J.cancelled) + ' Joli bookings cancelled or rejected).' : '.')
+      + ' Rates are of the row above, except "Posted", which is of visits whose date has passed.';
+  }
 }
 
 /* ═══════════ 2c. JOLI ═══════════ */
