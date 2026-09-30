@@ -420,6 +420,15 @@ td.fillbar { background-repeat: no-repeat; background-position: right center; }
 #tab-influencer .rag.RED { background: #FEE2E2; color: #B91C1C; }
 #tab-influencer .rag.GREY { background: #E5E7EB; color: #6B7280; }
 #tab-influencer .rag.BLUE { background: #DBEAFE; color: #1D4ED8; }
+#tab-influencer .rag.JOLI { background: #FDE8D7; color: #B4450B; }
+#tab-influencer .rag.IG { background: #F1F5F9; color: #475569; }
+#tab-influencer .infbar button.src-joli.on { background: #D9540E; color: #fff; }
+#tab-influencer .infbar button.src-joli.on .c { color: #FDE8D7; }
+#tab-influencer #joliSec { border-left: 4px solid #D9540E; }
+#tab-influencer #joliSec .cards { margin: 10px 0 14px; }
+#tab-influencer #joliSec h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #334155; margin: 14px 0 6px; }
+#tab-influencer .srcsplit { font-size: 11px; color: #64748B; margin-top: 4px; }
+#tab-influencer .srcsplit b { color: #B4450B; }
 #tab-influencer .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: bold; }
 #tab-influencer .tag.story { background: #DBEAFE; color: #1D4ED8; }
 #tab-influencer .tag.reel { background: #EDE9FE; color: #6D28D9; }
@@ -890,6 +899,34 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 <!-- ══ 2. THE NUMBERS THAT MATTER ══ -->
 <div class="cards" id="kpis"></div>
 <div class="hygstrip" id="hygStrip"></div>
+
+<!-- ══ 2c. JOLI (second source, added 30 Sep 2026) ══ -->
+<div class="section" id="joliSec">
+  <h2 class="fold" data-fold="joli">
+    <span class="chev">▼</span>Joli bookings
+    <span class="cnt" id="jlCnt"></span>
+  </h2>
+  <div class="foldbody" id="fold-joli">
+    <div class="src">Joli app (web.joliapp.com) · weekly Claude pull into JOLI_BOOKINGS / JOLI_CONTENT · merged into DYI_INFLUENCER_MASTER as box JOLI</div>
+    <div class="lede" id="jlLede"></div>
+    <div class="cards" id="jlKpis"></div>
+    <div class="grid2">
+      <div>
+        <h3>Visiting in the next 14 days</h3>
+        <div class="scroll" style="max-height:320px"><table id="jlUpcoming"></table></div>
+      </div>
+      <div>
+        <h3>By site</h3>
+        <table id="jlSites"></table>
+      </div>
+    </div>
+    <h3>What Joli creators posted</h3>
+    <table id="jlContent"></table>
+    <h3>Every Joli booking</h3>
+    <div class="scroll" style="max-height:420px"><table id="jlAll"></table></div>
+    <div style="margin-top:8px" class="subtle" id="jlFoot"></div>
+  </div>
+</div>
 
 <!-- ══ 3. WHAT TO DO NOW ══ -->
 <div class="section">
@@ -6163,12 +6200,16 @@ function wireMatrixModal() {
   const KIND = {
     'CHASE - 7d past visit': { label: 'Visited, no content', rank: 2 },
     'CHASE - 5d no date': { label: 'No date agreed', rank: 1 },
-    'CHASE - 5d no reply': { label: 'No reply', rank: 0 }
+    'CHASE - 5d no reply': { label: 'No reply', rank: 0 },
+    'JOLI - 7d past visit (chase in Joli)': { label: 'Joli: visited, no content', rank: 2 },
+    'JOLI - application to review': { label: 'Joli: application to review', rank: 1 }
   };
   const OWNER_BY_KIND = {
     'Visited, no content': 'Georgie',
     'No date agreed': 'Georgie',
-    'No reply': 'Georgie'
+    'No reply': 'Georgie',
+    'Joli: visited, no content': 'Georgie',
+    'Joli: application to review': 'Georgie'
   };
   const STAGES = ['Outreach sent', 'Awaiting confirmation', 'Confirmed', 'Visited - awaiting content',
     'Content delivered', 'No content', 'Cold', 'Inbound - no outreach', 'Unclassified'];
@@ -6187,6 +6228,10 @@ function wireMatrixModal() {
     const disc = new Set(agg.disc_threads || []);
 
     const invited = EXT.filter(m => m.invited);
+    /* Invite-based rates are an Instagram-DM concept: Joli creators apply, nobody invites them. */
+    const igE = EXT.filter(m => m.box !== 'JOLI');
+    const igBooked = igE.filter(m => m.visit_resolved === 'TRUE');
+    const igTerms = igE.filter(m => m.terms_confirmed);
     const booked = EXT.filter(m => m.visit_resolved === 'TRUE');
     const bookedContent = booked.filter(m => m.posted === 'YES');
     const invContent = invited.filter(m => m.posted === 'YES');
@@ -6284,20 +6329,19 @@ function wireMatrixModal() {
       invited: invited.length, with_content: withContent.length, inv_content: invContent.length,
       booked: booked.length, booked_content: bookedContent.length,
       conv: booked.length ? Math.round(bookedContent.length / booked.length * 100) : 0,
-      inv_to_book: invited.length ? Math.round(booked.length / invited.length * 100) : 0,
+      inv_to_book: invited.length ? Math.round(igBooked.length / invited.length * 100) : 0,
       nocontent: statusC['No content'] || 0,
       multi: EXT.filter(m => num(m.booking_count) > 1).length,
       bookings: EXT.reduce((s, m) => s + num(m.booking_count), 0),
       none_stated: noneStated,
       none_stated_pct: invited.length ? Math.round(noneStated / invited.length * 100) : 0,
-      terms: EXT.filter(m => m.terms_confirmed).length,
+      terms: igTerms.length,
       date_passed: datePassed.length,
       date_future: booked.length - datePassed.length,
       visited_flagged: visitedFlagged,
       attendance_unknown: attendanceUnknown,
-      acc_rate: invited.length ? Math.round(EXT.filter(m => m.terms_confirmed).length / invited.length * 100) : 0,
-      acc_to_book: EXT.filter(m => m.terms_confirmed).length
-        ? Math.round(booked.length / EXT.filter(m => m.terms_confirmed).length * 100) : 0,
+      acc_rate: invited.length ? Math.round(igTerms.length / invited.length * 100) : 0,
+      acc_to_book: igTerms.length ? Math.round(igBooked.length / igTerms.length * 100) : 0,
       visit: EXT.filter(m => m.visit_date).length,
       dtp_n: dtp.length,
       dtp_median: dtp.length ? r1(median(dtp)) : 0,
@@ -6334,9 +6378,24 @@ function wireMatrixModal() {
     };
     const mix = { n: nb, counts: mixCounts, pct: Object.fromEntries(Object.entries(mixCounts).map(([k, v]) => [k, pc(v)])) };
 
+    const joliRows = EXT.filter(m => m.box === 'JOLI');
+    const igRows = EXT.filter(m => m.box !== 'JOLI');
+    /* Joli clocks run from today: its snapshot is live, unlike the weekly DM export. */
+    const splitOf = (rows, asOf) => {
+      const b = rows.filter(m => m.visit_resolved === 'TRUE');
+      const p = b.filter(m => { const v = ms(m.visit_date); return v != null && v <= asOf; });
+      const c = b.filter(m => m.posted === 'YES');
+      return { threads: rows.length, booked: b.length, passed: p.length, content: c.length,
+        conv: b.length ? Math.round(c.length / b.length * 100) : 0 };
+    };
+    const split = { ig: splitOf(igRows, asofMs), joli: splitOf(joliRows, Date.now()) };
+    const funnelTop = joliRows.length
+      ? (invited.length ? { k: 'Invited (IG) or applied (Joli)', n: invited.length + joliRows.length }
+                        : { k: 'Applied on Joli', n: joliRows.length })
+      : { k: 'Invites sent', n: invited.length };
     const funnel = [
-      { k: 'Invites sent', n: invited.length },
-      { k: 'Accepted the invite', n: EXT.filter(m => m.terms_confirmed).length },
+      funnelTop,
+      { k: joliRows.length && !invited.length ? 'Approved' : 'Accepted the invite', n: EXT.filter(m => m.terms_confirmed).length },
       { k: 'Visit date confirmed', n: booked.length },
       { k: 'That date has now passed', n: datePassed.length },
       { k: 'Produced content', n: bookedContent.length }
@@ -6366,6 +6425,7 @@ function wireMatrixModal() {
         wait: dayFloor(asofMs, ms(m.last_message)),
         visit: datePart(m.visit_date),
         owner: OWNER_BY_KIND[k.label],
+        joli: m.box === 'JOLI',
         key: m.thread_path, _i: idx
       };
     }).sort((a, b) => b.rank - a.rank || b.wait - a.wait || a._i - b._i);
@@ -6404,7 +6464,8 @@ function wireMatrixModal() {
         num(m.msgs_total), datePart(m.last_message),
         Math.round((parseFloat(m.confidence) || 0) * 100) / 100,
         m.content_evidence || '',
-        m.agreed_posting || '', m.disclosed === 'TRUE' ? 1 : 0
+        m.agreed_posting || '', m.disclosed === 'TRUE' ? 1 : 0,
+        m.box === 'JOLI' ? 'Joli' : 'IG DM', m.owner_notes || ''
       ];
       row._i = _ti;
       return row;
@@ -6431,7 +6492,7 @@ function wireMatrixModal() {
       top: agg.top, sites, grades: agg.grades, disclosed: agg.disclosed,
       collabs: agg.collabs, review,
       weeks: agg.weeks, wseries: agg.wseries,
-      offers, conf, chases, noback, table, sources, hygiene, _extRows: EXT,
+      offers, conf, chases, noback, table, sources, hygiene, _extRows: EXT, split,
       noback_overdue: nobackOverdue,
       resolvable, resolvable_pct: EXT.length ? Math.round(resolvable / EXT.length * 1000) / 10 : 0,
       ledger: ledgerOut
@@ -6512,6 +6573,14 @@ var INF_REGION_KEY = 'mr_hub_inf_region';
 var INF_CITY_KEY = 'mr_hub_inf_city';
 var INF_INFER_KEY = 'mr_hub_inf_infer';
 var INF_INFER = false;          /* include handle-inferred cities in the filter */
+var INF_SRCK = '';              /* '' = every source, 'ig' = Instagram DMs, 'joli' = Joli app */
+var INF_SRCK_KEY = 'mr_hub_inf_source';
+var INF_JOLI = { bookings: [], content: [] };   /* JOLI_BOOKINGS / JOLI_CONTENT rows */
+function infIsJoli(m) { return m.box === 'JOLI'; }
+function infSrcOk(m) {
+  if (!INF_SRCK || m.account_class !== 'EXTERNAL') return true;
+  return INF_SRCK === 'joli' ? infIsJoli(m) : !infIsJoli(m);
+}
 var INF_DAY = 86400000;
 
 /* GEOGRAPHY — CITY is the unit, the AM cluster is only a grouping of cities.
@@ -6689,6 +6758,7 @@ function infCounts(w) {
   INF_CITIES.forEach(function (x) { c.city[x.k] = 0; c.inf[x.k] = 0; });
   (INF_SRC.master || []).forEach(function (m) {
     if (m.account_class !== 'EXTERNAL') return;
+    if (!infSrcOk(m)) return;
     if (w && !infTouchesWeek(m, w)) return;
     c.all++;
     var r = infRowCity(m);
@@ -6712,10 +6782,11 @@ function infCounts(w) {
 /* Build the tab's data object for the current slice. */
 function infSlice(w, rg, city) {
   var src = INF_SRC, agg = src.agg;
-  var rows = src.master, a = agg, sliced = !!(w || rg || city);
+  var rows = src.master, a = agg, sliced = !!(w || rg || city || INF_SRCK);
 
   if (sliced) {
     rows = src.master.filter(function (m) {
+      if (!infSrcOk(m)) return false;
       if (w && !infTouchesWeek(m, w)) return false;
       if (m.account_class !== 'EXTERNAL') return true;
       var rc = infRowCity(m);
@@ -6729,8 +6800,16 @@ function infSlice(w, rg, city) {
     });
     a = {};
     for (var k in agg) if (Object.prototype.hasOwnProperty.call(agg, k)) a[k] = agg[k];
-    /* Message-level totals carry neither a week nor a site — print nothing, never 0. */
-    ['messages', 'msgs_in', 'msgs_out', 'creators'].forEach(function (key) { a[key] = null; });
+    /* Message-level totals carry neither a week nor a site — print nothing, never 0.
+       They are Instagram-inbox totals, so the IG-only view keeps them unsliced. */
+    if (w || rg || city || INF_SRCK === 'joli')
+      ['messages', 'msgs_in', 'msgs_out', 'creators'].forEach(function (key) { a[key] = null; });
+    /* A Joli-only view has no inbox at all: DM-derived panels go empty, not IG-shaped. */
+    if (INF_SRCK === 'joli') {
+      ['tags', 'reactions', 'story', 'reel', 'post', 'own_reshares', 'disclosed',
+       'collab_content', 'collab_creators'].forEach(function (key) { a[key] = 0; });
+      a.top = []; a.grades = []; a.collabs = []; a.cap_threads = []; a.disc_threads = [];
+    }
     if (w) {
       var ws = { story: {}, reel: {}, post: {} };
       ['story', 'reel', 'post'].forEach(function (t) {
@@ -6748,7 +6827,8 @@ function infSlice(w, rg, city) {
   D._week = w || '';
   D._region = rg || '';
   D._city = city || '';
-  D._noWeeks = !!(rg || city);        /* week × geography is not derivable for pieces */
+  D._source = INF_SRCK;
+  D._noWeeks = !!(rg || city || INF_SRCK === 'joli');  /* week × geography is not derivable for pieces */
   return D;
 }
 
@@ -6756,7 +6836,7 @@ function infBar(D) {
   var bar = document.getElementById('infbar');
   if (!bar) return;
   bar.replaceChildren();
-  bar.classList.toggle('scoped', !!(INF_W || INF_RG));
+  bar.classList.toggle('scoped', !!(INF_W || INF_RG || INF_SRCK));
 
   var weeks = (INF_SRC.agg.weeks || []).slice().sort();
   var mk = function (label, on, fn, count) {
@@ -6767,6 +6847,17 @@ function infBar(D) {
     b.onclick = fn;
     return b;
   };
+
+  var ext = (INF_SRC.master || []).filter(function (m) { return m.account_class === 'EXTERNAL'; });
+  var nJ = ext.filter(infIsJoli).length;
+  if (nJ) {
+    bar.append(mk('All sources', !INF_SRCK, function () { infSetSource(''); }, ext.length));
+    bar.append(mk('Instagram DMs', INF_SRCK === 'ig', function () { infSetSource(INF_SRCK === 'ig' ? '' : 'ig'); }, ext.length - nJ));
+    var jb = mk('Joli', INF_SRCK === 'joli', function () { infSetSource(INF_SRCK === 'joli' ? '' : 'joli'); }, nJ);
+    jb.classList.add('src-joli');
+    bar.append(jb);
+    bar.append(Object.assign(document.createElement('span'), { className: 'sep' }));
+  }
 
   bar.append(mk('All time', !INF_W, function () { infSetWeek(''); }));
   if (weeks.length) {
@@ -6845,12 +6936,13 @@ function infBar(D) {
 
   var st = document.createElement('div');
   st.className = 'state';
-  if (!INF_W && !INF_RG && !INF_CITY) {
+  var srcLbl = INF_SRCK === 'joli' ? 'Joli only' : INF_SRCK === 'ig' ? 'Instagram DMs only' : '';
+  if (!INF_W && !INF_RG && !INF_CITY && !INF_SRCK) {
     st.innerHTML = 'Showing <b>everything</b> · ' + (INF_SRC.agg.weeks || []).length +
       ' weeks · ' + INF_CITIES.length + ' cities' + (INF_INFER ? ' · <b>inferred cities ON</b>' : '') +
       ' · ← → step weeks, esc clears';
   } else {
-    st.innerHTML = 'Scoped to <b>' + (INF_W ? infWeekLabel(INF_W) : 'all time') + '</b> · <b>' +
+    st.innerHTML = 'Scoped to ' + (srcLbl ? '<b>' + srcLbl + '</b> · ' : '') + '<b>' + (INF_W ? infWeekLabel(INF_W) : 'all time') + '</b> · <b>' +
       infPlaceLabel() + '</b>' + (INF_CITY ? ' <span class="subtle">(' + infRegionLabel(INF_RG) + ')</span>' : '') +
       (INF_INFER ? ' · <b>incl. inferred</b>' : '') + ' · esc clears';
   }
@@ -6870,6 +6962,7 @@ function infSetCity(k) {
   infSave(); infApply(true);
 }
 function infSetInfer(v) { INF_INFER = !!v; infSave(); infApply(true); }
+function infSetSource(k) { INF_SRCK = k || ''; try { localStorage.setItem(INF_SRCK_KEY, INF_SRCK); } catch (e) {} infApply(true); }
 function infSave() {
   try {
     localStorage.setItem(INF_REGION_KEY, INF_RG);
@@ -6919,10 +7012,10 @@ function infBindKeys() {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'ArrowLeft') { e.preventDefault(); infStepWeek(-1); }
     else if (e.key === 'ArrowRight') { e.preventDefault(); infStepWeek(1); }
-    else if (e.key === 'Escape' && (INF_W || INF_RG || INF_CITY)) {
+    else if (e.key === 'Escape' && (INF_W || INF_RG || INF_CITY || INF_SRCK)) {
       e.preventDefault();
-      INF_W = ''; INF_RG = ''; INF_CITY = '';
-      try { localStorage.setItem(INF_WEEK_KEY, ''); } catch (err) {}
+      INF_W = ''; INF_RG = ''; INF_CITY = ''; INF_SRCK = '';
+      try { localStorage.setItem(INF_WEEK_KEY, ''); localStorage.setItem(INF_SRCK_KEY, ''); } catch (err) {}
       infSave();
       infApply(true);
     }
@@ -6937,6 +7030,7 @@ async function loadInfluencer() {
     return;
   }
   INF_SRC = { master: d.dyi_master, ledger: d.dyi_ledger || [], agg: d.dyi_agg };
+  INF_JOLI = { bookings: d.joli_bookings || [], content: d.joli_content || [] };
 
   /* Capture the static template ONCE, then own the pane: bar on top, body below.
      Every slice replaces the body wholesale, so no listener or appended node can
@@ -6960,7 +7054,9 @@ async function loadInfluencer() {
     INF_CITY = infCityDef(sc) ? sc : '';
     if (INF_CITY) INF_RG = infCityDef(INF_CITY).cluster;
     INF_INFER = !!localStorage.getItem(INF_INFER_KEY);
-  } catch (e) { INF_W = ''; INF_RG = ''; INF_CITY = ''; INF_INFER = false; }
+    var ss = localStorage.getItem(INF_SRCK_KEY) || '';
+    INF_SRCK = (ss === 'ig' || ss === 'joli') ? ss : '';
+  } catch (e) { INF_W = ''; INF_RG = ''; INF_CITY = ''; INF_INFER = false; INF_SRCK = ''; }
 
   infBindKeys();
   infApply(false);
@@ -7092,8 +7188,21 @@ const LOOP = IDATA.loop;
   const hero = el('div', 'card hero');
   hero.append(el('div', 'label', 'Comped visits that produce content'),
               el('div', 'value', T.conv + '%'),
-              el('div', 'delta', fmt(T.booked_content) + ' of ' + fmt(T.booked) + ' comped visits · steady at 47 to 49% across three windows'));
+              el('div', 'delta', fmt(T.booked_content) + ' of ' + fmt(T.booked) + ' comped visits'
+                + (IDATA._source || (IDATA.split && IDATA.split.joli.threads) ? '' : ' · steady at 47 to 49% across three windows')));
+  const SP = IDATA.split || {};
+  if (SP.joli && SP.joli.threads && !IDATA._source) {
+    hero.append(el('div', 'delta', 'IG DMs ' + SP.ig.conv + '% (' + fmt(SP.ig.content) + '/' + fmt(SP.ig.booked)
+      + ') · Joli ' + SP.joli.conv + '% (' + fmt(SP.joli.content) + '/' + fmt(SP.joli.booked) + ', mostly still to visit)'));
+  }
   c.append(hero);
+  if (SP.joli && SP.joli.threads && IDATA._source !== 'ig') {
+    const jk = el('div', 'card');
+    jk.append(el('div', 'label', 'Joli bookings'), el('div', 'value', fmt(SP.joli.booked)),
+      el('div', 'delta', fmt(SP.joli.passed) + ' visited · ' + fmt(SP.joli.booked - SP.joli.passed) + ' upcoming · '
+        + fmt(SP.joli.content) + ' posted'));
+    c.append(jk);
+  }
   const cards = [
     ['Chases due now', fmt(T.chases), 'RED', 'someone has to send a message today'],
     ['Fed, nothing back', fmt(IDATA.noback_overdue), 'AMBER', 'visited over 7 days ago, still no post'],
@@ -7102,10 +7211,12 @@ const LOOP = IDATA.loop;
     ['Turned up, unprovable', fmt(T.attendance_unknown), 'AMBER',
       'visit dates passed with no content and no visited flag'],
     ['Content pieces logged', fmt(T.cr_pieces), '', fmt(T.cr_story) + ' story (proof) · ' + fmt(T.cr_inferred) + ' reel or post (inferred)'
-      + (T.staff_pieces ? ' · excludes ' + fmt(T.staff_pieces) + ' staff pieces' : '')],
+      + (T.staff_pieces && IDATA._source !== 'joli' ? ' · excludes ' + fmt(T.staff_pieces) + ' staff pieces' : '')],
     ['No deliverable agreed', T.none_stated_pct + '%', 'AMBER', fmt(T.none_stated) + ' invites asked for nothing specific'],
   ];
+  const IG_ONLY = ['Invites sent', 'Invites accepted', 'Turned up, unprovable', 'No deliverable agreed'];
   for (const [l, v, rag, d] of cards) {
+    if (IDATA._source === 'joli' && IG_ONLY.indexOf(l) > -1) continue;
     const k = el('div', 'card');
     k.append(el('div', 'label', l));
     const val = el('div', 'value' + (rag ? ' v-' + rag : ''), v);
@@ -7159,7 +7270,8 @@ const STATE_RAG = { OPEN: 'GREY', CHASED: 'BLUE', CONTENT: 'GREEN',
 
 let chaseFilter = 'OPEN';
 const CH = IDATA.chases;
-const KINDRAG = { 'Visited, no content': 'RED', 'No date agreed': 'AMBER', 'No reply': 'GREY' };
+const KINDRAG = { 'Visited, no content': 'RED', 'No date agreed': 'AMBER', 'No reply': 'GREY',
+  'Joli: visited, no content': 'RED', 'Joli: application to review': 'AMBER' };
 
 $('#chaseLede').innerHTML = 'Every row here is one message someone needs to send, <b>ordered by cost to the business</b>: '
   + 'a creator who has already eaten a comped meal and posted nothing sits at the top, because that money is already spent. '
@@ -7195,6 +7307,7 @@ function renderChase() {
   build('#chaseTable', [
     { h: 'Creator', sk: 'nm', cell: creatorCell },
     { h: 'Why', cell: c => { const td = el('td'); td.append(el('span', 'rag ' + KINDRAG[c.kind], c.kind)); return td; } },
+    { h: 'Source', sk: 'joli', cell: c => { const td = el('td'); td.append(el('span', 'rag ' + (c.joli ? 'JOLI' : 'IG'), c.joli ? 'Joli' : 'IG DM')); return td; } },
     { h: 'Site', f: c => c.site.replace('Maki & Ramen ', '') || '—' },
     { h: 'Offer', f: c => c.offer || '—' },
     { h: 'Waiting', num: true, sk: 'wait',
@@ -7488,12 +7601,14 @@ renderChase();
 }
 
 /* ═══════════ 9. FULL TRACKER ═══════════ */
-const MCOLS = ['nm','slug','real','site','status','offer','visit','booked','posted','format','grade','story','reel','post','dtp','chase','msgs','last','conf','evidence','agreed','disclosed'];
+const MCOLS = ['nm','slug','real','site','status','offer','visit','booked','posted','format','grade','story','reel','post','dtp','chase','msgs','last','conf','evidence','agreed','disclosed','source','notes'];
 const MROWS = IDATA.table.map(a => Object.fromEntries(MCOLS.map((k, i) => [k, a[i]])));
 {
-  $('#msCnt').textContent = fmt(MROWS.length) + ' EXTERNAL THREADS';
+  const nJoliRows = MROWS.filter(r => r.source === 'Joli').length;
+  $('#msCnt').textContent = fmt(MROWS.length) + ' EXTERNAL THREADS' + (nJoliRows ? ' · ' + fmt(nJoliRows) + ' JOLI' : '');
   const cols = [
     { h: 'Creator', cell: creatorCell, sk: 'nm' },
+    { h: 'Source', sk: 'source', cell: r => { const td = el('td'); td.append(el('span', 'rag ' + (r.source === 'Joli' ? 'JOLI' : 'IG'), r.source)); if (r.notes && r.source === 'Joli') td.title = r.notes; return td; } },
     { h: 'Site', f: r => (r.site || '').replace('Maki & Ramen ', ''), sk: 'site' },
     { h: 'Status', k: 'status' },
     { h: 'Booked', ctr: true, cell: r => { const td = el('td', 'ctr'); if (r.booked) td.append(el('span', 'rag GREEN', r.visit || '✓')); return td; }, sk: 'visit' },
@@ -7517,7 +7632,7 @@ const MROWS = IDATA.table.map(a => Object.fromEntries(MCOLS.map((k, i) => [k, a[
   let shown = MROWS;
   const render = q => {
     q = (q || '').trim().toLowerCase();
-    shown = !q ? MROWS : MROWS.filter(r => [r.nm, r.slug, r.real, r.site, r.status, r.format, r.chase, r.offer, r.agreed].join(' ').toLowerCase().includes(q));
+    shown = !q ? MROWS : MROWS.filter(r => [r.nm, r.slug, r.real, r.site, r.status, r.format, r.chase, r.offer, r.agreed, r.source, r.notes].join(' ').toLowerCase().includes(q));
     const cap = shown.slice(0, 400);
     build('#masterTable', cols, cap, { sortable: true });
     $('#masterFoot').textContent = fmt(shown.length) + ' of ' + fmt(MROWS.length) + ' threads match'
@@ -7543,6 +7658,129 @@ const MROWS = IDATA.table.map(a => Object.fromEntries(MCOLS.map((k, i) => [k, a[
     ['Actions', 'Chase state lives in a separate DYI_CHASE_LEDGER tab keyed on the thread, never in the master. The master is rebuilt from scratch every week, so anything written into it would be wiped. A chase is recorded when a new outbound message appears on the thread in the next export — no buttons. This is what makes the loop closed.'],
   ];
   items.forEach(([h, b]) => { const r = el('div', 'methodrow'); r.append(el('b', null, h), el('span', null, b)); mb.append(r); });
+}
+
+/* ═══════════ 2c. JOLI ═══════════ */
+/* Joli is a second front door: creators apply in the Joli app, Georgie approves,
+   they visit and post. It never touches our Instagram inbox, so the DM pipeline
+   cannot see it; a weekly Claude pull snapshots it into JOLI_BOOKINGS and
+   JOLI_CONTENT, and JoliImport.gs appends one master row per booking (box JOLI).
+   The section follows the region / city filter; the week filter does not apply
+   to it (Joli rows only carry visit and content dates). */
+{
+  const sec = $('#joliSec');
+  const jRows = (IDATA._extRows || []).filter(m => m.box === 'JOLI');
+  if (!jRows.length || IDATA._source === 'ig') { sec.remove(); }
+  else {
+    const byH = {}; jRows.forEach(m => { byH[String(m.handle).toLowerCase()] = m; });
+    const JB = (INF_JOLI.bookings || []).filter(b => byH[String(b.handle).toLowerCase().replace(/^@/, '')]);
+    const JC = (INF_JOLI.content || []).filter(c => byH[String(c.handle).toLowerCase()]);
+    const n = v => Number(String(v == null ? '' : v).replace(/,/g, '')) || 0;
+    const now = Date.now();
+    const vms = m => { const t = Date.parse(String(m.visit_date || '').replace(' ', 'T') + ':00Z'); return isNaN(t) ? null : t; };
+    const booked = jRows.filter(m => m.visit_resolved === 'TRUE');
+    const visited = booked.filter(m => { const t = vms(m); return t != null && t <= now; });
+    const upcoming = booked.filter(m => { const t = vms(m); return t != null && t > now; });
+    const posted = jRows.filter(m => m.posted === 'YES');
+    const cancelled = jRows.filter(m => /cancel|reject/i.test(m.owner_notes || ''));
+    const pending = jRows.filter(m => m.status === 'Awaiting confirmation');
+    const views = JC.reduce((a, c) => a + n(c.views), 0);
+    const reach = JC.reduce((a, c) => a + n(c.reach), 0);
+    const fb = JB.filter(b => b.feedback_score);
+    const avgFb = fb.length ? (fb.reduce((a, b) => a + n(b.feedback_score), 0) / fb.length).toFixed(1) : '—';
+    const overdue = jRows.filter(m => m.chase_flag === 'JOLI - 7d past visit (chase in Joli)').length;
+
+    $('#jlCnt').textContent = fmt(jRows.length) + ' BOOKINGS · ' + fmt(upcoming.length) + ' UPCOMING · ' + fmt(JC.length) + ' PIECES';
+    $('#jlLede').innerHTML = '<b>' + fmt(jRows.length) + ' creators</b> came in through Joli: <b>' + fmt(visited.length)
+      + '</b> have visited, <b>' + fmt(upcoming.length) + '</b> are booked in, ' + fmt(pending.length)
+      + ' applications are waiting for approval and ' + fmt(cancelled.length) + ' cancelled or were rejected. '
+      + 'Joli tracks <b>' + fmt(JC.length) + ' pieces</b> so far (' + fmt(views) + ' views). '
+      + 'Joli only sees posts from connected accounts, so stories are usually missing: a visit Joli marks <i>Completed</i> '
+      + 'with no piece here is not proof of nothing. Chase in the Joli app, not in Instagram.';
+
+    const kp = $('#jlKpis');
+    [['Visited', fmt(visited.length), '', fmt(upcoming.length) + ' more booked in'],
+     ['Posted', fmt(posted.length), '', visited.length ? Math.round(posted.length / visited.length * 100) + '% of visits so far' : ''],
+     ['Views', fmt(views), '', fmt(reach) + ' reach across ' + fmt(JC.length) + ' pieces'],
+     ['Feedback', avgFb === '—' ? '—' : avgFb + '/5', '', fmt(fb.length) + ' visits rated us'],
+     ['Chase in Joli', fmt(overdue), overdue ? 'RED' : '', 'visited over 7 days ago, nothing tracked'],
+     ['To approve', fmt(pending.length), pending.length ? 'AMBER' : '', 'new applications in Joli']
+    ].forEach(([l, v, rag, d]) => {
+      const k = el('div', 'card');
+      k.append(el('div', 'label', l), el('div', 'value' + (rag ? ' v-' + rag : ''), v), el('div', 'delta', d));
+      kp.append(k);
+    });
+
+    const site = m => (m.site || '').replace('Maki & Ramen ', '') || '—';
+    const nm = m => Array.from(String(m.name || m.handle)).slice(0, 34).join('');
+    const who = m => { const td = el('td'); const b = el('div', 'handle', nm(m));
+      const a = el('a', 'realh', '@' + m.handle); a.href = 'https://instagram.com/' + m.handle; a.target = '_blank'; a.rel = 'noopener';
+      b.append(a); td.append(b); return td; };
+
+    const soon = upcoming.filter(m => vms(m) - now <= 14 * 86400000).sort((a, b) => vms(a) - vms(b));
+    build('#jlUpcoming', [
+      { h: 'When', f: m => new Date(vms(m)).toLocaleString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'UTC' }) },
+      { h: 'Creator', cell: who },
+      { h: 'Site', f: site },
+      { h: 'Party', f: m => m.party_size || '', num: true },
+    ], soon);
+    if (!soon.length) $('#jlUpcoming').innerHTML = '<tr><td class="subtle">Nothing booked in the next 14 days.</td></tr>';
+
+    const sc = {};
+    jRows.forEach(m => { const k = site(m); sc[k] = sc[k] || { site: k, booked: 0, visited: 0, upcoming: 0, posted: 0 };
+      if (m.visit_resolved === 'TRUE') sc[k].booked++;
+      if (visited.indexOf(m) > -1) sc[k].visited++;
+      if (upcoming.indexOf(m) > -1) sc[k].upcoming++;
+      if (m.posted === 'YES') sc[k].posted++; });
+    const sRows = Object.values(sc).sort((a, b) => b.booked - a.booked);
+    const smax = Math.max(...sRows.map(r => r.booked), 1);
+    build('#jlSites', [
+      { h: 'Site', k: 'site' },
+      { h: 'Booked', num: true, sk: 'booked', cell: r => fillCell(r.booked, smax, { colour: '#FDE8D7' }) },
+      { h: 'Visited', k: 'visited', num: true },
+      { h: 'Upcoming', k: 'upcoming', num: true },
+      { h: 'Posted', k: 'posted', num: true },
+    ], sRows, { sortable: true });
+
+    const cRows = JC.map(c => ({ handle: c.handle, type: c.type, posted: String(c.posted_at || '').slice(0, 10),
+      views: n(c.views), reach: n(c.reach), eng: n(c.engagements), er: c.engagement_rate || '',
+      site: site(byH[String(c.handle).toLowerCase()] || {}), name: (byH[String(c.handle).toLowerCase()] || {}).name || c.handle }))
+      .sort((a, b) => b.views - a.views);
+    const vmax = Math.max(...cRows.map(r => r.views), 1);
+    build('#jlContent', [
+      { h: 'Creator', cell: r => who({ handle: r.handle, name: r.name }), sk: 'handle' },
+      { h: 'Type', k: 'type' },
+      { h: 'Site', k: 'site' },
+      { h: 'Posted', k: 'posted' },
+      { h: 'Views', num: true, sk: 'views', cell: r => fillCell(r.views, vmax, { colour: '#FDE8D7' }) },
+      { h: 'Reach', k: 'reach', num: true, f: r => fmt(r.reach) },
+      { h: 'Engagements', k: 'eng', num: true, f: r => fmt(r.eng) },
+      { h: 'Eng. rate', k: 'er', num: true },
+    ], cRows, { sortable: true });
+    if (!cRows.length) $('#jlContent').innerHTML = '<tr><td class="subtle">No content tracked by Joli in this view yet.</td></tr>';
+
+    const bBy = {}; JB.forEach(b => { bBy[String(b.handle).toLowerCase().replace(/^@/, '')] = b; });
+    const aRows = jRows.map(m => { const b = bBy[String(m.handle).toLowerCase()] || {};
+      return { m, handle: m.handle, name: m.name, site: site(m), visit: String(m.visit_date || '').slice(0, 16),
+        joli: b.joli_status || '', status: m.status, posted: m.posted === 'YES' ? 1 : 0,
+        fb: b.feedback_score ? n(b.feedback_score) : '', feedback: b.feedback || '', chase: m.chase_flag ? m.chase_flag.replace('JOLI - ', '') : '' }; })
+      .sort((a, b) => (b.visit || '') < (a.visit || '') ? -1 : 1);
+    const JRAG = { Completed: 'GREEN', 'In progress': 'BLUE', Visited: 'BLUE', Upcoming: 'GREY', 'New application': 'AMBER', Cancelled: 'RED', Rejected: 'RED' };
+    build('#jlAll', [
+      { h: 'Creator', cell: r => who(r.m), sk: 'name' },
+      { h: 'Site', k: 'site' },
+      { h: 'Visit', k: 'visit' },
+      { h: 'In Joli', sk: 'joli', cell: r => { const td = el('td'); if (r.joli) td.append(el('span', 'rag ' + (JRAG[r.joli] || 'GREY'), r.joli)); return td; } },
+      { h: 'Our status', k: 'status' },
+      { h: 'Posted', sk: 'posted', cell: r => { const td = el('td'); if (r.posted) td.append(el('span', 'rag GREEN', 'Yes')); return td; } },
+      { h: 'Rating', k: 'fb', num: true },
+      { h: 'Chase', cell: r => { const td = el('td'); if (r.chase) td.append(el('span', 'rag AMBER', r.chase)); return td; }, sk: 'chase' },
+      { h: 'Their feedback', sort: false, cell: r => { const td = el('td', 'subtle'); const t = String(r.feedback);
+          td.textContent = t.length > 90 ? t.slice(0, 88) + '…' : t; if (t.length > 90) td.title = t; return td; } },
+    ], aRows, { sortable: true });
+    $('#jlFoot').textContent = fmt(aRows.length) + ' Joli bookings · statuses as of the last weekly Joli pull'
+      + (INF_JOLI.bookings.length ? '' : ' · booking detail (feedback, Joli status) arrives once WebApi ships joli_bookings');
+  }
 }
 
 /* ═══════════ folds ═══════════ */
