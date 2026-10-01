@@ -197,6 +197,8 @@ details.mrbar { margin:0 0 8px; }
 .compbar summary { cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:10px; }
 .compbar summary::-webkit-details-marker { display:none; }
 .compbar .names { display:block; margin-top:6px; line-height:1.6; word-break:break-word; }
+.compbar .namelist { margin:8px 0 2px 20px; padding:0; color:#92400E; font-size:11.5px; line-height:1.7; columns:2 340px; column-gap:28px; }
+.compbar .namelist li { break-inside:avoid; }
 details.mrbar { padding:0; background:#fff; border:1px solid #E2E8F0; color:#334155; }
 .mxsum { cursor:pointer; list-style:none; display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; font-size:12px; }
 .mxsum::-webkit-details-marker { display:none; }
@@ -4928,12 +4930,12 @@ function renderComplianceBar(view) {
   });
   if (!bad.length) { el.innerHTML = ''; return; }
   var names = bad.slice(0, 6).map(function(x) { return x.r.entity_name; }).join(' · ');
-  names = bad.map(function(x) { return x.r.entity_name; }).join(' \u00b7 ');
+  names = '<ol class="namelist">' + bad.map(function(x) { return '<li>' + escAttr(x.r.entity_name) + '</li>'; }).join('') + '</ol>';
   el.innerHTML = '<details class="compbar"><summary><span><strong>' + bad.length + ' campaign' +
     (bad.length === 1 ? '' : 's') + ' off naming convention</strong>' +
     ' <span class="names" style="display:inline;margin:0">site, format and objective unreadable from the name</span></span>' +
     '<span class="mxmore" style="color:#B45309">names</span></summary>' +
-    '<span class="names">' + escAttr(names) + '</span></details>';
+    names + '</details>';
 }
 
 // =====================================================================
