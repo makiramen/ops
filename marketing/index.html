@@ -177,6 +177,39 @@ th.diagfirst, td.diagfirst { border-left:2px solid #E7E5E4; }
   border:1px solid #FDE68A; border-radius:8px; padding:7px 12px; font-size:11.5px;
   color:#92400E; margin-bottom:10px; }
 .compbar .names { color:#B45309; font-size:10.5px; }
+/* v6.4.3: calm header stack on the Add / Remove tab */
+.mxhelp { border:1px solid #E2E8F0; background:#fff; border-radius:8px; padding:8px 12px; margin-bottom:8px; font-size:12px; color:#334155; }
+.mxhelp summary { cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:10px; align-items:center; }
+.mxhelp summary::-webkit-details-marker { display:none; }
+.mxhelp summary span, .mxsum .mxmore, .compbar .mxmore { font-size:11px; color:#64748B; white-space:nowrap; }
+.mxhelp summary span::after, .mxsum .mxmore::after, .compbar .mxmore::after { content:' \25BE'; }
+.mxhelp[open] summary span::after, details[open] > .mxsum .mxmore::after, .compbar[open] .mxmore::after { content:' \25B4'; }
+.mxhelp ul { margin:8px 0 2px 18px; padding:0; color:#475569; line-height:1.55; }
+.mxhelp li { margin:2px 0; }
+.mxalerts { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; align-items:flex-start; }
+details.mrbar { margin:0 0 8px; }
+.mxalerts > * { flex:1 1 320px; margin:0 !important; }
+.mxalerts .riskbar, .mxalerts .compbar { margin:0; }
+.mxalerts > div:empty { display:none; }
+.riskbar, .compbar { padding:7px 12px; font-size:12px; border-radius:8px; }
+.riskbar b { font-size:14px; }
+.compbar { display:block; }
+.compbar summary { cursor:pointer; list-style:none; display:flex; justify-content:space-between; gap:10px; }
+.compbar summary::-webkit-details-marker { display:none; }
+.compbar .names { display:block; margin-top:6px; line-height:1.6; word-break:break-word; }
+details.mrbar { padding:0; background:#fff; border:1px solid #E2E8F0; color:#334155; }
+.mxsum { cursor:pointer; list-style:none; display:flex; flex-wrap:wrap; gap:8px; align-items:center; padding:8px 12px; font-size:12px; }
+.mxsum::-webkit-details-marker { display:none; }
+.mxsum .mxmore { margin-left:auto; }
+.mxsum .mxk { color:#64748B; }
+.mrtbl { width:100%; border-collapse:collapse; font-size:11.5px; margin:0; }
+.mrtbl td { padding:6px 12px; border-top:1px solid #F1F5F9; vertical-align:middle; }
+.mrtbl td.o { width:34px; }
+.mrtbl td.t { font-weight:600; color:#1E293B; width:34%; }
+.mrtbl td.u { color:#166534; white-space:nowrap; }
+.mrtbl td.e { color:#64748B; white-space:nowrap; }
+.mrtbl td.p { text-align:right; font-weight:700; color:#C2410C; white-space:nowrap; }
+.mrfoot { font-size:10.5px; color:#94A3B8; padding:6px 12px 8px; border-top:1px solid #F1F5F9; }
 /* Ad-level drill-down: the creative team's actual question is "which image
    worked", and that only answers itself with the image on screen. */
 .adgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:10px; margin-top:8px; }
@@ -1152,15 +1185,17 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
     <div class="src">Decides itself · <span id="matrix-asof" class="subtle">checking freshness…</span>
       <a class="sheetlink" href="https://docs.google.com/spreadsheets/d/1zpm8ixjmnCt60kUXu-SoDbXEua7obJ0XU_zt5jYSIGw/edit" target="_blank">override in sheet ↗</a>
     </div>
-    <div class="notice plain">
-      <strong>Every ad is judged on the result Meta was actually told to buy.</strong><br>
-      A campaign set to buy <em>landing page views</em> is judged on the cost of a landing page view — not on bookings it was never optimised for. The <strong>AD TYPE</strong> column tells you which. <em>Bookings are shown on every row regardless, so cheap traffic is never mistaken for a full restaurant.</em><br>
-      <strong>CPA</strong> — £ per booking/order/lead, on every row so the board is comparable. The verdict is still judged on the campaign's own objective — that cost sits in the small print under the CPA. <strong>CPC</strong> — £ per link click. <em>Owner: Vidya (paid media).</em><br>
-      <strong>CTR %, LPV % and THRUPLAY %</strong> sit in the grey band on the right. They are <strong>background information only and do not decide anything</strong> — they tell you <em>why</em> a number looks the way it does. Low CTR % = the ad isn't pulling people in (<em>Georgie</em>). Low LPV % = the landing page is losing people who clicked (<em>Vidya</em>). Low ThruPlay % = the video loses people early (<em>Georgie</em>).<br>
-      <strong>Kills sit at the top until they are actually switched off</strong> — a KILL on this board is still spending. Once it stops, it moves to the decision history below. Click any row for the agreed date and history.
-    </div>
-    <div id="matrix-risk"></div>
-    <div id="matrix-compliance"></div>
+    <details class="mxhelp" id="mx-help">
+      <summary><b>Every ad is judged on the result Meta was told to buy.</b> <span>How this board decides</span></summary>
+      <ul>
+        <li><b>Verdict</b> uses the campaign's own objective (see <b>Ad type</b>). A landing page view campaign is judged on cost per LPV, not bookings.</li>
+        <li><b>Bookings</b> show on every row, so cheap traffic is never mistaken for a full restaurant.</li>
+        <li><b>CPA</b> is £ per booking, order or lead on every row; the objective cost sits under it. <b>CPC</b> is £ per link click. Owner: Vidya.</li>
+        <li><b>CTR, LPV and ThruPlay %</b> (grey band) are background only and decide nothing. Low CTR: ad not pulling (Georgie). Low LPV: landing page losing people (Vidya). Low ThruPlay: video loses people early (Georgie).</li>
+        <li><b>Kills stay at the top until switched off.</b> Once stopped they move to decision history. Click any row for its history.</li>
+      </ul>
+    </details>
+    <div class="mxalerts"><div id="matrix-risk"></div><div id="matrix-compliance"></div></div>
     <!-- v2.5.1: account-level Meta items that have no board row live here as
          one line; per-campaign recs are embedded in the What-to-do column. -->
     <div id="matrix-metarecs"></div>
@@ -1308,8 +1343,13 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
         <div class="fun" id="rr-f-visits"></div>
         <p class="caveat" id="rr-visits-note"></p>
       </div>
-      <div class="card"><h3>Second visit within 7 days</h3>
-        <div style="font-size:38px;font-weight:700;color:var(--rr-accent);letter-spacing:-.03em" id="rr-sv"></div>
+      <div class="card"><h3>Second visit</h3>
+        <div style="display:flex;gap:28px;flex-wrap:wrap">
+          <div><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--rr-ink-2)">Within 7 days</div>
+            <div style="font-size:38px;font-weight:700;color:var(--rr-accent);letter-spacing:-.03em" id="rr-sv"></div></div>
+          <div><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--rr-ink-2)">Within 30 days</div>
+            <div style="font-size:38px;font-weight:700;color:var(--rr-accent);letter-spacing:-.03em" id="rr-sv30"></div></div>
+        </div>
         <p class="caveat" id="rr-sv-note" style="font-size:12.5px;color:var(--rr-ink-2)"></p>
       </div>
       <div class="card"><h3>Spend by tier</h3>
@@ -1533,7 +1573,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 </div>
 <!-- ═══════════════ END LOYALTY TAB ═══════════════════════════════════ -->
 
-<footer>M&amp;R Marketing Hub · web edition v1.1 · live data via the M&amp;R Apps Script API (Windsor datasets cached ~30 min) · budget board + watchdog + Monday wrap run in Apps Script</footer>
+<footer>M&amp;R Marketing Hub · web edition v1.2 · live data via the M&amp;R Apps Script API (Windsor datasets cached ~30 min) · budget board + watchdog + Monday wrap run in Apps Script</footer>
 
 <!-- ================================================================ -->
 <!-- BRAND SURVEY TAB  (static read-out, no API)                       -->
@@ -4873,8 +4913,8 @@ function renderRiskBar(view) {
             : goog ? 'in Google Ads' : 'in Meta Ads Manager';
   el.innerHTML = '<div class="riskbar">' +
     (perDay > 0.005 ? '<b>' + fmtGbp2(perDay) + ' a day</b> is still going into ' : '<b>Money is still going into</b> ') +
-    kills.length + ' ad' + (kills.length === 1 ? '' : 's') + ' we agreed to kill — ' + where + '.' +
-    (perDay > 0.005 ? ' <span class="subtle" style="color:#B91C1C">That is about ' + fmtGbp(perDay * 7) + ' a week.</span>' : '') +
+    kills.length + ' ad' + (kills.length === 1 ? '' : 's') + ' we agreed to kill (' + where + ').' +
+    (perDay > 0.005 ? ' <span class="subtle" style="color:#B91C1C">About ' + fmtGbp(perDay * 7) + ' a week.</span>' : '') +
     '</div>';
 }
 
@@ -4888,10 +4928,12 @@ function renderComplianceBar(view) {
   });
   if (!bad.length) { el.innerHTML = ''; return; }
   var names = bad.slice(0, 6).map(function(x) { return x.r.entity_name; }).join(' · ');
-  el.innerHTML = '<div class="compbar"><strong>' + bad.length + ' campaign' +
-    (bad.length === 1 ? ' does' : 's do') + ' not follow the naming convention</strong>' +
-    ' — still judged on what Meta is really buying, but the site, format and objective cannot be read from the name.' +
-    '<span class="names">' + escAttr(names) + (bad.length > 6 ? ' …' : '') + '</span></div>';
+  names = bad.map(function(x) { return x.r.entity_name; }).join(' \u00b7 ');
+  el.innerHTML = '<details class="compbar"><summary><span><strong>' + bad.length + ' campaign' +
+    (bad.length === 1 ? '' : 's') + ' off naming convention</strong>' +
+    ' <span class="names" style="display:inline;margin:0">site, format and objective unreadable from the name</span></span>' +
+    '<span class="mxmore" style="color:#B45309">names</span></summary>' +
+    '<span class="names">' + escAttr(names) + '</span></details>';
 }
 
 // =====================================================================
@@ -5100,22 +5142,21 @@ function metaRecsHydrate() {
 function metaRecsAccountHtml() {
   var acc = META_RECS.account || [];
   var open = acc.filter(function(r) { return !r.s; });
-  var head = '<div class="mrbar"><div class="mrbarhead"><b>\u26a1 Meta recommendations</b> \u00b7 reviewed ' +
-    escAttr(META_RECS.reviewed) + ' \u00b7 ' + escAttr(META_RECS.score) + metaRecsFreshPill() +
-    '<span class="mrcycle">Pulled from Ads Manager into the Meta recs sheet every Monday. ' +
-    'Owners: G = Georgie / Summer (images, video, creative assets) \u00b7 V = Vidya (budgets, goals, text, duplication, pixel). ' +
-    'Changing a rec is a sheet edit, not a page rebuild.</span></div>';
-  if (!open.length) return head + '<div class="mrnd">Nothing open at account level.</div></div>';
-  return head + '<div class="mrgrid">' + open.map(function(r) {
+  var pts = open.reduce(function(a, r) { return a + (Number(r.points) || 0); }, 0);
+  var sum = '<summary class="mxsum"><b>⚡ Meta recommendations</b>' +
+    '<span class="mxk">' + open.length + ' open · ' + escAttr(META_RECS.score) +
+    ' · reviewed ' + escAttr(META_RECS.reviewed) + '</span>' + metaRecsFreshPill() +
+    '<span class="mxmore">' + (open.length ? 'show' : '') + '</span></summary>';
+  var foot = '<div class="mrfoot">Pulled from Ads Manager every Monday. G/S = Georgie / Summer (creative) · ' +
+    'V = Vidya (budgets, goals, text, pixel). Hover a row for Meta’s full wording. Edit in the Meta recs sheet.</div>';
+  if (!open.length) return '<details class="mrbar" id="mx-recs">' + sum + foot + '</details>';
+  return '<details class="mrbar" id="mx-recs">' + sum + '<table class="mrtbl">' + open.map(function(r) {
     var w = metaRecsOwnerShort(r.who);
-    return '<div class="mrrow"><span class="recowner ' + (w === 'V' ? 'vidya' : 'georgie') +
-      '" title="' + escAttr(r.who) + '">' + w + '</span>' +
-      '<span class="mrrt">' + escAttr(r.short || metaRecShort(r.t)) + '</span>' +
-      (r.uplift ? '<span class="mrup">' + escAttr(r.uplift) + '</span>' : '') +
-      (r.entities ? '<span class="mrent">' + escAttr(r.entities) + '</span>' : '') +
-      (r.points !== '' ? '<span class="mrpts">+' + escAttr(r.points) + '</span>' : '') +
-      '<div class="mrfull">' + escAttr(r.t) + '</div></div>';
-  }).join('') + '</div></div>';
+    return '<tr title="' + escAttr(r.t) + '"><td class="o"><span class="recowner ' + (w === 'V' ? 'vidya' : 'georgie') +
+      '">' + w + '</span></td><td class="t">' + escAttr(r.short || metaRecShort(r.t)) + '</td>' +
+      '<td class="u">' + escAttr(r.uplift || '') + '</td><td class="e">' + escAttr(r.entities || '') + '</td>' +
+      '<td class="p">' + (r.points !== '' ? '+' + escAttr(r.points) : '') + '</td></tr>';
+  }).join('') + '</table>' + foot + '</details>';
 }
 // Name lookup tolerant of the "Instagram post:" space-after-colon inconsistency.
 var _metaRecsIdx = null;
@@ -6157,6 +6198,14 @@ function wireMatrixModal() {
     metaRecsHydrate();
     var mr = document.getElementById('matrix-metarecs');
     if (mr) mr.innerHTML = metaRecsAccountHtml();
+    ['mx-help', 'mx-recs'].forEach(function(id) {
+      var d = document.getElementById(id);
+      if (!d) return;
+      try { if (localStorage.getItem('mrhub-' + id) === '1') d.open = true; } catch (err) {}
+      d.addEventListener('toggle', function() {
+        try { localStorage.setItem('mrhub-' + id, d.open ? '1' : '0'); } catch (err) {}
+      });
+    });
   })();
   // v2.4: collapse / expand the decision history from its heading. Remembered.
   var histToggle = document.getElementById('hist-toggle');
@@ -7943,7 +7992,7 @@ var RR_SNAP = {
     {pts: '500 pts',   reward: 'Free combo meal',     reached: 57,   claimed: 35,  redeemed: 15,  click: '25.0%'},
     {pts: '1,000 pts', reward: 'Free ramen bowl',     reached: 1,    claimed: 15,  redeemed: 0,   click: '0%'}
   ],
-  second_visit: {rate: 14.5, n: 585, prev: 11.1, target: 15},
+  second_visit: {rate: 13.6, n: 6920, hits: 942, prev: 13.8, target: 15, as_of: '2026-09-29', d30: {rate: 27.0, n: 1642, hits: 443, prev: 24.6, target: 35}},
   clock: {
     mig: [47,25,60,74,36,43,48,58,44,48,70,54,66,57,0],
     nw: [536,50,35,26,18,17,14,13,7,4,3,5,1,0,0],
@@ -8257,11 +8306,25 @@ function rrSummary() {
   rrEl('rr-visits-note').innerHTML = '<b>' + onceOrNever.toFixed(1) + '% of the base has been in once or never.</b> ' +
     rrN(vb[0][1]) + ' members have never been recorded in a restaurant at all.';
 
-  var sv = RR.second_visit;
-  rrEl('rr-sv').textContent = sv.rate.toFixed(1) + '%';
-  rrEl('rr-sv-note').innerHTML = (sv.n ? 'n=' + rrN(sv.n) + ', ' : '') +
-    (sv.prev == null ? 'against' : 'up from ' + sv.prev + '% a week ago, against') + ' a ' + sv.target +
-    '% placeholder. This is the one KPI moving in the right direction and it is not yet a real target. The 30-day version cannot be computed until 17 September; that is arithmetic, not a fault.';
+  // 30 Sep 2026: both windows computed from DAILY VISITS in the API; the
+  // wording follows the numbers, nothing here is fixed text about direction.
+  var sv = RR.second_visit, s30 = sv.d30 || null;
+  var svMove = function (now, prev) {
+    if (prev == null || now == null) return '';
+    var d = Math.round((now - prev) * 10) / 10;
+    return Math.abs(d) < 0.5 ? 'flat on ' + prev.toFixed(1) + '% a week ago' :
+      (d > 0 ? 'up' : 'down') + ' from ' + prev.toFixed(1) + '% a week ago';
+  };
+  rrEl('rr-sv').textContent = sv.rate == null ? 'n/a' : sv.rate.toFixed(1) + '%';
+  rrEl('rr-sv30').textContent = (s30 && s30.rate != null) ? s30.rate.toFixed(1) + '%' : 'n/a';
+  var svLine = function (lbl, x) {
+    var m = svMove(x.rate, x.prev);
+    return '<b>' + lbl + ':</b> ' + (x.hits != null ? rrN(x.hits) + ' of ' : '') + rrN(x.n || 0) +
+      ' members came back' + (m ? ', ' + m : '') + ', against a ' + x.target + '% target.';
+  };
+  rrEl('rr-sv-note').innerHTML = svLine('7 days', sv) + (s30 ? ' ' + svLine('30 days', s30) : '') +
+    ' Counts members whose first recorded visit since go-live was at least 7 (or 30) days ago' +
+    (sv.as_of ? ', bills to ' + sv.as_of : '') + '. The 15% 7-day target is still a placeholder.';
 
   document.querySelector('#rr-t-tierspend tbody').innerHTML = RR.tier_spend.map(function(x) {
     return '<tr' + (x.bills === 0 ? ' class="dim"' : '') + '><td>' + x.name + '</td><td class="num">' + rrN(x.bills) +
