@@ -1,5 +1,5 @@
 """Shared helpers for the Site Control Centre nightly pulls.
-Google access: one read only service account. Secret GOOGLE_SERVICE_ACCOUNT_JSON (the key file contents) in GitHub Actions.
+Google access: one read only service account. Env GOOGLE_SERVICE_ACCOUNT_JSON (GitHub secret SITE_CC_SERVICE_ACCOUNT_JSON) (the key file contents) in GitHub Actions.
 No browser, no personal login. Every sheet it reads must be shared with the service account email as Viewer."""
 import json,os,datetime
 HERE=os.path.dirname(os.path.abspath(__file__))

@@ -14,6 +14,10 @@ for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open
   step python3 pipeline/pull_cashup.py   --site "$CODE" --data "$D" --days 21
   step python3 pipeline/pull_monalisa.py --site "$CODE" --data "$D"
   step python3 pipeline/pull_amcc.py     --site "$CODE" --data "$D" --amcc "$ROOT/data"
+  step python3 pipeline/pull_reviews.py  --site "$CODE" --data "$D"
+  step python3 pipeline/pull_loyalty.py  --site "$CODE" --data "$D"
+  step python3 pipeline/pull_eotm.py     --site "$CODE" --data "$D"
+  [ -f "$ROOT/keyline.html" ] && step python3 pipeline/pull_keyline.py --site "$CODE" --data "$D" --page "$ROOT/keyline.html"
   [ -f "$ROOT/builders/broth/live_matrix.txt" ] && step python3 pipeline/pull_broth.py --site "$CODE" --data "$D" --matrix "$ROOT/builders/broth/live_matrix.txt"
   OUT=$(mktemp -d); mkdir -p "$ROOT/site/$CODE"
   if python3 build.py --data "$D" --out "$OUT"; then
