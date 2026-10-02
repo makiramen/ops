@@ -56,6 +56,7 @@ def kobas(s):
     if not m:return None
     d=datetime.datetime.strptime(f"{m.group(1)} {m.group(2)} {TODAY.year}",'%d %b %Y').date()
     return d if d<=TODAY else d.replace(year=d.year-1)
+MP=J('mapal.json') if os.path.exists(P('mapal.json')) else {'f':[],'to':None,'src':'Mapal forms not pulled yet'}
 dly=J('daily.json');cov=J('covers.json');dlv=J('delivery.json');br=J('broth.json');rv=J('reviews.json');loy=J('loyalty.json')
 FEEDS=[  # name, as of, max age days
  ('Weekly KPIs',wkend([r[0] for r in main]),9),('Deliveroo weekly',wkend([r[0] for r in droo]),9),
@@ -63,7 +64,7 @@ FEEDS=[  # name, as of, max age days
  ('Labour budget',wkend(J('labour.json')['d']),9),('Efficiency',wkend(J('eff.json')),9),('Estate ladder',wkend(J('effall.json')),9),
  ('Broth',d10(br.get('to')),2),('Google reviews',d10(rv.get('built')),2),('Loyalty',d10(loy.get('to')),2),
  ('Key lines',kobas(J('keyline.json').get('pulled')),2),('Meeting notes',wkend(N)+datetime.timedelta(2) if N else None,10),
- ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('EOTM',d10(J('eotm.json').get('pulled')),35)]
+ ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3)]
 LOG=[];STALE=[]
 for n,asof,mx in FEEDS:
     age=(TODAY-asof).days if asof else None
@@ -75,7 +76,7 @@ C=lambda o:json.dumps(o,ensure_ascii=False,separators=(',',':'))
 T={'__TODAY__':TODAY.isoformat(),'__WK__':json.dumps(WK,separators=(',',':')),'__STAND__':R('stand.json'),'__EALL__':R('effall.json'),
    '__EFF__':R('eff.json').replace(' \u2014 ',', ').replace('\u2014',', '),'__LOY__':R('loyalty.json'),'__COV__':R('covers.json'),'__DEL__':R('delivery.json'),
    '__ACTS__':C(J('actions.json')),'__COMP__':C(J('compliance.json')),'__TEAM__':C(J('team.json')),'__GAPS__':C(J('gaps.json')),'__DAILY__':R('daily.json'),
-   '__KL__':C(J('keyline.json')),'__BROTH__':R('broth.json'),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out)}
+   '__KL__':C(J('keyline.json')),'__BROTH__':R('broth.json'),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP)}
 s=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src.html')).read()
 for k,v in T.items():s=s.replace(k,v)
 

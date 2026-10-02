@@ -329,8 +329,8 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
       <div class="ch"><h3>2 · Non-financial KPIs</h3></div>
       <div class="grid">
         <div class="s4" style="display:flex;flex-direction:column;gap:8px">
-          <div class="ch"><b>Intangibles audit</b><span class="tag t-no">MAPAL · FEED PENDING</span></div>
-          <div class="slot">Score pulls straight from Mapal once the feed is connected. Nothing to upload.</div>
+          <div class="ch"><b>Food quality audit</b><span class="tag t-auto">MAPAL</span></div>
+          <div id="fqBox"></div>
         </div>
         <div class="s8" style="display:flex;flex-direction:column;gap:8px">
           <div class="ch"><b id="negHead">Google reviews: complaints by reason</b><span class="tag t-auto">AUTO</span></div>
@@ -345,7 +345,7 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
       </div>
     </div>
     <div class="grid">
-      <div class="card s4"><div class="ch"><h3>3 · Hygiene compliance</h3><span class="tag t-no">MAPAL · FEED PENDING</span></div><div class="big ph">Score pending</div><div class="small">Weekly hygiene checks feed in from Mapal automatically. No manual entry.</div></div>
+      <div class="card s4"><div class="ch"><h3>3 · Hygiene compliance</h3><span class="tag t-auto">MAPAL</span></div><div id="hygBox"></div></div>
       <div class="card s4"><div class="ch"><h3>Site compliance</h3><span id="ovCompTL"></span></div><div class="mini">Moving to the Mapal feed; tracker until then</div><div id="ovComp"></div><div class="small">NE/Midland Site Compliance Tracker · <button type="button" class="btn sm" data-go="actions" style="height:22px;padding:0 8px;font-size:11px">Full list</button></div></div>
       <div class="card s4"><div class="ch"><h3>Maintenance</h3><span class="tag t-no">LOG FEED PENDING</span></div><div class="maintBox"></div></div>
     </div>
@@ -651,7 +651,7 @@ function renderOverview(){
   $('#notes').innerHTML=n?n.i.map(function(x){return '<li>'+esc(x)+'</li>'}).join(''):'<li class="small">No meeting notes filed for this week.</li>';
   var g=[];if(w.fv==null||w.dv==null)g.push(['r','Stock-take variance not entered']);if(!w.rev)g.push(['a','No new Google reviews in source']);
   if(w.d.sales==null)g.push(['a','Deliveroo invoice not filed: no sales row']);if(w.d.rider==null)g.push(['a','Deliveroo rider wait missing']);
-  if(w.sales==null)g.push(['r','No sales, wage or labour feed']);if(!n)g.push(['a','No GM/HC notes']);g.push(['n','Hygiene and intangibles: Mapal feed pending']);if(!LAB.d[S.wc])g.push(['a','No budget rota figure in Mona Lisa']);
+  if(w.sales==null)g.push(['r','No sales, wage or labour feed']);if(!n)g.push(['a','No GM/HC notes']);var hy=mapalLast('BOH Hygiene Check');if(!hy||daysBetween(hy[0],nowIso())>35)g.push(['a','No BOH Hygiene Check in Mapal for 5 weeks']);if(!LAB.d[S.wc])g.push(['a','No budget rota figure in Mona Lisa']);
   $('#gaps').innerHTML=g.map(function(x){return '<div style="display:flex;gap:8px;align-items:flex-start"><span class="pill p-'+x[0]+'" style="flex-shrink:0">'+(x[0]==='r'?'Missing':x[0]==='a'?'Partial':'No feed')+'</span><span class="small" style="color:var(--ink)">'+x[1]+'</span></div>'}).join('');
 }
 
@@ -1117,6 +1117,26 @@ function renderGaps(){var n=nowIso(),hz=addM(n,0),end=new Date(Date.parse(n+'T00
       '<div class="small">'+(k>0?'Starts '+dmy(x.from)+' (in '+k+'d)':'Since '+dmy(x.from))+(x.to?' to '+dmy(x.to):', no end date')+(x.hrs?' · '+x.hrs+' hrs/wk':'')+'</div>'+
       (x.plan?'<div class="small">Plan: '+esc(x.plan)+'</div>':'')+'<div class="obx" style="margin-top:4px"><button type="button" class="btn sm" data-gcov="'+x.id+'">'+(x.cov==='full'?'Mark not covered':x.cov==='part'?'Mark covered':'Mark part covered')+'</button></div></div>'}).join(''):'<div class="small" style="margin-top:6px">No gaps logged for the next 6 weeks.</div>');
 }
+
+/* Mapal forms (BOH Hygiene Check, Food Quality Audit, Food quality check), via the Mapal Broker. Live, not tied to the selected week. */
+var MAPAL=__MAPAL__,MF=MAPAL.f||[];
+function daysBetween(a,b){return Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5)}
+function mapalOf(name){return MF.filter(function(x){return x[1]===name})}
+function mapalLast(name){var L=mapalOf(name);return L.length?L[L.length-1]:null}
+function mapalRag(p){return p==null?'n':p>=95?'g':p>=90?'a':'r'}
+function mapalCard(name,none){var L=mapalOf(name),x=L[L.length-1],p=L[L.length-2];
+  if(!x)return '<div class="big ph" style="font-size:22px">None in Mapal</div><div class="small">'+none+'</div>';
+  var r=mapalRag(x[2]),sc=(x[4]?Math.round(x[3])+'/'+Math.round(x[4])+' · ':'')+(x[2]==null?'n/a':x[2]+'%');
+  var ch=p&&p[2]!=null&&x[2]!=null?' · last time '+p[2]+'% ('+dm(p[0])+')':'';
+  return '<div style="display:flex;justify-content:space-between;align-items:center"><div class="big" style="font-size:26px">'+sc+'</div>'+PILL[r]+'</div>'+
+    '<div class="small">'+dmy(x[0])+(x[7]?' · '+esc(x[7]):'')+ch+'</div>'+
+    (x[5]?'<div class="small" style="margin-top:4px"><b>'+x[5]+' failed</b>'+(x[6]?' ('+x[6]+' still open)':'')+': '+x[8].map(esc).join('; ')+'</div>':'<div class="small" style="margin-top:4px">No failed items.</div>')}
+function renderMapal(){
+  $('#hygBox').innerHTML=mapalCard('BOH Hygiene Check','No BOH Hygiene Check filed for this site in the last 45 days.')+'<div class="mini" style="margin-top:6px">Mapal BOH Hygiene Check, 1 point per question. Green 95%+, amber 90%+.</div>';
+  var fc=mapalOf('Food quality check'),c7=fc.filter(function(x){return daysBetween(x[0],nowIso())<7}).length;
+  $('#fqBox').innerHTML=mapalCard('Food Quality Audit','No Food Quality Audit filed for this site in the last 45 days.')+
+    '<div class="small" style="margin-top:6px">Daily food quality checks: <b>'+c7+'</b> in the last 7 days'+(fc.length?', last '+dm(fc[fc.length-1][0]):'')+'.</div>'+
+    '<div class="mini">Source: Mapal, '+MF.length+' forms since '+(MF[0]?dmy(MF[0][0]):'n/a')+'. Intangibles: no intangibles form exists in Mapal yet.</div>'}
 function renderAll(){
   var mo=S.per==='month';
   $$('[data-per]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.per===S.per)});
@@ -1127,7 +1147,7 @@ function renderAll(){
   $('#bsub').textContent='M14 Meadowhall · North England & Midlands · '+(mo?mLabel(S.month):'w/c '+dmy(S.wc));
   renderBanner();
   if(mo){renderChips();renderMonth();return}
-  var lab=renderSheet();renderChips(lab);renderFields();renderOverview();renderKpi();renderDroo();renderDaily();renderStock();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();
+  var lab=renderSheet();renderChips(lab);renderFields();renderOverview();renderKpi();renderDroo();renderDaily();renderStock();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();
 }
 $('#weekSel').innerHTML=WK.slice().reverse().map(function(w){return '<option value="'+w.wc+'">w/c '+dmy(w.wc)+(w.wc===CUR?' (latest)':'')+'</option>'}).join('');
 $('#monthSel').innerHTML=MONTHS.map(function(m){var a=agg(m);return '<option value="'+m+'">'+mLabel(m)+(a.ws.length<a.ms.length?' (in progress)':'')+'</option>'}).join('');
