@@ -31,15 +31,23 @@ def clean(t):
     t=(t or '').replace('—',', ').replace('–','-').strip()
     return t[:317].rsplit(' ',1)[0]+'...' if len(t)>320 else t
 TAX=RR.compile_tax(json.load(open(os.path.join(HERE,'reviews_taxonomy.json'))))
-have={r['id']:r for r in old['r']};seen=set();new=[];restar=0;latest=None
+# Old records (AM CC) carry a different id scheme from the sheet, so match on received day + reviewer as well as id.
+# Clean up: drop any rule-labelled copy of a review that also exists with AM CC labels (run #8, 02/10/2026, duplicated 276).
+dk=lambda r:(r['d'],r['a'])
+amcc={dk(r) for r in old['r'] if not r.get('lab')}
+old['r']=[r for r in old['r'] if not (r.get('lab') and dk(r) in amcc)]
+have={r['id']:r for r in old['r']};byk={}
+for r in old['r']:byk.setdefault(dk(r),r)
+seen=set();new=[];restar=0;latest=None
 for row in raw[1:]:
     row=row+['']*(12-len(row))
     if row[10].strip()!=LABEL or not row[0] or row[0] in seen:continue
     seen.add(row[0]);d=iso(row[11],row[6]);s=STARS.get(str(row[4]).strip().upper())
     if not d or d<FROM or not s:continue
     latest=max(latest or d,d);rid=row[0][-10:]
-    if rid in have:
-        if have[rid]['s']!=s:have[rid]['s']=s;restar+=1
+    hit=have.get(rid) or byk.get((d,nm(row[3])))
+    if hit:
+        if hit['s']!=s:hit['s']=s;restar+=1
         continue
     text,_,_=RR.norm_text(row[5]);cl=RR.classify({'t':row[5],'s':s},TAX)
     wc=(datetime.date.fromisoformat(d)-datetime.timedelta(datetime.date.fromisoformat(d).weekday())).isoformat()
