@@ -121,6 +121,18 @@ def main():
     R["cashup"]["mirror_sha"] = sha(cb)[:16]; R["cashup"]["mirror_dates"] = len(counts)
     live_venues = set(PC.VENUE_TO_CODE)
 
+    # 02/10/2026: covers_accepted.json holds (a) per-day sites Michael has confirmed as genuine, keyed dd/mm/yyyy,
+    # and (b) "offer_floor": a lower ramen spend-per-head floor while the app offer runs (low SPH is real).
+    try: ACCEPTED_COVERS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "covers_accepted.json")))
+    except FileNotFoundError: ACCEPTED_COVERS = {}
+    OFFER = ACCEPTED_COVERS.pop("offer_floor", None) or {}
+    def ramen_lo(dt):
+        try:
+            iso = datetime.datetime.strptime(dt, "%d/%m/%Y").date().isoformat()
+            if OFFER and OFFER.get("from", "9999") <= iso and (not OFFER.get("until") or iso <= OFFER["until"]):
+                return OFFER.get("ramen_lo", 15)
+        except Exception: pass
+        return 15
     def buildable(dt):
         """Return (ok, why, fleet_avg_spend, per_site_flags) for a dd/mm/yyyy date."""
         vr = by_date.get(dt, {})
@@ -137,7 +149,7 @@ def main():
             flags = []
             for v in live_venues:
                 sp = sales[v] / covers[v]; code = PC.VENUE_TO_CODE[v]
-                lo, hi = (30, 50) if code in NORI else (15, 40)
+                lo, hi = (30, 50) if code in NORI else (ramen_lo(dt), 40)
                 if not (lo <= sp <= hi): flags.append(f"{code} £{sp:.2f}/head (band £{lo}-{hi})")
             if not (20 <= fleet <= 26): return False, f"fleet avg spend £{fleet:.2f} outside £20-26 on {dt} (covers still filling?)", fleet, flags
             # 04/09/2026: a per-site spend outside its band no longer holds the WHOLE fleet day back.
@@ -165,8 +177,6 @@ def main():
     # the builder writes null for them instead of a doubled number, and say so loudly.
     # 02/10/2026: out-of-band covers Michael has confirmed as genuine (low spend from the app offer, not a
     # double count). Listed by date and site, so they ship instead of being nulled. Add new days here.
-    try: ACCEPTED_COVERS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "covers_accepted.json")))
-    except FileNotFoundError: ACCEPTED_COVERS = {}
     suspect = {}
     for dd in build_dates:
         d_dmy = dmy(dd.isoformat()); _, _, _, fl = buildable(d_dmy)
