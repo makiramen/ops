@@ -163,10 +163,17 @@ def main():
     keep_dmy = {dmy(dd.isoformat()) for dd in build_dates}
     # venues whose covers are outside band on each kept day: blank covers + avg spend in the slice so
     # the builder writes null for them instead of a doubled number, and say so loudly.
+    # 02/10/2026: out-of-band covers Michael has confirmed as genuine (low spend from the app offer, not a
+    # double count). Listed by date and site, so they ship instead of being nulled. Add new days here.
+    try: ACCEPTED_COVERS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "covers_accepted.json")))
+    except FileNotFoundError: ACCEPTED_COVERS = {}
     suspect = {}
     for dd in build_dates:
         d_dmy = dmy(dd.isoformat()); _, _, _, fl = buildable(d_dmy)
         codes = [f.split(" ")[0] for f in fl]
+        acc = [c for c in codes if c in ACCEPTED_COVERS.get(d_dmy, [])]
+        if acc: R["warnings"].append(f"{dd.isoformat()} covers outside band ACCEPTED by Michael for {', '.join(acc)} (genuine low spend, Slerp app offer)")
+        codes = [c for c in codes if c not in acc]
         if codes:
             suspect[d_dmy] = {v for v, c in PC.VENUE_TO_CODE.items() if c in codes}
             R["warnings"].append(f"{dd.isoformat()} covers SUSPECT, nulled for {', '.join(codes)}: " + "; ".join(fl) + " — chase the site's cash-up (covers double-count tell)")
