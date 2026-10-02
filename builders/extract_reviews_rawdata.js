@@ -59,7 +59,8 @@
     'Nottingham': 'M16', 'Lakeside': 'M17', 'Soho': 'M18',
     'Maki Shoreditch': 'M19', 'Maki Southampton': 'M20', 'Nori': 'MakiNori',
     // 25/08/2026: label appeared at source 20/08; M21 mapping approved by Michael.
-    'Maki Birmingham': 'M21'
+    'Maki Birmingham': 'M21',
+    'Maki F4': 'MAF4'
   };
   const DROP = { 'Leith': 1, 'West end': 1, 'Maki O2': 1, 'NQ': 1, '#N/A': 1 };
   const RW = { FIVE: 5, FOUR: 4, THREE: 3, TWO: 2, ONE: 1, '5': 5, '4': 4, '3': 3, '2': 2, '1': 1 };

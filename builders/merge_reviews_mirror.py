@@ -28,6 +28,8 @@ MAP = {
     'Nottingham': 'M16', 'Lakeside': 'M17', 'Soho': 'M18',
     'Maki Shoreditch': 'M19', 'Maki Southampton': 'M20', 'Nori': 'MakiNori',
     'Maki Birmingham': 'M21',
+    # 02/10/2026: 'Maki F4' = Braehead (Glasgow), first rows 18/09/2026. Mapped to MAF4 with Michael's approval.
+    'Maki F4': 'MAF4',
 }
 DROP = {'Leith', 'West end', 'Maki O2', 'NQ', '#N/A'}
 UNMAPPED_BY_RULING = {'Ikigai'}

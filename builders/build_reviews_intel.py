@@ -37,10 +37,13 @@ DISPLAY = {"M1": "Nicolson", "M3": "Fountainbridge", "M6": "Bath Street", "M7": 
            "M8": "Renfield", "M9": "Manchester", "M10": "Leeds", "M11": "Leicester", "M12": "Newcastle",
            "M13": "Aberdeen", "M14": "Meadowhall", "M15": "Metrocentre", "M16": "Nottingham",
            "M17": "Lakeside", "M18": "Soho", "M19": "Shoreditch", "M20": "Southampton",
-           "M21": "Maki 21", "MakiNori": "Maki Nori", "IKI2": "Ikigai Ramen"}
+           "M21": "Maki 21", "MakiNori": "Maki Nori", "IKI2": "Ikigai Ramen", "MAF4": "Braehead"}
 NOT_IN_SOURCE = {"IKI2": "Ikigai is not wired into the Google Reviews workbook (never has been)."}
 # M21 dropped from NOT_IN_SOURCE 25/08/2026: it now HAS a label at source,
 # `Maki Birmingham` (first rows 20/08), mapped to M21 with Michael's approval.
+# Sites with reviews but no weekly KPI card (no all_sites_wc entry) are added to the roster here.
+# 02/10/2026: MAF4 Braehead (source label `Maki F4`, first rows 18/09), mapped with Michael's approval.
+EXTRA_ROSTER = {"MAF4": {"site_label": "Braehead", "gm": None, "am": None, "region": "Scotland & Newcastle"}}
 
 CLAUSE_SPLIT = re.compile(r"(?<=[.!?;])\s+|\n+|\s+(?=\b(?:but|however|although|though|except|unfortunately)\b)", re.I)
 TRANSLATED = re.compile(r"\(Translated by Google\)\s*(.*?)\s*\(Original\)\s*(.*)", re.S)
@@ -201,6 +204,9 @@ def load_live(live_dir):
             }
             roster[code] = {"code": code, "name": DISPLAY.get(code, s["name"]), "site_label": s["name"],
                             "gm": s.get("gm"), "am": AM_ALIAS.get(s.get("am"), s.get("am")), "region": s["cluster"]}
+    for code, x in EXTRA_ROSTER.items():
+        if code not in roster:
+            roster[code] = {"code": code, "name": DISPLAY.get(code, x["site_label"]), **x}
     for code, r in roster.items():
         reg = REGIONS.get(r["region"], {})
         r["region_id"] = reg.get("id"); r["head"] = reg.get("head"); r["dam"] = reg.get("dam")

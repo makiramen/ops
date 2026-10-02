@@ -99,6 +99,8 @@ SITE_TO_CODE = {
     #    20/08/2026, one day before M21 opened. Mapping approved by Michael
     #    25/08/2026 (M21 = Birmingham).
     "maki birmingham": "M21",
+    # 02/10/2026: 'Maki F4' = Braehead, franchise, collected-but-not-rendered (not in SITES).
+    "maki f4": "MAF4",
 }
 RATING_WORD_TO_INT = {"five": 5, "four": 4, "three": 3, "two": 2, "one": 1}
 
