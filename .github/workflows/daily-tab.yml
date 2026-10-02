@@ -10,7 +10,7 @@ name: Daily tab (cash-up + reviews + Reviews Intelligence)
 # Every run is idempotent and commits only when something changed, so the extra runs are free.
 on:
   schedule:
-    - cron: '15 6-18 * * *'       # every hour 10:15 to 22:15 Dubai = 07:15 to 19:15 UK (BST)
+    - cron: '30 8,9 * * *'        # 09:30 UK daily (02/10/2026). GitHub cron is UTC: 08:30Z = 09:30 BST, 09:30Z = 09:30 GMT. The other run is a free idempotent re-check.
   workflow_dispatch: {}
 
 permissions:
