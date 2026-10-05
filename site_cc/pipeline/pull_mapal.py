@@ -15,12 +15,16 @@ rows=list(csv.reader(open(A.csv,encoding='utf-8'))) if A.csv else sheet_values(S
 if not rows or rows[0][:4]!=['form_id','form_name','location','date']:sys.exit('forms tab missing or layout changed; last good file kept')
 H=rows[0];R=[dict(zip(H,r+['']*(len(H)-len(r)))) for r in rows[1:] if r and r[0]]
 if not R:sys.exit('forms tab is empty; last good file kept')
+import re
+def tidy(x):
+    cut=len(x.strip())>=90 and not x.strip()[-1] in '?.)';x=re.sub(r'\s*[—–]\s*',', ',x.strip());x=re.sub(r'\s+,\s*',', ',x);x=re.sub(r'\s{2,}',' ',x)
+    return x[:x.rfind(' ')].rstrip(' ,')+'...' if cut and ' ' in x else x   # broker cuts items at 90 chars
 num=lambda x:float(x) if str(x).strip() not in ('',) else None
 f=[]
 for r in R:
     if r['location'].strip()!=LOC:continue
     f.append([r['date'][:10],r['form_name'].strip(),num(r['pct']),num(r['score']),num(r['max_score']),int(num(r['deviations']) or 0),
-              int(num(r['open_deviations']) or 0),r['auditor'].strip(),[x.strip().replace('—',', ').replace('–','-') for x in r['deviation_items'].split('|') if x.strip()]])
+              int(num(r['open_deviations']) or 0),r['auditor'].strip(),[tidy(x) for x in r['deviation_items'].split('|') if x.strip()]])
 f.sort(key=lambda x:(x[0],x[1]))
 out={'src':'Mapal (GetCompliant) forms via the Mapal Broker, tab forms','pulled':datetime.date.today().isoformat(),
      'to':max(r['date'][:10] for r in R),'location':LOC,'f':f}
