@@ -1,19 +1,19 @@
-Name: Site Control Centre nightly
- 
+name: Site Control Centre nightly
+
 on:
   schedule:
-    # GitHub cron is UTC. Two slots each so the UK time holds through BST and GMT; the guard below keeps only 05:30 and 09:30 UK.
+    # GitHub cron is UTC. Two slots each so the UK time holds through BST and GMT; the guard below keeps the 05:00 to 07:59 and 09:00 to 11:59 UK windows.
     - cron: '30 4,5 * * *'   # 05:30 UK nightly build
     - cron: '30 8,9 * * *'   # 09:30 UK cash up run (GMs have sent the cash up)
   workflow_dispatch: {}
- 
+
 concurrency:
   group: site-cc-nightly
   cancel-in-progress: false
- 
+
 permissions:
   contents: write
- 
+
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -55,4 +55,3 @@ jobs:
           git diff --cached --quiet && { echo "No changes."; exit 0; }
           git commit -m "Site CC nightly: $(TZ=Europe/London date +'%Y-%m-%d %H:%M') UK"
           for i in 1 2 3; do git push && break; git fetch origin main && git rebase origin/main; done
- 
