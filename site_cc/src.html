@@ -1118,7 +1118,7 @@ function renderGaps(){var n=nowIso(),hz=addM(n,0),end=new Date(Date.parse(n+'T00
       (x.plan?'<div class="small">Plan: '+esc(x.plan)+'</div>':'')+'<div class="obx" style="margin-top:4px"><button type="button" class="btn sm" data-gcov="'+x.id+'">'+(x.cov==='full'?'Mark not covered':x.cov==='part'?'Mark covered':'Mark part covered')+'</button></div></div>'}).join(''):'<div class="small" style="margin-top:6px">No gaps logged for the next 6 weeks.</div>');
 }
 
-/* Mapal forms (BOH Hygiene Check, Food Quality Audit, Food quality check), via the Mapal Broker. Live, not tied to the selected week. */
+/* Mapal forms (BOH Hygiene Check, Food Quality Audit, Food quality check, Weekly intangibles), via the Mapal Broker. Live, not tied to the selected week. */
 var MAPAL=__MAPAL__,MF=MAPAL.f||[];
 function daysBetween(a,b){return Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/864e5)}
 function mapalOf(name){return MF.filter(function(x){return x[1]===name})}
@@ -1136,7 +1136,8 @@ function renderMapal(){
   var fc=mapalOf('Food quality check'),c7=fc.filter(function(x){return daysBetween(x[0],nowIso())<7}).length;
   $('#fqBox').innerHTML=mapalCard('Food Quality Audit','No Food Quality Audit filed for this site in the last 45 days.')+
     '<div class="small" style="margin-top:6px">Daily food quality checks: <b>'+c7+'</b> in the last 7 days'+(fc.length?', last '+dm(fc[fc.length-1][0]):'')+'.</div>'+
-    '<div class="mini">Source: Mapal, '+MF.length+' forms since '+(MF[0]?dmy(MF[0][0]):'n/a')+'. Intangibles: no intangibles form exists in Mapal yet.</div>'}
+    (function(){var wi=mapalLast('Weekly intangibles');return '<div class="small">Weekly intangibles: '+(wi?'<b>'+(wi[4]?Math.round(wi[3])+'/'+Math.round(wi[4])+' · ':'')+(wi[2]==null?'n/a':wi[2]+'%')+'</b> '+PILL[mapalRag(wi[2])]+' '+dm(wi[0])+(wi[7]?' · '+esc(wi[7]):'')+(daysBetween(wi[0],nowIso())>8?' <b>(none this week)</b>':''):'none in Mapal in the last 45 days')+'.</div>'})()+
+    '<div class="mini">Source: Mapal, '+MF.length+' forms since '+(MF[0]?dmy(MF[0][0]):'n/a')+'.</div>'}
 function renderAll(){
   var mo=S.per==='month';
   $$('[data-per]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.per===S.per)});
