@@ -84,7 +84,7 @@ FEEDS=[  # name, as of, max age days
  ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3)]
 # Feeds that do not exist for this site (no source in sites.json) are n/a, not late
 NA={'Loyalty':not SITE['has']['loyalty'],'Broth':not SITE['has']['broth'],'Mapal forms':not SITE['has']['mapal'],'Mapal compliance':not SITE['has']['mapal'],'Compliance':not J('compliance.json').get('pulled'),
-    'Team':not J('team.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled')}
+    'Team':not J('team.json').get('pulled'),'Key lines':not J('keyline.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled')}
 LOG=[];STALE=[]
 for n,asof,mx in FEEDS:
     if NA.get(n) and asof is None:LOG.append({'feed':n,'asof':None,'status':'n/a'});continue
