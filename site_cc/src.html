@@ -194,15 +194,74 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
 @media (prefers-reduced-motion:no-preference){.tabs button,.btn,.seg button{transition:background .15s,color .15s,border-color .15s}}
 .sechd td{background:var(--maki-orange-bg);color:var(--maki-orange-deep);font-weight:800;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px}
 #brothTable th,#brothTable td{text-align:center}#brothTable th:first-child,#brothTable td:first-child{text-align:left}#brothTable .sechd td{text-align:left}
+/* Reviews tab and audit report (05/10/2026) */
+.rvctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.rvctl input[type=date],.rvctl input[type=search]{background:#fff;border:1px solid var(--line);border-radius:9px;padding:5px 9px;font-size:13px}
+.rvctl input[type=search]{min-width:200px}
+.stchip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.stchip[aria-pressed="true"]{background:var(--maki-ink);color:#fff;border-color:var(--maki-ink)}
+.kt{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kt>div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow);cursor:default}
+.kt>div[data-k]{cursor:pointer}.kt>div[data-k]:hover{border-color:var(--maki-orange-ring)}
+.kt b{display:block;font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.kt span{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.kt small{display:block;color:var(--ink-2);font-size:12px;margin-top:2px}
+.stack{display:flex;height:26px;border-radius:8px;overflow:hidden;font-size:11px;font-weight:800;color:#fff}
+.stack>div{display:flex;align-items:center;justify-content:center;white-space:nowrap;overflow:hidden;cursor:pointer;font-style:italic}
+.ibar{display:grid;grid-template-columns:minmax(120px,190px) 1fr auto;gap:10px;align-items:center;padding:4px 6px;border-radius:8px;cursor:pointer;font-size:13px}
+.ibar:hover,.ibar.on{background:var(--maki-orange-bg)}
+.ibar .tr{height:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.ibar .tr i{display:block;height:100%;border-radius:6px}
+.ibar .n{font-size:12px;color:var(--ink-2);white-space:nowrap}.ibar .n b{color:var(--ink);font-size:13px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.subs{margin:2px 0 6px 22px;display:flex;flex-direction:column;gap:2px}
+.subs .ibar{grid-template-columns:minmax(120px,170px) 1fr auto;font-size:12.5px}
+.ev{border-left:3px solid var(--line);padding:2px 0 2px 8px;color:var(--ink-2);font-size:12.5px}
+.ev b{color:var(--ink);font-weight:700}
+.who{display:inline-flex;align-items:center;gap:4px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid var(--line);background:#fff}
+.who.pos{border-color:var(--green-ring);background:var(--green-bg);color:var(--green-ink)}
+.who.neg{border-color:var(--red-ring);background:var(--red-bg);color:var(--red-ink)}
+table.ppl td,table.ppl th{padding:6px 8px}
+table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background:var(--maki-orange-bg)}
+.wtrend{display:flex;gap:4px;align-items:flex-end;height:96px;padding-top:6px}
+.wtrend button{flex:1;min-width:14px;border:0;background:none;padding:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:2px;cursor:pointer;height:100%}
+.wtrend button i{display:block;width:100%;border-radius:4px 4px 0 0;background:#f6b79f}
+.wtrend button i.neg{background:var(--red);border-radius:0}
+.wtrend button.on i{background:var(--maki-orange)}.wtrend button.on i.neg{background:var(--red-ink)}
+.wtrend button small{font-size:9.5px;color:var(--ink-3)}
+.rvfeed{display:flex;flex-direction:column;gap:8px;max-height:760px;overflow:auto;padding-right:4px}
+.mark{background:#fff3c4;border-radius:3px;padding:0 2px}
+.anote{white-space:pre-line;font-size:13.5px;line-height:1.55}
+.clickable{cursor:pointer}.clickable:hover{border-color:var(--maki-orange-ring)}
+.openrep{margin-top:4px}
+/* audit report overlay */
+.ovl{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px;overflow:auto}
+.ovl[hidden]{display:none!important}
+.sheet{background:var(--surface);border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.3);width:min(980px,100%);display:flex;flex-direction:column;gap:14px;padding:20px}
+.sheet .x{border:0;background:var(--surface-2);border-radius:999px;width:34px;height:34px;font-size:18px;cursor:pointer}
+.qrow{display:grid;grid-template-columns:28px 1fr auto;gap:10px;padding:8px 6px;border-bottom:1px solid var(--line);align-items:start}
+.qrow.bad{background:var(--red-bg);border-radius:8px;border-bottom-color:var(--red-ring)}
+.qrow .ic{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff}
+.qrow .ic.ok{background:var(--green)}.qrow .ic.no{background:var(--red)}.qrow .ic.na{background:var(--ink-3)}
+.qrow .ans{font-size:12px;font-weight:700;color:var(--ink-2);text-align:right;white-space:nowrap}
+.photos{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.photos img{width:150px;height:150px;object-fit:cover;border-radius:8px;border:1px solid var(--line);cursor:zoom-in}
+.photos img.big{width:100%;height:auto;max-height:70vh;object-fit:contain;cursor:zoom-out}
+.sec{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--maki-orange-deep);margin:12px 0 2px}
+.hist{display:flex;flex-direction:column;gap:4px}
+.hist button{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-size:12.5px;cursor:pointer;text-align:left}
+.hist button:hover{border-color:var(--maki-orange-ring);background:var(--maki-orange-bg)}
 </style>
 
 <header class="brand">
   <div class="wrap">
     <img class="blogo" src="data:image/png;base64,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" alt="Maki &amp; Ramen">
-    <div class="btitle"><div class="bname">Maki<i>&bull;</i>Ramen</div><div class="bsub" id="bsub">Site Control Centre · M14 Meadowhall</div></div>
+    <div class="btitle"><div class="bname">Maki<i>&bull;</i>Ramen</div><div class="bsub" id="bsub">Site Control Centre</div></div>
     <span class="bkanji" aria-hidden="true">寿司とラーメン</span>
     <span class="bchip">v1.0 · Site</span>
     <div class="ctl">
+      <span class="clab">Site</span>
+      <select class="sel" id="siteSel" aria-label="Site"></select>
       <span class="clab">Period</span>
       <div class="seg" role="group" aria-label="Period"><button type="button" data-per="week" aria-pressed="true">Week</button><button type="button" data-per="month" aria-pressed="false">Month</button></div>
       <select class="sel" id="weekSel" aria-label="Week"></select>
@@ -217,14 +276,15 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
   <div class="wrap">
     <div class="top">
       <div>
-        <h1>Maki 14 <span>·</span> Meadowhall</h1>
-        <div class="meta">GM <b style="color:var(--red-ink)">vacant</b> · AM Inka Cheung · HEC Artur Mroczkowski · Stage: Kiban</div>
+        <h1 id="siteH1">Site</h1>
+        <div class="meta" id="siteMeta"></div>
       </div>
       <div class="chips" id="siteChips"></div>
     </div>
     <nav class="tabs" role="tablist" aria-label="Sections">
       <button role="tab" data-t="overview">Overview</button>
       <button role="tab" data-t="daily">Daily</button>
+      <button role="tab" data-t="reviews">Reviews</button>
       <button role="tab" data-t="kpi">Weekly KPI Sheet</button>
       <button role="tab" data-t="droo">Deliveroo</button>
       <button role="tab" data-t="stock">Stock &amp; Cost</button>
@@ -306,9 +366,68 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
     </div>
     <div class="card">
       <div class="ch"><h3>Broth quality · daily check</h3><span class="tag t-auto">MAPAL</span></div>
-      <div class="small">Tonkotsu and Tori Paitan refractometer readings from the Mapal Broth Check, measured after the restaurant adds water. Same spec as the Control Centre Broth tab. Out of spec or missed turns the day red; the HC fixes it and Artur Mroczkowski (DEC) follows up.</div>
+      <div class="small">Tonkotsu and Tori Paitan refractometer readings from the Mapal Broth Check, measured after the restaurant adds water. Same spec as the Control Centre Broth tab. Out of spec or missed turns the day red; the HC fixes it and the DEC (<span class="decName"></span>) follows up.</div>
       <div class="tscroll"><table id="brothTable"></table></div>
       <div class="small" id="brothFoot"></div>
+    </div>
+  </section>
+
+  <!-- REVIEWS: Reviews Intelligence for this site, interactive -->
+  <section class="pane" data-p="reviews" hidden>
+    <div class="row"><div><div class="eyebrow">Reviews</div><h2 id="rvTitle">What guests are saying</h2>
+      <div class="sub">Every Google review for this site, labelled by the Control Centre Reviews Intelligence: the complaint, the quoted evidence, staff named, dishes and praise. Click any bar, name, star or week to filter; everything below follows.</div></div>
+      <span class="tag t-auto">AUTO</span></div>
+    <div class="card" style="gap:10px">
+      <div class="rvctl">
+        <span class="clab">Period</span>
+        <div class="seg" role="group" aria-label="Review period" id="rvPer"><button type="button" data-rp="wk">Selected week</button><button type="button" data-rp="4w">Last 4 weeks</button><button type="button" data-rp="mo">Month</button><button type="button" data-rp="q">Quarter</button><button type="button" data-rp="all">Since April</button><button type="button" data-rp="cu">Custom</button></div>
+        <span id="rvCustom" hidden><input type="date" id="rvFrom" aria-label="From"> to <input type="date" id="rvTo" aria-label="To"></span>
+      </div>
+      <div class="rvctl">
+        <span class="clab">Show</span>
+        <div class="seg" role="group" aria-label="Show" id="rvShow"><button type="button" data-rs="neg">Complaints</button><button type="button" data-rs="pos">Praise</button><button type="button" data-rs="all">Everything</button></div>
+        <span class="clab">Stars</span><span id="rvStars" class="chips"></span>
+        <input type="search" id="rvQ" placeholder="Search text, dish or name" aria-label="Search reviews">
+        <button type="button" class="btn sm" id="rvClear">Clear filters</button>
+      </div>
+      <div class="small" id="rvActive"></div>
+    </div>
+    <div class="kt" id="rvKpi"></div>
+    <div class="grid">
+      <div class="card s7">
+        <div class="ch"><h3>Service issue or quality issue?</h3><span class="small" id="rvIssN"></span></div>
+        <div class="small">Reviews carrying each issue, then total mentions (one review can carry several). Click a bar to open its detail and filter the reviews.</div>
+        <div class="stack" id="rvStack"></div>
+        <div id="rvBars" style="display:flex;flex-direction:column;gap:2px"></div>
+      </div>
+      <div class="card s5">
+        <div class="ch"><h3>Reviews by week</h3><span class="small">bar = reviews, red = 3★ or below</span></div>
+        <div class="wtrend" id="rvTrend"></div>
+        <div class="small" id="rvTrendFoot">Click a week to look at it.</div>
+        <div class="ch" style="margin-top:6px"><h3>What they love</h3></div>
+        <div id="rvPraise" style="display:flex;flex-direction:column;gap:2px"></div>
+      </div>
+    </div>
+    <div class="grid">
+      <div class="card s7">
+        <div class="ch"><h3 id="rvLowHead">What went wrong in the 1★ and 2★ reviews</h3></div>
+        <div id="rvLow" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+      <div class="card s5">
+        <div class="ch"><h3>People named in reviews</h3><span class="small">click a name</span></div>
+        <div class="tscroll"><table class="ppl" id="rvPeople"></table></div>
+        <div class="small">Names as guests wrote them, so one person can appear under two spellings. Green = praised, red = named in a complaint.</div>
+        <div class="ch" style="margin-top:8px"><h3>Dishes</h3></div>
+        <div id="rvDishes" class="small"></div>
+      </div>
+    </div>
+    <div class="card" id="rvNoteCard">
+      <div class="ch"><h3 id="rvNoteHead">Control Centre write up</h3><span class="tag t-auto">REVIEWS PASS</span></div>
+      <div class="anote" id="rvNote"></div>
+    </div>
+    <div class="card">
+      <div class="ch"><h3 id="rvFeedHead">Reviews</h3><div class="seg" role="group" aria-label="Sort"><button type="button" data-ro="new">Newest</button><button type="button" data-ro="low">Lowest stars</button></div></div>
+      <div class="rvfeed" id="rvFeed"></div>
     </div>
   </section>
 
@@ -469,7 +588,7 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
           <button type="button" data-fl="open" aria-pressed="true">Open</button><button type="button" data-fl="done" aria-pressed="false">Awaiting AM</button><button type="button" data-fl="closed" aria-pressed="false">Closed</button>
         </div></div>
       <div class="tscroll"><table><thead><tr><th>Action</th><th>Raised at</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody id="actRows"></tbody></table></div>
-      <div class="small" style="margin-top:8px">Every GM/HC, GMH chef and AM meeting action lands here and in the M14 Asana project, and goes to the restaurant inbox. <span class="tag t-no">ASANA QUEUED</span> means it goes up at the next sync; <span class="tag t-auto">SUPPORT</span> means a support team (EC, maintenance, marketing) is assigned too. Status here is cached for offline use.</div>
+      <div class="small" style="margin-top:8px">Every GM/HC, GMH chef and AM meeting action lands here and in the site Asana project, and goes to the restaurant inbox. <span class="tag t-no">ASANA QUEUED</span> means it goes up at the next sync; <span class="tag t-auto">SUPPORT</span> means a support team (EC, maintenance, marketing) is assigned too. Status here is cached for offline use.</div>
     </div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Maintenance log</h3><span class="tag t-no">LOG FEED PENDING</span></div><div class="maintBox"></div></div>
@@ -480,6 +599,8 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
   <!-- MONTH -->
   <section class="pane" data-p="month" hidden id="monthPane"></section>
 </main>
+<div class="ovl" id="repOvl" hidden role="dialog" aria-modal="true" aria-labelledby="repTitle"><div class="sheet" id="repSheet"></div></div>
+
 <div class="toast" id="toast" hidden></div>
 
 <script>
@@ -489,15 +610,17 @@ var WK=__WK__;
 var DELJ=__DEL__,DEL=DELJ.d||{};
 WK.forEach(function(w){var b=new Date(w.wc+'T00:00:00Z').getTime(),s=0,t=0,n=0;for(var i=0;i<7;i++){var r=DEL[new Date(b+i*864e5).toISOString().slice(0,10)];if(r){n++;s+=r[1];t+=r[0]||0}}w.del=n?s:null;w.delT=n&&t?t:null});
 var NOTES=__NOTES__;
-/* Reviews: Reviews Intelligence product (AM Control Centre Reviews tab), M14 only. Labour budget: Mona Lisa. EOTM: Hanna's per site sheets. */
+/* Reviews: Google Reviews sheet, this site. Labour budget: Mona Lisa. EOTM: Hanna's per site sheets. */
 var BROTH=__BROTH__,REV=__REV__,LAB=__LAB__,EOTM=__EOTM__;
-/* Loyalty: Ramen Royalty (Trifft) member bills at Meadowhall by day, from the Marketing Hub payload. Launched 18/08/2026; weeks wholly before launch are n/a. */
+/* Loyalty: Ramen Royalty (Trifft) member bills at this site by day, from the Marketing Hub payload. Launched 18/08/2026; weeks wholly before launch are n/a. */
 var LOY=__LOY__,LOYD=LOY.d||{};
 function loyWeek(wc){var b=new Date(wc+'T00:00:00Z').getTime(),o={b:0,m:0,s:0,n:0,days:0};for(var i=0;i<7;i++){var k=new Date(b+i*864e5).toISOString().slice(0,10);if(k<LOY.launch||k>LOY.to)continue;o.days++;var r=LOYD[k];if(r){o.n++;o.b+=r[0];o.m+=r[1];o.s+=r[2]}}return o.days?o:null}
 WK.forEach(function(w){var l=loyWeek(w.wc);w.loyB=l?l.b:null;w.loyM=l?l.m:null;w.loyS=l?l.s:null;w.loyDays=l?l.days:0;w.loyShare=l&&w.covers?l.b/w.covers*100:null});
 var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8},peer:{n:'Leeds (M10)',roas:4.57,spend:447.23}};
-var CUR=WK[WK.length-1].wc;
-var KEY='maki_site_cc_m14_v4';
+var SITE=__SITE__,SCODE=SITE.code;
+var CUR=WK.length?WK[WK.length-1].wc:'__TODAY__';
+var TGTW=(function(){for(var i=WK.length-1;i>=0;i--)if(WK[i].target)return WK[i].target;return 0})(),YMAX=Math.ceil(Math.max(TGTW,Math.max.apply(null,WK.map(function(w){return w.sales||0}).concat([1])))*1.1/5000)*5000;
+var KEY='maki_site_cc_'+SCODE.toLowerCase()+'_v4';
 var ACTS=__ACTS__.map(function(a){a.s=a.s||'open';a.ev=a.ev||'';return a});
 var COMP=__COMP__,TEAM=__TEAM__,GAPS0=__GAPS__;
 var TODAY='__TODAY__';
@@ -511,8 +634,8 @@ function queue(op,o){S.ob.push({ts:new Date().toISOString().slice(0,16),op:op,o:
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 var $=function(s){return document.querySelector(s)},$$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
-function dm(d){if(!d)return '';var p=d.split('-');return p[2]+'/'+p[1]}
-function dmy(d){var p=d.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+function dm(d){if(!d)return 'n/a';var p=String(d).split('-');return p[2]+'/'+p[1]}
+function dmy(d){if(!d)return 'n/a';var p=String(d).split('-');return p[2]+'/'+p[1]+'/'+p[0]}
 var tt;function toast(m){var el=$('#toast');el.textContent=m;el.hidden=false;clearTimeout(tt);tt=setTimeout(function(){el.hidden=true},2400)}
 var NA='<span class="ph">n/a</span>';
 function gbp(v){return v==null?NA:'£'+Math.round(v).toLocaleString('en-GB')}
@@ -533,7 +656,7 @@ var M=[
  {k:'del',lab:'Delivery sales',src:'Auto Cash Up',f:function(w){return w.del},fmt:gbp,dir:1,tgt:function(w){return w.delT},tl:function(w){return w.delT?gbp(w.delT):null},
   rag:function(v,w){if(v==null||!w.delT)return 'n';return v>=w.delT?'g':'r'},gap:function(v,w){return w.delT?pctS((v-w.delT)/w.delT*100):''},chg:'pct'},
  {k:'covers',lab:'Covers',src:'Mona Lisa',f:function(w){return w.covers},fmt:function(v){return v==null?NA:v.toLocaleString('en-GB')},dir:1,tgt:function(w){return lyCovers(w.wc)},tl:function(w){var t=w.wc?lyCovers(w.wc):null;return t==null?null:t.toLocaleString('en-GB')+' LY'},rag:function(v,w){var t=w.wc?lyCovers(w.wc):null;return v==null||t==null?'n':v>=t?'g':'r'},gap:function(v,w){var t=lyCovers(w.wc);return t?pctS((v-t)/t*100)+' vs LY':''},chg:'pct',note:'vs LY from w/c 16/11'},
- {k:'sph',lab:'Spend per head',src:'Mona Lisa',f:function(w){return w.sph},fmt:function(v){return v==null?NA:'£'+v.toFixed(2)},dir:1,tgt:function(){return 22},tl:function(){return '≥ £22.00'},rag:function(v){return band(v,22,20.9,true)},gap:function(v){var d=sgn(v-22,2,'');return d.charAt(0)==='-'?'-£'+d.slice(1):'+£'+d.replace('+','')},chg:'abs2'},
+ {k:'sph',lab:'Spend per head',src:'Mona Lisa',f:function(w){return w.sph},fmt:function(v){return v==null?NA:'£'+v.toFixed(2)},dir:1,tgt:function(){return SITE.sph},tl:function(){return '≥ £'+SITE.sph.toFixed(2)},rag:function(v){return band(v,SITE.sph,SITE.sph-1.1,true)},gap:function(v){var d=sgn(v-22,2,'');return d.charAt(0)==='-'?'-£'+d.slice(1):'+£'+d.replace('+','')},chg:'abs2'},
  {k:'wage',lab:'Wage %',src:'Mona Lisa',f:function(w){return w.wage},fmt:pct1,dir:-1,tgt:function(){return 22},tl:function(){return '≤ 22.0%'},rag:function(v){return wageRag(v)},gap:function(v){return v<=22?sgn(v-22,1,'pp'):v<=24?sgn(v-24,1,'pp')+' to Red Light':sgn(v-24,1,'pp')+' over'},chg:'pp',sub:'Amber 22 to 24%'},
  {k:'food',lab:'Food cost %',src:'Mona Lisa',f:function(w){return w.food},fmt:pct2,dir:-1,tgt:function(){return 25},tl:function(){return '< 25.0%'},rag:function(v){return band(v,24.99,25,false)},gap:function(v){return sgn(v-25,2,'pp')},chg:'pp'},
  {k:'fv',lab:'Food variance',src:'Stock-take',f:function(w){return w.fv},fmt:function(v){return v==null?NA:sgn(v,1,'%')},dir:0,tgt:function(){return 5},tl:function(){return '± 5%'},rag:function(v){return v==null?'n':band(Math.abs(v),5,7.5,false)},gap:function(v){return Math.abs(v)<=5?'in band':sgn(Math.abs(v)-5,1,'pp')+' out'},chg:'abs'},
@@ -645,7 +768,7 @@ function rlTrips(w){var t=[],sv=w.target&&w.sales!=null?(w.sales-w.target)/w.tar
 function renderOverview(){
   renderStandingWeek();renderHero();renderScore();renderDayChart();renderEff();
   var ws=lastN(S.wc,10);
-  $('#salesChart').innerHTML=barChart(ws,[S.wc],function(w){return w.sales},null,50000,'k',[{v:43000,c:'#0f172a',l:'Target £43k'}]);
+  $('#salesChart').innerHTML=barChart(ws,[S.wc],function(w){return w.sales},null,YMAX,'k',[{v:TGTW,c:'#0f172a',l:'Target £'+Math.round(TGTW/1000)+'k'}]);
   var w=wk(S.wc);
   function rl(lab,val,tr,st){return '<tr><td>'+lab+'</td><td class="r"><b>'+val+'</b></td><td class="r">'+st+'</td></tr>'}
   var sv=w.target&&w.sales!=null?(w.sales-w.target)/w.target*100:null;
@@ -748,8 +871,8 @@ function renderDroo(){
   ws.forEach(function(x){var dd=x.d;h+='<tr'+(x.wc===S.wc?' class="sel"':'')+'><td><b>'+dm(x.wc)+'</b></td>'+DM.map(function(m){var v=dd[m.k];return '<td class="r'+(v==null?'':' c-'+band(v,m.g,m.a,m.hi))+'">'+(v==null?NA:m.fmt(v))+'</td>'}).join('')+
     '<td class="r">'+gbp(dd.sales)+'</td><td class="r">'+(dd.orders==null?NA:dd.orders)+'</td><td class="r">'+(dd.aov==null?NA:'£'+dd.aov.toFixed(2))+'</td><td>'+(DM.every(function(m){return dd[m.k]==null})?TLo('n','No data'):'<span class="pill p-'+drooRag(dd)+'">'+({g:'Green',a:'Amber',r:'Red',n:'No data'})[drooRag(dd)]+'</span>')+'</td></tr>'});
   $('#drooTrend').innerHTML=h+'</tbody>';
-  $('#adBox').innerHTML='<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end"><div><div class="mini">M14 ad spend</div><div class="kv" style="font-size:22px">£0</div></div><div><div class="mini">M14 ROAS</div><div class="kv ph" style="font-size:22px">n/a</div></div><div><div class="mini">Group ROAS w/e '+dm(ADS.we)+'</div><div class="kv" style="font-size:22px">'+ADS.net.roas.toFixed(2)+'</div></div><div><div class="mini">'+ADS.peer.n+'</div><div class="kv" style="font-size:22px">'+ADS.peer.roas.toFixed(2)+'</div></div></div>'+
-    '<div class="small" style="margin-top:6px">Meadowhall is not in any weekly Deliveroo Ads export from '+dmy(ADS.from)+' to w/e '+dmy(ADS.we)+': no Marketer spend, so no ROAS. Group w/e '+dm(ADS.we)+': '+ADS.net.sites+' sites, £'+Math.round(ADS.net.spend).toLocaleString('en-GB')+' spend; '+ADS.peer.n+' £'+Math.round(ADS.peer.spend)+'. ROAS is Deliveroo\'s 7 day figure.</div>';
+  $('#adBox').innerHTML='<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end"><div><div class="mini">'+SCODE+' ad spend</div><div class="kv" style="font-size:22px">£0</div></div><div><div class="mini">'+SCODE+' ROAS</div><div class="kv ph" style="font-size:22px">n/a</div></div><div><div class="mini">Group ROAS w/e '+dm(ADS.we)+'</div><div class="kv" style="font-size:22px">'+ADS.net.roas.toFixed(2)+'</div></div><div><div class="mini">'+ADS.peer.n+'</div><div class="kv" style="font-size:22px">'+ADS.peer.roas.toFixed(2)+'</div></div></div>'+
+    '<div class="small" style="margin-top:6px">'+(SCODE==='M14'?'Meadowhall is not in any weekly Deliveroo Ads export from '+dmy(ADS.from)+' to w/e '+dmy(ADS.we)+': no Marketer spend, so no ROAS.':'Per site Deliveroo ad spend is not wired into this page yet.')+' Group w/e '+dm(ADS.we)+': '+ADS.net.sites+' sites, £'+Math.round(ADS.net.spend).toLocaleString('en-GB')+' spend; '+ADS.peer.n+' £'+Math.round(ADS.peer.spend)+'. ROAS is Deliveroo\'s 7 day figure.</div>';
 }
 
 /* ---------- other week tabs ---------- */
@@ -767,7 +890,7 @@ function revCard(r,reply){var iss=issueSet(r),rp=S.repl[r.id];
     '<div>'+(r.t?esc(r.t):'<span class="ph">Star rating only, no comment</span>')+'</div>'+
     ((iss.length||reply)?'<div class="chips">'+iss.map(function(l){return '<span class="pill p-n">'+esc(l)+'</span>'}).join('')+
     (reply?(rp?'<span class="pill p-g">✓ Replied '+dm(rp)+'</span>':'<span class="pill p-o">Reply: not yet</span><button type="button" class="btn sm" data-rep="'+r.id+'">Mark replied</button>'):'')+'</div>':'')+'</div>'}
-function brothSt(dt){if(dt<BROTH.from||dt>BROTH.to)return 'n';var b=BROTH.d[dt];if(!b||b[0]==null||b[1]==null)return 'm';var t=BROTH.spec.tk,p=BROTH.spec.tp;return b[0]>=t[0]&&b[0]<=t[1]&&b[1]>=p[0]&&b[1]<=p[1]?'g':'r'}
+function brothSt(dt){if(!BROTH.from||dt<BROTH.from||dt>BROTH.to)return 'n';var b=BROTH.d[dt];if(!b||b[0]==null||b[1]==null)return 'm';var t=BROTH.spec.tk,p=BROTH.spec.tp;return b[0]>=t[0]&&b[0]<=t[1]&&b[1]>=p[0]&&b[1]<=p[1]?'g':'r'}
 var BST={g:['p-g','✓ In spec'],r:['p-r','✕ Out of spec'],m:['p-r','✕ Missed'],n:['p-n','n/a']};
 function renderDaily(){
   var lastDay=Object.keys(DAY).sort().pop(),anchor=isCur()?(lastDay>addD(S.wc,6)?lastDay:addD(S.wc,6)):addD(S.wc,6);
@@ -801,7 +924,7 @@ function renderDaily(){
   var brow=function(dt){var b=BROTH.d[dt]||[null,null],st=BST[brothSt(dt)];return '<tr><td><b>'+dayName(dt)+'</b> '+dm(dt)+'</td>'+bc(b[0],'tk')+bc(b[1],'tp')+'<td><span class="pill '+st[0]+'">'+st[1]+'</span></td></tr>'};
   var bsec=function(t){return '<tr class="sechd"><td colspan="4">'+t+'</td></tr>'};
   $('#brothTable').innerHTML='<thead><tr><th>Day</th><th>Tonkotsu · spec 6.0 to 7.0</th><th>Tori Paitan · spec 4.0 to 5.0</th><th>Day</th></tr></thead><tbody>'+bsec((isCur()?'Latest cash-up day':'Last day of the week'))+brow(anchor)+bsec('Previous 7 days · '+(B.brn?B.br+' / '+B.brn+' in spec':'n/a'))+prv.map(brow).join('')+'</tbody>';
-  var dv=BROTH.dev.filter(function(x){return x[0]>=prv[0]&&x[0]<=anchor});
+  var dv=(BROTH.dev||[]).filter(function(x){return x[0]>=prv[0]&&x[0]<=anchor});
   $('#brothFoot').textContent='Source: '+BROTH.src+', '+dmy(BROTH.from)+' to '+dmy(BROTH.to)+'. A missed check counts as a fail.'+(dv.length?' Mapal deviations in these 8 days: '+dv.map(function(x){return dm(x[0])+' '+(x[1]==='pork'?'tonkotsu':'tori paitan')+' '+x[2]+' ('+x[3]+')'}).join(', ')+'.':'');
 }
 function tile(lab,val,sub,r,tag){return '<div class="card tile s3"><div class="ch"><span class="lab">'+lab+'</span>'+(r?PILL[r]:(tag||''))+'</div><div class="big">'+val+'</div><div class="small">'+sub+'</div></div>'}
@@ -813,7 +936,7 @@ function renderKeyline(){
   $('#klSup').innerHTML=Object.keys(KL.sup).map(function(k){var v=KL.sup[k];return '<span class="pill p-o">'+k+': order by '+v[0]+', lands '+v[1]+(v[2]?', '+v[2]:'')+'</span>'}).join('');
   $('#klTable').innerHTML='<thead><tr><th>Item</th><th>Supplier</th><th class="r">On hand</th><th class="r">Used a day</th><th class="r">Days left</th><th>On order</th><th class="r">Baseline</th><th class="r">Order today</th><th>Next delivery</th><th>Status</th></tr></thead><tbody>'+
     KL.lines.map(function(l){var neg=/^-/.test(l[2]);return '<tr'+(l[9]==='Urgent'?' class="kl-urg"':'')+'><td class="mname">'+l[0]+'<span class="kl-why">'+l[10]+'</span></td><td>'+l[1]+'</td><td class="r'+(neg?' c-r':'')+'">'+l[2]+'</td><td class="r">'+(l[3]==null?NA:l[3].toFixed(2))+'</td><td class="r'+(l[4]==null?'':l[4]<3?' c-r':l[4]<6?' c-a':'')+'"><b>'+(l[4]==null?NA:l[4])+'</b>'+(l[5]?'<span class="kl-why">out '+l[5]+'</span>':'')+'</td><td class="small">'+(l[6]||'<span class="ph">none</span>')+'</td><td class="r">'+(l[7]||NA)+'</td><td class="r"><b>'+(l[8]||'<span class="ph">none</span>')+'</b></td><td class="small">'+(KL.sup[l[1]]?KL.sup[l[1]][1]:NA)+'</td><td>'+P[l[9]]+'</td></tr>'}).join('')+'</tbody>';
-  $('#klFoot').textContent='Live position, not tied to the selected week. Same engine as Keyline Control, filtered to M14. Pulled from '+KL.pulled+', last physical check '+KL.check+'. Order today is net of stock already on order; Covered means the open order clears the Baseline if it lands.';
+  $('#klFoot').textContent='Live position, not tied to the selected week. Same engine as Keyline Control, filtered to '+SCODE+'. Pulled from '+KL.pulled+', last physical check '+KL.check+'. Order today is net of stock already on order; Covered means the open order clears the Baseline if it lands.';
 }
 var COVJ=__COV__,COV=COVJ.d||{};
 var DAY=__DAILY__;
@@ -878,7 +1001,7 @@ function renderPeople(){
     tile('Open roles','2','FT bartender · PT FOH/bar for November',null,'<span class="tag t-man">MANUAL</span>')+
     tile('General Manager','Vacant','Hiring stage to be added',null,'<span class="pill p-r">✕ Gap</span>');
   var ws=lastN(S.wc,10).slice().reverse();
-  $('#labTable').innerHTML='<thead><tr><th>w/c</th><th class="r">Sales</th><th class="r">Wage %</th><th class="r">Labour hrs</th><th class="r">Sales per labour hr</th></tr></thead><tbody><tr class="tgtrow"><td>Target</td><td class="r">£43,000</td><td class="r">≤ 22.0%</td><td class="r">Budget rota</td><td class="r">·</td></tr>'+
+  $('#labTable').innerHTML='<thead><tr><th>w/c</th><th class="r">Sales</th><th class="r">Wage %</th><th class="r">Labour hrs</th><th class="r">Sales per labour hr</th></tr></thead><tbody><tr class="tgtrow"><td>Target</td><td class="r">'+gbp(TGTW)+'</td><td class="r">≤ 22.0%</td><td class="r">Budget rota</td><td class="r">·</td></tr>'+
     ws.map(function(x){return '<tr'+(x.wc===S.wc?' class="sel"':'')+'><td><b>'+dm(x.wc)+'</b></td><td class="r'+(x.sales==null?'':' c-'+(x.sales>=x.target?'g':x.sales>=x.target*.9?'a':'r'))+'">'+gbp(x.sales)+'</td><td class="r'+(x.wage==null?'':' c-'+wageRag(x.wage))+'">'+pct1(x.wage)+'</td><td class="r">'+(x.hours==null?NA:x.hours.toFixed(1))+'</td><td class="r">'+(x.hours&&x.sales?'£'+(x.sales/x.hours).toFixed(2):NA)+'</td></tr>'}).join('')+'</tbody>';
   var m=S.wc.slice(0,7);$('#eotmBox').innerHTML='<div class="mini">'+mLabel(m)+'</div>'+['FOH','BOH'].map(function(d){var x=(S.eotm[m]&&S.eotm[m][d])||(EOTM.m[m]&&EOTM.m[m][d]);
     return '<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>'+(d==='FOH'?'Front of house':'Back of house')+'</b>'+(x?TL('g',x.sent?'Sent to Hanna':'In Hanna sheet'):TL('r','Not submitted'))+'</div>'+
@@ -976,7 +1099,7 @@ function renderMonth(){
     var c=change(m,cv,cpv);return {m:m,v:v,pv:pv,r:r,c:c};
   });
   var tg=rows.filter(function(e){return e.r!=='n'}),hit=tg.filter(function(e){return e.r==='g'}).length,bet=rows.filter(function(e){return e.c.b>0}).length,cmp=rows.filter(function(e){return e.v!=null&&e.pv!=null}).length;
-  var h='<div class="row"><div><div class="eyebrow">Month view</div><h2>'+mLabel(S.month)+(closed<tot?' · in progress':'')+'</h2><div class="sub">'+closed+' of '+tot+' weeks closed. A week counts in the month its Monday falls in.'+(S.month==='2026-05'?' Backfilled to w/c 04/05 on 01/10/2026; Mona Lisa weekly sales target was £57,000 until w/c 25/05 and £43,000 from w/c 01/06.':'')+'</div></div>'+
+  var h='<div class="row"><div><div class="eyebrow">Month view</div><h2>'+mLabel(S.month)+(closed<tot?' · in progress':'')+'</h2><div class="sub">'+closed+' of '+tot+' weeks closed. A week counts in the month its Monday falls in.'+(S.month==='2026-05'&&SCODE==='M14'?' Backfilled to w/c 04/05 on 01/10/2026; Mona Lisa weekly sales target was £57,000 until w/c 25/05 and £43,000 from w/c 01/06.':'')+'</div></div>'+
     '<div class="chips"><button type="button" class="btn sm" id="mPrev"'+(pi>=MONTHS.length?' disabled':'')+'>◀ Previous month</button><button type="button" class="btn sm" id="mNext"'+(MONTHS.indexOf(S.month)===0?' disabled':'')+'>Next month ▶</button></div></div>';
   h+=standingMonthHtml(S.month);
   var LOYH='<h4 style="margin-top:12px">Loyalty</h4>'+(a.loyB==null?'<div class="hitem"><span class="ic ic-a">R</span><div><b>n/a</b><small>Ramen Royalty launched 18/08/2026</small></div></div>':'<div class="hitem"><span class="ic ic-'+band(a.loyShare,25,15,true)+'">R</span><div><b>'+a.loyB.toLocaleString('en-GB')+' member bills · '+pct1(a.loyShare)+' of covers</b><small>Programme target 25% · '+(a.loyDays<a.ws.length*7?a.loyDays+' trading days since launch':'full month')+' · '+gbp(a.loyS)+' spend'+(a.sales?', '+pct1(a.loyS/a.sales*100)+' of sales':'')+'</small></div></div>');
@@ -1003,7 +1126,7 @@ function renderMonth(){
       '<td class="r'+cc(w.eff,effRag(w.eff))+'">'+w.eff+'</td><td>'+(w.rl==='red'?'<span class="pill p-r">✕ Red</span>':'<span class="pill p-g">✓ Green</span>')+'</td></tr>'}).join('');
   h+='<div class="card"><div class="ch"><div><div class="eyebrow">Week by week</div><h3 style="margin-top:2px">Every week against its targets</h3></div><div class="legend"><span class="pill p-g">On target</span><span class="pill p-r">Red Light</span></div></div><div class="tscroll"><table>'+
     '<thead><tr><th>w/c</th><th class="r">Sales</th><th class="r">Covers</th><th class="r">SPH</th><th class="r">Wage %</th><th class="r">Food %</th><th class="r">Food var</th><th class="r">Drinks var</th><th class="r">Google ★</th><th class="r">Roo ★</th><th class="r">Roo prep</th><th class="r">Eff</th><th>Red Light</th></tr></thead><tbody>'+
-    '<tr class="tgtrow"><td>🎯 Target</td><td class="r">'+gbp(a.ws.length?a.ws[0].target:43000)+'</td><td class="r">·</td><td class="r">≥ £22.00</td><td class="r">≤ 22.0%</td><td class="r">< 25.0%</td><td class="r">± 5%</td><td class="r">± 5%</td><td class="r">≥ 4.70</td><td class="r">≥ 4.70</td><td class="r">≤ 15 min</td><td class="r">≥ 90</td><td>No triggers</td></tr>'+wrows+
+    '<tr class="tgtrow"><td>🎯 Target</td><td class="r">'+gbp(a.ws.length?a.ws[0].target:TGTW)+'</td><td class="r">·</td><td class="r">≥ £22.00</td><td class="r">≤ 22.0%</td><td class="r">< 25.0%</td><td class="r">± 5%</td><td class="r">± 5%</td><td class="r">≥ 4.70</td><td class="r">≥ 4.70</td><td class="r">≤ 15 min</td><td class="r">≥ 90</td><td>No triggers</td></tr>'+wrows+
     '<tr class="tot"><td>Month</td><td class="r">'+gbp(a.sales)+'</td><td class="r">'+a.covers.toLocaleString('en-GB')+'</td><td class="r">£'+a.sph.toFixed(2)+'</td><td class="r">'+pct1(a.wage)+'</td><td class="r">'+pct2(a.food)+'</td><td class="r">'+(a.fv==null?NA:sgn(a.fv,1,'%'))+'</td><td class="r">'+(a.dv==null?NA:sgn(a.dv,1,'%'))+'</td><td class="r">'+(a.rating==null?NA:a.rating.toFixed(2))+'</td><td class="r">'+(a.d.r==null?NA:a.d.r.toFixed(2))+'</td><td class="r">'+(a.d.prep==null?NA:a.d.prep.toFixed(1))+'</td><td class="r">'+(a.eff==null?NA:Math.round(a.eff))+'</td><td>'+a.red+' red</td></tr>'+
     '</tbody></table></div><div class="small">Month row: wage and food are weighted by sales, variance is the month-end stock-take, ratings and prep are averages of the weeks.</div></div>';
   // deliveroo month
@@ -1011,17 +1134,17 @@ function renderMonth(){
     '<tr class="tgtrow"><td>🎯 Target</td>'+DM.map(function(m){return '<td class="r">'+(m.hi?'≥ ':'≤ ')+m.g+(m.k==='prep'?' min':m.k==='r'?'★':'%')+'</td>'}).join('')+'<td class="r">·</td><td class="r">·</td><td>All green</td></tr>'+
     a.ws.map(function(x){var dd=x.d,none=DM.every(function(m){return dd[m.k]==null});return '<tr><td><b>'+dm(x.wc)+'</b></td>'+DM.map(function(m){var v=dd[m.k];return '<td class="r'+(v==null?'':' c-'+band(v,m.g,m.a,m.hi))+'">'+(v==null?NA:m.fmt(v))+'</td>'}).join('')+'<td class="r">'+gbp(dd.sales)+'</td><td class="r">'+(dd.orders==null?NA:dd.orders)+'</td><td>'+(none?TLo('n','No data'):'<span class="pill p-'+drooRag(dd)+'">'+({g:'Green',a:'Amber',r:'Red',n:'No data'})[drooRag(dd)]+'</span>')+'</td></tr>'}).join('')+
     '<tr class="tot"><td>Month</td>'+DM.map(function(m){var v=a.d[m.k];return '<td class="r">'+(v==null?NA:m.fmt(v))+'</td>'}).join('')+'<td class="r">'+gbp(a.d.sales)+'</td><td class="r">'+(a.d.orders==null?NA:a.d.orders)+'</td><td></td></tr></tbody></table></div></div>';
-  h+='<div class="card"><div class="ch"><h3>Weekly sales since June · '+mLabel(S.month)+' in orange</h3><span class="tag t-auto">AUTO</span></div><div class="tscroll">'+barChart(WK.filter(function(w){return w.sales!=null}),a.ms,function(w){return w.sales},null,50000,'k',[{v:43000,c:'#0f172a',l:'Target £43k'}])+'</div></div>';
+  h+='<div class="card"><div class="ch"><h3>Weekly sales since June · '+mLabel(S.month)+' in orange</h3><span class="tag t-auto">AUTO</span></div><div class="tscroll">'+barChart(WK.filter(function(w){return w.sales!=null}),a.ms,function(w){return w.sales},null,YMAX,'k',[{v:TGTW,c:'#0f172a',l:'Target £'+Math.round(TGTW/1000)+'k'}])+'</div></div>';
   var trows=MONTHS.map(function(m){var x=agg(m),on=m===S.month,sv=x.sales!=null?(x.sales-x.target)/x.target*100:null;
     return '<tr'+(on?' class="sel"':'')+'><td><b>'+mLabel(m)+'</b></td><td class="r">'+x.ws.length+'/'+x.ms.length+'</td><td class="r'+(sv==null?'':' c-'+(sv>=0?'g':sv>-10?'a':'r'))+'">'+gbp(x.sales)+(sv==null?'':'<div style="font-size:11px;font-weight:600">'+pctS(sv)+'</div>')+'</td><td class="r">'+Math.round(x.coversPW).toLocaleString('en-GB')+'</td><td class="r c-'+band(x.sph,22,20.9,true)+'">£'+x.sph.toFixed(2)+'</td><td class="r'+(x.wage==null?'':' c-'+wageRag(x.wage))+'">'+pct1(x.wage)+'</td><td class="r'+(x.food==null?'':' c-'+band(x.food,24.99,25,false))+'">'+pct2(x.food)+'</td><td class="r'+(x.rating==null?'':' c-'+band(x.rating,4.7,4.3,true))+'">'+(x.rating==null?NA:x.rating.toFixed(2))+'</td><td class="r'+(x.d.r==null?'':' c-'+band(x.d.r,4.7,4,true))+'">'+(x.d.r==null?NA:x.d.r.toFixed(2))+'</td><td class="r">'+x.red+'</td><td class="r">'+(on?'<span class="small">Showing</span>':'<button type="button" class="btn sm" data-month="'+m+'">View</button>')+'</td></tr>'}).join('');
   h+='<div class="card"><div class="ch"><div><div class="eyebrow">History</div><h3 style="margin-top:2px">Month on month</h3></div></div><div class="tscroll"><table><thead><tr><th>Month</th><th class="r">Weeks</th><th class="r">Sales</th><th class="r">Covers / wk</th><th class="r">SPH</th><th class="r">Wage %</th><th class="r">Food %</th><th class="r">Google ★</th><th class="r">Roo ★</th><th class="r">Red wks</th><th></th></tr></thead><tbody>'+
-    '<tr class="tgtrow"><td>🎯 Target</td><td class="r">·</td><td class="r">£43,000 / wk</td><td class="r">·</td><td class="r">≥ £22.00</td><td class="r">≤ 22.0%</td><td class="r">< 25.0%</td><td class="r">≥ 4.70</td><td class="r">≥ 4.70</td><td class="r">0</td><td></td></tr>'+trows+'</tbody></table></div><div class="small">History starts May 2026, the first stored weekly build. Earlier months need a Mona Lisa backfill.</div></div>';
+    '<tr class="tgtrow"><td>🎯 Target</td><td class="r">·</td><td class="r">'+gbp(TGTW)+' / wk</td><td class="r">·</td><td class="r">≥ £22.00</td><td class="r">≤ 22.0%</td><td class="r">< 25.0%</td><td class="r">≥ 4.70</td><td class="r">≥ 4.70</td><td class="r">0</td><td></td></tr>'+trows+'</tbody></table></div><div class="small">History starts May 2026, the first stored weekly build. Earlier months need a Mona Lisa backfill.</div></div>';
   $('#monthPane').innerHTML=h;
 }
 
 /* ---------- league + efficiency standing ---------- */
 var STAND=__STAND__;
-var TIER='Chūmori 中盛り',TIERSITES=['M3','M14','M17','M10','M12','M7','M11'];
+var TIER=SITE.tier||'',TIERSITES=SITE.tierSites||[];
 function ord(n){var s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0])}
 function qOf(d){return d.slice(0,4)+'-Q'+(Math.floor((+d.slice(5,7)-1)/3)+1)}
 function qLabel(q){return q.slice(5)+' '+q.slice(0,4)}
@@ -1031,18 +1154,18 @@ function lgSeason(q,upto){return lgList(qMondays(q).filter(function(m){return !u
 function lgTable(ym,upto){return lgList(mondays(ym).filter(function(m){return !upto||m<=upto}))}
 function lgList(all){var ms=all.filter(function(m){return STAND.lg[m]}),t={};
   TIERSITES.forEach(function(c){t[c]=0});ms.forEach(function(m){TIERSITES.forEach(function(c){t[c]+=STAND.lg[m][c]||0})});
-  var rows=TIERSITES.map(function(c){return {c:c,p:t[c]}}).sort(function(a,b){return b.p-a.p||(a.c==='M14'?-1:0)});
+  var rows=TIERSITES.map(function(c){return {c:c,p:t[c]}}).sort(function(a,b){return b.p-a.p||(a.c===SCODE?-1:0)});
   rows.forEach(function(r){r.rank=1+rows.filter(function(x){return x.p>r.p}).length;r.tie=rows.filter(function(x){return x.p===r.p}).length>1});
-  return {rows:rows,weeks:ms.length,me:rows.filter(function(r){return r.c==='M14'})[0]};}
+  return {rows:rows,weeks:ms.length,me:rows.filter(function(r){return r.c===SCODE})[0]};}
 function posTxt(r){return r.p===0&&r.tie&&r.rank===1?'·':(r.tie?'=':'')+ord(r.rank)}
 function mv(prev,cur,lowerBetter){if(prev==null||cur==null)return '<span class="chg flat">no comparison</span>';var d=prev-cur;if(d===0)return '<span class="chg flat">● no change</span>';
   return '<span class="chg '+(d>0?'up':'down')+'">'+(d>0?'▲ up ':'▼ down ')+Math.abs(d)+' place'+(Math.abs(d)>1?'s':'')+'</span>'}
 function standCard(eyebrow,big,sub,chg,rag){return '<div class="card s3" style="gap:6px;border-top:4px solid var(--maki-orange)"><div class="eyebrow">'+eyebrow+'</div><div class="big">'+big+'</div><div class="small">'+sub+'</div><div>'+chg+'</div></div>'}
-function miniLeague(t,title){return '<div class="card s3" style="gap:8px"><div class="ch"><h3>'+title+'</h3></div><table><tbody>'+t.rows.map(function(r){var me=r.c==='M14';return '<tr'+(me?' style="background:var(--maki-orange-bg)"':'')+'><td style="padding:5px 8px;font-weight:800;color:'+(me?'var(--maki-orange-deep)':'var(--ink-2)')+'">'+posTxt(r)+'</td><td style="padding:5px 8px;font-weight:'+(me?800:500)+'">Maki '+r.c.slice(1)+(me?' (you)':'')+'</td><td class="r" style="padding:5px 8px;font-weight:700">'+r.p+' pts</td></tr>'}).join('')+'</tbody></table></div>'}
+function miniLeague(t,title){return '<div class="card s3" style="gap:8px"><div class="ch"><h3>'+title+'</h3></div><table><tbody>'+t.rows.map(function(r){var me=r.c===SCODE;return '<tr'+(me?' style="background:var(--maki-orange-bg)"':'')+'><td style="padding:5px 8px;font-weight:800;color:'+(me?'var(--maki-orange-deep)':'var(--ink-2)')+'">'+posTxt(r)+'</td><td style="padding:5px 8px;font-weight:'+(me?800:500)+'">Maki '+r.c.slice(1)+(me?' (you)':'')+'</td><td class="r" style="padding:5px 8px;font-weight:700">'+r.p+' pts</td></tr>'}).join('')+'</tbody></table></div>'}
 var EALL=__EALL__;
 function effLadder(L,dp){
   if(!L)return '';
-  var rk=L.map(function(r){return 1+L.filter(function(x){return x[1]>r[1]}).length}),me=-1;L.forEach(function(r,i){if(r[0]==='M14')me=i});if(me<0)return '';
+  var rk=L.map(function(r){return 1+L.filter(function(x){return x[1]>r[1]}).length}),me=-1;L.forEach(function(r,i){if(r[0]===SCODE)me=i});if(me<0)return '';
   var show=[0,1,2],gap=false;[me-1,me,me+1].forEach(function(i){if(i>=0&&i<L.length&&show.indexOf(i)<0)show.push(i)});show.sort(function(a,b){return a-b});
   var nm=function(c){return c==='IKI2'?'Ikigai 2':c==='MakiNori'?'Maki Nori':'Maki '+c.slice(1)};
   var h='<div class="ladder">',prev=-1;
@@ -1058,15 +1181,15 @@ function renderStandingWeek(){
   var cur=lgSeason(sq,live?null:wc),last=lgSeason(pq,live?null:wc),open=qMondays(sq).filter(function(m){return m>=TODAY||!live})[0]||qMondays(sq)[0];
   var pend=qMondays(pq).filter(function(m){return !STAND.lg[m]&&m<=TODAY}),pending=pend.length;
   var e=STAND.eff[wc],pe=pw?STAND.eff[pw.wc]:null,h='';
-  var curBig=cur.weeks?posTxt(cur.me)+' <span style="font-size:15px;color:var(--ink-2)">of 7</span>':'0 pts';
+  var curBig=cur.weeks?posTxt(cur.me)+' <span style="font-size:15px;color:var(--ink-2)">of '+TIERSITES.length+'</span>':'0 pts';
   var curSub=cur.weeks?TIER+' tier · '+cur.me.p+' pts after '+cur.weeks+' week'+(cur.weeks>1?'s':''):'New season, every site level on 0. First week counted: w/c '+dm(open)+'.';
-  var lastLine='<span class="small">'+qLabel(pq)+' final: <b style="color:var(--ink)">'+(last.weeks?posTxt(last.me)+' of 7, '+last.me.p+' pts':'n/a')+'</b>'+(last.weeks&&last.me.rank>1?', '+(last.rows[0].p-last.me.p)+' behind Maki '+last.rows[0].c.slice(1):last.weeks?' 🏆':'')+(pending&&live?' · w/c '+pend.map(dm).join(', ')+' still to close':'')+'</span>';
+  var lastLine='<span class="small">'+qLabel(pq)+' final: <b style="color:var(--ink)">'+(last.weeks?posTxt(last.me)+' of '+TIERSITES.length+', '+last.me.p+' pts':'n/a')+'</b>'+(last.weeks&&last.me.rank>1?', '+(last.rows[0].p-last.me.p)+' behind Maki '+last.rows[0].c.slice(1):last.weeks?' 🏆':'')+(pending&&live?' · w/c '+pend.map(dm).join(', ')+' still to close':'')+'</span>';
   h+=standCard('Efficiency · whole group · week',e&&e[0]?ord(e[0])+' <span style="font-size:15px;color:var(--ink-2)">of '+e[1]+'</span>':'n/a','w/c '+dm(wc)+' · score '+(e?e[2]:'n/a')+' / 100'+(pe?' · last week '+ord(pe[0]):''),(pe&&e?mv(pe[0],e[0])+' <span class="small">vs last week</span>':'')+effLadder(EALL[wc]));
   var ym=wc.slice(0,7),mt=effMonth(ym,wc),pm=effMonth(prevYm(ym));
-  var mr=mt?mt.filter(function(r){return r[0]==='M14'})[0]:null,mrank=mr?1+mt.filter(function(x){return x[1]>mr[1]}).length:null,pmr=pm?pm.filter(function(r){return r[0]==='M14'})[0]:null,pmrank=pmr?1+pm.filter(function(x){return x[1]>pmr[1]}).length:null;
+  var mr=mt?mt.filter(function(r){return r[0]===SCODE})[0]:null,mrank=mr?1+mt.filter(function(x){return x[1]>mr[1]}).length:null,pmr=pm?pm.filter(function(r){return r[0]===SCODE})[0]:null,pmrank=pmr?1+pm.filter(function(x){return x[1]>pmr[1]}).length:null;
   h+=standCard('Efficiency · whole group · '+mLabel(ym),mrank?ord(mrank)+' <span style="font-size:15px;color:var(--ink-2)">of '+mt.length+'</span>':'n/a','Average weekly score '+(mr?mr[1].toFixed(1):'n/a')+' over '+(mt?mt.w:0)+' week'+((mt&&mt.w>1)?'s':'')+(pmrank?' · '+mLabel(prevYm(ym))+' '+ord(pmrank):''),(pmrank&&mrank?mv(pmrank,mrank)+' <span class="small">vs '+mLabel(prevYm(ym))+'</span>':'')+effLadder(mt,1));
-  h+=standCard('League · '+qLabel(sq)+' season'+(cur.weeks?' so far':''),curBig,curSub,lastLine);
-  h+=miniLeague(cur,TIER+' · '+qLabel(sq)+' season');
+  if(TIERSITES.length){h+=standCard('League · '+qLabel(sq)+' season'+(cur.weeks?' so far':''),curBig,curSub,lastLine);
+  h+=miniLeague(cur,TIER+' · '+qLabel(sq)+' season');}else h+=noLeague();
   $('#standing').innerHTML=h;
 }
 function effMonth(ym,upto){var ms=mondays(ym).filter(function(m){return EALL[m]&&(!upto||m<=upto)});if(!ms.length)return null;var acc={};
@@ -1078,13 +1201,15 @@ function standingMonthHtml(ym){
   var pms=mondays(prevYm(ym)).map(function(m){return STAND.eff[m]}).filter(function(x){return x&&x[0]}),pavg=pms.length?pms.reduce(function(s,x){return s+x[0]},0)/pms.length:null;
   var best=ranks.length?Math.min.apply(null,ranks.map(function(x){return x[0]})):null,n=ranks.length?ranks[ranks.length-1][1]:null;
   var h='<div class="grid" style="align-items:start">';
-  var mt=effMonth(ym),pm=effMonth(prevYm(ym)),mr=mt?mt.filter(function(r){return r[0]==='M14'})[0]:null,mrank=mr?1+mt.filter(function(x){return x[1]>mr[1]}).length:null,pmr=pm?pm.filter(function(r){return r[0]==='M14'})[0]:null,pmrank=pmr?1+pm.filter(function(x){return x[1]>pmr[1]}).length:null;
+  var mt=effMonth(ym),pm=effMonth(prevYm(ym)),mr=mt?mt.filter(function(r){return r[0]===SCODE})[0]:null,mrank=mr?1+mt.filter(function(x){return x[1]>mr[1]}).length:null,pmr=pm?pm.filter(function(r){return r[0]===SCODE})[0]:null,pmrank=pmr?1+pm.filter(function(x){return x[1]>pmr[1]}).length:null;
   h+=standCard('Efficiency · whole group · '+mLabel(ym),mrank?ord(mrank)+' <span style="font-size:15px;color:var(--ink-2)">of '+mt.length+'</span>':'n/a','Average weekly score '+(mr?mr[1].toFixed(1):'n/a')+' over '+(mt?mt.w:0)+' weeks · best single week '+(best?ord(best):'n/a'),(pmrank&&mrank?mv(pmrank,mrank)+' <span class="small">vs '+mLabel(prevYm(ym))+'</span>':'')+effLadder(mt,1));
-  h+=standCard('League · '+mLabel(ym)+(ms.length<mondays(ym).length?' so far':' final'),t.weeks?posTxt(t.me)+' <span style="font-size:15px;color:var(--ink-2)">of 7</span>':'n/a',TIER+' tier · '+t.me.p+' pts over '+t.weeks+' weeks',pt.weeks?mv(pt.me.rank,t.me.rank)+' <span class="small">vs '+mLabel(prevYm(ym))+' ('+posTxt(pt.me)+')</span>':'<span class="small">No previous month</span>');
-  h+=standCard('League · '+mLabel(prevYm(ym))+' final',pt.weeks?posTxt(pt.me)+' <span style="font-size:15px;color:var(--ink-2)">of 7</span>':'n/a',pt.weeks?pt.me.p+' pts':'No league data','');
+  if(!TIERSITES.length)return h+noLeague()+'</div>';
+  h+=standCard('League · '+mLabel(ym)+(ms.length<mondays(ym).length?' so far':' final'),t.weeks?posTxt(t.me)+' <span style="font-size:15px;color:var(--ink-2)">of '+TIERSITES.length+'</span>':'n/a',TIER+' tier · '+t.me.p+' pts over '+t.weeks+' weeks',pt.weeks?mv(pt.me.rank,t.me.rank)+' <span class="small">vs '+mLabel(prevYm(ym))+' ('+posTxt(pt.me)+')</span>':'<span class="small">No previous month</span>');
+  h+=standCard('League · '+mLabel(prevYm(ym))+' final',pt.weeks?posTxt(pt.me)+' <span style="font-size:15px;color:var(--ink-2)">of '+TIERSITES.length+'</span>':'n/a',pt.weeks?pt.me.p+' pts':'No league data','');
   h+=miniLeague(t,TIER+' · '+mLabel(ym));
   return h+'</div>';
 }
+function noLeague(){return standCard('The Maki League','n/a','Not in a league tier yet. Tiers: '+Object.keys(SITE.tiers||{}).join(', ')+'.','')}
 function prevYm(ym){var y=+ym.slice(0,4),m=+ym.slice(5,7)-1;if(m===0){y--;m=12}return y+'-'+String(m).padStart(2,'0')}
 
 /* ---------- render + events ---------- */
@@ -1139,10 +1264,39 @@ function mapalRag(p){return p==null?'n':p>=95?'g':p>=90?'a':'r'}
 function mapalCard(name,none){var L=mapalOf(name),x=L[L.length-1],p=L[L.length-2];
   if(!x)return '<div class="big ph" style="font-size:22px">None in Mapal</div><div class="small">'+none+'</div>';
   var r=mapalRag(x[2]),sc=(x[4]?Math.round(x[3])+'/'+Math.round(x[4])+' · ':'')+(x[2]==null?'n/a':x[2]+'%');
-  var ch=p&&p[2]!=null&&x[2]!=null?' · last time '+p[2]+'% ('+dm(p[0])+')':'';
-  return '<div style="display:flex;justify-content:space-between;align-items:center"><div class="big" style="font-size:26px">'+sc+'</div>'+PILL[r]+'</div>'+
-    '<div class="small">'+dmy(x[0])+(x[7]?' · '+esc(x[7]):'')+ch+'</div>'+
-    (x[5]?'<div class="small" style="margin-top:4px"><b>'+x[5]+' failed</b>'+(x[6]?' ('+x[6]+' still open)':'')+': '+x[8].map(esc).join('; ')+'</div>':'<div class="small" style="margin-top:4px">No failed items.</div>')}
+  var ch=p&&p[2]!=null&&x[2]!=null?(x[2]>p[2]?'<span class="chg up">▲ up from '+p[2]+'%</span>':x[2]<p[2]?'<span class="chg down">▼ down from '+p[2]+'%</span>':'<span class="chg flat">● same as last time</span>'):'';
+  var red=repRed(x);
+  return '<div class="clickable" data-mrep="'+L.length+'|'+esc(name)+'" style="display:flex;flex-direction:column;gap:6px;cursor:pointer" title="Open the full report">'+
+    '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div class="big" style="font-size:26px">'+sc+'</div>'+PILL[r]+'</div>'+
+    '<div class="small">'+dayName(x[0])+' '+dmy(x[0])+(x[7]?' · by '+esc(x[7]):'')+' '+ch+'</div>'+
+    (red.length?'<div style="display:flex;flex-direction:column;gap:4px;margin-top:2px"><div class="mini" style="color:var(--red-ink);font-weight:800">'+red.length+' red point'+(red.length>1?'s':'')+(x[6]?' · '+x[6]+' still open':'')+'</div>'+
+      red.map(function(q){return '<div class="ev" style="border-left-color:var(--red)">'+esc(q.q)+(q.ph?' <span class="pill p-n" style="height:18px">📷 '+q.ph+'</span>':'')+'</div>'}).join('')+'</div>':'<div class="small" style="color:var(--green-ink);font-weight:700">✓ No red points</div>')+
+    '<div><button type="button" class="btn sm pri openrep" data-mrep="'+L.length+'|'+esc(name)+'">Open full report'+(MAPAL.detail&&MAPAL.detail[x[9]]?'':' (summary)')+'</button></div></div>'+
+    (L.length>1?'<div class="mini" style="margin-top:6px">Earlier '+esc(name)+' checks</div><div class="hist">'+L.slice(0,-1).slice(-4).reverse().map(function(y){var i=L.indexOf(y)+1;return '<button type="button" data-mrep="'+i+'|'+esc(name)+'"><span>'+dmy(y[0])+(y[7]?' · '+esc(y[7]):'')+'</span><span>'+(y[2]==null?'n/a':y[2]+'%')+' '+PILL[mapalRag(y[2])]+'</span></button>'}).join('')+'</div>':'')}
+/* red points of a form: from the full answers when the broker sends them, else the deviation list */
+function repRed(x){var D=MAPAL.detail&&x[9]&&MAPAL.detail[x[9]];
+  if(D)return D.filter(function(a){return a[5]}).map(function(a){return {q:a[1],ph:(a[10]||[]).length}});
+  return (x[8]||[]).map(function(t){return {q:t,ph:0}})}
+function repOpen(i,name){var L=mapalOf(name),x=L[i-1];if(!x)return;var D=MAPAL.detail&&x[9]&&MAPAL.detail[x[9]],PH=MAPAL.photos||{},r=mapalRag(x[2]);
+  var img=function(ids){return ids&&ids.length?'<div class="photos">'+ids.filter(function(id){return PH[id]}).map(function(id){return '<img src="'+PH[id]+'" alt="Photo from the check" data-zoom="1">'}).join('')+'</div>':''};
+  var qrow=function(a){var st=a[5]?'no':(a[4]?'ok':(/^(yes|ok|pass|true|compliant)$/i.test(a[2])?'ok':'na'));
+    return '<div class="qrow'+(a[5]?' bad':'')+'"><span class="ic '+st+'">'+(st==='no'?'✕':st==='ok'?'✓':'·')+'</span><div><div style="font-weight:'+(a[5]?800:600)+'">'+esc(a[1])+'</div>'+
+      (a[7]?'<div class="small">Comment: '+esc(a[7])+'</div>':'')+(a[8]?'<div class="small" style="color:var(--red-ink)">Deviation: '+esc(a[8])+'</div>':'')+(a[9]?'<div class="small">Action: '+esc(a[9])+'</div>':'')+
+      (a[5]&&a[6]?'<div class="small" style="color:var(--red-ink);font-weight:700">Still open in Mapal</div>':'')+img(a[10])+'</div><div class="ans">'+esc(a[2]||'')+(a[4]?'<br>'+(a[3]||0)+'/'+a[4]:'')+'</div></div>'};
+  var h='<div class="ch"><div><div class="eyebrow">Mapal · full report</div><h2 id="repTitle" style="margin:2px 0 0">'+esc(name)+' · '+dmy(x[0])+'</h2><div class="small">'+esc(SITE.label)+' '+esc(SITE.name)+(x[7]?' · by '+esc(x[7]):'')+'</div></div>'+
+    '<div style="display:flex;gap:10px;align-items:center"><div class="big" style="font-size:26px">'+(x[4]?Math.round(x[3])+'/'+Math.round(x[4])+' · ':'')+(x[2]==null?'n/a':x[2]+'%')+'</div>'+PILL[r]+'<button type="button" class="x" data-repx="1" aria-label="Close">×</button></div></div>';
+  if(D){var bad=D.filter(function(a){return a[5]});
+    h+='<div class="card" style="border-color:'+(bad.length?'var(--red-ring)':'var(--green-ring)')+';background:'+(bad.length?'var(--red-bg)':'var(--green-bg)')+'"><div class="ch"><h3>'+(bad.length?'Red points · '+bad.length:'No red points')+'</h3>'+(x[6]?'<span class="pill p-r">'+x[6]+' still open</span>':'')+'</div>'+(bad.length?bad.map(qrow).join(''):'<div class="small">Every scored question passed.</div>')+'</div>';
+    var sec={},order=[];D.forEach(function(a){var k=a[0]||'Questions';if(!sec[k]){sec[k]=[];order.push(k)}sec[k].push(a)});
+    h+='<details'+(bad.length?'':' open')+'><summary class="btn sm" style="width:max-content">Every question · '+D.length+'</summary>'+order.map(function(k){var L2=sec[k],f=L2.filter(function(a){return a[5]}).length;return '<div class="sec">'+esc(k)+(f?' · '+f+' red':'')+'</div>'+L2.map(qrow).join('')}).join('')+'</details>';
+  }else{
+    h+='<div class="card" style="border-color:'+(x[5]?'var(--red-ring)':'var(--green-ring)')+'"><div class="ch"><h3>'+(x[5]?'Red points · '+x[5]:'No red points')+'</h3>'+(x[6]?'<span class="pill p-r">'+x[6]+' still open</span>':'')+'</div>'+
+      (x[8]||[]).map(function(t){return '<div class="qrow bad"><span class="ic no">✕</span><div style="font-weight:700">'+esc(t)+'</div><div></div></div>'}).join('')+
+      '<div class="small">The question by question answers, comments and photos show here once the Mapal Broker sends the full answers (form_answers tab). Until then this is the summary Mapal returns: score and the failed questions.</div></div>';
+  }
+  h+='<div class="small">Source: Mapal (GetCompliant) via the Mapal Broker, pulled '+dmy(MAPAL.pulled||nowIso())+'. Scores are 1 point a question; green 95%+, amber 90%+.</div>';
+  $('#repSheet').innerHTML=h;$('#repOvl').hidden=false;document.body.style.overflow='hidden'}
+function repClose(){$('#repOvl').hidden=true;document.body.style.overflow=''}
 function renderMapal(){
   $('#hygBox').innerHTML=mapalCard('BOH Hygiene Check','No BOH Hygiene Check filed for this site in the last 45 days.')+'<div class="mini" style="margin-top:6px">Mapal BOH Hygiene Check, 1 point per question. Green 95%+, amber 90%+.</div>';
   var fc=mapalOf('Food quality check'),c7=fc.filter(function(x){return daysBetween(x[0],nowIso())<7}).length;
@@ -1150,6 +1304,126 @@ function renderMapal(){
     '<div class="small" style="margin-top:6px">Daily food quality checks: <b>'+c7+'</b> in the last 7 days'+(fc.length?', last '+dm(fc[fc.length-1][0]):'')+'.</div>'+
     (function(){var wi=mapalLast('Weekly intangibles');return '<div class="small">Weekly intangibles: '+(wi?'<b>'+(wi[4]?Math.round(wi[3])+'/'+Math.round(wi[4])+' · ':'')+(wi[2]==null?'n/a':wi[2]+'%')+'</b> '+PILL[mapalRag(wi[2])]+' '+dm(wi[0])+(wi[7]?' · '+esc(wi[7]):'')+(daysBetween(wi[0],nowIso())>8?' <b>(none this week)</b>':''):'none in Mapal in the last 45 days')+'.</div>'})()+
     '<div class="mini">Source: Mapal, '+MF.length+' forms since '+(MF[0]?dmy(MF[0][0]):'n/a')+'.</div>'}
+
+/* ---------- Reviews tab: Reviews Intelligence, interactive (05/10/2026) ---------- */
+/* RI.r = [id, date, stars, author, text, issues[[cat,sub,evidence]], praise[], staff[[name,sent]], dishes[[name,sent]], summary] */
+var RI=__RI__,RIR=RI.r||[],RTAX=RI.tax||{},RPR=RI.praise||{};
+var RCOL={food:'#c2410c',service:'#1d4ed8',speed:'#b45309',value:'#6d28d9',cleanliness_ambience:'#0f766e',accuracy:'#be185d',hours_access:'#374151',availability:'#065f46',digital_payment:'#0369a1'};
+function rvS(){var d={per:'4w',show:'neg',stars:[],cat:null,sub:null,who:null,dish:null,q:'',from:'',to:'',ord:'new',open:null};S.rv=S.rv&&typeof S.rv==='object'?S.rv:{};for(var k in d)if(!(k in S.rv))S.rv[k]=d[k];return S.rv}
+function catLab(c){return (RTAX[c]&&RTAX[c].l)||c}
+function subLab(c,s){var t=RTAX[c];return (t&&t.s&&t.s[s])||s}
+function catCol(c){return (RTAX[c]&&RTAX[c].c)||RCOL[c]||'#64748b'}
+function rvRange(){var v=rvS(),last=RIR.length?RIR[RIR.length-1][1]:nowIso(),a,b,lab;
+  if(v.per==='wk'){a=S.wc;b=addD(S.wc,6);lab='w/c '+dmy(S.wc)}
+  else if(v.per==='4w'){b=last>nowIso()?nowIso():last;b=b<addD(S.wc,6)&&!isCur()?addD(S.wc,6):b;a=addD(b,-27);lab='4 weeks to '+dmy(b)}
+  else if(v.per==='mo'){var m=(isCur()?last:S.wc).slice(0,7);a=m+'-01';b=addD(m.slice(0,4)+'-'+String(+m.slice(5)%12+1).padStart(2,'0')+'-01',-1);if(m.slice(5)==='12')b=m.slice(0,4)+'-12-31';lab=mLabel(m)}
+  else if(v.per==='q'){var d=isCur()?last:S.wc,q=Math.floor((+d.slice(5,7)-1)/3);a=d.slice(0,4)+'-'+String(q*3+1).padStart(2,'0')+'-01';b=q===3?d.slice(0,4)+'-12-31':addD(d.slice(0,4)+'-'+String(q*3+4).padStart(2,'0')+'-01',-1);lab='Q'+(q+1)+' '+d.slice(0,4)}
+  else if(v.per==='cu'){a=v.from||addD(last,-27);b=v.to||last;lab=dmy(a)+' to '+dmy(b)}
+  else{a='2000-01-01';b='2100-01-01';lab='since '+(RIR.length?dmy(RIR[0][1]):'April')}
+  return {a:a,b:b,lab:lab}}
+function rvNeg(r){return r[2]!=null&&r[2]<=3||r[5].length>0}
+function rvPos(r){return r[2]>=4&&(r[6].length>0||r[7].some(function(x){return x[1]==='pos'})||r[8].some(function(x){return x[1]==='pos'}))}
+function rvBase(){var g=rvRange();return RIR.filter(function(r){return r[1]>=g.a&&r[1]<=g.b})}
+function rvMatch(r,skip){var v=rvS();skip=skip||{};
+  if(!skip.show){if(v.show==='neg'&&!rvNeg(r))return false;if(v.show==='pos'&&!rvPos(r))return false}
+  if(!skip.stars&&v.stars.length&&v.stars.indexOf(r[2])<0)return false;
+  if(!skip.cat&&v.cat&&!r[5].some(function(i){return i[0]===v.cat&&(!v.sub||i[1]===v.sub)}))return false;
+  if(!skip.who&&v.who&&!r[7].some(function(x){return x[0]===v.who}))return false;
+  if(!skip.dish&&v.dish&&!r[8].some(function(x){return x[0]===v.dish}))return false;
+  if(v.q){var q=v.q.toLowerCase(),hay=(r[4]+' '+r[3]+' '+r[9]+' '+r[5].map(function(i){return i[2]}).join(' ')+' '+r[7].map(function(x){return x[0]}).join(' ')+' '+r[8].map(function(x){return x[0]}).join(' ')).toLowerCase();if(hay.indexOf(q)<0)return false}
+  return true}
+function rvHi(t){var v=rvS();t=esc(t||'');if(v.q){var q=v.q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');t=t.replace(new RegExp('('+esc(q)+')','ig'),'<span class="mark">$1</span>')}return t}
+function rvWho(n,s){return '<span class="who '+(s==='neg'?'neg':s==='pos'?'pos':'')+'" data-rw="'+esc(n)+'">'+(s==='neg'?'✕ ':s==='pos'?'✓ ':'')+esc(n)+'</span>'}
+function rvCard(r){
+  var iss=r[5].map(function(i){return '<div class="ev"><span class="dot" style="background:'+catCol(i[0])+'"></span><b>'+esc(subLab(i[0],i[1]))+'</b>'+(i[2]?': "'+rvHi(i[2])+'"':'')+'</div>'}).join('');
+  var pr=r[6].map(function(p){return '<span class="pill p-g">'+esc(RPR[p]||p)+'</span>'}).join('');
+  var who=r[7].map(function(x){return rvWho(x[0],x[1])}).join(' ');
+  var ds=r[8].map(function(x){return '<span class="pill '+(x[1]==='neg'?'p-r':x[1]==='pos'?'p-g':'p-n')+'" data-rd="'+esc(x[0])+'" style="cursor:pointer">'+esc(x[0])+'</span>'}).join('');
+  return '<div class="review"><div class="ch"><b>'+stars(r[2])+' · '+dayName(r[1])+' '+dmy(r[1])+'</b><span class="small">'+esc(r[3])+'</span></div>'+
+    (r[9]&&rvNeg(r)?'<div style="font-weight:700">'+rvHi(r[9])+'</div>':'')+
+    '<div>'+(r[4]?rvHi(r[4]):'<span class="ph">Star rating only, no comment</span>')+'</div>'+iss+
+    ((pr||who||ds)?'<div class="chips">'+who+pr+ds+'</div>':'')+'</div>'}
+function rvSet(k,v){var s=rvS();s[k]=v;if(k==='cat')s.sub=null;save();renderReviews()}
+function renderReviews(){
+  if(!$('#rvFeed'))return;var v=rvS(),g=rvRange(),base=rvBase();
+  $$('#rvPer [data-rp]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.rp===v.per)});
+  $$('#rvShow [data-rs]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.rs===v.show)});
+  $$('[data-ro]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.ro===v.ord)});
+  $('#rvCustom').hidden=v.per!=='cu';if(v.per==='cu'){$('#rvFrom').value=g.a;$('#rvTo').value=g.b}
+  if(document.activeElement!==$('#rvQ'))$('#rvQ').value=v.q;
+  $('#rvStars').innerHTML=[5,4,3,2,1].map(function(n){var c=base.filter(function(r){return r[2]===n}).length;return '<button type="button" class="stchip" data-rst="'+n+'" aria-pressed="'+(v.stars.indexOf(n)>=0)+'">'+n+'★ <span style="opacity:.7">'+c+'</span></button>'}).join('');
+  $('#rvTitle').textContent='What guests are saying · '+g.lab;
+  var act=[];if(v.cat)act.push(catLab(v.cat)+(v.sub?' › '+subLab(v.cat,v.sub):''));if(v.who)act.push('named: '+v.who);if(v.dish)act.push('dish: '+v.dish);if(v.stars.length)act.push(v.stars.join(', ')+'★');if(v.q)act.push('"'+v.q+'"');
+  $('#rvActive').innerHTML=act.length?'Filtered by <b>'+esc(act.join(' · '))+'</b>':'No filters. Click a bar, name, dish, star or week to narrow down.';
+  /* KPI tiles: whole period, unaffected by the show filter */
+  var n=base.length,avg=n?base.reduce(function(t,r){return t+r[2]},0)/n:null,low=base.filter(function(r){return r[2]<=2}).length,ng=base.filter(function(r){return r[2]<=3}).length,
+      wi=base.filter(function(r){return r[5].length}).length,pp=base.filter(rvPos).length,named={};base.forEach(function(r){r[7].forEach(function(x){named[x[0]]=1})});
+  $('#rvKpi').innerHTML='<div><span>Reviews</span><b>'+n+'</b><small>'+(avg==null?'n/a':avg.toFixed(2)+'★ average')+' '+(avg==null?'':PILL[avg>=4.7?'g':'r'])+'</small></div>'+
+    '<div data-k="low"><span>1★ and 2★</span><b style="color:'+(low?'var(--red-ink)':'inherit')+'">'+low+'</b><small>click to list them</small></div>'+
+    '<div data-k="neg"><span>3★ or below</span><b>'+ng+'</b><small>'+(n?(ng/n*100).toFixed(1)+'% of reviews':'')+'</small></div>'+
+    '<div data-k="iss"><span>With a complaint</span><b>'+wi+'</b><small>includes complaints inside 4 to 5★</small></div>'+
+    '<div data-k="pos"><span>Praise</span><b style="color:var(--green-ink)">'+pp+'</b><small>4 to 5★ that say why</small></div>'+
+    '<div><span>Staff named</span><b>'+Object.keys(named).length+'</b><small>see People below</small></div>';
+  /* issue bars: every filter except cat and show, so the chart explains the current slice */
+  var pool=base.filter(function(r){return rvMatch(r,{cat:1,show:1})}),cats={},tot=0;
+  pool.forEach(function(r){var seen={};r[5].forEach(function(i){var c=cats[i[0]]||(cats[i[0]]={r:0,m:0,subs:{}});c.m++;tot++;if(!seen[i[0]]){c.r++;seen[i[0]]=1}var s=c.subs[i[1]]||(c.subs[i[1]]={r:0,m:0,seen:{}});s.m++;if(!s.seen[r[0]]){s.r++;s.seen[r[0]]=1}})});
+  var cl=Object.keys(cats).sort(function(a,b){return cats[b].r-cats[a].r||cats[b].m-cats[a].m}),mx=cl.length?cats[cl[0]].r:1;
+  $('#rvIssN').textContent=pool.filter(function(r){return r[5].length}).length+' reviews with an issue, '+tot+' mentions';
+  var q=cats.food?cats.food.m:0,sv=cats.service?cats.service.m:0,ot=tot-q-sv;
+  $('#rvStack').innerHTML=tot?[['food',q,'quality'],['service',sv,'service'],[null,ot,'other']].filter(function(x){return x[1]}).map(function(x){var p=x[1]/tot*100;return '<div data-rc="'+(x[0]||'')+'" title="'+x[1]+' mentions" style="width:'+p+'%;background:'+(x[0]?catCol(x[0]):'#94a3b8')+'">'+(p>=12?Math.round(p)+'% '+x[2]:'')+'</div>'}).join(''):'<div style="width:100%;background:var(--green);font-style:normal">No complaints in this slice</div>';
+  $('#rvBars').innerHTML=cl.map(function(c){var x=cats[c],on=v.cat===c;
+    var h='<div class="ibar'+(on?' on':'')+'" data-rc="'+c+'" title="'+x.r+' reviews mention '+esc(catLab(c).toLowerCase())+', '+x.m+' distinct complaints"><div><span class="dot" style="background:'+catCol(c)+'"></span>'+esc(catLab(c))+'</div><div class="tr"><i style="width:'+(x.r/mx*100)+'%;background:'+catCol(c)+'"></i></div><div class="n"><b>'+x.r+'</b> rev · '+x.m+' mentions</div></div>';
+    if(on){var sl=Object.keys(x.subs).sort(function(a,b){return x.subs[b].r-x.subs[a].r});h+='<div class="subs">'+sl.map(function(s){var y=x.subs[s];return '<div class="ibar'+(v.sub===s?' on':'')+'" data-rsub="'+s+'"><div>'+esc(subLab(c,s))+'</div><div class="tr"><i style="width:'+(y.r/x.r*100)+'%;background:'+catCol(c)+';opacity:.7"></i></div><div class="n"><b>'+y.r+'</b> rev</div></div>'}).join('')+'<div class="small">Owner: '+esc((RTAX[c]&&RTAX[c].o)||'')+'</div></div>'}
+    return h}).join('')||'<div class="small">No complaints in this slice.</div>';
+  /* week trend: last 12 weeks to the period end */
+  var wks=[];for(var i=11;i>=0;i--){var m0=addD(g.b>'2099'?(RIR.length?RIR[RIR.length-1][1]:nowIso()):g.b,-7*i);m0=addD(m0,-((new Date(m0+'T00:00:00Z').getUTCDay()+6)%7));wks.push(m0)}
+  var wd=wks.map(function(w){var L=RIR.filter(function(r){return r[1]>=w&&r[1]<=addD(w,6)});return {w:w,n:L.length,ng:L.filter(function(r){return r[2]<=3}).length,a:L.length?L.reduce(function(t,r){return t+r[2]},0)/L.length:null}}),wm=Math.max.apply(null,wd.map(function(x){return x.n}).concat([1]));
+  $('#rvTrend').innerHTML=wd.map(function(x){var on=v.per==='wk'&&S.wc===x.w;return '<button type="button" data-rwk="'+x.w+'" class="'+(on?'on':'')+'" title="w/c '+dmy(x.w)+': '+x.n+' reviews'+(x.a==null?'':', '+x.a.toFixed(2)+'★')+', '+x.ng+' at 3★ or below"><small>'+x.n+'</small><i style="height:'+((x.n-x.ng)/wm*64)+'px"></i><i class="neg" style="height:'+(x.ng/wm*64)+'px"></i><small>'+dm(x.w)+'</small></button>'}).join('');
+  /* praise themes and dishes, current slice ignoring show */
+  var pr={},dish={};pool.forEach(function(r){r[6].forEach(function(p){pr[p]=(pr[p]||0)+1});r[8].forEach(function(d){var o=dish[d[0]]||(dish[d[0]]={p:0,n:0});if(d[1]==='neg')o.n++;else if(d[1]==='pos')o.p++})});
+  var pl=Object.keys(pr).sort(function(a,b){return pr[b]-pr[a]}),pm=pl.length?pr[pl[0]]:1;
+  $('#rvPraise').innerHTML=pl.map(function(p){return '<div class="ibar" style="cursor:default"><div>'+esc(RPR[p]||p)+'</div><div class="tr"><i style="width:'+(pr[p]/pm*100)+'%;background:var(--green)"></i></div><div class="n"><b>'+pr[p]+'</b> rev</div></div>'}).join('')||'<div class="small">No praise themes in this slice.</div>';
+  var dl=Object.keys(dish).sort(function(a,b){return (dish[b].p+dish[b].n)-(dish[a].p+dish[a].n)}).slice(0,14);
+  $('#rvDishes').innerHTML=dl.length?'<div class="chips">'+dl.map(function(d){var o=dish[d];return '<span class="pill '+(o.n>o.p?'p-r':o.p?'p-g':'p-n')+'" data-rd="'+esc(d)+'" style="cursor:pointer'+(v.dish===d?';outline:2px solid var(--maki-orange)':'')+'">'+esc(d)+' · '+(o.p?'✓'+o.p:'')+(o.p&&o.n?' ':'')+(o.n?'✕'+o.n:'')+'</span>'}).join('')+'</div>':'No dishes mentioned in this slice.';
+  /* people */
+  var pe={};pool.forEach(function(r){r[7].forEach(function(x){var o=pe[x[0]]||(pe[x[0]]={p:0,n:0,last:''});if(x[1]==='neg')o.n++;else o.p++;if(r[1]>o.last)o.last=r[1]})});
+  var pn=Object.keys(pe).sort(function(a,b){return (pe[b].n-pe[a].n)||(pe[b].p-pe[a].p)});
+  $('#rvPeople').innerHTML=pn.length?'<thead><tr><th>Name</th><th class="r">Praised</th><th class="r">In a complaint</th><th class="r">Last</th></tr></thead><tbody>'+pn.map(function(k){var o=pe[k];return '<tr data-who="'+esc(k)+'"'+(v.who===k?' class="sel"':'')+'><td><b>'+esc(k)+'</b></td><td class="r" style="color:var(--green-ink);font-weight:700">'+(o.p||'·')+'</td><td class="r" style="color:var(--red-ink);font-weight:700">'+(o.n||'·')+'</td><td class="r">'+dm(o.last)+'</td></tr>'}).join('')+'</tbody>':'<tbody><tr><td class="small">Nobody named in this slice.</td></tr></tbody>';
+  /* 1 and 2 star reviews, what went wrong */
+  var lows=base.filter(function(r){return r[2]<=2&&rvMatch(r,{show:1,stars:1})}).sort(function(a,b){return b[1].localeCompare(a[1])});
+  $('#rvLowHead').textContent='What went wrong in the 1★ and 2★ reviews · '+lows.length;
+  $('#rvLow').innerHTML=lows.length?lows.map(function(r){var who=r[7].filter(function(x){return x[1]==='neg'});
+    return '<div class="review" style="border-left:4px solid var(--red)"><div class="ch"><b>'+stars(r[2])+' · '+dayName(r[1])+' '+dmy(r[1])+'</b><span class="small">'+esc(r[3])+'</span></div>'+
+      '<div style="font-weight:700">'+esc(r[9]||(r[4]||'').slice(0,140))+'</div>'+
+      (r[5].length?r[5].map(function(i){return '<div class="ev"><span class="dot" style="background:'+catCol(i[0])+'"></span><b>'+esc(subLab(i[0],i[1]))+'</b>'+(i[2]?': "'+esc(i[2])+'"':'')+'</div>'}).join(''):'<div class="small">No issue labelled: read the full text.</div>')+
+      (who.length?'<div class="chips"><span class="small">Named:</span> '+who.map(function(x){return rvWho(x[0],x[1])}).join(' ')+'</div>':'')+
+      '<details><summary class="small" style="cursor:pointer">Full review</summary><div style="margin-top:4px">'+esc(r[4]||'No comment')+'</div></details></div>'}).join(''):'<div class="banner ok"><span>No 1★ or 2★ reviews in this slice.</span></div>';
+  /* write up: the AM CC reviews pass, best match for the period */
+  var ann=RI.ann||{},key=null,mo=g.b.slice(0,7),qq=g.b.slice(0,4)+'-Q'+(Math.floor((+g.b.slice(5,7)-1)/3)+1);
+  if(v.per==='wk')key='week|'+S.wc+'|site|'+SCODE;else if(v.per==='q')key='quarter|'+qq+'|site|'+SCODE;else key='month|'+(v.per==='all'||g.b>'2099'?'':mo)+'|site|'+SCODE;
+  if(!ann[key]){var ks=Object.keys(ann).filter(function(k){return k.indexOf(v.per==='wk'?'week|':v.per==='q'?'quarter|':'month|')===0}).sort();key=ks.length?ks[ks.length-1]:Object.keys(ann).sort().pop()}
+  var A2=key&&ann[key];$('#rvNoteCard').hidden=!A2;
+  if(A2){var kp=key.split('|');$('#rvNoteHead').textContent='Control Centre write up · '+(kp[0]==='week'?'w/c '+dmy(kp[1]):kp[0]==='month'?mLabel(kp[1]):kp[1].replace('-',' '))+(A2.w?' · written '+dmy(A2.w):'');$('#rvNote').textContent=A2.t}
+  /* feed */
+  var feed=base.filter(function(r){return rvMatch(r)});feed.sort(v.ord==='low'?function(a,b){return a[2]-b[2]||b[1].localeCompare(a[1])}:function(a,b){return b[1].localeCompare(a[1])});
+  $('#rvFeedHead').textContent=(v.show==='neg'?'Complaints':v.show==='pos'?'Praise':'All reviews')+' · '+feed.length+' of '+n;
+  $('#rvFeed').innerHTML=feed.length?feed.slice(0,150).map(rvCard).join('')+(feed.length>150?'<div class="small">Showing 150 of '+feed.length+'. Narrow the filters to see the rest.</div>':''):'<div class="small">No reviews match. Clear a filter.</div>';
+  $('#rvFoot')&&0;
+}
+function rvClick(e){var t=e.target.closest('[data-rp],[data-rs],[data-rst],[data-rc],[data-rsub],[data-rw],[data-who],[data-rd],[data-rwk],[data-ro],[data-k],#rvClear');if(!t||!t.closest('[data-p="reviews"]'))return false;var v=rvS(),d=t.dataset;
+  if(t.id==='rvClear'){v.stars=[];v.cat=v.sub=v.who=v.dish=null;v.q='';save();renderReviews();return true}
+  if(d.rp){v.per=d.rp;save();renderReviews();return true}
+  if(d.rs){v.show=d.rs;save();renderReviews();return true}
+  if(d.ro){v.ord=d.ro;save();renderReviews();return true}
+  if(d.rst){var n=+d.rst,i=v.stars.indexOf(n);if(i>=0)v.stars.splice(i,1);else v.stars.push(n);save();renderReviews();return true}
+  if(d.rsub!=null){v.sub=v.sub===d.rsub?null:d.rsub;v.show='neg';save();renderReviews();return true}
+  if(d.rc!=null){if(!d.rc){v.cat=null;v.sub=null}else{v.cat=v.cat===d.rc?null:d.rc;v.sub=null;v.show='neg'}save();renderReviews();return true}
+  if(d.rw!=null||d.who!=null){var w=d.rw!=null?d.rw:d.who;v.who=v.who===w?null:w;v.show='all';save();renderReviews();var f=$('#rvFeed');if(f)f.scrollIntoView({behavior:'smooth',block:'start'});return true}
+  if(d.rd!=null){v.dish=v.dish===d.rd?null:d.rd;v.show='all';save();renderReviews();return true}
+  if(d.rwk){if(WK.some(function(w){return w.wc===d.rwk})){S.wc=d.rwk;v.per='wk'}else{v.per='cu';v.from=d.rwk;v.to=addD(d.rwk,6)}save();renderAll();return true}
+  if(d.k){if(d.k==='low'){v.stars=[1,2];v.show='all'}else if(d.k==='neg'){v.stars=[];v.show='neg'}else if(d.k==='iss'){v.stars=[];v.show='neg'}else if(d.k==='pos'){v.stars=[];v.show='pos'}save();renderReviews();return true}
+  return false}
+
 function renderAll(){
   var mo=S.per==='month';
   $$('[data-per]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.per===S.per)});
@@ -1157,11 +1431,27 @@ function renderAll(){
   $('#weekSel').hidden=mo;$('#monthSel').hidden=!mo;$('.tabs').hidden=mo;$('#weekSel').value=S.wc;
   $$('.tabs button').forEach(function(b){b.setAttribute('aria-selected',b.dataset.t===S.tab)});
   $$('[data-p]').forEach(function(p){p.hidden=mo?p.dataset.p!=='month':p.dataset.p!==S.tab});
-  $('#bsub').textContent='Site Control Centre · M14 Meadowhall';
+  $('#bsub').textContent='Site Control Centre · '+SCODE+' '+SITE.name;
   renderBanner();
   if(mo){renderChips();renderMonth();return}
-  var lab=renderSheet();renderChips(lab);renderFields();renderOverview();renderKpi();renderDroo();renderDaily();renderStock();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();
+  var lab=renderSheet();renderChips(lab);renderFields();renderOverview();renderKpi();renderDroo();renderDaily();renderStock();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
 }
+/* site header and site switcher (sites.json) */
+$('#siteH1').innerHTML=esc(SITE.label)+' <span>·</span> '+esc(SITE.name);
+document.title=SITE.label+' '+SITE.name+' · Site Control Centre';
+$('#siteMeta').innerHTML='GM '+(SITE.gm&&!/vacant/i.test(SITE.gm)?esc(SITE.gm):'<b style="color:var(--red-ink)">'+(SITE.gm?'vacant':'not on file')+'</b>')+' · AM '+esc(SITE.am)+(SITE.dam?' · DAM '+esc(SITE.dam):'')+(SITE.dec?' · DEC '+esc(SITE.dec):'')+' · '+esc(SITE.cluster);
+$$('.decName').forEach(function(e){e.textContent=SITE.dec||'DEC'});
+$('#siteSel').innerHTML=(SITE.sites||[]).map(function(x){return '<option value="'+x[0]+'"'+(x[0]===SCODE?' selected':'')+'>'+esc(x[1]+' · '+x[2])+'</option>'}).join('')+'<option value="__all">All sites…</option>';
+$('#siteSel').addEventListener('change',function(e){var v=e.target.value;location.href=v==='__all'?'../':'../'+v+'/'});
+/* reviews tab and audit report: own listener, runs before the main one */
+document.addEventListener('click',function(e){
+  if(e.target.closest('[data-repx]')||e.target.id==='repOvl'){repClose();e.stopImmediatePropagation();return}
+  var z=e.target.closest('[data-zoom]');if(z){z.classList.toggle('big');e.stopImmediatePropagation();return}
+  var m=e.target.closest('[data-mrep]');if(m){var q=m.dataset.mrep.split('|');repOpen(+q[0],q.slice(1).join('|'));e.stopImmediatePropagation();return}
+  if(rvClick(e))e.stopImmediatePropagation()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#repOvl').hidden)repClose()});
+$('#rvQ').addEventListener('input',function(e){rvS().q=e.target.value.trim();save();renderReviews()});
+['#rvFrom','#rvTo'].forEach(function(k){$(k).addEventListener('change',function(){var v=rvS();v.from=$('#rvFrom').value;v.to=$('#rvTo').value;save();renderReviews()})});
 $('#weekSel').innerHTML=WK.slice().reverse().map(function(w){return '<option value="'+w.wc+'">w/c '+dmy(w.wc)+(w.wc===CUR?' (latest)':'')+'</option>'}).join('');
 $('#monthSel').innerHTML=MONTHS.map(function(m){var a=agg(m);return '<option value="'+m+'">'+mLabel(m)+(a.ws.length<a.ms.length?' (in progress)':'')+'</option>'}).join('');
 $('#weekSel').addEventListener('change',function(e){S.wc=e.target.value;save();renderAll()});
@@ -1196,13 +1486,13 @@ $('#btnSuggest').onclick=function(){var w=wk(S.wc),ev=evaluate(w,prevW(S.wc)).fi
   var t=ev.slice(0,3).map(function(e,i){return (i+1)+'. '+e.m.lab+' '+e.m.fmt(e.v).replace(/<[^>]+>/g,'')+' vs target '+e.m.tl(w).replace(/<[^>]+>/g,'')+': [action, owner, date]'}).join('\n');
   $('#f_improve').value=t;F().improve=t;save();renderFields();toast('Pre-filled. Add the actions')};
 $('#btnAsana').onclick=function(){var c=$('#obCard');c.hidden=!c.hidden;renderOb()};
-function renderOb(){$('#btnAsana').textContent='Sync outbox'+(S.ob.length?' ('+S.ob.length+')':'');$('#obMeta').textContent=S.ob.length+' change'+(S.ob.length===1?'':'s')+' waiting';$('#obTxt').value=S.ob.length?JSON.stringify({site:'M14',ob:S.ob}):'Nothing waiting.'}
+function renderOb(){$('#btnAsana').textContent='Sync outbox'+(S.ob.length?' ('+S.ob.length+')':'');$('#obMeta').textContent=S.ob.length+' change'+(S.ob.length===1?'':'s')+' waiting';$('#obTxt').value=S.ob.length?JSON.stringify({site:SCODE,ob:S.ob}):'Nothing waiting.'}
 $('#obCopy').onclick=function(){var t=$('#obTxt');t.select();try{navigator.clipboard.writeText(t.value).then(function(){toast('Copied')},function(){document.execCommand('copy');toast('Copied')})}catch(e){document.execCommand('copy');toast('Copied')}};
 $('#obClear').onclick=function(){if(!S.ob.length)return;S.ob=[];save();renderOb();toast('Outbox cleared')};
 document.addEventListener('change',function(e){var el=e.target;if(!el.dataset||!el.dataset.br)return;var p=el.dataset.br.split('|'),dt=p[0],b=S.broth[dt]=S.broth[dt]||{},v=el.value.trim();
   if(p[1]==='by')b.by=v;else{b[p[1]]=b[p[1]]||{};b[p[1]][p[2]]=v}queue('broth',{d:dt,k:p[1],f:p[2],v:v});save();renderDaily();renderOb();if(v==='fail')toast('Broth fail logged: tell Artur today')});
 $('#eotmForm').addEventListener('submit',function(e){e.preventDefault();var m=S.wc.slice(0,7),d=$('#eo_d').value,n=$('#eo_n').value.trim(),why=$('#eo_w').value.trim();if(!n||!why){toast('Add a name and why');return}
-  var x={n:n,role:$('#eo_r').value.trim(),why:why,by:S.role,on:nowIso(),sent:1};S.eotm[m]=S.eotm[m]||{};S.eotm[m][d]=x;queue('eotm',{site:'M14',month:m,dept:d,to:'Hanna Awang',n:n,role:x.role,why:why});save();['#eo_n','#eo_r','#eo_w'].forEach(function(k){$(k).value=''});renderPeople();renderOb();toast('Queued for Hanna')});
+  var x={n:n,role:$('#eo_r').value.trim(),why:why,by:S.role,on:nowIso(),sent:1};S.eotm[m]=S.eotm[m]||{};S.eotm[m][d]=x;queue('eotm',{site:SCODE,month:m,dept:d,to:'Hanna Awang',n:n,role:x.role,why:why});save();['#eo_n','#eo_r','#eo_w'].forEach(function(k){$(k).value=''});renderPeople();renderOb();toast('Queued for Hanna')});
 $('#gapForm').addEventListener('submit',function(e){e.preventDefault();var w=$('#gp_w').value.trim(),f=$('#gp_f').value;if(!w||!f){toast('Add who and a start date');return}var g={id:'g'+Date.now(),who:w,area:'',from:f,to:$('#gp_t').value,hrs:+$('#gp_h').value||null,plan:$('#gp_p').value.trim(),cov:$('#gp_p').value.trim()?'part':'none',src:'GM entry'};S.gaps.push(g);queue('gap',g);save();['#gp_w','#gp_f','#gp_t','#gp_h','#gp_p'].forEach(function(k){$(k).value=''});renderGaps();renderOb();toast('Gap added')});
 $('#newAct').addEventListener('submit',function(e){e.preventDefault();var t=$('#na_t').value.trim(),o=$('#na_o').value.trim(),d=$('#na_d').value,er=$('#naErr');
   if(!t||!o){er.hidden=false;er.textContent='Add the action and an owner.';return}er.hidden=true;var na={id:Date.now(),t:t,o:o,d:d,s:'open',ev:'',src:$('#na_s').value,wc:S.wc,esc:$('#na_e').checked?1:0};S.acts.push(na);queue('add',na);$('#na_e').checked=false;$('#na_t').value=$('#na_o').value=$('#na_d').value='';S.filter='open';save();renderActs();renderOb();toast('Action added')});
