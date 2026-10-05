@@ -84,6 +84,11 @@ h2{margin:2px 0 0;font-size:22px;font-weight:800;letter-spacing:-.01em;text-wrap
 .tl-r .l-r{color:#ef4444}.tl-a .l-a{color:#f59e0b}.tl-g .l-g{color:#10b981}
 .tl-r b{color:var(--red-ink)}.tl-a b{color:var(--amber-ink)}.tl-g b{color:var(--green-ink)}.tl-n b{color:var(--ink-3);font-weight:600}
 .tl-n .tlh{background:#8a7f76}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:6px 18px}
+.dtl{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.dtl .dl{flex:1;color:var(--ink-2);font-weight:600}.dtl .tl{flex:0 0 auto}.dtl b{font-variant-numeric:tabular-nums;font-weight:800}
+.dtl-all{grid-column:1/-1;font-size:14px}.dtl-all .dl{color:var(--ink);font-weight:800}
+.dv-r{color:var(--red-ink)}.dv-a{color:var(--amber-ink)}.dv-g{color:var(--green-ink)}.dv-n{color:var(--ink-3)}
 .cmp td{vertical-align:middle}
 #score th:nth-child(4),#score td:nth-child(4),#score th:nth-child(6),#score td:nth-child(6),#finTable th:nth-child(4),#finTable td:nth-child(4),#finTable th:nth-child(6),#finTable td:nth-child(6),.sc th:nth-child(4),.sc td:nth-child(4),.sc th:nth-child(6),.sc td:nth-child(6){text-align:center}
 #score td[colspan]{text-align:left}.mini{font-size:11px;color:var(--ink-3)}
@@ -320,7 +325,7 @@ ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
     <div class="grid">
       <div class="card s6">
         <div class="ch"><h3>Deliveroo operations</h3><button type="button" class="btn sm" data-go="droo">Open Deliveroo</button></div>
-        <div id="kpiDroo" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+        <div id="kpiDroo" class="dgrid"></div>
       </div>
       <div class="card s6">
         <div class="ch"><h3>Labour &amp; budget rota</h3><span class="tag t-auto">AUTO</span></div>
@@ -704,7 +709,8 @@ function renderKpi(){
   h+='<tr><td class="mname">Labour hours</td><td class="r val">'+(w.hours==null?NA:w.hours.toFixed(1))+'</td><td class="r small">'+(pw&&pw.hours!=null?pw.hours.toFixed(1):NA)+'</td><td>'+(w.hours!=null&&pw&&pw.hours!=null?(function(d){return '<span class="chg flat">'+(d>0?'▲ +':d<0?'▼ ':'● ')+d.toFixed(1)+' hrs</span>'})(w.hours-pw.hours):'<span class="chg flat">no comparison</span>')+'</td><td class="r small">Budget rota</td><td><span class="pill p-o">Manual below</span></td><td><span class="tag t-auto">🔒 MONA LISA</span></td></tr>';
   $('#finTable').innerHTML=h+'</tbody>';
   var d=w.d,dr=drooRag(d);
-  $('#kpiDroo').innerHTML='<span class="pill p-'+dr+'">Overall '+({g:'GREEN',a:'AMBER',r:'RED',n:'NO DATA'})[dr]+'</span>'+DM.map(function(m){var v=d[m.k],r=v==null?'n':band(v,m.g,m.a,m.hi);return '<span class="pill p-'+r+'">'+m.lab+' '+(v==null?'n/a':m.fmt(v))+'</span>'}).join('');
+  var RW={g:'Green',a:'Amber',r:'Red',n:'No data'};
+  $('#kpiDroo').innerHTML='<div class="dtl dtl-all">'+TLo(dr,'Overall '+RW[dr])+'<span class="dl">Overall</span><b class="dv-'+dr+'">'+RW[dr]+'</b></div>'+DM.map(function(m){var v=d[m.k],r=v==null?'n':band(v,m.g,m.a,m.hi);return '<div class="dtl">'+TLo(r,m.lab+' '+RW[r])+'<span class="dl">'+m.lab+'</span><b class="dv-'+r+'">'+(v==null?'n/a':m.fmt(v))+'</b></div>'}).join('');
   renderNeg(w);renderLabBud(w);renderMtg();renderSignLog();
 }
 
