@@ -1,5 +1,4 @@
-
-name: Site Control Centre nightly
+Name: Site Control Centre nightly
  
 on:
   schedule:
@@ -24,7 +23,9 @@ jobs:
         id: guard
         run: |
           H=$(TZ=Europe/London date +%H)
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$H" = "05" ] || [ "$H" = "09" ]; then echo "go=1" >> $GITHUB_OUTPUT; else echo "UK hour $H, skipping"; echo "go=0" >> $GITHUB_OUTPUT; fi
+          # GitHub often starts scheduled runs 30 to 90 minutes late, so accept a 3 hour window per slot (a second run is a harmless rebuild)
+          case "$H" in 05|06|07|09|10|11) OK=1;; *) OK=0;; esac
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] || [ "$OK" = "1" ]; then echo "go=1" >> $GITHUB_OUTPUT; else echo "UK hour $H, skipping"; echo "go=0" >> $GITHUB_OUTPUT; fi
       - uses: actions/checkout@v5
         if: steps.guard.outputs.go == '1'
         with: { fetch-depth: 1, persist-credentials: false }
