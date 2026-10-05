@@ -12,7 +12,8 @@ import reviews_rules as RR
 ap=argparse.ArgumentParser();ap.add_argument('--site',required=True);ap.add_argument('--data',required=True)
 ap.add_argument('--check',action='store_true');ap.add_argument('--csv')
 A=ap.parse_args()
-S,C=site(A.site);SRC=S['sources']['google_reviews'];LABEL=C['reviews_site']
+S,C=site(A.site);SRC=S['sources']['google_reviews'];LABEL=C.get('reviews_site')
+if not LABEL:print(f'reviews {A.site}: no Google Reviews site label in sites.json, feed stays n/a');sys.exit(0)
 HERE=os.path.dirname(os.path.abspath(__file__))
 P=os.path.join(A.data,'reviews.json')
 old=json.load(open(P));FROM=min(r['d'] for r in old['r']) if old['r'] else '2026-04-20'

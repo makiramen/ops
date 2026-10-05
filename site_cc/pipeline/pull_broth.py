@@ -6,7 +6,8 @@ import sys,os,argparse
 sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import common as C
 ap=argparse.ArgumentParser();ap.add_argument('--site',default='M14');ap.add_argument('--matrix',required=True);ap.add_argument('--data',default='.')
-a=ap.parse_args();S,cfg=C.site(a.site);lab=cfg['broth_label']
+a=ap.parse_args();S,cfg=C.site(a.site);lab=cfg.get('broth_label')
+if not lab:print(f'broth {a.site}: no Mapal broth label in sites.json, feed stays n/a');sys.exit(0)
 L=open(a.matrix).read().splitlines();days=L[0].split(':',1)[1].split(',')
 def row(k):
     for l in L:

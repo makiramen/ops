@@ -476,7 +476,7 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
     </div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>3 · Hygiene compliance</h3><span class="tag t-auto">MAPAL</span></div><div id="hygBox"></div></div>
-      <div class="card s4"><div class="ch"><h3>Site compliance</h3><span id="ovCompTL"></span></div><div class="mini">Moving to the Mapal feed; tracker until then</div><div id="ovComp"></div><div class="small">NE/Midland Site Compliance Tracker · <button type="button" class="btn sm" data-go="actions" style="height:22px;padding:0 8px;font-size:11px">Full list</button></div></div>
+      <div class="card s4"><div class="ch"><h3>Site compliance</h3><span id="ovCompTL"></span></div><div id="mcompOv"></div><div class="mini" style="margin-top:8px">Certificates and contractor checks</div><div id="ovComp"></div><div class="small"><span id="compSrc"></span> · <button type="button" class="btn sm" data-go="actions" style="height:22px;padding:0 8px;font-size:11px">Full list</button></div></div>
       <div class="card s4"><div class="ch"><h3>Maintenance</h3><span class="tag t-no">LOG FEED PENDING</span></div><div class="maintBox"></div></div>
     </div>
     <div class="grid">
@@ -592,7 +592,7 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
     </div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Maintenance log</h3><span class="tag t-no">LOG FEED PENDING</span></div><div class="maintBox"></div></div>
-      <div class="card s8"><div class="ch"><h3>Site compliance</h3><span id="compTL"></span></div><div class="tscroll"><table class="cmp" id="compTable"></table></div><div class="small" id="compFoot"></div></div>
+      <div class="card s8"><div class="ch"><h3>Site compliance</h3><span id="compTL"></span></div><div id="mcompAct"></div><div class="mini">Certificates and contractor checks</div><div class="tscroll"><table class="cmp" id="compTable"></table></div><div class="small" id="compFoot"></div></div>
     </div>
   </section>
 
@@ -1021,8 +1021,8 @@ function renderActs(){
   $('#ovActHead').textContent='Open actions · '+open.length;
   $('#ovActs').innerHTML='<tbody>'+(open.slice().sort(function(x,y){return (x.d||'9').localeCompare(y.d||'9')}).slice(0,5).map(function(a){return '<tr><td>'+esc(a.t)+'<div class="small">'+esc(a.o)+'</div></td><td class="r">'+stat(a)+'</td></tr>'}).join('')||'<tr><td class="small">No open actions.</td></tr>')+'</tbody>';
   var mj=S.acts.filter(function(a){return a.s!=='closed'&&/maint|repair|broken|clean|fix|equipment|pots|chairs/i.test(a.t)});
-  $$('.maintBox').forEach(function(el){el.innerHTML='<div class="big" style="font-size:22px">'+mj.length+' open from actions</div>'+mj.map(function(a){return '<div class="small">• '+esc(a.t)+' ('+esc(a.o)+(a.d?', '+dm(a.d):'')+')</div>'}).join('')+
-    '<div class="small" style="margin-top:6px">Jobs logged on the group Maintenance Log form show here once its response sheet is linked. Induction repairs were raised at the GM/HC meeting but are not on the log.</div><a class="small" href="https://docs.google.com/forms/d/1r5VF5i9W-tcXBubvU5InIRdHoTkBIeJoefmx6Yi-6Dk/viewform" target="_blank" rel="noopener">Open the Maintenance Log form</a>'});
+  $$('.maintBox').forEach(function(el){el.innerHTML='<div class="big" style="font-size:22px">'+mj.length+' open from actions</div>'+mj.map(function(a){return '<div class="small">• '+esc(a.t)+(function(){var m=[a.o?esc(a.o):'',a.d?dm(a.d):''].filter(Boolean).join(', ');return m?' ('+m+')':''})()+'</div>'}).join('')+
+    '<div class="small" style="margin-top:6px">Jobs logged on the group Maintenance Log form show here once its response sheet is linked.</div><a class="small" href="https://docs.google.com/forms/d/1r5VF5i9W-tcXBubvU5InIRdHoTkBIeJoefmx6Yi-6Dk/viewform" target="_blank" rel="noopener">Open the Maintenance Log form</a>'});
 }
 
 /* ---------- roles, fields, sign-off ---------- */
@@ -1224,7 +1224,21 @@ function compRows(){var n=nowIso();return COMP.items.map(function(it){var lab=it
   else if(!last){r='r';st='No record'}
   else{due=addM(last,m);var k=dd(n,due);if(k<0){r='r';st='Overdue '+(-k)+'d'}else if(k<=42){r='a';st='Due in '+k+'d'}else{r='g';st='In date'}}
   return {lab:lab,who:who,last:last,m:m,note:note,r:r,st:st,due:due}})}
-function renderComp(){var rows=compRows(),red=rows.filter(function(x){return x.r==='r'}),amb=rows.filter(function(x){return x.r==='a'}),ok=rows.filter(function(x){return x.r==='g'}).length;
+/* Mapal task compliance: Mapal Weekly Compliance Tracker (on time %, open deviations, flag), weekly */
+var MCOMP=__MCOMP__;
+function mcompRag(x){return !x?'n':x[3]==='RED'?'r':x[3]==='WATCH'?'a':'g'}
+function mcompHtml(full){var W=MCOMP.w||[];if(!W.length)return '<div class="small">Mapal task compliance: not in the feed for this site yet.</div>';
+  var x=W[W.length-1],p=W[W.length-2],ch=(MCOMP.chain||[]).filter(function(c){return c[0]===x[0]})[0],r=mcompRag(x),L=W.slice(-8);
+  var h='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><div class="mini">Mapal tasks done on time · w/c '+dm(x[0])+'</div><div class="big" style="font-size:26px">'+(x[1]==null?'n/a':x[1]+'%')+'</div></div>'+(full?TL(r,x[3]==='RED'?'Red':x[3]==='WATCH'?'Watch':'OK'):'')+'</div>'+
+    '<div class="small">'+(x[2]?'<b style="color:var(--red-ink)">'+x[2]+' open deviation'+(x[2]>1?'s':'')+'</b>':'No open deviations')+(p&&p[1]!=null&&x[1]!=null?' · last week '+p[1]+'%':'')+(ch&&ch[1]!=null?' · group '+ch[1]+'%':'')+'</div>'+
+    '<div class="wtrend" style="height:60px;margin-top:4px">'+L.map(function(w){var rr=mcompRag(w);return '<button type="button" title="w/c '+dmy(w[0])+': '+(w[1]==null?'n/a':w[1]+'%')+(w[2]?', '+w[2]+' open deviations':'')+'" style="cursor:default"><i style="height:'+((w[1]||0)*0.4)+'px;background:'+(rr==='r'?'var(--red)':rr==='a'?'var(--amber)':'var(--green)')+'"></i><small>'+dm(w[0])+'</small></button>'}).join('')+'</div>';
+  if(full)h+='<div class="small">Source: '+esc(MCOMP.src)+', to '+dmy(MCOMP.to)+'. On time = Mapal tasks completed on schedule. Red: 10+ open deviations or under 25% on time; watch: 25 to 74%.</div>';
+  return h}
+function renderComp(){$('#mcompOv').innerHTML=mcompHtml(false);$('#mcompAct').innerHTML=mcompHtml(true);$('#compSrc').textContent=COMP.items&&COMP.items.length?COMP.src:'Certificate tracker: none for this site';
+  if(!COMP.items||!COMP.items.length){var mr=mcompRag((MCOMP.w||[]).slice(-1)[0]);$('#compTL').innerHTML=$('#ovCompTL').innerHTML=TL(mr,mr==='n'?'No feed':mr==='r'?'Mapal red':mr==='a'?'Mapal watch':'Mapal OK');
+    $('#ovComp').innerHTML='<div class="small">No certificate tracker for this site yet (fire, gas, EICR, PAT, ventilation, pest). Next: the Mapal documents feed.</div>';$('#compTable').innerHTML='';$('#compFoot').textContent='';return}
+  renderComp2()}
+function renderComp2(){var rows=compRows(),red=rows.filter(function(x){return x.r==='r'}),amb=rows.filter(function(x){return x.r==='a'}),ok=rows.filter(function(x){return x.r==='g'}).length;
   var o=red.length?'r':amb.length?'a':'g';
   $('#compTL').innerHTML=$('#ovCompTL').innerHTML=TL(o,red.length?red.length+' red':amb.length?amb.length+' due soon':'All in date');
   var order={r:0,a:1,n:2,g:3};rows.sort(function(a,b){return order[a.r]-order[b.r]||(a.due||'9').localeCompare(b.due||'9')});
@@ -1271,9 +1285,11 @@ function mapalCard(name,none){var L=mapalOf(name),x=L[L.length-1],p=L[L.length-2
     '<div class="small">'+dayName(x[0])+' '+dmy(x[0])+(x[7]?' · by '+esc(x[7]):'')+' '+ch+'</div>'+
     (red.length?'<div style="display:flex;flex-direction:column;gap:4px;margin-top:2px"><div class="mini" style="color:var(--red-ink);font-weight:800">'+red.length+' red point'+(red.length>1?'s':'')+(x[6]?' · '+x[6]+' still open':'')+'</div>'+
       red.map(function(q){return '<div class="ev" style="border-left-color:var(--red)">'+esc(q.q)+(q.ph?' <span class="pill p-n" style="height:18px">📷 '+q.ph+'</span>':'')+'</div>'}).join('')+'</div>':'<div class="small" style="color:var(--green-ink);font-weight:700">✓ No red points</div>')+
-    '<div><button type="button" class="btn sm pri openrep" data-mrep="'+L.length+'|'+esc(name)+'">Open full report'+(MAPAL.detail&&MAPAL.detail[x[9]]?'':' (summary)')+'</button></div></div>'+
+    '<div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn sm pri openrep" data-mrep="'+L.length+'|'+esc(name)+'">Open full report'+(MAPAL.detail&&MAPAL.detail[x[9]]?'':' (summary)')+'</button>'+mapalLink(x,'Open in Mapal')+'</div></div>'+
     (L.length>1?'<div class="mini" style="margin-top:6px">Earlier '+esc(name)+' checks</div><div class="hist">'+L.slice(0,-1).slice(-4).reverse().map(function(y){var i=L.indexOf(y)+1;return '<button type="button" data-mrep="'+i+'|'+esc(name)+'"><span>'+dmy(y[0])+(y[7]?' · '+esc(y[7]):'')+'</span><span>'+(y[2]==null?'n/a':y[2]+'%')+' '+PILL[mapalRag(y[2])]+'</span></button>'}).join('')+'</div>':'')}
 /* red points of a form: from the full answers when the broker sends them, else the deviation list */
+/* link to the form in Mapal (opens if the viewer is logged in to Mapal); empty until the broker sends the url column */
+function mapalLink(x,t){return x&&x[10]?'<a class="btn sm" href="'+esc(x[10])+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">'+t+' ↗</a>':''}
 function repRed(x){var D=MAPAL.detail&&x[9]&&MAPAL.detail[x[9]];
   if(D)return D.filter(function(a){return a[5]}).map(function(a){return {q:a[1],ph:(a[10]||[]).length}});
   return (x[8]||[]).map(function(t){return {q:t,ph:0}})}
@@ -1284,7 +1300,7 @@ function repOpen(i,name){var L=mapalOf(name),x=L[i-1];if(!x)return;var D=MAPAL.d
       (a[7]?'<div class="small">Comment: '+esc(a[7])+'</div>':'')+(a[8]?'<div class="small" style="color:var(--red-ink)">Deviation: '+esc(a[8])+'</div>':'')+(a[9]?'<div class="small">Action: '+esc(a[9])+'</div>':'')+
       (a[5]&&a[6]?'<div class="small" style="color:var(--red-ink);font-weight:700">Still open in Mapal</div>':'')+img(a[10])+'</div><div class="ans">'+esc(a[2]||'')+(a[4]?'<br>'+(a[3]||0)+'/'+a[4]:'')+'</div></div>'};
   var h='<div class="ch"><div><div class="eyebrow">Mapal · full report</div><h2 id="repTitle" style="margin:2px 0 0">'+esc(name)+' · '+dmy(x[0])+'</h2><div class="small">'+esc(SITE.label)+' '+esc(SITE.name)+(x[7]?' · by '+esc(x[7]):'')+'</div></div>'+
-    '<div style="display:flex;gap:10px;align-items:center"><div class="big" style="font-size:26px">'+(x[4]?Math.round(x[3])+'/'+Math.round(x[4])+' · ':'')+(x[2]==null?'n/a':x[2]+'%')+'</div>'+PILL[r]+'<button type="button" class="x" data-repx="1" aria-label="Close">×</button></div></div>';
+    '<div style="display:flex;gap:10px;align-items:center"><div class="big" style="font-size:26px">'+(x[4]?Math.round(x[3])+'/'+Math.round(x[4])+' · ':'')+(x[2]==null?'n/a':x[2]+'%')+'</div>'+PILL[r]+mapalLink(x,'Open in Mapal')+'<button type="button" class="x" data-repx="1" aria-label="Close">×</button></div></div>';
   if(D){var bad=D.filter(function(a){return a[5]});
     h+='<div class="card" style="border-color:'+(bad.length?'var(--red-ring)':'var(--green-ring)')+';background:'+(bad.length?'var(--red-bg)':'var(--green-bg)')+'"><div class="ch"><h3>'+(bad.length?'Red points · '+bad.length:'No red points')+'</h3>'+(x[6]?'<span class="pill p-r">'+x[6]+' still open</span>':'')+'</div>'+(bad.length?bad.map(qrow).join(''):'<div class="small">Every scored question passed.</div>')+'</div>';
     var sec={},order=[];D.forEach(function(a){var k=a[0]||'Questions';if(!sec[k]){sec[k]=[];order.push(k)}sec[k].push(a)});

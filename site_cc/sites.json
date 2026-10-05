@@ -1,5 +1,5 @@
 {
- "_note": "One entry per site. The nightly job builds every site listed with \"live\": true. Sheet ids are shared by all sites. A null source key (for example loyalty_venue) means that feed does not exist for the site: the pull writes an empty feed and the page shows n/a. Tiers = The Maki League tiers (+3 lowest wage %, +3 lowest food cost %, +3 highest SPH, within the tier, each week).",
+ "_note": "One entry per site. The nightly job builds every site listed with \"live\": true. Sheet ids are shared by all sites. A null source key (for example loyalty_venue) means that feed does not exist for the site: the pull writes an empty feed and the page shows n/a. Tiers = The Maki League tiers (+3 lowest wage %, +3 lowest food cost %, +3 highest SPH, within the tier, each week). Rollout: only M7 and M14 live while we troubleshoot (05/10/2026); set live true per site to roll out.",
  "sources": {
   "auto_cash_up": {
    "id": "1T4TtCs-SkBjinToxG45oKksUiPPPIllo2Pqrqbaix6w",
@@ -25,13 +25,17 @@
   },
   "mapal_broker": {
    "id": "17M3-5veLg5rnLlCOvCSjBspzzWc8GIGCBPK_M5yzMrw"
+  },
+  "mapal_compliance": {
+   "id": "1JgM5881gtBvjYeb_AgfQVuAi4hlJqqSWwbTyiLGdgQU",
+   "note": "Mapal Weekly Compliance Tracker, shared with site-cc-reader 05/10/2026"
   }
  },
  "sites": {
   "M1": {
    "name": "Nicolson St",
    "label": "Maki 1",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 1",
    "reviews_site": "Maki1/2",
    "broth_label": "M1TOO Ltd",
@@ -47,7 +51,7 @@
   "M3": {
    "name": "Fountainbridge",
    "label": "Maki 3",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 3",
    "reviews_site": "Fountainbridge",
    "broth_label": "Fountain Good Food Ltd",
@@ -63,7 +67,7 @@
   "M6": {
    "name": "Bath Street",
    "label": "Maki 6",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 6",
    "reviews_site": "Bath st",
    "broth_label": "Maki Bath St",
@@ -95,7 +99,7 @@
   "M8": {
    "name": "Renfield St",
    "label": "Maki 8",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 8",
    "reviews_site": "Renfield",
    "broth_label": "Renfield Good Food Ltd",
@@ -111,7 +115,7 @@
   "IKI2": {
    "name": "Ikigai Ramen",
    "label": "Ikigai 2",
-   "live": true,
+   "live": false,
    "cashup_venue": "Ikigai 2",
    "reviews_site": "Ikigai",
    "broth_label": null,
@@ -128,7 +132,7 @@
   "M12": {
    "name": "Newcastle",
    "label": "Maki 12",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 12",
    "reviews_site": "Newcastle",
    "broth_label": "Maki Newcastle Ltd",
@@ -144,7 +148,7 @@
   "M13": {
    "name": "Aberdeen",
    "label": "Maki 13",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 13",
    "reviews_site": "Aberdeen",
    "broth_label": "Maki Aberdeen Ltd",
@@ -160,7 +164,7 @@
   "M15": {
    "name": "Metrocentre",
    "label": "Maki 15",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 15",
    "reviews_site": "Metro",
    "broth_label": "Maki METRO",
@@ -176,7 +180,7 @@
   "M9": {
    "name": "Manchester",
    "label": "Maki 9",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 9",
    "reviews_site": "Manchester",
    "broth_label": "Maki Manchester LTD",
@@ -192,7 +196,7 @@
   "M10": {
    "name": "Leeds",
    "label": "Maki 10",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 10",
    "reviews_site": "Leeds",
    "broth_label": "Maki Leeds Ltd",
@@ -208,7 +212,7 @@
   "M11": {
    "name": "Leicester",
    "label": "Maki 11",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 11",
    "reviews_site": "Leicester",
    "broth_label": "Maki Leicester Ltd",
@@ -249,7 +253,7 @@
   "M16": {
    "name": "Nottingham",
    "label": "Maki 16",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 16",
    "reviews_site": "Nottingham",
    "broth_label": "Maki Nottingham Ltd",
@@ -265,7 +269,7 @@
   "M17": {
    "name": "Lakeside",
    "label": "Maki 17",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 17",
    "reviews_site": "Lakeside",
    "broth_label": "Maki Lakeside",
@@ -281,7 +285,7 @@
   "M18": {
    "name": "Soho",
    "label": "Maki 18",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 18",
    "reviews_site": "Soho",
    "broth_label": "Maki Soho",
@@ -297,11 +301,11 @@
   "MakiNori": {
    "name": "Maki Nori",
    "label": "Maki Nori",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki Nori",
    "reviews_site": "Nori",
    "broth_label": null,
-   "mapal_location": null,
+   "mapal_location": "Maki Nori",
    "loyalty_venue": null,
    "compliance_tab": null,
    "onboarding_tab": null,
@@ -314,7 +318,7 @@
   "M19": {
    "name": "Shoreditch",
    "label": "Maki 19",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 19",
    "reviews_site": "Maki Shoreditch",
    "broth_label": "Maki Shoreditch",
@@ -330,7 +334,7 @@
   "M20": {
    "name": "Southampton",
    "label": "Maki 20",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 20",
    "reviews_site": "Maki Southampton",
    "broth_label": "Maki Southampton",
@@ -346,7 +350,7 @@
   "M21": {
    "name": "Birmingham",
    "label": "Maki 21",
-   "live": true,
+   "live": false,
    "cashup_venue": "Maki 21",
    "reviews_site": "Maki Birmingham",
    "broth_label": "Maki Birmingham Ltd",

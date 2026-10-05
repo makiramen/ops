@@ -9,7 +9,8 @@ from common import site,save,sheet_values
 ap=argparse.ArgumentParser();ap.add_argument('--site',required=True);ap.add_argument('--data',required=True)
 ap.add_argument('--check',action='store_true');ap.add_argument('--csv-visits');ap.add_argument('--csv-metrics')
 A=ap.parse_args()
-S,C=site(A.site);SRC=S['sources']['ramen_royalty'];VEN=C['loyalty_venue']
+S,C=site(A.site);SRC=S['sources']['ramen_royalty'];VEN=C.get('loyalty_venue')
+if not VEN:print(f'loyalty {A.site}: no Ramen Royalty venue in sites.json, feed stays n/a');sys.exit(0)
 rows=lambda f,sid,rng:list(csv.reader(open(f,encoding='utf-8'))) if f else sheet_values(sid,rng)
 def table(rs):
     h=[x.strip() for x in rs[0]];return [dict(zip(h,r+['']*(len(h)-len(r)))) for r in rs[1:] if any(r)]

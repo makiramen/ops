@@ -80,10 +80,10 @@ FEEDS=[  # name, as of, max age days
  ('Daily cash up',d10(mx(dly)),2),('Covers',d10(mx(cov['d'])),2),('Delivery sales',d10(mx(dlv['d'])),2),
  ('Labour budget',wkend(J('labour.json')['d']),9),('Efficiency',wkend(J('eff.json')),9),('Estate ladder',wkend(J('effall.json')),9),
  ('Broth',d10(br.get('to')),2),('Google reviews',d10(rv.get('built')),2),('Loyalty',d10(loy.get('to')),2),
- ('Key lines',kobas(J('keyline.json').get('pulled')),2),('Meeting notes',wkend(N)+datetime.timedelta(2) if N else None,10),('Reviews intelligence',d10(RI.get('built')),3),
+ ('Key lines',kobas(J('keyline.json').get('pulled')),2),('Meeting notes',wkend(N)+datetime.timedelta(2) if N else None,10),('Reviews intelligence',d10(RI.get('built')),3),('Mapal compliance',d10(JD('mcomp.json',{}).get('to')),9),
  ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3)]
 # Feeds that do not exist for this site (no source in sites.json) are n/a, not late
-NA={'Loyalty':not SITE['has']['loyalty'],'Broth':not SITE['has']['broth'],'Mapal forms':not SITE['has']['mapal'],'Compliance':not J('compliance.json').get('pulled'),
+NA={'Loyalty':not SITE['has']['loyalty'],'Broth':not SITE['has']['broth'],'Mapal forms':not SITE['has']['mapal'],'Mapal compliance':not SITE['has']['mapal'],'Compliance':not J('compliance.json').get('pulled'),
     'Team':not J('team.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled')}
 LOG=[];STALE=[]
 for n,asof,mx in FEEDS:
@@ -97,7 +97,7 @@ C=lambda o:json.dumps(o,ensure_ascii=False,separators=(',',':'))
 T={'__TODAY__':TODAY.isoformat(),'__WK__':json.dumps(WK,separators=(',',':')),'__STAND__':R('stand.json'),'__EALL__':R('effall.json'),
    '__EFF__':R('eff.json').replace(' \u2014 ',', ').replace('\u2014',', '),'__LOY__':R('loyalty.json'),'__COV__':R('covers.json'),'__DEL__':R('delivery.json'),
    '__ACTS__':C(ACTS),'__COMP__':C(J('compliance.json')),'__TEAM__':C(J('team.json')),'__GAPS__':C(J('gaps.json')),'__DAILY__':R('daily.json'),
-   '__KL__':C(J('keyline.json')),'__BROTH__':R('broth.json'),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE)}
+   '__KL__':C(J('keyline.json')),'__BROTH__':R('broth.json'),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__MCOMP__':C(JD('mcomp.json',{'w':[],'chain':[],'to':None,'src':'Mapal compliance not pulled yet'})),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE)}
 s=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src.html')).read()
 ND=lambda v:v.replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')  # feed text (reviews, notes, actions) never brings a dash in
 for k,v in T.items():s=s.replace(k,ND(v))

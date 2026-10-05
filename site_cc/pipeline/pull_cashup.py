@@ -16,7 +16,7 @@ rows=list(csv.reader(open(a.csv,encoding='utf-8-sig'))) if a.csv else C.sheet_va
 h=rows[0]
 for i,e in V.EXPECTED_HEADERS.items():
     if (h[i] if i<len(h) else '').strip()!=e.strip():sys.exit(f'FATAL: Raw Data 2 column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')
-T=C.today().isoformat();lo=a.frm or (C.today()-datetime.timedelta(a.days)).isoformat();lo=max(lo,cfg['opened'])
+T=C.today().isoformat();lo=a.frm or (C.today()-datetime.timedelta(a.days)).isoformat();lo=max(lo,cfg.get('opened') or '2026-04-20')
 dly,cov,dlv=[C.json.load(open(os.path.join(a.data,f))) for f in ('daily.json','covers.json','delivery.json')]
 n=0;warn=[]
 for r in rows[1:]:
