@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-09-29",
+  "generated_at": "2026-10-05",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-21 \u2013 2026-09-27",
@@ -55,7 +55,7 @@
       },
       "labour_split": {
         "split_status": "filed",
-        "days_with_split": 6,
+        "days_with_split": 7,
         "days_present": 7,
         "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
         "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
@@ -155,7 +155,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-21..2026-09-27 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-09-29."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-21..2026-09-27 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-05."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-21.json (AGMM Task List Status). Open items only.",
@@ -177,9 +177,9 @@
         "week_ending": "2026-09-27",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
+        "sales": 971.5,
+        "orders": 27,
+        "aov": 35.98,
         "new_customers": null,
         "rating": 5.0,
         "open_hours_pct": 99.8,
@@ -196,12 +196,11 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "source": "Deliveroo Tax Invoice PDF (Restaurant Hub), 'Deliveroo Commission' Total row - Total Order Value = GMV, Total Quantity = orders. Period Mon 21 Sep 00:00 - Sun 27 Sep 23:59 UTC. Filed to Drive by finance 30/09/2026. Read via Drive MCP by the Monday 05/10/2026 late-sweep data-pull subagent. Invoice serial res-uk-552416-35; Drive file Deliveroo_2026-09-28_479.46.pdf (id 1oBjQQM6S8D7diA8J7rxKd8xKIH13QQWW). [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
         "busy_mode_pct": 0.0
       },
-      "gaps": [
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [
           "Covers rose by 7 (0.69%) week on week and spend per head rose by \u00a30.24 (1.02%).",
