@@ -22,6 +22,7 @@ for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open
   [ -f "$ROOT/data/reviews_intel.json" ] && step python3 pipeline/pull_reviews_intel.py --site "$CODE" --data "$D" --intel "$ROOT/data/reviews_intel.json"
   step python3 pipeline/pull_loyalty.py  --site "$CODE" --data "$D"
   step python3 pipeline/pull_eotm.py     --site "$CODE" --data "$D"
+  step python3 pipeline/pull_team.py     --site "$CODE" --data "$D"
   step python3 pipeline/pull_mapal.py    --site "$CODE" --data "$D"
   step python3 pipeline/pull_mapal_compliance.py --site "$CODE" --data "$D"
   [ -f "$ROOT/keyline.html" ] && step python3 pipeline/pull_keyline.py --site "$CODE" --data "$D" --page "$ROOT/keyline.html"
