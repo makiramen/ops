@@ -1,0 +1,417 @@
+{
+ "_note": "One entry per site. The nightly job builds every site listed with \"live\": true. Sheet ids are shared by all sites. A null source key (for example loyalty_venue) means that feed does not exist for the site: the pull writes an empty feed and the page shows n/a. Tiers = The Maki League tiers (+3 lowest wage %, +3 lowest food cost %, +3 highest SPH, within the tier, each week). Rollout: only M7 and M14 live while we troubleshoot (05/10/2026); set live true per site to roll out.",
+ "sources": {
+  "auto_cash_up": {
+   "id": "1T4TtCs-SkBjinToxG45oKksUiPPPIllo2Pqrqbaix6w",
+   "range": "'Raw Data 2'!A:AA"
+  },
+  "compliance_ne_midlands": {
+   "id": "135dwu0OvMdpDhYwGW7XI_AKU6P-4876WrKCLsolFg5M"
+  },
+  "mona_lisa": {
+   "id": "1_yzry0OCWA9N6-I9mWxmAFwfBqMWwEzMN3kPpSp6HJw",
+   "range": "'Input Tabs '!A:BZ"
+  },
+  "google_reviews": {
+   "id": "1aFGfbGrEBeqWny8myF6H4LVxO0YegT0MdIJHrxpxk3I",
+   "range": "'Raw Data'!A:L"
+  },
+  "ramen_royalty": {
+   "id": "1BU8Shqe4PajaoUfqvEFY_KVcNNzAZ-BIMq5AE-xcvkE",
+   "launch": "2026-08-18"
+  },
+  "eotm": {
+   "folder": "1IIjz9u4nm6NuDX1KLQoFQV5euFMs0jcK"
+  },
+  "mapal_broker": {
+   "id": "17M3-5veLg5rnLlCOvCSjBspzzWc8GIGCBPK_M5yzMrw"
+  },
+  "mapal_compliance": {
+   "id": "1JgM5881gtBvjYeb_AgfQVuAi4hlJqqSWwbTyiLGdgQU",
+   "note": "Mapal Weekly Compliance Tracker, shared with site-cc-reader 05/10/2026"
+  },
+  "onboarding": {
+   "id": "1zdNRHPqwpLnUtV0FWFADtDkVrTQaN97zPyIx6WcUSao",
+   "note": "Hanna's Maki Group Onboarding Tracker - 2026, link shared (anyone), no service account share needed"
+  },
+  "maintenance": {
+   "id": "1_ssmA8xOdmdb8tKspL4qVvQ5DWYM1lVvI83iwrEyClA",
+   "form": "https://docs.google.com/forms/d/1r5VF5i9W-tcXBubvU5InIRdHoTkBIeJoefmx6Yi-6Dk/viewform",
+   "note": "Lincoln's Required Maintenance/Repair (Responses), link shared (anyone, reader), no service account share needed"
+  }
+ },
+ "sites": {
+  "M1": {
+   "name": "Nicolson St",
+   "label": "Maki 1",
+   "live": false,
+   "cashup_venue": "Maki 1",
+   "reviews_site": "Maki1/2",
+   "broth_label": "M1TOO Ltd",
+   "mapal_location": "M1TOO Ltd",
+   "loyalty_venue": "Nicolson Street, Edinburgh",
+   "compliance_tab": null,
+   "onboarding_tab": "MNic",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Kobachi 小鉢"
+  },
+  "M3": {
+   "name": "Fountainbridge",
+   "label": "Maki 3",
+   "live": false,
+   "cashup_venue": "Maki 3",
+   "reviews_site": "Fountainbridge",
+   "broth_label": "Fountain Good Food Ltd",
+   "mapal_location": "Fountain Good Food Ltd",
+   "loyalty_venue": "Fountainbridge, Edinburgh",
+   "compliance_tab": null,
+   "onboarding_tab": "M3",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Chūmori 中盛り"
+  },
+  "M6": {
+   "name": "Bath Street",
+   "label": "Maki 6",
+   "live": false,
+   "cashup_venue": "Maki 6",
+   "reviews_site": "Bath st",
+   "broth_label": "Maki Bath St",
+   "mapal_location": "Maki Bath St",
+   "loyalty_venue": "Bath Street, Glasgow",
+   "compliance_tab": null,
+   "onboarding_tab": "M6",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Kobachi 小鉢"
+  },
+  "M7": {
+   "name": "St James Quarter",
+   "label": "Maki 7",
+   "live": true,
+   "cashup_venue": "Maki 7",
+   "reviews_site": "SJQ",
+   "broth_label": "Maki SJQ Ltd",
+   "mapal_location": "Maki SJQ Ltd",
+   "loyalty_venue": "St James Quarter, Edinburgh",
+   "compliance_tab": null,
+   "onboarding_tab": "M7",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Chūmori 中盛り"
+  },
+  "M8": {
+   "name": "Renfield St",
+   "label": "Maki 8",
+   "live": false,
+   "cashup_venue": "Maki 8",
+   "reviews_site": "Renfield",
+   "broth_label": "Renfield Good Food Ltd",
+   "mapal_location": "Renfield Good Food Ltd",
+   "loyalty_venue": "Renfield Street, Glasgow",
+   "compliance_tab": null,
+   "onboarding_tab": "M8",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Ōmori 大盛り"
+  },
+  "IKI2": {
+   "name": "Ikigai Ramen",
+   "label": "Ikigai 2",
+   "live": false,
+   "cashup_venue": "Ikigai 2",
+   "reviews_site": "Ikigai",
+   "broth_label": null,
+   "mapal_location": null,
+   "loyalty_venue": null,
+   "compliance_tab": null,
+   "onboarding_tab": null,
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Kobachi 小鉢",
+   "sph": 21
+  },
+  "M12": {
+   "name": "Newcastle",
+   "label": "Maki 12",
+   "live": false,
+   "cashup_venue": "Maki 12",
+   "reviews_site": "Newcastle",
+   "broth_label": "Maki Newcastle Ltd",
+   "mapal_location": "Maki Newcastle Ltd",
+   "loyalty_venue": "Eldon Square, Newcastle",
+   "compliance_tab": null,
+   "onboarding_tab": "M12",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Chūmori 中盛り"
+  },
+  "M13": {
+   "name": "Aberdeen",
+   "label": "Maki 13",
+   "live": false,
+   "cashup_venue": "Maki 13",
+   "reviews_site": "Aberdeen",
+   "broth_label": "Maki Aberdeen Ltd",
+   "mapal_location": "Maki Aberdeen Ltd",
+   "loyalty_venue": "Union Square, Aberdeen",
+   "compliance_tab": null,
+   "onboarding_tab": "M13",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Ōmori 大盛り"
+  },
+  "M15": {
+   "name": "Metrocentre",
+   "label": "Maki 15",
+   "live": false,
+   "cashup_venue": "Maki 15",
+   "reviews_site": "Metro",
+   "broth_label": "Maki METRO",
+   "mapal_location": "Maki METRO",
+   "loyalty_venue": "Metrocentre, Gateshead",
+   "compliance_tab": null,
+   "onboarding_tab": "M15",
+   "cluster": "Scotland & Newcastle",
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "tier": "Ōmori 大盛り"
+  },
+  "M9": {
+   "name": "Manchester",
+   "label": "Maki 9",
+   "live": false,
+   "cashup_venue": "Maki 9",
+   "reviews_site": "Manchester",
+   "broth_label": "Maki Manchester LTD",
+   "mapal_location": "Maki Manchester LTD",
+   "loyalty_venue": "York Street, Manchester",
+   "compliance_tab": "M9",
+   "onboarding_tab": "M9",
+   "cluster": "North England & Midlands",
+   "am": "Inka Cheung",
+   "dam": "Amy Tang",
+   "tier": "Ōmori 大盛り"
+  },
+  "M10": {
+   "name": "Leeds",
+   "label": "Maki 10",
+   "live": false,
+   "cashup_venue": "Maki 10",
+   "reviews_site": "Leeds",
+   "broth_label": "Maki Leeds Ltd",
+   "mapal_location": "Maki Leeds Ltd",
+   "loyalty_venue": "Bond Street, Leeds",
+   "compliance_tab": "M10",
+   "onboarding_tab": "M10",
+   "cluster": "North England & Midlands",
+   "am": "Inka Cheung",
+   "dam": "Amy Tang",
+   "tier": "Chūmori 中盛り"
+  },
+  "M11": {
+   "name": "Leicester",
+   "label": "Maki 11",
+   "live": false,
+   "cashup_venue": "Maki 11",
+   "reviews_site": "Leicester",
+   "broth_label": "Maki Leicester Ltd",
+   "mapal_location": "Maki Leicester Ltd",
+   "loyalty_venue": "Highcross Shopping Centre, Leicester",
+   "compliance_tab": "M11",
+   "onboarding_tab": "M11",
+   "cluster": "North England & Midlands",
+   "am": "Inka Cheung",
+   "dam": "Amy Tang",
+   "tier": "Chūmori 中盛り"
+  },
+  "M14": {
+   "name": "Meadowhall",
+   "label": "Maki 14",
+   "live": true,
+   "cashup_venue": "Maki 14",
+   "reviews_site": "Meadowhall",
+   "broth_label": "Maki Meadowhall",
+   "mapal_location": "Maki Meadowhall",
+   "loyalty_venue": "Meadowhall, Sheffield",
+   "compliance_tab": "M14",
+   "onboarding_tab": "M14",
+   "cluster": "North England & Midlands",
+   "am": "Inka Cheung",
+   "dam": "Amy Tang",
+   "tier": "Chūmori 中盛り",
+   "opened": "2025-11-14",
+   "eotm_sheets": {
+    "BOH": [
+     "1FXr5DEZZI2yzWVaweNzQm7xChgqccSHX9xEjdW1DLvE",
+     "1RapZT3nez3Vt20NAANmANtrqZlcfaHz3RxdSVtId3kc",
+     "1glJ5Y5iqgRL5okNGbTWchC2AKgmoGWCNq1vvSaiatRs"
+    ],
+    "FOH": []
+   }
+  },
+  "M16": {
+   "name": "Nottingham",
+   "label": "Maki 16",
+   "live": false,
+   "cashup_venue": "Maki 16",
+   "reviews_site": "Nottingham",
+   "broth_label": "Maki Nottingham Ltd",
+   "mapal_location": "Maki Nottingham Ltd",
+   "loyalty_venue": "King Street, Nottingham",
+   "compliance_tab": "M16",
+   "onboarding_tab": "M16",
+   "cluster": "North England & Midlands",
+   "am": "Inka Cheung",
+   "dam": "Amy Tang",
+   "tier": "Ōmori 大盛り"
+  },
+  "M17": {
+   "name": "Lakeside",
+   "label": "Maki 17",
+   "live": false,
+   "cashup_venue": "Maki 17",
+   "reviews_site": "Lakeside",
+   "broth_label": "Maki Lakeside",
+   "mapal_location": "Maki Lakeside",
+   "loyalty_venue": "Lakeside Shopping Centre",
+   "compliance_tab": null,
+   "onboarding_tab": "M17",
+   "cluster": "South England",
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "tier": "Chūmori 中盛り"
+  },
+  "M18": {
+   "name": "Soho",
+   "label": "Maki 18",
+   "live": false,
+   "cashup_venue": "Maki 18",
+   "reviews_site": "Soho",
+   "broth_label": "Maki Soho",
+   "mapal_location": "Maki Soho",
+   "loyalty_venue": "Old Compton St, Soho",
+   "compliance_tab": null,
+   "onboarding_tab": "M18",
+   "cluster": "South England",
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "tier": "Ōmori 大盛り"
+  },
+  "MakiNori": {
+   "name": "Maki Nori",
+   "label": "Maki Nori",
+   "live": false,
+   "cashup_venue": "Maki Nori",
+   "reviews_site": "Nori",
+   "broth_label": null,
+   "mapal_location": "Maki Nori",
+   "loyalty_venue": null,
+   "compliance_tab": null,
+   "onboarding_tab": "Maki Nori ",
+   "cluster": "South England",
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "tier": null,
+   "sph": 35
+  },
+  "M19": {
+   "name": "Shoreditch",
+   "label": "Maki 19",
+   "live": false,
+   "cashup_venue": "Maki 19",
+   "reviews_site": "Maki Shoreditch",
+   "broth_label": "Maki Shoreditch",
+   "mapal_location": "Maki Shoreditch",
+   "loyalty_venue": "Shoreditch, London",
+   "compliance_tab": null,
+   "onboarding_tab": "M19 (Shoreditch)",
+   "cluster": "South England",
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "tier": null
+  },
+  "M20": {
+   "name": "Southampton",
+   "label": "Maki 20",
+   "live": false,
+   "cashup_venue": "Maki 20",
+   "reviews_site": "Maki Southampton",
+   "broth_label": "Maki Southampton",
+   "mapal_location": "Maki Southampton",
+   "loyalty_venue": "West Quay, Southampton",
+   "compliance_tab": null,
+   "onboarding_tab": "M20 (Shampton)",
+   "cluster": "South England",
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "tier": null
+  },
+  "M21": {
+   "name": "Birmingham",
+   "label": "Maki 21",
+   "live": false,
+   "cashup_venue": "Maki 21",
+   "reviews_site": "Maki Birmingham",
+   "broth_label": "Maki Birmingham Ltd",
+   "mapal_location": "Maki Birmingham Ltd",
+   "loyalty_venue": "New Street, Birmingham",
+   "compliance_tab": null,
+   "onboarding_tab": "M21 (Birmingham)",
+   "cluster": "South England",
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "tier": null
+  }
+ },
+ "tiers": {
+  "Kobachi 小鉢": [
+   "M1",
+   "M6",
+   "IKI2"
+  ],
+  "Chūmori 中盛り": [
+   "M3",
+   "M7",
+   "M12",
+   "M10",
+   "M11",
+   "M14",
+   "M17"
+  ],
+  "Ōmori 大盛り": [
+   "M8",
+   "M13",
+   "M15",
+   "M9",
+   "M16",
+   "M18"
+  ]
+ },
+ "clusters": {
+  "Scotland & Newcastle": {
+   "am": "Ka Ho",
+   "dam": "Óisín Patrick Darragh",
+   "dec": "Penny"
+  },
+  "North England & Midlands": {
+   "am": "Inka Cheung",
+   "dam": "Amy Tang",
+   "dec": "Artur Mroczkowski"
+  },
+  "South England": {
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "dec": "Srawut \"O\" Chairipu"
+  }
+ }
+}
