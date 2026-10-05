@@ -1,0 +1,193 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-05",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-09-28 \u2013 2026-10-04",
+    "commencing": "2026-09-28",
+    "ending": "2026-10-04"
+  },
+  "sites": {
+    "MakiNori": {
+      "code": "MakiNori",
+      "name": "Maki Nori",
+      "gm": "(confirm)",
+      "gm_confirm": false,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 21966.78,
+          "target": null,
+          "var_pct": null,
+          "prev": 22700.42,
+          "wow_abs": -733.64,
+          "wow_pct": -3.23
+        },
+        "covers": {
+          "actual": 541,
+          "prev": 621,
+          "wow_abs": -80,
+          "wow_pct": -12.88
+        },
+        "sph": {
+          "actual": 40.6,
+          "prev": 36.55,
+          "wow_abs": 4.05,
+          "wow_pct": 11.08,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 37.52,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 534.3
+        },
+        "waste": {
+          "actual": 2.52
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-09-28"
+      },
+      "efficiency_score": {
+        "score": 33,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sph": {
+            "weight": 15,
+            "value": 100.0,
+            "basis": "\u00a340.60 vs \u00a335 tgt \u2014 level 100, WoW +11.08% \u2192 mom 100"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "37.52% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "sales",
+          "food",
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "wage 37.5%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 3.7857,
+        "new_reviews": 14,
+        "star_breakdown": {
+          "1": 4,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 9
+        },
+        "negatives": 4,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Cheuk Jason",
+            "text": "I guess this is the worst Japanese restaurant I\u2019ve ever been.\nThe tuna and white fish were fishy and I even accidentally swallowed a bone from the nigiri. The rice was bland and cold, even worse than takeaway sushi.\nI have to say the atmosphere was good and chill. However, I realized the floor and sushi bar were quite dirty.\nOverall, I\u2019d rather go to Eat Tokyo on the next street, cheaper and better food.",
+            "date": "2026-10-02",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Rayn Chan",
+            "text": "Poor imitation of omakase\n\nWhat is japanese food? I can't say i know it all, but this place certainly knows nothing.\nFirstly, their signature 'hand roll'. If you have had any experience with sushi before you will know that temaki is supposed to be ice cream cone shaped with lots of rice and sashimi on top - the point for it being a filling snack/starter. However, their ones were small (it already looks small enough but when you grab it you can feel that its not even filled with rice) and then they tried to impress me by saying some fancy words, even though with it being called negitoro (shredded fatty tuna) it was just normal thin supermarket tuna. Poor fish got slaughtered just to be put in that trash then fell out because it wasnt even rolled tight enough.\nSecondly, the service. Its so obvious that they prioritize looks over quality (classic tourist scam) but they don't even give you any water, soysauce plate or wasabi despite it appearing as a fancy cuisine. When the food was served the waitress had a dead look on her face and mumbled the names of the sashimi really quickly.\nI might have wrote alot already, but guess what? Theres still more. I'll just bullet point them.\n\u2022 Cheap supermarket soysauce and wasabi\n\u2022 Putting avocado in sushi\n\u2022 Most customers were european people (not being racist) who came for instagram posts, showing what kind of people would actually come to this place.\n\u2022 No actual asian chefs\n\u2022 Expensive ( \u00a310 + for just some cheap tuna and \u00a330 for a plate of miniature sashimi)\n\nThe only good things were that the food didn't take that long to arrive and i guess the beard guy was chill.\n\nIf you want actual authentic japanese food, don't come here. I'd recommend RAI which is nearby and sells the same thing.",
+            "date": "2026-10-02",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Rooney Chan",
+            "text": "Fake japanese food-\navocado doesn't exist on sushi\nthey give u barely any rice in the sushi like rice is expensive as hell\ud83d\udcb0\nso expensive \u00a333 for a little plate of sushi and sashimi that cant even fill up one person\nno asian chef\nservice is terrible they literally tried to teach us how to eat sushi when weve had sushi for at least 20 years before\ntoilet stinks looks like mcdonalds toilet\nthey dont even greet you\nthey put soy sauce in solution bottles\nthey give you supermarket wasabi\nthey dont give you soy sauce plates\nthey make FAKE omakase\nthey give you fake toro\nThis is from an asian customer not all the people not get scammed by this restaurant\nALL THEY DO IS SCAM UK PEOPLE WITH FAKE JAPANESE CUISINE WHAT A DISGRACE\n(im actually being nice to them for giving them 1 star im glazing them)",
+            "date": "2026-10-02",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-28..2026-10-04 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-05."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-09-28.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Light from kp area is off, is hokding only for the cable",
+            "priority": "\u2014",
+            "logged_week": "27/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Ice machine is not working, we reboot but is not making ice at all",
+            "priority": "\u2014",
+            "logged_week": "27/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+      ]
+    }
+  }
+}

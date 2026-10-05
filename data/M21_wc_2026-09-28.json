@@ -1,0 +1,269 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-05",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-09-28 \u2013 2026-10-04",
+    "commencing": "2026-09-28",
+    "ending": "2026-10-04"
+  },
+  "sites": {
+    "M21": {
+      "code": "M21",
+      "name": "Maki 21",
+      "gm": "(vacant)",
+      "gm_confirm": false,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 59515.49,
+          "target": 53000.0,
+          "var_pct": 12.29,
+          "prev": 59545.52,
+          "wow_abs": -30.03,
+          "wow_pct": -0.05
+        },
+        "covers": {
+          "actual": 2498,
+          "prev": 2475,
+          "wow_abs": 23,
+          "wow_pct": 0.93
+        },
+        "sph": {
+          "actual": 22.92,
+          "prev": 23.44,
+          "wow_abs": -0.52,
+          "wow_pct": -2.22,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 24.84,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 1033.78
+        },
+        "waste": {
+          "actual": 293.43
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 6,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-09-28"
+      },
+      "efficiency_score": {
+        "score": 63,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+12.29) + 30% (\u00a3gap +6515 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 78.34,
+            "basis": "\u00a322.92 vs \u00a322 tgt \u2014 level 100, WoW -2.22% \u2192 mom 28"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 42.4,
+            "basis": "24.84% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "food",
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.3846,
+        "new_reviews": 91,
+        "star_breakdown": {
+          "1": 9,
+          "2": 1,
+          "3": 4,
+          "4": 9,
+          "5": 68
+        },
+        "negatives": 14,
+        "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "morgan lee",
+            "text": "My third time visiting since opening and it was a really poor experience, I had brought my niece (11 and autistic) out for some lunch as we had signed up to the app and received vouchers for a \u00a35 ramen she was so excited, we went to oseyo opposite the restaurant and bought some snacks and drink before going to grab a table, once we were sat it took a while for someone to take our order, when the food arrived we only received one order, the server only put one meal on the tab so i had waited over 30 minutes for my meal and my niece was already half way through her food.\nWe were almost finished and ready to ask for the bill, when the White female manager noticed our drinks we had bought from the shop placed next to my bag where my niece was sitting, she asked us to put them away which i agreed to and told my niece to try and fit them into the bag she couldn\u2019t hear me due to the loud atmosphere and before i could repeat myself the manager had took it upon herself to tell my niece to put them away but she adopted a different tone when speaking to my niece which i didn\u2019t appreciate as i had already agreed to put them away, she explained that the reason for them needing to be put away was due to allergies which as someone who works in the hospitality/ food industry and is fully aware of Natasha\u2019s law that is not something i was confused by the logic, I also visited two weeks before and had no issue with bringing my own drink so it must be something they have recently implemented. The interaction left me very uncomfortable so i asked for the bill and when it came to paying it had to be split which wasn\u2019t an issue but after leaving and checking my bank statement I had noticed i was charger \u00a35.50 rather than \u00a35 despite using the \u00a35 voucher, I don\u2019t know what the extra charges were for as the receipt i received was the original one with the price before the vouchers had been applied. Overall a lot went wrong and i feel there is a lot to be improved, especially in terms of service and ordering processes.",
+            "date": "2026-10-04",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Saraiba Hassan",
+            "text": "Horrible Food, absolutely not worth the money! The squid tempura was chewy and flavourless. Had the steak ramen and it was chewy and inedible had to send it back. Not worth the money!",
+            "date": "2026-10-04",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Hasib Khan",
+            "text": "Customer service was mid. They have us well done steak ramen, extremely cheewy. Food is not the best.",
+            "date": "2026-10-04",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Heavenly Magogo",
+            "text": "This place has good food however the service and communication skills is VERY disappointing.when it came to communicating with us to why we got kicked out the brown male staff member was cussing under his breath about his job after each customer .Mind you they did not clarify why we got kicked out coming to the conclusion it\u2019s because we were being too loud but there was music louder than our voices . as well there was a middle age woman who was stereotypical towards us how being a teenagers and lied about warning us about being loud. This shows the poor attitude of staff to younger people who are trying to enjoy their friends company and the food.",
+            "date": "2026-10-04",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Blessing Magogo",
+            "text": "Please be aware if you are a teenager they will be on to you.They have preconceptions about us teens especially this one middle aged white lady who seems to have an agressive attitude ,kicked me and my friends out (as if we weren\u2019t going to leave already) for simply having fun and enjoying the food like any other customer minding our business because supposedly we are not allowed to laugh because we was making noise ? Mind you there was full load music going on.\n\nOne of her employees (brown boy with black hair perhaps in 20s)had a big attitude problem as he kept whispering under his breath cuss words and complaining about people having an attitude yet he\u2019s the one with it..like are you slow. on about some \u201c sorry is there something funny\u201d mind you the conversation had nothing to do with him.And when he saw my friend he was like \u201c oh those girls again\u201d like respectfully shut up and I don\u2019t know why he\u2019s scared of teens .\n\nThen, when we called the shop again to know why we had to leave (after they kicked us out) the women said she warned us about being loud and how if we do that again we will leave yet she NEVER said that to our face at all and then she proceeded to say \u201c if u want to be stupid we have cameras\u201d (we recorded the conversation) well nah obviously you have them and you will see how she didn\u2019t interact with us until we had to pay by accusing us we had added other foods because previous teens brought lots of food and lied about having one bowl ..like respectfully u shouldn\u2019t be making assumptions/comparing us to pervious situations .\n\nOver all , the food was good .However, when it comes to customer service and professionalism it is very disappointing and embarrassing how staff treat teenagers by  calling us stupid when she\u2019s the  one who stupidly doesn\u2019t know how to respond respectfully to the question \u201dwhy did you kick us out?\u201d\n\nseems like some adults need to go back and learn basic communication skills. And re think about applying to work in a social environment because the male staff member is clearly fed up with their job yet is still there. Then the women , Acting like showing the cameras will do something. like are you dumb ? of course we know what we did because we was there",
+            "date": "2026-10-04",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Bogdan Artemov",
+            "text": "absolutely horrible service! Had plastic in my food and took forever to get a new dish... guy behind me had the same issue! also had lipstick on my glass and asked for a replacement but never got one despite asking for it again!! clearly not fresh ingredients and absolutely unacceptable service!! i wont be coming back anytime soon",
+            "date": "2026-10-03",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Olivia Allen",
+            "text": "Safe to say disappointed doesn\u2019t even begin to cover, after having a lovely time in the Nottingham branch this place does a disservice to the brand. You\u2019ve got team members who are miserable clearly not being managed which is strange due to the amount on. It is clear as anything that servers haven\u2019t learnt the menu, let alone how to communicate to the customers. Really disappointed came away with such a distaste. You\u2019ve lost some loyal customers .",
+            "date": "2026-10-03",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "San Dee (Sandee)",
+            "text": "We visited on a Thursday evening, it wasn't too busy which was nice.\nThe food was good, we had a steak ramen, a chicken yakisoba and Tokyo rolls.\nIt was generally good, I wouldn't rush to go there again.\nWe also had a lychee lemonade with bubble tea. It tasted really nice but the portion was tiny, again for the price. Should have been a full cup but it was tiny.\nIt let itself down with the price, it was really expensive for what you get.\nOther than that nice location, good staff.",
+            "date": "2026-10-02",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Crow",
+            "text": "The food here was ok. I had a bowl of ramen, which was alright and my friends had chicken katsu curry and sushi. Apparently the sushi was very good, but I feel like the ramen was mediocre - lots of other places do much better ramen for cheaper.\nThey have a different kitchen for their sushi so if you're in a group ordering a mix of sushi and hot mains, be aware that it could take longer for one to arrive. We waited for quite a long time before my friend was served the sushi she ordered.\nThe atmosphere was also very nice",
+            "date": "2026-10-02",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Trish Vu",
+            "text": "I was appalled with the level of customer service there was. Not only we were giving our drinks AFTER our food was served and eaten, we saw the table next to us being seated down after us and given their drinks before us. There was an incident where I asked for the bill by I assumed was the manager on duty, and she said that there was a delay as they had to print out 8 bills and the receipt machine was having problems, we waited roughly 20-25 minutes without any communications while the blonde lady looked at us a lot, we then saw the table next to us asking for the bill and immediately got their receipt even though we waited for some times. I told the other waiter that we have been waited for ages and I told the lady we needed the bill and he said \u201coh\u201d without any apologies on her behalf which makes us believe they did not really care about our time.",
+            "date": "2026-09-30",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Nina",
+            "text": "Hells ramen was not spicy. So they charge for extra chilli sauce!\nThey were half empty and we had ordered too much food for a table of 2 to fit properly. But they were too inflexible to move us.\nSo the food was ok. Service could be better and if the spicy ramen isn't hot enough they shouldn't be charging for more chilli.",
+            "date": "2026-09-29",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Natalie Chatterton",
+            "text": "Delicious food, lots to choose from, but the resturant was soo crowded and loud, it was difficult to hear anyone talking.",
+            "date": "2026-09-28",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-28..2026-10-04 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-05."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-09-28.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-04",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": null,
+        "orders": null,
+        "aov": null,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 99.6,
+        "avg_prep_min": 16.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 0.0,
+        "rider_wait_5min_pct": 1.9,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "busy_mode_pct": 4.8
+      },
+      "gaps": [
+        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
+      ]
+    }
+  }
+}

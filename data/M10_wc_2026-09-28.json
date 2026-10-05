@@ -1,0 +1,234 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-05",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-09-28 \u2013 2026-10-04",
+    "commencing": "2026-09-28",
+    "ending": "2026-10-04"
+  },
+  "sites": {
+    "M10": {
+      "code": "M10",
+      "name": "Maki 10",
+      "gm": "Ninder Joshi",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 39096.07,
+          "target": 33000.0,
+          "var_pct": 18.47,
+          "prev": 35536.1,
+          "wow_abs": 3559.97,
+          "wow_pct": 10.02
+        },
+        "covers": {
+          "actual": 1606,
+          "prev": 1542,
+          "wow_abs": 64,
+          "wow_pct": 4.15
+        },
+        "sph": {
+          "actual": 19.83,
+          "prev": 19.19,
+          "wow_abs": 0.64,
+          "wow_pct": 3.34,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 20.56,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 548.5
+        },
+        "waste": {
+          "actual": 0.0
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-09-28"
+      },
+      "efficiency_score": {
+        "score": 92,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+18.47) + 30% (\u00a3gap +6096 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 69.7,
+            "basis": "\u00a319.83 vs \u00a322 tgt \u2014 level 64, WoW +3.34% \u2192 mom 83"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "20.56% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "food",
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7255,
+        "new_reviews": 51,
+        "star_breakdown": {
+          "1": 1,
+          "2": 2,
+          "3": 1,
+          "4": 2,
+          "5": 45
+        },
+        "negatives": 4,
+        "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "Moka Asuka",
+            "text": "I don\u2019t really understand the hype about Maki&Ramen unfortunately. I\u2019ve been there 2x now thanks to freshers vouchers and none of the ramens I\u2019ve tried has tasted good or authentic. I\u2019ve tried the Chicken green curry ramen, steak tataki ramen, and vegan black garlic ramen. All of them had a dirty, gristly taste\u2026 like the char off a grill. The chicken in the ramen tasted freezer burnt and the vegan bacon had an aftertaste of burnt tires\u2026 very strange. I was excited to try this place since people seem to like it but I wouldn\u2019t recommend the ramen. I\u2019ve yet to try the sushi though, so maybe thats good? Service tends to be slow but this is difficult since they\u2019re always busy. Sometimes it can take up to 30 minutes to receive your food after you order.",
+            "date": "2026-10-03",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Rachel Martin",
+            "text": "Nice food. Just don't agree with the automatic 10% service charge.\nIt's not my job to pay your staff for basic service.",
+            "date": "2026-09-30",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Moonfall Rosa",
+            "text": "I recently visited on the 19th September, me and my partner had been looking forward to visiting after a wonderful visit to Manchester's last year, we booked a table ahead and arrived ten minutes ahead and were seated. However we were not impressed by the service sadly.\n\nFirstly as we were greeted the server seemed completely unenthusastic, sighing and banging the drum in passing which at that point why bother doing it if Ur not going to do it properly. I thought, fair enough, maybe they've had a bad night, a bad shift can really stink. However we were seated, it was all clean, that was no issue, but right away our server was hovering behind my partner waiting for us to pick what to have which made us feel rushed, would come to ask and we would say oh we've just sat down we haven't really had a chance to read the menu yet, mind you I'm not exaggerating, we sat down no more than 15 seconds ago. We then are looking through the menu and I kept glancing up to our waitress (a south Asian woman) because she was hovering and looking at us impatiently leaving us quite stressed as we tried to decide what to have. We chose drinks, they took a while to come out, but it wasn't terrible. Then eventually the food was ordered, the whole time the waitress was just silently hovering and glaring and felt quite intimidating, I don't really care about a waiter asking if we are ready to order yet since of course they have to ask, but we would be making a point of exaggerating we were reading and indecisive so she would relax and stop breathing down our necks but she wouldn't go, and asked us probably 5 times in the span of a couple minutes if we were ready. Eventually we ordered food (within about 10 minutes of being there) and then we waited almost an hour for the food to be ready, multiple tables who arrived after us and ordered after us got their food first, mind you they were also couples so 2 person tables and both also getting the same sort of order, two ramens. We were not apologised to for the wait and we tried to just let it go and enjoy the food because again peopl can just be having a bad day. However this experience has stayed with me and whole the food was delicious, I really can't help but think to the hour long wait for the food, the restaurant was not completely full, so I do not know if maybe an earlier rush had the staff/chefs exhausted or running low on certain stock.\n\nIf this was the case I would love if in the future there could be a \"this dish will take a bit longer to make, approx X amount of time\" or even just to not have the waitress so persistent and in a foul mood the entire time. Even throughout the meal, she seemed to come over and just stand over us. Not asking us \"how is your food?\" (Which I genuinely prefer when that doesn't happen), but just standing and I'd keep glancing and she would just be glaring. I get people can have a bad day but it really ruined the dinner, I couldn't just have a nice experience and relax and enjoy the lovely food, I felt tense and on edge being watched the whole time.\n\nWe had a service charge added on the bill which we didn't ask to be removed because we felt a bit intimidated and awkward but I certainly wouldn't have paid it given the choice. This should be a yes or no box to tick or press rather than automatically applying. The service didn't need to be exceptional above and beyond. Just not miserable, moody, glaring, intimidating.",
+            "date": "2026-09-29",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Aliya Khan",
+            "text": "If i could give a 0, I would. The service at maki and ramen Leeds by the tall south asian guy and the south asian woman is appalling. I came with a leg injury on my right knee, i requested a booth so I wouldnt be bumping and further injuring my leg due to the ridiculously small tables they provide for two people. They were very weird about giving away booth tables \u201cin case someone else came\u201d (even though the restaurant was mostly empty). They said we could only get a booth table if we booked in advance so we came another time with a booking. But they refused to give a table again. When we did manage to eat, the South Asian woman demanded I throw away my leftovers, even though we tidied up the table for them. What\u2019s the point in paying service charge for such poor service?? The staff also seem to work in fear of the tyrannical stuck up south Asian guy. We were loyal customers but due to the circumstances given we won\u2019t be returning to the leeds branch. The customer service ruins an otherwise beautiful restaurant.",
+            "date": "2026-09-28",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-28..2026-10-04 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-05."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-09-28.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 3,
+        "tasks": [
+          {
+            "task": "Wifi Consistency",
+            "priority": "\u2014",
+            "logged_week": "Pending",
+            "owner": "Chris",
+            "status": "open"
+          },
+          {
+            "task": "Front Door (Left) Stopper smashed",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Front door Stopper need to be fixed",
+            "priority": "\u2014",
+            "logged_week": "14/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "3 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-04",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 5626.96,
+        "orders": 201,
+        "aov": 27.99,
+        "new_customers": 66,
+        "rating": 4.67,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 20.1,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.9,
+        "rider_wait_5min_pct": 4.0,
+        "conversion_pct": 8.1,
+        "wow": {
+          "gmv_pct": 5.2,
+          "orders_abs": 5,
+          "prev_gmv": 5350.69,
+          "prev_orders": 196
+        },
+        "gmv_vs_4wk_pct": 5.6,
+        "gmv_vs_ly_pct": -33.9,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 3.8
+      },
+      "gaps": [
+        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    }
+  }
+}
