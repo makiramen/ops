@@ -711,16 +711,16 @@ function evaluate(w,pw){
 function renderHero(){
   var w=wk(S.wc),pw=prevW(S.wc),ev=evaluate(w,pw);
   var tg=ev.filter(function(e){return e.r!=='n'}),hit=tg.filter(function(e){return e.r==='g'}).length,close=tg.filter(function(e){return e.r==='a'}).length,miss=tg.filter(function(e){return e.r==='r'}).length;
-  var cmp=ev.filter(function(e){return e.v!=null&&e.pv!=null}),bet=cmp.filter(function(e){return e.c.b>0}).length,wor=cmp.filter(function(e){return e.c.b<0}).length;
+  var cmp=tg,bet=tg.filter(function(e){return e.v!=null&&e.pv!=null&&e.c.b>0}).length,wor=tg.filter(function(e){return e.v!=null&&e.pv!=null&&e.c.b<0}).length;
   var head=hit>=Math.ceil(tg.length*.75)?'Strong week':hit>=Math.ceil(tg.length*.5)?'Mixed week':'Off the pace';
   var ev2=ev.filter(function(e){return ['food','rating','dr','dprep','loy','loyshare','loyspend'].indexOf(e.m.k)<0});
   var wins=ev2.filter(function(e){return e.r==='g'&&e.c.b>0}).slice(0,3);
   if(wins.length<3)wins=wins.concat(ev2.filter(function(e){return e.r==='g'&&wins.indexOf(e)<0}).slice(0,3-wins.length));
-  var focus=ev2.filter(function(e){return e.r==='r'}).concat(ev2.filter(function(e){return e.r==='a'})).slice(0,3);
+  var fx=tg.filter(function(e){return e.m.k!=='food'}),focus=fx.filter(function(e){return e.r==='r'}).concat(fx.filter(function(e){return e.r==='a'}));
   function item(e,ic){return '<div class="hitem"><span class="ic ic-'+ic+'">'+(ic==='g'?'✓':ic==='r'?'✕':'!')+'</span><div><b>'+e.m.lab+': '+e.m.fmt(e.v)+'</b><small>'+(e.m.tl(w)?'Target '+e.m.tl(w)+(e.m.gap?' · '+e.m.gap(e.v,w):''):'')+(e.pv!=null?' · last week '+e.m.fmt(e.pv):'')+'</small></div></div>'}
   var tot=tg.length||1;
   $('#hero').innerHTML=
-   '<div style="display:flex;flex-direction:column;gap:14px"><div><div class="eyebrow">w/c '+dmy(S.wc)+(S.wc===CUR?' · latest week':'')+'</div><h2>'+head+'</h2><div class="sub">'+hit+' of '+tg.length+' targets hit, '+miss+' Red Light. '+bet+' of '+cmp.length+' measures better than last week.</div></div>'+
+   '<div style="display:flex;flex-direction:column;gap:14px"><div><div class="eyebrow">w/c '+dmy(S.wc)+(S.wc===CUR?' · latest week':'')+'</div><h2>'+head+'</h2><div class="sub">'+hit+' of '+tg.length+' targets hit, '+miss+' Red Light. '+bet+' of '+cmp.length+' targets better than last week.</div></div>'+
    '<div class="meter"><div class="lab"><span>Targets hit</span><b>'+hit+' / '+tg.length+'</b></div><div class="track" aria-hidden="true"><i style="width:'+(hit/tot*100)+'%;background:var(--green)"></i><i style="width:'+(close/tot*100)+'%;background:var(--amber)"></i><i style="width:'+(miss/tot*100)+'%;background:var(--red)"></i></div></div>'+
    '<div class="meter"><div class="lab"><span>Better than last week</span><b>'+bet+' / '+cmp.length+'</b></div><div class="track" aria-hidden="true"><i style="width:'+(bet/(cmp.length||1)*100)+'%;background:var(--maki-orange)"></i><i style="width:'+((cmp.length-bet-wor)/(cmp.length||1)*100)+'%;background:#7a6a5e"></i></div></div></div>'+
    '<div class="hlist"><h4>Working</h4>'+(wins.length?wins.map(function(e){return item(e,'g')}).join(''):'<div class="hitem">No targets hit this week.</div>')+'</div>'+
