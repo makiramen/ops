@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-05",
+  "generated_at": "2026-10-06",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-09-28 \u2013 2026-10-04",
@@ -18,8 +18,8 @@
       "kpis": {
         "sales": {
           "actual": 21966.78,
-          "target": null,
-          "var_pct": null,
+          "target": 39000.0,
+          "var_pct": -43.67,
           "prev": 22700.42,
           "wow_abs": -733.64,
           "wow_pct": -3.23
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
+          "actual": 40.65,
           "target": 23.0,
           "gated": false
         },
@@ -62,9 +62,9 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": 10.5,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": false
         },
         "food": {
           "variance_pct": null,
@@ -74,7 +74,7 @@
         "week_commencing": "2026-09-28"
       },
       "efficiency_score": {
-        "score": 33,
+        "score": 25,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -86,10 +86,20 @@
           "food_var": 5
         },
         "components": {
+          "sales": {
+            "weight": 10,
+            "value": 59.21,
+            "basis": "70% (100-43.67) + 30% (\u00a3gap -17033 vs \u00b1\u00a350k cal)"
+          },
           "sph": {
             "weight": 15,
             "value": 100.0,
             "basis": "\u00a340.60 vs \u00a335 tgt \u2014 level 100, WoW +11.08% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "40.65% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -98,8 +108,6 @@
           }
         },
         "components_dropped": [
-          "sales",
-          "food",
           "weekly_star",
           "food_var"
         ],
@@ -108,7 +116,9 @@
       "red_light": {
         "status": "red",
         "triggers": [
-          "wage 37.5%"
+          "sales -43.7% vs target",
+          "wage 37.5%",
+          "food 40.6%"
         ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
@@ -150,7 +160,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-28..2026-10-04 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-05."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-28..2026-10-04 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-06."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-09-28.json (AGMM Task List Status). Open items only.",
@@ -184,7 +194,6 @@
       },
       "deliveroo": null,
       "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
         "Stock-take \u2014 no variance entered this week",
         "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
       ]
