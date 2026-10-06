@@ -618,6 +618,8 @@ function loyWeek(wc){var b=new Date(wc+'T00:00:00Z').getTime(),o={b:0,m:0,s:0,n:
 WK.forEach(function(w){var l=loyWeek(w.wc);w.loyB=l?l.b:null;w.loyM=l?l.m:null;w.loyS=l?l.s:null;w.loyDays=l?l.days:0;w.loyShare=l&&w.covers?l.b/w.covers*100:null});
 var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8},peer:{n:'Leeds (M10)',roas:4.57,spend:447.23}};
 var SITE=__SITE__,SCODE=SITE.code;
+/* Sites with no delivery (sites.json delivery:false, e.g. M7 SJQ): no delivery sales, Deliveroo rating, prep or Deliveroo tab. */
+var NODEL=SITE.has.delivery===false;
 var CUR=WK.length?WK[WK.length-1].wc:'__TODAY__';
 var TGTW=(function(){for(var i=WK.length-1;i>=0;i--)if(WK[i].target)return WK[i].target;return 0})(),YMAX=Math.ceil(Math.max(TGTW,Math.max.apply(null,WK.map(function(w){return w.sales||0}).concat([1])))*1.1/5000)*5000;
 var KEY='maki_site_cc_'+SCODE.toLowerCase()+'_v4';
@@ -669,6 +671,7 @@ var M=[
  {k:'loyspend',lab:'Member spend',src:'Ramen Royalty',f:function(w){return w.loyS},fmt:gbp,dir:1,tgt:function(){return null},tl:function(){return null},rag:function(){return 'n'},gap:function(){return ''},chg:'pct',sub:function(w){return w.loyS!=null&&w.sales?pct1(w.loyS/w.sales*100)+' of sales':'Ramen Royalty'}},
  {k:'eff',lab:'Efficiency score',src:'Control Centre',f:function(w){return w.eff},fmt:function(v){return v==null?NA:Math.round(v)+''},dir:1,tgt:function(){return 90},tl:function(){return '≥ 90'},rag:function(v){return effRag(v)},gap:function(v){return sgn(v-90,0,'')},chg:'abs0'}
 ];
+if(NODEL)M=M.filter(function(m){return ['del','dr','dprep'].indexOf(m.k)<0});
 function pct1(v){return v==null?NA:v.toFixed(1)+'%'}
 function pct2(v){return v==null?NA:v.toFixed(2)+'%'}
 function sgn(v,dp,suf){if(v==null||isNaN(v))return '';var s=v.toFixed(dp);if(+s===0)s=(0).toFixed(dp);return (+s>0?'+':'')+s+(suf==null?'':suf)}
@@ -730,7 +733,7 @@ function heroKeys(w,pw){
   var pws=pw?lastN(pw.wc,4).filter(function(x){return x.rev&&x.rating!=null}):[],pn=pws.reduce(function(t,x){return t+x.rev},0),pg=pn?pws.reduce(function(t,x){return t+x.rating*x.rev},0)/pn:null;
   function ic(r){return '<span class="ic ic-'+(r==='n'?'a':r)+'">'+(r==='g'?'✓':r==='r'?'✕':'!')+'</span>'}
   var food='<div class="hitem">'+ic(fr)+'<div><b>Food cost: '+pct2(w.food).replace(/<[^>]+>/g,'')+'</b><small>Red Light above 25%'+(w.food!=null?' · '+sgn(w.food-25,2,'pp'):'')+(pw&&pw.food!=null?' · last week '+pct2(pw.food):'')+'</small></div></div>';
-  var rev='<div class="hitem">'+ic(rr)+'<div><b>Reviews, last 4 weeks: Google '+(g==null?'n/a':g.toFixed(2)+'★')+' · Deliveroo '+(dr==null?'n/a':dr.toFixed(2)+'★')+'</b><small>'+n+' Google reviews, '+neg+' negative · target ≥ 4.70★'+(pg!=null?' · prior 4 weeks '+pg.toFixed(2)+'★':'')+'</small></div></div>';
+  var rev='<div class="hitem">'+ic(rr)+'<div><b>Reviews, last 4 weeks: Google '+(g==null?'n/a':g.toFixed(2)+'★')+(NODEL?'':' · Deliveroo '+(dr==null?'n/a':dr.toFixed(2)+'★'))+'</b><small>'+n+' Google reviews, '+neg+' negative · target ≥ 4.70★'+(pg!=null?' · prior 4 weeks '+pg.toFixed(2)+'★':'')+'</small></div></div>';
   var d=w.d,orr=drooRag(d),miss=DM.filter(function(m){return d[m.k]==null}).length;
   var ops='<div class="hitem">'+ic(orr)+'<div><b>Deliveroo operations: '+({g:'GREEN',a:'AMBER',r:'RED',n:'NO DATA'})[orr]+'</b><small>'+DM.filter(function(m){return m.k!=='r'}).map(function(m){var v=d[m.k],r=v==null?'n':band(v,m.g,m.a,m.hi);return m.lab+' '+(v==null?'n/a':m.fmt(v))+(r==='r'?' ✕':r==='a'?' !':'')}).join(' · ')+(miss?' · '+miss+' metric'+(miss>1?'s':'')+' missing':'')+'</small></div></div>';
   var urg=KL.lines.filter(function(l){return l[9]==='Urgent'}),chk=KL.lines.filter(function(l){return l[9]==='Check'}).length,first=urg.slice().sort(function(a,b){return a[4]-b[4]})[0];
@@ -1235,7 +1238,7 @@ function renderMaint(mj){var M=MAINT||{},O=M.open||[],D=M.done||[],n=nowIso(),N=
   var h='';
   if(!M.pulled)h='<div class="small">Maintenance log not pulled yet for this site.</div>';
   else{h='<div class="big" style="font-size:22px">'+O.length+' open job'+(O.length===1?'':'s')+'</div><div class="small">'+(N.high||0)+' high priority · '+(N.done30||0)+' done in the last 30 days'+(N.cost30?' (£'+N.cost30.toFixed(2)+')':'')+'</div>'+O.map(function(j){return job(j,true)}).join('');
-    var un=((M.recap||{}).items||[]).filter(function(x){return !x.matched});
+    var un=((M.recap||{}).items||[]).filter(function(x){return !x.matched&&!x.closed});
     if(un.length)h+='<div class="mini" style="margin-top:10px">Also on Lincoln\'s recap'+(M.recap.asof?' ('+dmy(M.recap.asof)+')':'')+'</div>'+un.map(function(x){return '<div class="small">• '+esc(x.t)+(x.upd?': '+esc(x.upd):'')+'</div>'}).join('');
     if(D.length)h+='<details style="margin-top:10px"><summary class="small" style="cursor:pointer">Recently done ('+D.length+' in 60 days)</summary>'+D.slice(0,8).map(function(j){return job(j,false)}).join('')+'</details>'}
   if(mj&&mj.length)h+='<div class="mini" style="margin-top:10px">From meeting actions</div>'+mj.map(function(a){var m=[a.o?esc(a.o):'',a.d?dm(a.d):''].filter(Boolean).join(', ');return '<div class="small">• '+esc(a.t)+(m?' ('+m+')':'')+'</div>'}).join('');
@@ -1535,6 +1538,23 @@ $('#newAct').addEventListener('submit',function(e){e.preventDefault();var t=$('#
   if(!t||!o){er.hidden=false;er.textContent='Add the action and an owner.';return}er.hidden=true;var na={id:Date.now(),t:t,o:o,d:d,s:'open',ev:'',src:$('#na_s').value,wc:S.wc,esc:$('#na_e').checked?1:0};S.acts.push(na);queue('add',na);$('#na_e').checked=false;$('#na_t').value=$('#na_o').value=$('#na_d').value='';S.filter='open';save();renderActs();renderOb();toast('Action added')});
 var hsh=(location.hash||'').slice(1);if(['overview','kpi','droo','daily','stock','people','actions'].indexOf(hsh)>-1){S.tab=hsh;S.per='week'}if(hsh==='month')S.per='month';
 if(idx(S.wc)<0)S.wc=CUR;if(MONTHS.indexOf(S.month)<0)S.month=MONTHS[0];
+if(NODEL&&S.tab==='droo')S.tab='overview';
+/* No delivery site: strip every delivery and Deliveroo element after each render (tabs, cards, Red Light rows, gaps, table columns). */
+function stripDel(){
+  var t=document.querySelector('nav.tabs [data-t="droo"]');if(t)t.hidden=true;
+  $$('[data-go="droo"]').forEach(function(b){var c=b.closest('.card');if(c)c.hidden=true});
+  $$('.hlist h4').forEach(function(h){if(/^Deliveroo/.test(h.textContent)){h.parentNode.remove()}});
+  $$('.card .eyebrow').forEach(function(e){if(e.textContent==='Deliveroo'){var c=e.closest('.card');if(c)c.hidden=true}});
+  $$('.hitem b').forEach(function(b){if(/^Deliveroo/.test(b.textContent)){var h=b.closest('.hitem');if(h)h.remove()}});
+  $$('#redlight tr').forEach(function(r){if(/^Deliveroo/.test(r.cells[0].textContent))r.remove()});
+  $$('#gaps > div').forEach(function(d){if(/Deliveroo/.test(d.textContent))d.remove()});
+  $$('.small').forEach(function(d){if(/^Delivery is every platform/.test(d.textContent))d.remove()});
+  $$('#siteChips .pill').forEach(function(p){if(/^Deliveroo/.test(p.textContent))p.hidden=true});
+  $$('table').forEach(function(tb){var hr=tb.tHead&&tb.tHead.rows[0];if(!hr)return;var n=hr.cells.length,ix=[];
+    for(var i=0;i<n;i++)if(/^(Delivery|Roo\b|Deliveroo)/.test(hr.cells[i].textContent.trim()))ix.push(i);if(!ix.length)return;
+    Array.prototype.forEach.call(tb.rows,function(r){if(r.cells.length===n)ix.forEach(function(k){r.cells[k].hidden=true})})});
+}
+if(NODEL){var _ra=renderAll;renderAll=function(){_ra.apply(this,arguments);stripDel()};var _rm=renderMonth;renderMonth=function(){_rm.apply(this,arguments);stripDel()};var _rd=renderDaily;renderDaily=function(){_rd.apply(this,arguments);stripDel()}}
 renderAll();
 window.addEventListener('resize',function(){if(S.per==='week'&&S.tab==='droo')renderDroo()});
 })();

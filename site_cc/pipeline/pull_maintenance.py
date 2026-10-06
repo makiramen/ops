@@ -31,7 +31,7 @@ clean=lambda s:re.sub(r'\s+',' ',(s or '').replace('—',', ').replace('–','-'
 rows=sheet_values(sid,"'Form responses 1'!A:M")
 if len(rows)<2:raise SystemExit('maintenance: Form responses 1 read but empty, keeping the last good file')
 T=today();cut=(T-datetime.timedelta(60)).isoformat()
-opn=[];done=[]
+opn=[];done=[];closed=[]
 for r in rows[1:]:
     r=(r+['']*13)[:13]
     if key not in keys(r[2]):continue
@@ -42,6 +42,7 @@ for r in rows[1:]:
     j={'d':d,'t':clean(r[4]),'pri':pri,'st':st,'by':clean(r[3]),'who':clean(r[9]),'note':clean(r[12]),'cost':money(r[11]),'comp':dmy(r[7]),
        'pic':r[5].strip() if r[5].strip().startswith('http') else ''}
     if re.match(r'(?i)complet|cancel',st):
+        closed.append(j)
         if d>=cut:done.append(j)
     else:opn.append(j)
 # Lincoln's Weekly Recap: rows with no date or site carry on the site above
@@ -63,6 +64,10 @@ except Exception as e:print('maintenance: Weekly Recap not read:',e)
 for it in recap['items']:
     best=max(opn,key=lambda j:difflib.SequenceMatcher(None,j['t'].lower()[:80],it['t'].lower()[:80]).ratio(),default=None)
     if best and difflib.SequenceMatcher(None,best['t'].lower()[:80],it['t'].lower()[:80]).ratio()>=0.6:best['upd']=it['upd'];it['matched']=True
+# a recap line whose job is already Completed or Cancelled (any age) is not shown as still on the recap
+sim=lambda a,b:difflib.SequenceMatcher(None,a.lower()[:80],b.lower()[:80]).ratio()
+for it in recap['items']:
+    if not it.get('matched') and any(sim(j['t'],it['t'])>=0.6 for j in closed):it['closed']=True
 opn.sort(key=lambda j:j['d']);done.sort(key=lambda j:j['d'],reverse=True)
 d30=[j for j in done if j['d']>=(T-datetime.timedelta(30)).isoformat() and j['st'].lower().startswith('complet')]
 out={'src':'Required Maintenance/Repair (Responses), Maintenance Log form','pulled':T.isoformat(),
