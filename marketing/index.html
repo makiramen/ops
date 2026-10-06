@@ -1256,7 +1256,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
      All numbers come from RR (= DATA.rr merged over the 1 Sept snapshot).
      Nothing here reads any other tab's state.                            -->
 <!-- ================================================================ -->
-<!-- SLERP TAB  (v6.5, 6 Oct 2026) · source: Slerp Orders SoT sheet    -->
+<!-- SLERP TAB  (v6.5.1, 6 Oct 2026) · source: Slerp Orders SoT sheet    -->
 <!-- Reads DATA.slerp when HubPublish carries it, else the snapshot.   -->
 <!-- ================================================================ -->
 <style>
@@ -8846,8 +8846,13 @@ function slerpRender() {
 }
 (function() {
   var b = document.querySelector('#tabs button[data-tab="slerp"]');
-  if (b) b.addEventListener('click', function() { try { slerpRender(); } catch (e) { console.error('slerp', e); } });
-  if (location.hash === '#slerp') setTimeout(function() { try { slerpRender(); } catch (e) {} }, 0);
+  // v6.5.1: draw now (snapshot if DATA not in yet), then redraw once the payload lands
+  var go = function() {
+    try { slerpRender(); } catch (e) { console.error('slerp', e); }
+    if (typeof loadData === 'function') loadData().then(function() { try { slerpRender(); } catch (e) {} }).catch(function() {});
+  };
+  if (b) b.addEventListener('click', go);
+  if (location.hash === '#slerp') setTimeout(go, 0);
 })();
 </script>
 
