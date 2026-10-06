@@ -30,6 +30,8 @@ SK={
  'eotm.json':{'src':"Hanna's EOTM Manual Input sheets",'pulled':None,'sheets':{'BOH':'','FOH':''},'m':{}},
  'mapal.json':{'src':'Mapal forms' if C.get('mapal_location') else 'Mapal: '+na,'to':None,'location':C.get('mapal_location'),'f':[],'detail':{}},
  'mcomp.json':{'src':'Mapal Weekly Compliance Tracker','to':None,'location':C.get('mapal_location'),'w':[],'chain':[]},
+ 'maint.json':{'src':'Required Maintenance/Repair (Responses)','pulled':None,'url':'','form':'','open':[],'done':[],'recap':{'asof':None,'items':[]},'n':{}},
+ 'ppm.json':{'src':'PPM contractors by site','asof':None,'items':[]},
  'revintel.json':{'src':'AM Control Centre Reviews Intelligence','built':None,'to':None,'code':A.site,'tax':{},'praise':{},'ann':{},'r':[]},
 }
 # reviews.json carries the complaint taxonomy the page labels with; reuse the pipeline copy
