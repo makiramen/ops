@@ -48,6 +48,7 @@ jobs:
         if: steps.guard.outputs.go == '1'
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+          ASANA_TOKEN: ${{ secrets.ASANA_TOKEN }}
           OPS_ROOT: ${{ github.workspace }}
         run: bash site_cc/pipeline/run_nightly.sh
       - name: Commit and push
