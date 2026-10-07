@@ -5804,10 +5804,35 @@ const MEETING_RISK = {
   var elGaps = document.getElementById('daily-gaps');
   var elFoot = document.getElementById('daily-foot');
 
-  var NCOL = 11;
+  var NCOL = 12;
   var DATES = [];
   var cache = {};
   var rvCache = {};   // reviews payload per date; null means 'tried, not available'
+  // Deliveroo daily ops (data/deliveroo_daily.json, written by the Site CC nightly from the Deliveroo Daily Master sheet).
+  // One estate file keyed by day then site: [orders, prep min, AOD min, missing items %, cancellations, cancel %, rejections, prep red].
+  // Optional: a missing file renders the column as a dot and the cash-up table still renders in full.
+  var ROO = null, rooTried = false;
+  function rooLoad() {
+    if (rooTried) return Promise.resolve(ROO);
+    rooTried = true;
+    return fetch((typeof DATA_DIR === 'string' ? DATA_DIR : './data/') + 'deliveroo_daily.json?cb=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { ROO = (j && j.d) ? j : null; return ROO; })
+      .catch(function () { ROO = null; return null; });
+  }
+  function rooCell(date, code) {
+    var q = ROO && ROO.d[date] && ROO.d[date][code];
+    if (!q) return '<span class="dly-m" title="No Deliveroo daily row for this site and day">\u00b7</span>';
+    var red = q[7] === 1, iss = [];
+    if (q[3]) iss.push(q[3].toFixed(1) + '% missing');
+    if (q[6]) iss.push(q[6] + ' rej');
+    if (q[4]) iss.push(q[4] + ' cancel');
+    var tip = 'Deliveroo ' + date + ': ' + (q[0] == null ? '' : q[0] + ' orders, ') + (q[1] == null ? '' : 'prep ' + q[1].toFixed(1) + ' min, ')
+      + (q[2] == null ? '' : 'order duration ' + q[2].toFixed(1) + ' min') + (iss.length ? '; ' + iss.join(', ') : '; no missing items, cancellations or rejections');
+    return '<span title="' + esc(tip) + '"><b>' + (q[0] == null ? '\u00b7' : q[0]) + '</b> orders'
+      + '<span class="sub"><span class="' + (q[1] == null ? 'dly-m' : (red ? 'dly-r' : 'dly-g')) + '">' + (q[1] == null ? '\u00b7' : q[1].toFixed(1) + ' min prep') + '</span>'
+      + (iss.length ? ' <span class="dly-r">' + esc(iss.join(' \u00b7 ')) + '</span>' : '') + '</span></span>';
+  }
 
   var fmtG = function (n) {
     if (n == null) return '—';
@@ -5975,7 +6000,8 @@ const MEETING_RISK = {
       + '<td><span class="' + ragWage(l.wage_pct) + '">' + fmtP(l.wage_pct) + '</span></td>'
       + '<td>' + foh + '</td><td>' + boh + '</td>'
       + '<td>' + splitBar(s) + '</td>'
-      + '<td>' + rvChip(rv, code) + '</td></tr>'
+      + '<td>' + rvChip(rv, code) + '</td>'
+      + '<td>' + rooCell(p.date, code) + '</td></tr>'
       + rvRow(rv, code);
   }
 
@@ -6089,7 +6115,8 @@ const MEETING_RISK = {
 
     var head = '<tr><th>Site</th><th>Target</th><th>Sales</th><th>Target hit?</th><th>Covers</th>'
       + '<th>Labour</th><th>Wage %</th><th class="acc-foh">FOH</th><th class="acc-boh">BOH</th>'
-      + '<th>Split of labour cost</th><th>Google reviews<span class="sub" style="display:block;font-size:10px;font-weight:600;opacity:.85">7 days · click to read</span></th></tr>';
+      + '<th>Split of labour cost</th><th>Google reviews<span class="sub" style="display:block;font-size:10px;font-weight:600;opacity:.85">7 days · click to read</span></th>'
+      + '<th>Deliveroo<span class="sub" style="display:block;font-size:10px;font-weight:600;opacity:.85">orders · prep · issues</span></th></tr>';
 
     // Group by region. Any site not in a cluster still gets rendered, under a
     // catch-all band, so a new site can never silently vanish from the tab.
@@ -6176,6 +6203,7 @@ const MEETING_RISK = {
       + 'FOH and BOH are actual completed shifts, shown in £ and as a share of the final total labour cost. '
       + 'Wage % is total labour ÷ sales. Grouped by region, then sales highest first. '
       + 'Source: Auto Cash Up workbook, <b>Raw Data 2</b>. Refreshed daily at 12:15 Dubai.'
+      + (ROO ? '<br><b>Deliveroo</b> is the day\'s orders delivered, estimated prep time (red above 15.00 min, the Red Light rule) and any missing items %, restaurant error cancellations or rejections, from the Deliveroo Daily Master sheet (Deliveroo\'s morning CSV drops, ingested hourly), latest day ' + shortDate(ROO.to) + '. A dot means no Deliveroo row for that site and day.' : '')
       + (rv
         ? '<br><b>Google reviews</b> lead on the rolling <b>7 days</b> to ' + shortDate(rv.window_to)
           + ' \u2014 about 65 reviews a day arrive across 19 sites, too few to judge a site on one day. '
@@ -6192,7 +6220,7 @@ const MEETING_RISK = {
     var i = DATES.indexOf(date);
     elPrev.disabled = (i >= DATES.length - 1);
     elNext.disabled = (i <= 0);
-    if (cache[date]) { render(cache[date], rvCache[date]); return; }
+    if (cache[date]) { rooLoad().then(function () { render(cache[date], rvCache[date]); }); return; }
     elSub.textContent = 'Loading ' + shortDate(date) + '…';
     var cb = '?cb=' + Date.now();
     var pMain = fetch(DIR + 'daily_' + date + '.json' + cb)
@@ -6203,7 +6231,7 @@ const MEETING_RISK = {
     var pRv = fetch(DIR + 'daily_reviews_' + date + '.json' + cb)
       .then(function (r) { return r.ok ? r.json() : null; })
       .catch(function () { return null; });
-    Promise.all([pMain, pRv])
+    Promise.all([pMain, pRv, rooLoad()])
       .then(function (a) {
         cache[date] = a[0];
         rvCache[date] = (a[1] && a[1].sites) ? a[1] : null;
