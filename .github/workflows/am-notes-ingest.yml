@@ -1,0 +1,54 @@
+name: AM CC notes ingest
+
+# Offline notes route (07/10/2026). A cloud Claude task drops am_cc_notes_wc_<MONDAY>.json into the
+# Drive folder "AM CC notes inbox" on Tue and Wed evenings. This job picks it up, patches the notes into
+# data/<CODE>_wc_<MONDAY>.json and all_sites, commits, then starts the Site Control Centre build so
+# M7 and M14 carry the same notes. Idempotent: a file is ingested once (data/_notes_ingest_state.json).
+on:
+  schedule:
+    # UTC. Every 15 min, Tue and Wed 16:00 to 22:59 UTC (20:00 to 02:59 Dubai), plus Thu morning as a catch up.
+    - cron: '4,19,34,49 16-22 * * 2,3'
+    - cron: '4,34 3-5 * * 4'
+  workflow_dispatch: {}
+
+concurrency:
+  group: am-notes-ingest
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  ingest:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: main, fetch-depth: 1, persist-credentials: false }
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - run: pip install 'google-auth>=2.29' 'google-api-python-client>=2.120'
+      - name: Ingest new notes files from Drive
+        id: ingest
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+        run: python3 site_cc/pipeline/ingest_am_notes.py --data data
+      - name: Commit and push
+        id: push
+        env:
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data
+          git diff --cached --quiet && { echo "No changes."; echo "pushed=0" >> $GITHUB_OUTPUT; exit 0; }
+          git commit -m "AM CC notes ingest: $(TZ=Europe/London date +'%Y-%m-%d %H:%M') UK"
+          for i in 1 2 3; do git push && break; git fetch origin main && git rebase origin/main; done
+          echo "pushed=1" >> $GITHUB_OUTPUT
+      - name: Rebuild the Site Control Centre (M7, M14 and every live site)
+        if: steps.ingest.outputs.changed != '0' && steps.push.outputs.pushed == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run site-cc-nightly.yml --ref main --repo ${{ github.repository }}
