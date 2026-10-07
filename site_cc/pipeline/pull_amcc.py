@@ -84,7 +84,7 @@ for wc in got:
             if store.get(wc)!=new:print('DIFF',lab,wc,'\n  stored',str(store.get(wc))[:300],'\n  source',str(new)[:300])
         else:store[wc]=new
 if not a.check:
-    for f,o in (('eff.json',EF),('effall.json',EA),('stand.json',SD),('notes.json',dict(sorted(NT.items()))),('amcc_actions.json',AC[-60:])):
+    for f,o in (('eff.json',EF),('effall.json',EA),('stand.json',SD),('notes.json',dict(sorted(NT.items()))),('amcc_actions.json',sorted(AC,key=lambda x:(x.get('wc') or '',x['id']))[-120:])):
         q=os.path.join(a.data,f);json.dump(o,open(q+'.tmp','w'),ensure_ascii=False,separators=(',',':'));os.replace(q+'.tmp',q)
 if not a.check:
     W['main']=[M[k] for k in sorted(M)];W['droo']=[D[k] for k in sorted(D)];W['pulled']=datetime.date.today().isoformat()
