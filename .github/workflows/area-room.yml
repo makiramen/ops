@@ -1,0 +1,119 @@
+name: Area Room daily build
+
+# 07/10/2026. Rebuilds and publishes the Area Room (area_room.html) every morning, no Mac needed.
+# WHEN. 10:00 UK, or straight after the AM CC daily tab lands if that is later. The reliable scheduler dispatches
+# this at 10:00 UK and re checks through the day (GitHub cron runs hours late on this repo). Each finished daily tab
+# run also wakes it (workflow_run), so a late cash-up rebuilds the room within minutes of landing.
+# GUARD. Never before 10:00 UK. Waits for the daily tab to carry yesterday; from 14:00 UK it builds with whatever
+# is live so the room still refreshes once a day. Skips when today's build already carries yesterday.
+# SECRETS. AREA_ROOM_CONFIG = {"users": {name: password}, "b2b_file_id": "..."} (logins never sit in the repo).
+# SITE_CC_SERVICE_ACCOUNT_JSON = site-cc-reader, which reads RAMEN_ROYALTY (AUTO) and the Mapal tracker.
+# The Area Room log web app URL stays as built into build_gate.py.
+# PUBLISHES area_room.html ONLY. The commit step refuses anything else, index.html included.
+on:
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Build now, ignore the 10:00 and already built checks'
+        type: boolean
+        default: false
+  workflow_run:
+    workflows: ['Daily tab (cash-up + reviews + Reviews Intelligence + Deliveroo daily ops)']
+    types: [completed]
+  schedule:
+    - cron: '5 9,10,13 * * *'   # backup only; the reliable scheduler is the real clock
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: area-room
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main, fetch-depth: 1, persist-credentials: false }
+
+      - name: Guard (UK clock, daily tab landed, not already built)
+        id: guard
+        env:
+          FORCE: ${{ github.event.inputs.force || 'false' }}
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, re, sys, urllib.request
+          from datetime import datetime, timedelta
+          from zoneinfo import ZoneInfo
+          now = datetime.now(ZoneInfo('Europe/London')); today = now.date(); D = (today - timedelta(days=1)).isoformat()
+          def say(m): print(m, file=sys.stderr)
+          if os.environ['FORCE'] == 'true':
+              say('Manual force run'); print('go=1'); raise SystemExit
+          if now.hour < 10:
+              say(f'{now:%H:%M} UK, before 10:00, skipping'); print('go=0'); raise SystemExit
+          latest = str(json.load(open('data/daily/daily_index.json')).get('latest', ''))
+          m = re.search(r'area-room-built: (\S+) daily:(\S+)', open('area_room.html', encoding='utf-8').read(400)) if os.path.exists('area_room.html') else None
+          built, carries = (m.group(1), m.group(2)) if m else ('', '')
+          if built == today.isoformat() and (carries >= D or carries >= latest):
+              say(f'Already built today carrying {carries}, skipping'); print('go=0'); raise SystemExit
+          if latest < D:
+              # is a daily tab run still going? its finish wakes this workflow again
+              req = urllib.request.Request(f"https://api.github.com/repos/{os.environ['REPO']}/actions/workflows/daily-tab.yml/runs?per_page=5",
+                                           headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              try:
+                  busy = any(r['status'] != 'completed' for r in json.load(urllib.request.urlopen(req, timeout=20))['workflow_runs'])
+              except Exception:
+                  busy = False
+              if now.hour < 14 or busy:
+                  say(f'Daily tab still on {latest} (want {D}), waiting for it'); print('go=0'); raise SystemExit
+              say(f'14:00 UK passed and the daily tab is still on {latest}, building with what is live')
+          say(f'Building: daily tab carries {latest}')
+          print('go=1')
+          PY
+
+      - uses: actions/setup-python@v5
+        if: steps.guard.outputs.go == '1'
+        with: { python-version: '3.12' }
+
+      - name: Install
+        if: steps.guard.outputs.go == '1'
+        run: pip install --quiet openpyxl cryptography google-auth google-api-python-client
+
+      - name: Build
+        if: steps.guard.outputs.go == '1'
+        env:
+          AREA_ROOM_CONFIG: ${{ secrets.AREA_ROOM_CONFIG }}
+          GOOGLE_SA_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+          OPS_DATA: ${{ github.workspace }}/data
+          DAILY_DIR: ${{ github.workspace }}/data/daily
+          DROO_DAILY: ${{ github.workspace }}/data/deliveroo_daily.json
+          AREA_ROOM_OUT: ${{ github.workspace }}/area_room.html
+          TZ: Europe/London
+        run: |
+          set -o pipefail
+          if [ -z "$AREA_ROOM_CONFIG" ]; then echo "::error::AREA_ROOM_CONFIG secret missing, nothing published"; exit 1; fi
+          python3 area_room_build/build_gate.py 2>&1 | tee /tmp/build.log
+          # never publish a room with the live sheets missing (falls back to stale or empty data)
+          if grep -q "sheet read failed\|b2b download failed\|b2b download was not" /tmp/build.log; then
+            echo "::error::a live source failed (see log), keeping the published room as it is"; exit 1; fi
+          head -c 200 area_room.html | grep -q "area-room-built: $(date +%F)" || { echo "::error::build marker missing"; exit 1; }
+          { echo "## Area Room"; head -c 200 area_room.html | grep -o "area-room-built:[^>]*"; grep "sites_weekly\|built" /tmp/build.log; } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish area_room.html only
+        if: steps.guard.outputs.go == '1'
+        env:
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          git config user.name "maki-nori"; git config user.email "michael@makiramen.com"
+          git add area_room.html
+          CHANGED=$(git diff --cached --name-only; git status --porcelain -- index.html)
+          [ "$CHANGED" = "area_room.html" ] || { echo "::error::refusing to publish anything but area_room.html: $CHANGED"; exit 1; }
+          git commit -q -m "Area Room: $(TZ=Europe/London date +'%Y-%m-%d %H:%M') UK"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          for i in 1 2 3; do git push "$URL" HEAD:main && exit 0; git fetch -q "$URL" main && git rebase -q FETCH_HEAD; done
+          exit 1

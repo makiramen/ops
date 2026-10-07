@@ -92,6 +92,15 @@ jobs:
               return bool(m) and str(m[-1]) >= D()
           def budget_done():
               j = jfile('data/ec_budget_run_report.json'); return bool(j) and str(j.get('ledger_through', '')) >= D()
+          def area_room_done():
+              # area_room.html carries '<!-- area-room-built: <UK day> daily:<day> -->'; done = built today with yesterday in it
+              try:
+                  t = call('/contents/area_room.html?ref=main', raw=True) or ''
+              except Exception:
+                  return False
+              import re
+              m = re.search(r'area-room-built: (\S+) daily:(\S+)', t[:400])
+              return bool(m) and m.group(1) == uk_today().isoformat() and m.group(2) >= D()
           def keyline_done():
               try: return call(f'/contents/keyline/pull-{uk_today().isoformat()}.txt?ref=main', raw=True) is not None
               except Exception: return False
@@ -102,6 +111,8 @@ jobs:
               dict(wf='broth-tab.yml', slots=['07:00', '08:00', '09:40', '11:00', '12:20', '14:00', '17:20', '21:20'], done=broth_done, always=['12:20', '17:20', '21:20']),
               dict(wf='daily-tab.yml', slots=['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30', '21:30'], done=daily_done, always=['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30', '21:30']),  # hourly: picks up Google reviews within the hour of the late nightly pull
               dict(wf='budget-burn-snapshot.yml', slots=['09:40', '11:10', '12:40', '14:10', '16:10', '18:10'], done=budget_done, always=['11:10', '16:10']),
+              # Area Room (07/10/2026): 10:00 UK, or after the daily tab lands if later (area-room.yml also wakes on each daily tab finish)
+              dict(wf='area-room.yml', slots=['10:00', '10:45', '11:30', '12:30', '13:30', '14:15', '16:15', '18:15'], done=area_room_done, always=[]),
               dict(wf='site-cc-nightly.yml', slots=['05:30', '09:50', '12:45'], done=None, always=['05:30', '09:50', '12:45']),
           ]
 
