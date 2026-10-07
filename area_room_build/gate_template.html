@@ -166,6 +166,38 @@ td.sitecell[data-site]:hover{color:var(--maki-orange);text-decoration:underline}
 .negbtn{font:inherit;font-size:11.5px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid #fecaca;border-radius:999px;padding:2px 9px;cursor:pointer;margin-left:4px}
 .negbtn:hover{background:var(--red);color:#fff}
 .tap{font-size:11px;color:var(--maki-orange);font-weight:700;margin-top:6px}
+/* ===== AM Control Centre colours (08/10/2026): cream bar, orange table heads, orange bands, gradient heroes ===== */
+:root{--amber-ring:#fde68a;--red-ring:#fecaca;--green-ring:#a7f3d0;--band:#E94E1B}
+.room-bar,.sheet-head{background:var(--maki-cream);color:var(--maki-ink);border-bottom:2px solid var(--maki-orange);box-shadow:0 1px 0 rgba(233,78,27,.06)}
+.room-logo{height:40px;width:auto;display:block;flex:none}
+.room-title{color:var(--maki-ink)}.room-title small{color:var(--maki-orange);font-weight:600}
+.sheet-head h2{color:var(--maki-ink)}.sheet-head small{color:var(--maki-orange);font-weight:600}
+.room-x{background:var(--maki-orange-bg);border:1px solid var(--maki-orange-ring);color:var(--maki-orange)}
+.room-x:hover{background:var(--maki-orange);border-color:var(--maki-orange);color:#fff}
+table.t th{background:var(--band);color:#fff;border-bottom:0;letter-spacing:.04em}
+table.t th span{color:rgba(255,255,255,.85)!important}
+table.t th.now{background:#B5470B;color:#fff}
+table.t tr.grp td{background:#FDEEE8;border-top:2px solid var(--band);border-bottom:1px solid #F6C9B6;color:var(--band)}
+.site-tile{border-top:0;border-left:4px solid var(--maki-orange)}
+.mini-hero{background:linear-gradient(135deg,#7a1f08 0%,#c63d12 55%,#E94E1B 100%);border-radius:18px;color:#fff;padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow-lg)}
+.mini-hero h2{margin:0 0 4px;font-size:22px;font-weight:700;letter-spacing:-.02em;color:#fff}
+.mini-hero p{margin:0;color:#fde3d6;font-size:13px}
+/* RAG cells, same tokens as the AM CC Deliveroo RAG */
+.rg{background:var(--green-bg);color:var(--green)}.ra{background:var(--amber-bg);color:var(--amber)}.rr{background:var(--red-bg);color:var(--red)}.rm{background:#f4f6f8;color:#94a3b8}
+table.t td.rg,table.t td.ra,table.t td.rr,table.t td.rm{font-weight:700;font-variant-numeric:tabular-nums}
+.ragpill{display:inline-block;min-width:56px;padding:2px 9px;border-radius:999px;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;text-align:center}
+.ragpill.g{background:var(--green-bg);color:var(--green);border:1px solid var(--green-ring)}.ragpill.a{background:var(--amber-bg);color:var(--amber);border:1px solid var(--amber-ring)}.ragpill.r{background:var(--red-bg);color:var(--red);border:1px solid var(--red-ring)}.ragpill.m{background:#f1f5f9;color:#64748b;border:1px solid var(--line)}
+.counts{display:flex;gap:6px;flex-wrap:wrap}
+.pcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px;margin-bottom:16px}
+.pcard{background:#fff;border:1px solid var(--line);border-left:4px solid var(--maki-orange);border-radius:14px;box-shadow:var(--shadow);padding:14px 16px}
+.pcard.r{border-left-color:var(--red)}.pcard.a{border-left-color:var(--amber)}.pcard.g{border-left-color:var(--green)}
+.pcard h3{margin:0;font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+.pcard .role{font-size:11.5px;color:var(--ink-3);margin:2px 0 10px}
+.pcard table.t{min-width:0;font-size:12.5px}
+.pcard table.t td,.pcard table.t th{padding:6px 7px}
+.wkpick{font:inherit;font-size:12.5px;font-weight:700;padding:6px 10px;border:1px solid var(--maki-orange-ring);border-radius:9px;background:var(--maki-orange-bg);color:var(--maki-orange)}
+table.t tr.band td{background:#FDEEE8;border-top:2px solid var(--band);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--band);padding:8px 10px}
+table.t tr.tot td{font-weight:800}
 </style>
 </head>
 <body>
@@ -209,6 +241,7 @@ td.sitecell[data-site]:hover{color:var(--maki-orange);text-decoration:underline}
 <!-- ROOM -->
 <div id="room">
   <div class="room-bar">
+    <img class="room-logo" alt="Maki &amp; Ramen" src="data:image/png;base64,__LOGO__">
     <span class="room-mark">門</span>
     <div class="room-title"><span id="rtitle">Area Room</span><small id="rsub"></small></div>
     <span style="margin-left:auto"></span>
@@ -329,7 +362,7 @@ function runinWeeks(){return D.sites.weeks_available.filter(function(w){return w
 function cell(v,ok,unit,dp){
   if(v===undefined)return '<span class="fut">·</span>';
   if(v==null)return '<span class="na">n/a</span>';
-  var cls=ok==null?"n":(ok?"g":"r");
+  var cls=ok==null?"n":(ok===true?"g":(ok===false?"r":ok));
   return '<span class="cell"><span class="dot '+cls+'"></span>'+fmt(v,dp)+(unit||"")+'</span>';
 }
 function headCols(first){
@@ -337,6 +370,82 @@ function headCols(first){
   if(SHOW_RUNIN)runinWeeks().forEach(function(w){h+='<th class="c">w/c '+dd(w)+'</th>'});
   D.periods.forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+p[1]+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">'+dd(p[2])+'</span></th>'});
   return h+'</tr>';
+}
+
+/* ---------- RAG bands (08/10/2026). Green hits the plan target, amber is close, red is a miss or a Red Light ---------- */
+var OWN=[
+  {who:"Lincoln",role:"Area Manager · Lakeside, Southampton, Shoreditch",sites:["M17","M20","M19"]},
+  {who:"Kaitlin",role:"Deputy Area Manager · Soho, Maki Nori, Shoreditch",sites:["M18","MakiNori","M19"]},
+  {who:"Kei",role:"Acting GM Lakeside · B2B for the region",sites:["M17"],b2b:true}
+];
+function share(v,t){return v==null||t==null?null:(v>=t?"g":(v>=0.75*t?"a":"r"))}
+function rLab(v,c){var t=D.targets[c]&&D.targets[c].labour;return v==null||t==null?null:(v<=t?"g":(v<=t+2?"a":"r"))}
+function rSales(v){return v==null?null:(v>=0?"g":(v>-10?"a":"r"))}
+function rFood(v){return v==null?null:(v<24?"g":(v<=25?"a":"r"))}
+function rStar(v){return v==null?null:(v>=4.7?"g":(v>=4.5?"a":"r"))}
+function rComp(v){return v==null?null:(v>=95?"g":(v>=90?"a":"r"))}
+function rClean(v){return v==null?null:(v>=3?"g":(v>=2.5?"a":"r"))}
+function rEff(v){return v==null?null:(v>=90?"g":(v>=85?"a":"r"))}
+/* Deliveroo weekly: the AM CC canonical 5 metric bands. Rider wait blank = 0. RED if any red, GREEN if all green, else AMBER */
+var DM=[["d_rating","Rating",4.7,4.0,true,2,""],["d_open","Open",98,95,true,1,"%"],["d_prep","Prep",15,18,false,1," min"],["d_inacc","Inaccurate",2,3,false,1,"%"],["d_rider","Rider wait",2,4,false,1,"%"]];
+function band(v,g,a,up){if(v==null)return "m";return up?(v>=g?"g":(v>=a?"a":"r")):(v<=g?"g":(v<=a?"a":"r"))}
+function drooVal(w,f){if(!w)return null;var v=w[f];if(f==="d_rider"&&v==null&&(w.d_open!=null||w.d_prep!=null))return 0;return v==null?null:v}
+function drooRoll(w){if(!w)return null;var b=DM.map(function(m){return band(drooVal(w,m[0]),m[2],m[3],m[4])});if(b.every(function(x){return x==="m"}))return null;if(b.indexOf("r")>=0)return "r";if(b.every(function(x){return x==="g"}))return "g";return "a"}
+function rcell(v,r,txt){return '<td class="c'+(v==null?' rm':(r?' r'+r:''))+'">'+(v==null?'<span class="na">n/a</span>':txt)+'</td>'}
+function pill(r,txt){return '<span class="ragpill '+(r||"m")+'">'+(txt||{g:"Green",a:"Amber",r:"Red",m:"n/a"}[r||"m"])+'</span>'}
+function cnt(list){var o={g:0,a:0,r:0};list.forEach(function(x){if(o[x]!=null)o[x]++});return o}
+function cntHtml(o){return '<span class="counts">'+pill("g",o.g+" green")+pill("a",o.a+" amber")+pill("r",o.r+" red")+'</span>'}
+
+/* ---------- people scorecard: Lincoln, Kaitlin, Kei ---------- */
+var PWEEK=null;
+function peopleScore(){
+  var weeks=D.sites.weeks_available.slice().sort().reverse();
+  if(!PWEEK||weeks.indexOf(PWEEK)<0)PWEEK=weeks[0];
+  var wk=PWEEK,T=D.targets;
+  var pk=null;D.periods.forEach(function(p){if(p[2]===wk)pk=p[0]});
+  function W(c){return (D.sites.by_week[wk]||{})[c]||null}
+  var M=[
+    {k:"Sales vs target",v:function(w){return w&&w.sales!=null&&w.sales_t?(w.sales/w.sales_t-1)*100:null},r:function(v){return rSales(v)},f:function(v){return (v>=0?"+":"")+v.toFixed(1)+"%"},t:function(){return "0% · Red Light at -10%"}},
+    {k:"Labour %",v:function(w){return w&&w.wage},r:rLab,f:function(v){return v.toFixed(1)+"%"},t:function(c){return T[c]?T[c].labour+"%":""}},
+    {k:"Food %",v:function(w){return w&&w.food},r:function(v){return rFood(v)},f:function(v){return v.toFixed(1)+"%"},t:function(){return "under 24%"}},
+    {k:"Google reviews",v:function(w){return w&&w.rev},r:function(v,c){return share(v,T[c]&&T[c].reviews)},f:function(v){return fmt(v)},t:function(c){return T[c]?T[c].reviews:""}},
+    {k:"Google rating",v:function(w){return w&&w.rev_avg},r:function(v){return rStar(v)},f:function(v){return v.toFixed(2)+"★"},t:function(){return "4.70"}},
+    {k:"App sign ups",v:function(w,c){if(!T[c]||T[c].signups==null)return undefined;var S=D.signups&&D.signups.weekly[c];return S?(S[wk]||0):null},r:function(v,c){return share(v,T[c].signups)},f:function(v){return fmt(v)},t:function(c){return T[c]&&T[c].signups!=null?T[c].signups:"none"}},
+    {k:"Compliance %",v:function(w,c){var M=D.compliance&&D.compliance[c];return M&&M[wk]&&M[wk].pct!=null?M[wk].pct:null},r:function(v){return rComp(v)},f:function(v){return v.toFixed(1)+"%"},t:function(){return "95%"}},
+    {k:"Cleanliness /5",v:function(w,c){return pk?cleanScore(c,pk):null},r:function(v){return rClean(v)},f:function(v){return v.toFixed(1)},t:function(){return "3"}},
+    {k:"Efficiency",v:function(w){return w&&w.eff},r:function(v){return rEff(v)},f:function(v){return v},t:function(){return "90"}},
+    {k:"Deliveroo",v:function(w,c){if(!D.sites_meta[c].droo)return undefined;return drooRoll(w)},r:function(v){return v},f:function(v){return {g:"Green",a:"Amber",r:"Red"}[v]},t:function(){return "5 metrics"}}
+  ];
+  var opts=weeks.map(function(x){return '<option value="'+x+'"'+(x===wk?' selected':'')+'>w/c '+dd(x)+(x===weeks[0]?' (latest)':'')+'</option>'}).join('');
+  var h='<div class="mini-hero"><h2>Team scorecard · w/c '+dd(wk)+'</h2><p>Lincoln, Kaitlin and Kei, each on their own sites. Green hits target, amber is close, red is a miss or a Red Light.</p></div>';
+  h+='<div style="display:flex;align-items:center;gap:10px;margin:-4px 0 12px"><label class="muted" for="pweek" style="font-weight:700">Week</label><select id="pweek" class="wkpick">'+opts+'</select></div><div class="pcards">';
+  OWN.forEach(function(o){
+    var all=[],rows='';
+    M.forEach(function(m){
+      var cells='',any=false;
+      o.sites.forEach(function(c){
+        var w=W(c),v=m.v(w,c);
+        if(v===undefined){cells+='<td class="c rm"><span class="na">n/a</span></td>';return}
+        any=true;var r=v==null?null:m.r(v,c);if(r)all.push(r);
+        cells+=rcell(v,r,v==null?'':m.f(v));
+      });
+      if(any)rows+='<tr><td class="m">'+m.k+'</td>'+cells+'</tr>';
+    });
+    var b2b='';
+    if(o.b2b&&D.b2b&&D.b2b.kpi){
+      var bk=pk&&pk!=="base"?pk:"sep",K=D.b2b.kpi[bk];
+      if(K){
+        var BR=[["Active partnerships",K.partnerships,5],["Student stands",K.stands,4],["Paid events",K.paid_events,1],["Outreach, Lakeside",K["out_Lakeside"],10],["Outreach, Southampton",K["out_Southampton"],10],["Outreach, Soho",K["out_Soho"],10],["Outreach, Maki Nori",K["out_Maki Nori"],10],["Outreach, Shoreditch",K["out_Shoreditch"],10]];
+        b2b='<tr class="band"><td colspan="'+(o.sites.length+1)+'">B2B · '+(bk==="sep"?"September":"this plan week")+'</td></tr>';
+        BR.forEach(function(x){var r=share(x[1],x[2]);if(r)all.push(r);b2b+='<tr><td class="m">'+x[0]+' <span class="muted">/ '+x[2]+'</span></td>'+rcell(x[1],r,x[1]==null?'':fmt(x[1])).replace('<td class="c','<td colspan="'+o.sites.length+'" class="c')+'</tr>'});
+      }
+    }
+    var C=cnt(all),worst=C.r?"r":(C.a?"a":(C.g?"g":""));
+    h+='<div class="pcard '+worst+'"><h3>'+o.who+'</h3><div class="role">'+o.role+'</div>'+cntHtml(C)+
+      '<div class="tblwrap" style="margin-top:10px"><table class="t"><tr><th>Measure</th>'+o.sites.map(function(c){return '<th class="c sitecell" data-site="'+c+'">'+D.sites_meta[c].name+'</th>'}).join('')+'</tr>'+rows+b2b+'</table></div></div>';
+  });
+  h+='</div>';
+  return h;
 }
 
 /* ---------- render ---------- */
@@ -363,15 +472,15 @@ function renderScore(){
   });
   tiles+='</div>';
   var rows=[
-    {k:"Labour %",t:function(c){return T[c].labour},tl:function(c){return T[c].labour+'%'},v:function(w){return w.wage},ok:function(v,c){return v<=T[c].labour},u:"%",dp:1},
-    {k:"New Google reviews",t:function(c){return T[c].reviews},tl:function(c){return T[c].reviews},v:function(w){return w.rev},ok:function(v,c){return v>=T[c].reviews}},
-    {k:"App sign ups",tl:function(c){return T[c].signups==null?'None':T[c].signups},v:function(w,c,wk){var S=D.signups&&D.signups.weekly[c];return S?(S[wk]!=null?S[wk]:0):null},ok:function(v,c){return T[c].signups==null?null:v>=T[c].signups},src:"new Ramen Royalty members, counted at the site of their first visit"},
+    {k:"Labour %",t:function(c){return T[c].labour},tl:function(c){return T[c].labour+'%'},v:function(w){return w.wage},ok:function(v,c){return rLab(v,c)},u:"%",dp:1},
+    {k:"New Google reviews",t:function(c){return T[c].reviews},tl:function(c){return T[c].reviews},v:function(w){return w.rev},ok:function(v,c){return share(v,T[c].reviews)}},
+    {k:"App sign ups",tl:function(c){return T[c].signups==null?'None':T[c].signups},v:function(w,c,wk){var S=D.signups&&D.signups.weekly[c];return S?(S[wk]!=null?S[wk]:0):null},ok:function(v,c){return T[c].signups==null?null:share(v,T[c].signups)},src:"new Ramen Royalty members, counted at the site of their first visit"},
     {k:"RR vouchers redeemed",all:true,tl:function(c){return c==="MakiNori"?'None':'Track'},v:function(w,c,wk){return vWeek(c,wk)},vh:vCell,src:"Ramen Royalty vouchers used, matched to the member bill at the till. Small figure is £5 welcome vouchers"},
-    {k:"Compliance %",tl:function(){return '95%'},v:function(w,c,wk){var M=D.compliance&&D.compliance[c];if(!M)return null;return M[wk]&&M[wk].pct!=null?M[wk].pct:null},ok:function(v){return v>=95},dp:1,u:"%",src:"Mapal weekly compliance. Southampton is not on Mapal yet"},
+    {k:"Compliance %",tl:function(){return '95%'},v:function(w,c,wk){var M=D.compliance&&D.compliance[c];if(!M)return null;return M[wk]&&M[wk].pct!=null?M[wk].pct:null},ok:function(v){return rComp(v)},dp:1,u:"%",src:"Mapal weekly compliance. Southampton is not on Mapal yet"},
     {k:"Training tracker %",tl:function(){return '95%'},v:function(){return null},src:"Management Training Tracker, feed not wired yet"},
-    {k:"Cleanliness /5",tl:function(){return '3 or above'},v:function(c,pk){return cleanScore(c,pk)},ok:function(v){return v>=3},dp:1,src:"Lincoln's weekly sheet"}
+    {k:"Cleanliness /5",tl:function(){return '3 or above'},v:function(c,pk){return cleanScore(c,pk)},ok:function(v){return rClean(v)},dp:1,src:"Lincoln's weekly sheet"}
   ];
-  var h='<div class="card"><h2>Weekly scorecard · '+REGION+'</h2><div class="sub">Baseline is the week before the plan (w/c 28/09). Weeks 1 to 4 fill as each week closes. Green hits target, red misses.</div>'+
+  var h='<div class="card"><h2>Weekly scorecard · '+REGION+'</h2><div class="sub">Baseline is the week before the plan (w/c 28/09). Weeks 1 to 4 fill as each week closes. Green hits target, amber is close, red misses.</div>'+
     '<label class="chk"><input type="checkbox" id="runin" '+(SHOW_RUNIN?'checked':'')+'> Show the 3 run in weeks before baseline</label>'+
     '<div class="tblwrap" style="margin-top:10px"><table class="t">'+headCols("Measure");
   rows.forEach(function(r){
@@ -394,9 +503,10 @@ function renderScore(){
       h+='</tr>';
     });
   });
-  h+='</table></div><div class="legend"><span><i class="dot g"></i>On target</span><span><i class="dot r"></i>Off target</span><span><span class="na">n/a</span> source not wired yet</span><span><span class="fut">·</span> week not closed</span></div></div>';
-  $("p-score").innerHTML=tiles+h;
+  h+='</table></div><div class="legend"><span><i class="dot g"></i>On target</span><span><i class="dot a"></i>Close (labour within 2 points, counts at 75% or more, compliance 90%, cleanliness 2.5)</span><span><i class="dot r"></i>Off target</span><span><span class="na">n/a</span> source not wired yet</span><span><span class="fut">·</span> week not closed</span></div></div>';
+  $("p-score").innerHTML=peopleScore()+tiles+h;
   $("runin").onchange=function(){SHOW_RUNIN=this.checked;renderScore();renderDeliv()};
+  $("pweek").onchange=function(){PWEEK=this.value;renderScore()};
 }
 
 /* Ramen Royalty vouchers per site: [vouchers, of which £5 welcome, of which firm match]. Maki Nori is not on Ramen Royalty. */
@@ -414,71 +524,127 @@ function cleanScore(c,pk){
   keys.forEach(function(k){if(a[k]!=null){s+=a[k];n++}});return n?s/n:null;
 }
 
+/* ---------- Deliveroo (08/10/2026): weekly RAG, weekly trend and daily ops, AM CC bands and colours ---------- */
+var DWEEK=null;
+function busyBand(v){return v==null?"m":(v<=0?"g":(v<=10?"a":"r"))}
 function renderDeliv(){
-  var codes=sitesIn(REGION,true),cur=curPeriod();
-  var M=[{k:"Rating",f:"d_rating",up:true,dp:2,u:""},{k:"Open %",f:"d_open",up:true,dp:1,u:"%"},{k:"Prep time",f:"d_prep",up:false,dp:1,u:" min"},{k:"Inaccurate order %",f:"d_inacc",up:false,dp:1,u:"%"},{k:"Rider wait time %",f:"d_rider",up:false,dp:1,u:"%"}];
-  var ncol=3+D.periods.length+(SHOW_RUNIN?runinWeeks().length:0);
-  var h='<div class="banner"><span>🛵</span><div><b>Deliveroo ops are live.</b> Baseline is w/c 28/09 from the Deliveroo weekly RAG ops report. The target is better than the week before, every week. Rider wait shows n/a when Deliveroo does not report it for a low volume week.</div></div>';
-  h+='<div class="card"><h2>Delivery scorecard · '+REGION+'</h2><div class="sub">Arrow compares with the previous column. Green moved the right way or held.</div><div class="tblwrap"><table class="t">'+
-    headCols("Metric").replace('<th class="c">Target</th>','<th class="c">Direction</th>');
-  M.forEach(function(m){
-    h+='<tr class="grp"><td colspan="'+ncol+'">'+m.k+'</td></tr>';
+  var codes=sitesIn(REGION,true),cur=curPeriod(),Q=D.droo_daily||{};
+  var withD=D.sites.weeks_available.filter(function(wk){var W=D.sites.by_week[wk]||{};return codes.some(function(c){return drooRoll(W[c])})}).sort().reverse();
+  if(!DWEEK||withD.indexOf(DWEEK)<0)DWEEK=withD[0];
+  var h='<div class="mini-hero"><h2>Deliveroo · '+REGION+'</h2><p>Weekly RAG from the Deliveroo ops report, and daily ops from Deliveroo\'s morning drops'+(Q.to?' (latest day '+dd(Q.to)+')':'')+'. Same bands and colours as the AM Control Centre.</p></div>';
+  /* weekly RAG matrix */
+  if(DWEEK){
+    var W=D.sites.by_week[DWEEK]||{},QW=(Q.w||{})[DWEEK]||{},rows='',all=[];
+    codes.forEach(function(c){
+      var m=D.sites_meta[c];
+      if(!m.droo){rows+='<tr><td class="m">'+m.name+'</td><td colspan="7" class="c"><span class="na">Not on Deliveroo</span></td></tr>';return}
+      var w=W[c],roll=drooRoll(w);if(roll)all.push(roll);
+      rows+='<tr><td class="m sitecell" data-site="'+c+'">'+m.name+(m.support?' <span class="pill p-n">support</span>':'')+'</td>';
+      DM.forEach(function(d){var v=drooVal(w,d[0]),r=band(v,d[2],d[3],d[4]);rows+=rcell(v,r==="m"?null:r,v==null?'':fmt(v,d[5])+d[6])});
+      var bz=(QW[c==="O2"?"MAF3":c]||[])[2];bz=bz==null?null:bz;var br=busyBand(bz);
+      rows+=rcell(bz,br==="m"?null:br,bz==null?'':fmt(bz,1)+'%')+'<td class="c">'+pill(roll)+'</td></tr>';
+    });
+    var opts=withD.map(function(x){return '<option value="'+x+'"'+(x===DWEEK?' selected':'')+'>w/c '+dd(x)+'</option>'}).join('');
+    h+='<div class="card"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Weekly Deliveroo RAG</h2><select id="dweek" class="wkpick">'+opts+'</select><span style="margin-left:auto">'+cntHtml(cnt(all))+'</span></div>'+
+      '<div class="sub" style="margin-top:6px">RED if any metric is red, GREEN if all five are green, otherwise AMBER. Rider wait blank means 0. Busy mode is shown, not scored.</div>'+
+      '<div class="tblwrap"><table class="t"><tr><th>Site</th><th class="c">Rating</th><th class="c">Open %</th><th class="c">Prep</th><th class="c">Inaccurate %</th><th class="c">Rider wait %</th><th class="c">Busy mode %</th><th class="c">Overall</th></tr>'+rows+'</table></div>'+
+      '<div class="legend"><span>Bands: rating 4.70 / 4.00 · open 98 / 95 · prep 15 / 18 min · inaccurate 2 / 3% · rider wait 2 / 4% · busy mode 0 green, up to 10% amber</span></div></div>';
+  }
+  /* weekly trend across the plan */
+  var ncol=2+D.periods.length+(SHOW_RUNIN?runinWeeks().length:0);
+  h+='<div class="card"><h2>Weekly trend · baseline to week 4</h2><div class="sub">Each cell is coloured on the AM CC bands. The arrow compares with the column before.</div><div class="tblwrap"><table class="t">'+
+    headCols("Metric").replace('<th class="c">Target</th>','');
+  DM.forEach(function(d){
+    h+='<tr class="grp"><td colspan="'+ncol+'">'+d[1]+' <span style="text-transform:none;letter-spacing:0;color:var(--ink-3);font-weight:600">· green '+(d[4]?'at or above ':'at or under ')+d[2]+d[6]+'</span></td></tr>';
     codes.forEach(function(c){
       var meta=D.sites_meta[c];
-      h+='<tr><td></td><td>'+meta.name+(meta.support?' <span class="pill p-n">support</span>':'')+'</td><td class="c">'+(m.up?'↑ Up':'↓ Down')+'</td>';
-      if(!meta.droo){h+='<td class="c" colspan="'+(D.periods.length+(SHOW_RUNIN?runinWeeks().length:0))+'"><span class="na">Not in the Deliveroo feed</span></td></tr>';return}
+      h+='<tr><td></td><td class="sitecell" data-site="'+c+'">'+meta.name+(meta.support?' <span class="pill p-n">support</span>':'')+'</td>';
+      if(!meta.droo){h+='<td class="c" colspan="'+(ncol-2)+'"><span class="na">Not on Deliveroo</span></td></tr>';return}
       var prev=null,cols=[];
-      if(SHOW_RUNIN)runinWeeks().forEach(function(wk){var w=D.sites.by_week[wk][c];cols.push({v:w?w[m.f]:null,now:false})});
-      D.periods.forEach(function(p){var w=weekData(c,p[0]);cols.push({v:w===undefined?undefined:(w?w[m.f]:null),now:p[0]===cur})});
+      if(SHOW_RUNIN)runinWeeks().forEach(function(wk){cols.push({v:drooVal(D.sites.by_week[wk][c],d[0]),now:false})});
+      D.periods.forEach(function(p){var w=weekData(c,p[0]);cols.push({v:w===undefined?undefined:drooVal(w,d[0]),now:p[0]===cur})});
       cols.forEach(function(x){
-        var inner;
-        if(x.v===undefined)inner='<span class="fut">·</span>';
-        else if(x.v==null)inner='<span class="na">n/a</span>';
-        else{
-          var arrow='';
-          if(prev!=null){var diff=x.v-prev;var good=m.up?diff>=0:diff<=0;arrow=' <span class="arr '+(Math.abs(diff)<1e-9?'n':(good?'g':'r'))+'">'+(Math.abs(diff)<1e-9?'＝':(diff>0?'▲':'▼'))+'</span>'}
-          inner='<span class="cell">'+fmt(x.v,m.dp)+m.u+arrow+'</span>';prev=x.v;
-        }
-        h+='<td class="c'+(x.now?' now':'')+'">'+inner+'</td>';
+        if(x.v===undefined){h+='<td class="c'+(x.now?' now':'')+'"><span class="fut">·</span></td>';return}
+        if(x.v==null){h+='<td class="c rm"><span class="na">n/a</span></td>';return}
+        var arrow='';
+        if(prev!=null){var diff=x.v-prev,good=d[4]?diff>=0:diff<=0;arrow=' <span class="arr '+(Math.abs(diff)<1e-9?'n':(good?'g':'r'))+'">'+(Math.abs(diff)<1e-9?'＝':(diff>0?'▲':'▼'))+'</span>'}
+        h+='<td class="c r'+band(x.v,d[2],d[3],d[4])+'">'+fmt(x.v,d[5])+d[6]+arrow+'</td>';prev=x.v;
       });
       h+='</tr>';
     });
   });
   h+='</table></div></div>';
-  h+=renderDrooDaily(codes);
+  h+=drooDaily(codes,true);
   $("p-deliv").innerHTML=h;
+  if($("dweek"))$("dweek").onchange=function(){DWEEK=this.value;renderDeliv()};
 }
 
-/* Daily Deliveroo ops: last 7 days per site against the 7 days before (baseline). Source: Deliveroo Daily Master via the nightly estate file. */
-function renderDrooDaily(codes){
+/* Daily Deliveroo ops. Day light = worst of: prep over 15.00 min (Red Light), any rejection (red), open 98 / 95%, rider wait 2 / 4% (blank = 0),
+   busy mode 0 green, up to 10% amber, missing items amber. Restaurant cancellations are left out. */
+function drooDaily(codes,showCard){
   var Q=D.droo_daily;
-  if(!Q||!Q.d||!Object.keys(Q.d).length)return '<div class="card"><h2>Daily Deliveroo ops</h2><div class="sub">Not wired yet: the nightly estate file data/deliveroo_daily.json has not landed. Orders, prep time, missing items, cancellations and rejections by day will show here.</div></div>';
-  var days=Object.keys(Q.d).sort(),last=days[days.length-1];
+  if(!Q||!Q.d||!Object.keys(Q.d).length)return '<div class="card"><h2>Daily Deliveroo ops</h2><div class="sub">The daily Deliveroo file has not landed yet.</div></div>';
+  var keys=Object.keys(Q.d).sort(),last=Q.to&&Q.d[Q.to]?Q.to:keys[keys.length-1];
   function addD(d,n){return new Date(Date.parse(d+"T00:00:00Z")+n*864e5).toISOString().slice(0,10)}
-  function dm(d){return d.slice(8,10)+"/"+d.slice(5,7)}
   function dow(d){return ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][(new Date(d+"T00:00:00Z").getUTCDay()+6)%7]}
-  var cur=[],prv=[];for(var i=6;i>=0;i--)cur.push(addD(last,-i));for(var j=13;j>=7;j--)prv.push(addD(last,-j));
-  function agg(c,ds){var o={n:0,orders:0,pw:0,pn:0,red:0,miss:0,rej:0,can:0};ds.forEach(function(d){var q=Q.d[d]&&Q.d[d][c];if(!q)return;o.n++;o.orders+=q[0]||0;if(q[1]!=null){o.pw+=q[1]*(q[0]||1);o.pn+=(q[0]||1)}if(q[7])o.red++;if(q[3])o.miss++;o.rej+=q[6]||0;o.can+=q[4]||0});o.prep=o.pn?o.pw/o.pn:null;return o}
-  var h='<div class="card"><h2>Daily Deliveroo ops · '+REGION+'</h2><div class="sub">Last 7 days to '+dow(last)+' '+dm(last)+', with the 7 days before as the baseline. Prep is red above 15.00 min (Red Light rule). Issues are missing items %, restaurant error cancellations and rejections.</div><div class="tblwrap"><table class="t"><tr><th>Site</th><th></th>';
-  cur.forEach(function(d){h+='<th class="c'+(d===last?' now':'')+'">'+dow(d)+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">'+dm(d)+'</span></th>'});
-  h+='<th class="c">7 days</th><th class="c">Baseline<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">'+dm(prv[0])+' to '+dm(prv[6])+'</span></th></tr>';
+  var days=[],prv=[];for(var i=6;i>=0;i--)days.push(addD(last,-i));for(var j=13;j>=7;j--)prv.push(addD(last,-j));
+  function row(c,d){var x=Q.d[d]&&Q.d[d][c==="O2"?"MAF3":c];return x||null}
+  function rider(q){if(!q)return null;return q[8]==null?((q[1]!=null||q[9]!=null)?0:null):q[8]}
+  var MET=[
+    ["Orders",function(q){return q[0]},function(){return null},function(v){return fmt(v)}],
+    ["Prep",function(q){return q[1]},function(v){return v<=15?"g":"r"},function(v){return v.toFixed(1)+" min"}],
+    ["Order duration",function(q){return q[2]},function(){return null},function(v){return v.toFixed(1)+" min"}],
+    ["Missing items",function(q){return q[3]},function(v){return v>0?"a":"g"},function(v){return v.toFixed(1)+"%"}],
+    ["Rejections",function(q){return q[6]},function(v){return v>0?"r":"g"},function(v){return fmt(v)}],
+    ["Rider wait",rider,function(v){return band(v,2,4,false)},function(v){return v.toFixed(1)+"%"}],
+    ["Open hours",function(q){return q[9]},function(v){return band(v,98,95,true)},function(v){return v.toFixed(1)+"%"}],
+    ["Busy mode",function(q){return q[10]},function(v){return busyBand(v)},function(v){return v.toFixed(1)+"%"}]
+  ];
+  function light(q){if(!q)return null;var b=[];MET.forEach(function(m){var v=m[1](q);if(v!=null){var r=m[2](v);if(r)b.push(r)}});if(!b.length)return null;return b.indexOf("r")>=0?"r":(b.indexOf("a")>=0?"a":"g")}
+  function agg(c,ds){
+    var o={n:0,ord:0,pw:0,pn:0,aw:0,an:0,miss:0,rej:0,rs:0,rn:0,os:0,on:0,bs:0,bn:0,L:{g:0,a:0,r:0}};
+    ds.forEach(function(d){var q=row(c,d);if(!q)return;o.n++;o.ord+=q[0]||0;var wt=q[0]||1;
+      if(q[1]!=null){o.pw+=q[1]*wt;o.pn+=wt}if(q[2]!=null){o.aw+=q[2]*wt;o.an+=wt}if(q[3])o.miss++;o.rej+=q[6]||0;
+      var rv=rider(q);if(rv!=null){o.rs+=rv;o.rn++}if(q[9]!=null){o.os+=q[9];o.on++}if(q[10]!=null){o.bs+=q[10];o.bn++}
+      var l=light(q);if(l)o.L[l]++});
+    return o;
+  }
+  function aggCell(o,i){
+    if(!o.n)return '<td class="c rm"><span class="na">n/a</span></td>';
+    var v,r;
+    switch(i){
+      case 0:return '<td class="c"><b>'+fmt(o.ord)+'</b></td>';
+      case 1:v=o.pn?o.pw/o.pn:null;r=v==null?null:(v<=15?"g":"r");return rcell(v,r,v==null?'':v.toFixed(1)+' min');
+      case 2:v=o.an?o.aw/o.an:null;return '<td class="c">'+(v==null?'<span class="na">n/a</span>':v.toFixed(1)+' min')+'</td>';
+      case 3:return rcell(o.miss,o.miss?"a":"g",o.miss+' day'+(o.miss===1?'':'s'));
+      case 4:return rcell(o.rej,o.rej?"r":"g",fmt(o.rej));
+      case 5:v=o.rn?o.rs/o.rn:null;return rcell(v,v==null?null:band(v,2,4,false),v==null?'':v.toFixed(1)+'%');
+      case 6:v=o.on?o.os/o.on:null;return rcell(v,v==null?null:band(v,98,95,true),v==null?'':v.toFixed(1)+'%');
+      case 7:v=o.bn?o.bs/o.bn:null;return rcell(v,v==null?null:busyBand(v),v==null?'':v.toFixed(1)+'%');
+    }
+  }
+  var nc=days.length+3;
+  var h='<table class="t"><tr><th>Measure</th>';
+  days.forEach(function(d){h+='<th class="c'+(d===last?' now':'')+'">'+dow(d)+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0">'+dd(d)+'</span></th>'});
+  h+='<th class="c">7 days</th><th class="c">7 days before<br><span style="font-weight:600;text-transform:none;letter-spacing:0">'+dd(prv[0])+' to '+dd(prv[6])+'</span></th></tr>';
   codes.forEach(function(c){
     var meta=D.sites_meta[c];
-    if(!meta.droo){h+='<tr><td class="m">'+meta.name+'</td><td colspan="'+(cur.length+3)+'"><span class="na">Not in the Deliveroo feed</span></td></tr>';return}
-    var A=agg(c,cur),B=agg(c,prv);
-    var rows=[["Orders",function(q){return q[0]==null?'<span class="na">n/a</span>':'<b>'+q[0]+'</b>'},function(o){return o.n?'<b>'+o.orders+'</b>':'<span class="na">n/a</span>'}],
-      ["Prep min",function(q){return q[1]==null?'<span class="na">n/a</span>':'<span class="cell"><span class="dot '+(q[7]?'r':'g')+'"></span>'+q[1].toFixed(1)+'</span>'},function(o){return o.prep==null?'<span class="na">n/a</span>':'<span class="cell"><span class="dot '+(o.red?'r':'g')+'"></span>'+o.prep.toFixed(1)+(o.red?' <span class="na">'+o.red+' red</span>':'')+'</span>'}],
-      ["Issues",function(q){var iss=[];if(q[3])iss.push(q[3].toFixed(1)+'% miss');if(q[6])iss.push(q[6]+' rej');if(q[4])iss.push(q[4]+' can');return iss.length?'<span style="color:var(--red);font-weight:700;font-size:11.5px">'+iss.join(', ')+'</span>':'<span class="dot g"></span>'},function(o){if(!o.n)return '<span class="na">n/a</span>';var iss=[];if(o.miss)iss.push(o.miss+'d miss');if(o.rej)iss.push(o.rej+' rej');if(o.can)iss.push(o.can+' can');return iss.length?'<span style="color:var(--red);font-weight:700;font-size:11.5px">'+iss.join(', ')+'</span>':'<span class="dot g"></span>'}]];
-    rows.forEach(function(r,i){
-      h+='<tr><td class="m">'+(i===0?meta.name+(meta.support?' <span class="pill p-n">support</span>':''):'')+'</td><td>'+r[0]+'</td>';
-      cur.forEach(function(d){var q=Q.d[d]&&Q.d[d][c];h+='<td class="c'+(d===last?' now':'')+'">'+(q?r[1](q):'<span class="fut">·</span>')+'</td>'});
-      h+='<td class="c">'+r[2](A)+'</td><td class="c">'+r[2](B)+'</td></tr>';
+    if(!meta.droo){h+='<tr class="band"><td colspan="'+nc+'">'+meta.name+' · not on Deliveroo</td></tr>';return}
+    var A=agg(c,days),B=agg(c,prv);
+    h+='<tr class="band"><td colspan="'+nc+'"><span class="sitecell" data-site="'+c+'">'+meta.name+'</span>'+(meta.support?' · support':'')+' <span style="float:right;text-transform:none;letter-spacing:0">'+(A.n?A.L.g+' green · '+A.L.a+' amber · '+A.L.r+' red days':'no Deliveroo rows')+'</span></td></tr>';
+    h+='<tr><td class="m">Day light</td>';
+    days.forEach(function(d){var l=light(row(c,d));h+='<td class="c'+(d===last?' now':'')+'">'+(row(c,d)?pill(l):'<span class="fut">·</span>')+'</td>'});
+    h+='<td class="c">'+(A.n?pill(A.L.r?"r":(A.L.a?"a":"g"),A.L.r?A.L.r+" red":(A.L.a?A.L.a+" amber":"Green")):'<span class="na">n/a</span>')+'</td><td class="c">'+(B.n?pill(B.L.r?"r":(B.L.a?"a":"g"),B.L.r?B.L.r+" red":(B.L.a?B.L.a+" amber":"Green")):'<span class="na">n/a</span>')+'</td></tr>';
+    MET.forEach(function(m,i){
+      h+='<tr><td class="m" style="font-weight:600;color:var(--ink-2)">'+m[0]+'</td>';
+      days.forEach(function(d){var q=row(c,d);if(!q){h+='<td class="c"><span class="fut">·</span></td>';return}var v=m[1](q);h+=rcell(v,v==null?null:m[2](v),v==null?'':m[3](v)).replace('<td class="c',d===last?'<td class="c now':'<td class="c')});
+      h+=aggCell(A,i)+aggCell(B,i)+'</tr>';
     });
   });
-  h+='</table></div><div class="legend"><span><i class="dot g"></i>Prep 15.00 min or under, no issues</span><span><i class="dot r"></i>Prep above 15.00 min</span><span><span class="fut">·</span> no Deliveroo row that day</span><span>Source: Deliveroo Daily Master (Deliveroo\'s morning CSV drops, ingested hourly), latest day '+dm(Q.to||last)+'</span></div></div>';
-  return h;
+  h+='</table>';
+  if(!showCard)return h;
+  return '<div class="card"><h2>Daily Deliveroo ops · last 7 days to '+dow(last)+' '+dd(last)+'</h2><div class="sub">Day light is the worst of the day\'s measures. Red: prep over 15.00 min (Red Light), any rejection, open under 95%, rider wait over 4%, busy mode over 10%. Amber: open under 98%, rider wait over 2%, any busy mode or missing items. Rider wait blank means 0. Restaurant cancellations are left out.</div><div class="tblwrap">'+h+'</div><div class="legend"><span><span class="fut">·</span> no Deliveroo row that day</span><span>Source: Deliveroo Daily Master (Deliveroo\'s morning drops, ingested hourly)</span></div></div>';
 }
-
 
 function renderClean(){
   var codes=sitesIn(REGION,false),cur=curPeriod();
@@ -677,6 +843,7 @@ function openDaily(c){
       '<td class="c">'+(r.wage!=null?'<span class="cell"><span class="dot '+(T.labour?(r.wage<=T.labour?'g':'r'):'n')+'"></span>'+r.wage.toFixed(1)+'%</span>':'<span class="na">n/a</span>')+'</td>'+
       '<td class="c">'+(r.hours!=null?r.hours:'')+'</td><td class="c">'+((D.signups&&D.signups.daily[c])?(D.signups.daily[c][d]||0):'<span class="na">n/a</span>')+'</td><td class="c">'+(function(){var x=vDay(c,d);return x?(x[0]+(x[0]?' <small style="color:var(--ink-3)">£5 '+x[1]+'</small>':'')):'<span class="na">n/a</span>'})()+'</td><td class="c">'+(r.rev_n!=null?r.rev_n+(r.rev_neg?' <button class="negbtn" data-neg="'+d+'">'+r.rev_neg+' neg ›</button>':''):'')+'</td></tr>'});
   h+='</table></div><div class="legend"><span>Wage dot uses the site\'s plan target ('+(T.labour||'n/a')+'%)</span><span>Vouchers: Ramen Royalty vouchers used, matched to the member bill at the till (Trifft records no site on a voucher), so a single day can be out by one or two</span></div></div>';
+  if(m.droo)h+='<div class="card"><h2>Deliveroo · last 7 days</h2><div class="sub">Day light is the worst of the day\'s measures, same rules as the Deliveroo tab.</div><div class="tblwrap">'+drooDaily([c],false)+'</div></div>';
   h+='<div id="negbox"></div>';
   var R=(L.reviews||[]).slice().sort(function(a,b){return a.stars-b.stars||String(b.date).localeCompare(a.date)});
   var W=L.window||{};
