@@ -10,12 +10,15 @@ ROOT="${OPS_ROOT:-..}"
 FAILS=0
 export SCC_CACHE="$(mktemp -d)"   # each Google sheet range is read once per run, shared by every site
 step(){ echo "== $*"; "$@" || { echo "!! FAILED: $*"; FAILS=$((FAILS+1)); }; }
+# Deliveroo daily ops (Deliveroo Daily Master sheet): one estate file for the AM CC daily tab and the Area Room, then per site below
+step python3 pipeline/pull_deliveroo_daily.py --estate "$ROOT/data/deliveroo_daily.json"
 for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open('sites.json'))['sites'].items() if v.get('live')))"); do
   D="data/$CODE"; mkdir -p "$D"
   step python3 pipeline/seed_site.py     --site "$CODE" --data "$D"
   # a new site (empty daily.json) backfills the cash up from May; after that the rolling 21 days
   if [ "$(cat "$D/daily.json")" = "{}" ]; then CU="--from 2026-05-04"; else CU="--days 21"; fi
   step python3 pipeline/pull_cashup.py   --site "$CODE" --data "$D" $CU
+  step python3 pipeline/pull_deliveroo_daily.py --site "$CODE" --data "$D"
   step python3 pipeline/pull_monalisa.py --site "$CODE" --data "$D"
   step python3 pipeline/pull_amcc.py     --site "$CODE" --data "$D" --amcc "$ROOT/data"
   step python3 pipeline/pull_reviews.py  --site "$CODE" --data "$D"

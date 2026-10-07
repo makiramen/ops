@@ -19,6 +19,7 @@ SK={
  'daily.json':{},
  'covers.json':{'_src':'Auto Cash Up, Raw Data 2','_closed':[],'d':{}},
  'delivery.json':{'_src':'Auto Cash Up, Raw Data 2','d':{}},
+ 'droo_daily.json':{'src':'Deliveroo Daily Master, Daily Summary' if C.get('delivery',True)!=False else 'Deliveroo daily: no delivery at this site','pulled':None,'site':A.site,'to':None,'d':{},'w':{},'k':['orders','prep','aod','missing_pct','cancel','cancel_pct','rejections','prep_red'],'wk':['rider_wait_pct','open_pct','busy_pct']},
  'eff.json':{},'effall.json':{},'stand.json':{'eff':{},'lg':{}},
  'broth.json':{'src':'Mapal Broth Checks' if C.get('broth_label') else 'Broth: '+na,'from':None,'to':None,'spec':{'tk':[6.0,7.0],'tp':[4.0,5.0]},'d':{},'dev':[]},
  'reviews.json':{'src':'Google reviews: Google Reviews sheet Raw Data','built':None,'tax':{},'r':[],'to':None},
