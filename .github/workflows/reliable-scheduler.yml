@@ -1,0 +1,145 @@
+name: Reliable scheduler (on time dispatch)
+
+# WHY (07/10/2026). GitHub's cron for this repo now starts scheduled runs 4 to 7 hours late, every day:
+# daily-tab's 09:30 UK slot ran at 14:36, 16:55, 15:16, 18:18 and 16:23 UK on 03 to 06/10; keyline's
+# 06:55 slot ran after 12:00 UK; broth's 07:20 slot ran mid afternoon; Site CC's 32 slots a day fired
+# twice in three days. Adding more cron slots does not fix a queue that is hours behind.
+#
+# HOW. This workflow does not trust cron. It is woken by the hub payload commit (Apps Script pushes
+# marketing/data.json at about :41 every hour, like clockwork) and, as a backup, by its own cron.
+# Each wake looks 70 minutes ahead, sleeps until the exact slot and dispatches the job (workflow_dispatch
+# with the job token, which GitHub always honours). Missed slots are caught up on the next wake.
+# A slot is skipped when the data is already current, or a run since the slot is queued, running or
+# succeeded. Everything it dispatches is idempotent. No Mac, no browser, no Claude session.
+on:
+  push:
+    branches: [main]
+    paths: ['marketing/data.json']
+  schedule:
+    - cron: '3,33 * * * *'
+  workflow_dispatch: {}
+
+permissions:
+  actions: write
+  contents: read
+
+concurrency:
+  group: reliable-scheduler
+  cancel-in-progress: false
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - name: Dispatch whatever is due, on time (UK clock)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import os, json, time, urllib.request, urllib.error, urllib.parse
+          from datetime import datetime, timedelta, timezone
+          from zoneinfo import ZoneInfo
+
+          UK = ZoneInfo('Europe/London'); UTC = timezone.utc
+          TOK = os.environ['GH_TOKEN']; API = 'https://api.github.com/repos/' + os.environ['REPO']
+          LOOKAHEAD = timedelta(minutes=70)
+          START = datetime.now(UTC)
+          SUMMARY = os.environ.get('GITHUB_STEP_SUMMARY')
+
+          def log(msg):
+              line = datetime.now(UK).strftime('%H:%M:%S UK ') + msg
+              print(line, flush=True)
+              if SUMMARY:
+                  with open(SUMMARY, 'a') as f: f.write('- ' + line + '\n')
+
+          def call(path, method='GET', body=None, raw=False):
+              data = json.dumps(body).encode() if body is not None else None
+              for i in range(3):
+                  req = urllib.request.Request(API + path, method=method, data=data)
+                  req.add_header('Authorization', 'Bearer ' + TOK)
+                  req.add_header('Accept', 'application/vnd.github.raw' if raw else 'application/vnd.github+json')
+                  req.add_header('X-GitHub-Api-Version', '2022-11-28')
+                  try:
+                      with urllib.request.urlopen(req, timeout=30) as r:
+                          b = r.read()
+                          if raw: return b.decode()
+                          return json.loads(b) if b else {}
+                  except urllib.error.HTTPError as e:
+                      if e.code == 404: return None
+                      if i == 2: raise
+                  except Exception:
+                      if i == 2: raise
+                  time.sleep(5 * (i + 1))
+
+          def jfile(path):
+              try:
+                  t = call('/contents/' + path + '?ref=main', raw=True)
+                  return json.loads(t) if t else None
+              except Exception as e:
+                  log(f'could not read {path}: {e}'); return None
+
+          def uk_today(): return datetime.now(UK).date()
+          def D(): return (uk_today() - timedelta(days=1)).isoformat()
+
+          # Data current checks (yesterday's trading day D is live already = nothing to do)
+          def daily_done():
+              j = jfile('data/daily/daily_index.json'); return bool(j) and str(j.get('latest', '')) >= D()
+          def broth_done():
+              j = jfile('data/broth/run_report.json')
+              m = (j or {}).get('matrix_after') or []
+              return bool(m) and str(m[-1]) >= D()
+          def budget_done():
+              j = jfile('data/ec_budget_run_report.json'); return bool(j) and str(j.get('ledger_through', '')) >= D()
+          def keyline_done():
+              try: return call(f'/contents/keyline/pull-{uk_today().isoformat()}.txt?ref=main', raw=True) is not None
+              except Exception: return False
+
+          # slots: UK times. Until the data is current every slot fires; 'always' slots fire regardless.
+          JOBS = [
+              dict(wf='keyline-daily.yml', slots=['06:55', '07:40', '08:20', '09:20', '10:20', '11:20'], done=keyline_done, always=[]),
+              dict(wf='broth-tab.yml', slots=['07:00', '08:00', '09:40', '11:00', '12:20', '14:00', '17:20', '21:20'], done=broth_done, always=['12:20', '17:20', '21:20']),
+              dict(wf='daily-tab.yml', slots=['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '18:30', '20:30'], done=daily_done, always=['09:30', '15:30']),
+              dict(wf='budget-burn-snapshot.yml', slots=['09:40', '11:10', '12:40', '14:10', '16:10', '18:10'], done=budget_done, always=['11:10', '16:10']),
+              dict(wf='site-cc-nightly.yml', slots=['05:30', '09:50', '12:45'], done=None, always=['05:30', '09:50', '12:45']),
+          ]
+
+          def at(hhmm):
+              d = uk_today(); h, m = map(int, hhmm.split(':'))
+              return datetime(d.year, d.month, d.day, h, m, tzinfo=UK).astimezone(UTC)
+
+          def runs_since(wf, t):
+              q = urllib.parse.quote('>=' + t.strftime('%Y-%m-%dT%H:%M:%SZ'))
+              r = call(f'/actions/workflows/{wf}/runs?per_page=30&created={q}')
+              return (r or {}).get('workflow_runs', [])
+
+          def evaluate(job):
+              now = datetime.now(UTC)
+              passed = [s for s in job['slots'] if at(s) <= now]
+              if not passed: return
+              s = passed[-1]; t = at(s); wf = job['wf']
+              rs = runs_since(wf, t)
+              if any(r['status'] != 'completed' or r['conclusion'] == 'success' for r in rs):
+                  return
+              if len(rs) >= 2:
+                  log(f'{wf} slot {s}: {len(rs)} failed runs since the slot, leaving it for the next slot'); return
+              if s not in job['always'] and job['done'] and job['done']():
+                  return
+              call(f'/actions/workflows/{wf}/dispatches', 'POST', {'ref': 'main'})
+              late = int((now - t).total_seconds() // 60)
+              log(f'DISPATCHED {wf} for the {s} UK slot' + (f' ({late} min catch up)' if late > 2 else ''))
+
+          while True:
+              for job in JOBS:
+                  try: evaluate(job)
+                  except Exception as e: log(f'{job["wf"]}: error {e}')
+              now = datetime.now(UTC)
+              nxt = sorted(at(s) for j in JOBS for s in j['slots'] if at(s) > now)
+              if not nxt or nxt[0] > START + LOOKAHEAD:
+                  log('nothing else due in this wake' + (f', next slot {nxt[0].astimezone(UK):%H:%M} UK' if nxt else ''))
+                  break
+              wait = (nxt[0] - now).total_seconds() + 5
+              log(f'sleeping {int(wait // 60)} min until the {nxt[0].astimezone(UK):%H:%M} UK slot')
+              time.sleep(wait)
+          PY
