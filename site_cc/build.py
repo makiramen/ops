@@ -72,7 +72,23 @@ def kobas(s):
 MP=JD('mapal.json',{'f':[],'to':None,'src':'Mapal forms not pulled yet'})
 RI=JD('revintel.json',{'r':[],'tax':{},'praise':{},'ann':{},'built':None,'to':None,'src':'Reviews Intelligence not pulled yet'})
 SITE['gm']=RI.get('gm')
-ACTS=J('actions.json') if os.path.exists(P('actions.json')) else JD('amcc_actions.json',[])
+ACTS=JD('actions.json',[])+JD('amcc_actions.json',[])
+# Asana sync (pull_asana.py writes asana.json): link each action to its task, Completed in Asana = Completed here, tasks made in Asana show too
+AS=JD('asana.json',{});AT={t['gid']:t for t in AS.get('tasks',[])};AMAP=AS.get('map',{})
+for a in ACTS:
+    g=AMAP.get(str(a['id']))
+    if g and g in AT:
+        t=AT[g];a['gid']=g;a['ag']=1
+        if t['c']:a['s']='closed';a['ca']=t.get('ca')
+        if t.get('d'):a['d']=t['d']
+    elif (a.get('wc') or '')<(SJ['sources'].get('asana') or {}).get('from','9999'):a['loc']=1  # before the Asana go live: page only
+LINKED=set(AMAP.values())
+for t in AS.get('tasks',[]):
+    if t['gid'] in LINKED:continue
+    a={'id':'as'+t['gid'],'gid':t['gid'],'ag':1,'t':t['t'],'o':t.get('o') or 'Unassigned','d':t.get('d'),'src':'Asana','wc':t.get('cr')}
+    if t['c']:a['s']='closed';a['ca']=t.get('ca')
+    ACTS.append(a)
+SITE['asana']={'hook':(SJ['sources'].get('asana') or {}).get('webapp'),'on':bool(AS)}
 MT=JD('maint.json',{'pulled':None,'open':[],'done':[],'recap':{'items':[]},'n':{}});PPM=JD('ppm.json',{'asof':None,'items':[]})
 dly=J('daily.json');cov=J('covers.json');dlv=J('delivery.json') if SC.get('delivery',True)!=False else {'d':{}};br=J('broth.json');rv=J('reviews.json');loy=J('loyalty.json')
 mx=lambda o:max(o) if o else None
@@ -82,10 +98,10 @@ FEEDS=[  # name, as of, max age days
  ('Labour budget',wkend(J('labour.json')['d']),9),('Efficiency',wkend(J('eff.json')),9),('Estate ladder',wkend(J('effall.json')),9),
  ('Broth',d10(br.get('to')),2),('Google reviews',d10(rv.get('built')),2),('Loyalty',d10(loy.get('to')),2),
  ('Key lines',kobas(J('keyline.json').get('pulled')),2),('Meeting notes',wkend(N)+datetime.timedelta(2) if N else None,10),('Reviews intelligence',d10(RI.get('built')),3),('Mapal compliance',d10(JD('mcomp.json',{}).get('to')),9),
- ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3),('Maintenance',d10(MT.get('pulled')),2),('PPM schedule',d10(PPM.get('asof')),35)]
+ ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3),('Maintenance',d10(MT.get('pulled')),2),('PPM schedule',d10(PPM.get('asof')),35),('Asana actions',d10(AS.get('pulled')),2)]
 # Feeds that do not exist for this site (no source in sites.json) are n/a, not late
 NA={'Deliveroo weekly':not SITE['has']['delivery'],'Delivery sales':not SITE['has']['delivery'],'Loyalty':not SITE['has']['loyalty'],'Broth':not SITE['has']['broth'],'Mapal forms':not SITE['has']['mapal'],'Mapal compliance':not SITE['has']['mapal'],'Compliance':not J('compliance.json').get('pulled'),
-    'Team':not J('team.json').get('pulled'),'Key lines':not J('keyline.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled'),'PPM schedule':not PPM.get('items')}
+    'Team':not J('team.json').get('pulled'),'Key lines':not J('keyline.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled'),'PPM schedule':not PPM.get('items'),'Asana actions':not (SC.get('asana_section') and AS)}
 LOG=[];STALE=[]
 for n,asof,mx in FEEDS:
     if NA.get(n) and (asof is None or n in ('Deliveroo weekly','Delivery sales')):LOG.append({'feed':n,'asof':None,'status':'n/a'});continue

@@ -567,9 +567,9 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
 
   <!-- WEEK: ACTIONS -->
   <section class="pane" data-p="actions" hidden>
-    <div class="row"><div><div class="eyebrow">Actions</div><h2>Actions &amp; compliance</h2><div class="sub">Data, diagnosis, action, owner, follow-up, closure. Every action is mirrored to Asana and emailed to the restaurant; completing it in Asana closes it here at the next sync. The site marks done with evidence; only the AM closes.</div></div>
+    <div class="row"><div><div class="eyebrow">Actions</div><h2>Actions &amp; compliance</h2><div class="sub">Data, diagnosis, action, owner, follow-up, closure. Every action from w/c 28/09 is a task in the Asana project Maki &amp; Ramen Management (site section). Mark done completes the Asana task straight away; a task completed in Asana moves to Completed here at the next nightly sync.</div></div>
       <button type="button" class="btn" id="btnAsana">Sync outbox</button></div>
-    <div class="card" id="obCard" hidden><div class="ch"><h3>Sync outbox</h3><span class="small" id="obMeta"></span></div><div class="small" style="margin-bottom:6px">This page works fully offline. Changes queue here and go into the AM Control Centre (and Asana for escalated actions) at the next build. Copy and send to your AM if a build is not due.</div><textarea id="obTxt" rows="5" readonly aria-label="Queued changes"></textarea><div class="obx" style="margin-top:6px"><button type="button" class="btn sm pri" id="obCopy">Copy changes</button><button type="button" class="btn sm" id="obClear">Mark as sent</button></div></div>
+    <div class="card" id="obCard" hidden><div class="ch"><h3>Sync outbox</h3><span class="small" id="obMeta"></span></div><div class="small" style="margin-bottom:6px">This page works fully offline. Changes that could not reach Asana (no signal, or an action not in Asana yet) queue here; Asana changes are retried when the page is next open online. Copy and send to your AM if they stay waiting.</div><textarea id="obTxt" rows="5" readonly aria-label="Queued changes"></textarea><div class="obx" style="margin-top:6px"><button type="button" class="btn sm pri" id="obCopy">Copy changes</button><button type="button" class="btn sm" id="obClear">Mark as sent</button></div></div>
     <div class="grid" id="actTiles"></div>
     <div class="card">
       <div class="ch"><h3>Add an action</h3></div>
@@ -585,10 +585,10 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
     <div class="card">
       <div class="ch"><h3>Action tracker</h3>
         <div class="seg" role="group" aria-label="Filter actions" id="filt">
-          <button type="button" data-fl="open" aria-pressed="true">Open</button><button type="button" data-fl="done" aria-pressed="false">Awaiting AM</button><button type="button" data-fl="closed" aria-pressed="false">Closed</button>
+          <button type="button" data-fl="open" aria-pressed="true">Open</button><button type="button" data-fl="done" aria-pressed="false">Marked done</button><button type="button" data-fl="closed" aria-pressed="false">Completed</button>
         </div></div>
       <div class="tscroll"><table><thead><tr><th>Action</th><th>Raised at</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody id="actRows"></tbody></table></div>
-      <div class="small" style="margin-top:8px">Every GM/HC, GMH chef and AM meeting action lands here and in the site Asana project, and goes to the restaurant inbox. <span class="tag t-no">ASANA QUEUED</span> means it goes up at the next sync; <span class="tag t-auto">SUPPORT</span> means a support team (EC, maintenance, marketing) is assigned too. Status here is cached for offline use.</div>
+      <div class="small" style="margin-top:8px">Every GM/HC, GMH chef and AM meeting action from w/c 28/09 lands here and in the site section of the Asana project; tasks added straight in Asana show here too. <span class="tag t-auto">ASANA</span> means it is an Asana task; <span class="tag t-no">ASANA QUEUED</span> means it goes up at the next nightly sync; <span class="tag t-auto">SUPPORT</span> means a support team (EC, maintenance, marketing) is assigned too. Status here is cached for offline use.</div>
     </div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Maintenance log</h3><span class="mtTL"></span></div><div class="maintBox"></div></div>
@@ -630,10 +630,24 @@ var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{}
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
 ['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
-ACTS.forEach(function(a){if(!S.acts.some(function(x){return x.id===a.id}))S.acts.push(a)});
+ACTS.forEach(function(a){var x=S.acts.filter(function(y){return y.id===a.id||(a.gid&&y.gid===a.gid)})[0];if(!x){S.acts.push(a);return}
+  ['gid','ag','loc','ca'].forEach(function(k){if(a[k]!=null)x[k]=a[k]});if(a.d)x.d=a.d;if(a.s==='closed')x.s='closed'});
+if(!Array.isArray(S.pend))S.pend=[];
 GAPS0.forEach(function(g){if(!S.gaps.some(function(x){return x.id===g.id}))S.gaps.push(g)});
 function queue(op,o){S.ob.push({ts:new Date().toISOString().slice(0,16),op:op,o:o});}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+/* Asana web app (Apps Script holds the token): Mark done completes the task, Add action creates it. No signal: kept in S.pend and retried on the next open. */
+var ASH=(SITE.asana&&SITE.asana.hook)||null;
+function asanaSend(m,retry){if(!retry)S.pend.push(m);save();
+  fetch(ASH,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(m)}).then(function(r){return r.json()}).then(function(r){
+    var a=S.acts.filter(function(x){return x.id===m.id})[0];
+    if(!r||!r.ok){S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});queue(m.op,m);if(a&&m.op==='done')a.ax=0;save();renderActs();renderOb();return toast('Asana said no: '+((r&&r.error)||'error')+'. Queued')}
+    S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});
+    if(a&&m.op==='done'){a.ax=1;toast('Completed in Asana')}
+    if(a&&m.op==='add'&&r.gid){a.gid=r.gid;a.ag=1;toast('Added to Asana')}
+    save();renderActs();renderOb();
+  }).catch(function(){save();renderOb()})}
+function asanaFlush(){if(!ASH||!S.pend.length||navigator.onLine===false)return;S.pend.slice().forEach(function(m){asanaSend(m,true)})}
 var $=function(s){return document.querySelector(s)},$$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
 function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
 function dm(d){if(!d)return 'n/a';var p=String(d).split('-');return p[2]+'/'+p[1]}
@@ -1010,17 +1024,17 @@ function renderPeople(){
     return '<div style="border-top:1px solid var(--line);margin-top:8px;padding-top:8px"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><b>'+(d==='FOH'?'Front of house':'Back of house')+'</b>'+(x?TL('g',x.sent?'Sent to Hanna':'In Hanna sheet'):TL('r','Not submitted'))+'</div>'+
     (x?'<div><b>'+esc(x.n)+'</b>'+(x.role?' · '+esc(x.role):'')+'</div><div class="small">'+esc(x.why)+'</div><div class="mini">Nominated by '+esc(x.by)+', '+dmy(x.on)+'</div>':'<div class="small">No '+d+' nomination for '+mLabel(m)+' yet.</div>')+'</div>'}).join('');
 }
-function stat(a){if(a.s==='closed')return '<span class="pill p-g">✓ Closed</span>';if(a.s==='done')return '<span class="pill p-o">Awaiting AM</span>';if(a.d&&a.d<TODAY)return '<span class="pill p-r">✕ Overdue</span>';if(a.d===TODAY)return '<span class="pill p-r">Due today</span>';return '<span class="pill p-n">Open · '+dm(a.d)+'</span>'}
+function stat(a){if(a.s==='closed')return '<span class="pill p-g">✓ Completed'+(a.ca?' · '+dm(a.ca):'')+'</span>';if(a.s==='done')return a.ax?'<span class="pill p-g">✓ Done in Asana</span>':'<span class="pill p-o">'+(a.gid&&ASH?'Sending to Asana':'Awaiting AM')+'</span>';if(a.d&&a.d<TODAY)return '<span class="pill p-r">✕ Overdue</span>';if(a.d===TODAY)return '<span class="pill p-r">Due today</span>';return '<span class="pill p-n">Open · '+dm(a.d)+'</span>'}
 function renderActs(){
   var open=S.acts.filter(function(a){return a.s==='open'}),done=S.acts.filter(function(a){return a.s==='done'}),closed=S.acts.filter(function(a){return a.s==='closed'}),over=open.filter(function(a){return a.d&&a.d<=TODAY}).length;
-  $('#actTiles').innerHTML=tile('Open',open.length,'From notes, visits and audits',null,'')+tile('Due or overdue',over,'Due today or earlier',over?'r':'g')+tile('Awaiting AM',done.length,'Done by site, needs AM close',null,'')+tile('Closed',closed.length,'With evidence attached',null,'');
+  $('#actTiles').innerHTML=tile('Open',open.length,'From notes, visits and audits',null,'')+tile('Due or overdue',over,'Due today or earlier',over?'r':'g')+tile('Marked done',done.length,'Done here, Completed at next sync',null,'')+tile('Completed',closed.length,'Completed in Asana or closed by the AM',null,'');
   $$('#filt button').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.fl===S.filter)});
   var list=S.acts.filter(function(a){return a.s===S.filter});
   $('#actRows').innerHTML=list.length?list.map(function(a){var ctl='';
     if(a.s==='open')ctl='<div class="ev"><input type="text" id="ev'+a.id+'" aria-label="Evidence for: '+esc(a.t)+'" placeholder="Evidence: what was done, photo link" value="'+esc(a.ev)+'"><button type="button" class="btn sm" data-done="'+a.id+'">Mark done</button></div>';
     if(a.s==='done')ctl='<div class="small">Evidence: '+esc(a.ev)+'</div>'+(S.role==='AM'?'<div class="ev"><button type="button" class="btn sm pri" data-close="'+a.id+'">Close</button><button type="button" class="btn sm" data-back="'+a.id+'">Send back</button></div>':'');
-    if(a.s==='closed')ctl='<div class="small">Evidence: '+esc(a.ev)+'</div>';
-    return '<tr><td style="min-width:260px"><b>'+esc(a.t)+'</b> <span class="tag '+(a.ag?'t-auto">ASANA':'t-no">ASANA QUEUED')+'</span>'+(a.esc?' <span class="tag t-auto">SUPPORT</span>':'')+ctl+'</td><td class="small">'+esc(a.src||'')+(a.wc?'<div class="mini">w/c '+dm(a.wc)+'</div>':'')+'</td><td>'+esc(a.o)+'</td><td>'+dm(a.d)+'</td><td>'+stat(a)+'</td></tr>'}).join(''):'<tr><td colspan="5" class="small">Nothing here.</td></tr>';
+    if(a.s==='closed')ctl='<div class="small">'+(a.ev?'Evidence: '+esc(a.ev):a.gid?'Completed in Asana':'')+'</div>';
+    return '<tr><td style="min-width:260px"><b>'+esc(a.t)+'</b>'+(a.loc?'':' <span class="tag '+(a.ag?'t-auto">ASANA':'t-no">ASANA QUEUED')+'</span>')+(a.esc?' <span class="tag t-auto">SUPPORT</span>':'')+ctl+'</td><td class="small">'+esc(a.src||'')+(a.wc?'<div class="mini">w/c '+dm(a.wc)+'</div>':'')+'</td><td>'+esc(a.o)+'</td><td>'+dm(a.d)+'</td><td>'+stat(a)+'</td></tr>'}).join(''):'<tr><td colspan="5" class="small">Nothing here.</td></tr>';
   $('#ovActHead').textContent='Open actions · '+open.length;
   $('#ovActs').innerHTML='<tbody>'+(open.slice().sort(function(x,y){return (x.d||'9').localeCompare(y.d||'9')}).slice(0,5).map(function(a){return '<tr><td>'+esc(a.t)+'<div class="small">'+esc(a.o)+'</div></td><td class="r">'+stat(a)+'</td></tr>'}).join('')||'<tr><td class="small">No open actions.</td></tr>')+'</tbody>';
   var mj=S.acts.filter(function(a){return a.s!=='closed'&&/maint|repair|broken|clean|fix|equipment|pots|chairs/i.test(a.t)});
@@ -1512,7 +1526,7 @@ document.addEventListener('click',function(e){
   if(ds.fl){S.filter=ds.fl;save();return renderActs()}
   if(ds.rep){S.repl[ds.rep]=nowIso();queue('replied',{id:ds.rep});save();renderDaily();renderOb();return toast('Marked replied')}
   if(ds.gcov){var gx=S.gaps.filter(function(x){return x.id==ds.gcov})[0];gx.cov=gx.cov==='full'?'none':gx.cov==='part'?'full':'part';queue('gapcover',{id:gx.id,cov:gx.cov});save();renderGaps();renderOb();return}
-  if(ds.done){var a=S.acts.filter(function(x){return x.id==ds.done})[0],inp=document.getElementById('ev'+a.id),ev=inp.value.trim();if(!ev){inp.focus();return toast('Add evidence before marking done')}a.ev=ev;a.s='done';queue('done',{id:a.id,t:a.t,ev:ev});save();renderActs();renderOb();return toast('Sent to the AM to close')}
+  if(ds.done){var a=S.acts.filter(function(x){return x.id==ds.done})[0],inp=document.getElementById('ev'+a.id),ev=inp.value.trim();if(!ev){inp.focus();return toast('Add evidence before marking done')}a.ev=ev;a.s='done';if(a.gid&&ASH){asanaSend({op:'done',site:SCODE,gid:a.gid,id:a.id,ev:ev,by:S.role});renderActs();renderOb();return toast('Completing in Asana')}queue('done',{id:a.id,t:a.t,ev:ev});save();renderActs();renderOb();return toast('Sent to the AM to close')}
   if(ds.close){var ca=S.acts.filter(function(x){return x.id==ds.close})[0];ca.s='closed';queue('close',{id:ca.id,t:ca.t});save();renderActs();renderOb();return toast('Action closed')}
   if(ds.back){var ba=S.acts.filter(function(x){return x.id==ds.back})[0];ba.s='open';queue('reopen',{id:ba.id,t:ba.t});save();renderActs();renderOb();return toast('Sent back to owner')}
 });
@@ -1526,7 +1540,7 @@ $('#btnSuggest').onclick=function(){var w=wk(S.wc),ev=evaluate(w,prevW(S.wc)).fi
   var t=ev.slice(0,3).map(function(e,i){return (i+1)+'. '+e.m.lab+' '+e.m.fmt(e.v).replace(/<[^>]+>/g,'')+' vs target '+e.m.tl(w).replace(/<[^>]+>/g,'')+': [action, owner, date]'}).join('\n');
   $('#f_improve').value=t;F().improve=t;save();renderFields();toast('Pre-filled. Add the actions')};
 $('#btnAsana').onclick=function(){var c=$('#obCard');c.hidden=!c.hidden;renderOb()};
-function renderOb(){$('#btnAsana').textContent='Sync outbox'+(S.ob.length?' ('+S.ob.length+')':'');$('#obMeta').textContent=S.ob.length+' change'+(S.ob.length===1?'':'s')+' waiting';$('#obTxt').value=S.ob.length?JSON.stringify({site:SCODE,ob:S.ob}):'Nothing waiting.'}
+function renderOb(){var n=S.ob.length+(S.pend||[]).length;$('#btnAsana').textContent='Sync outbox'+(n?' ('+n+')':'');$('#obMeta').textContent=S.ob.length+' change'+(S.ob.length===1?'':'s')+' waiting';$('#obTxt').value=S.ob.length?JSON.stringify({site:SCODE,ob:S.ob}):'Nothing waiting.'}
 $('#obCopy').onclick=function(){var t=$('#obTxt');t.select();try{navigator.clipboard.writeText(t.value).then(function(){toast('Copied')},function(){document.execCommand('copy');toast('Copied')})}catch(e){document.execCommand('copy');toast('Copied')}};
 $('#obClear').onclick=function(){if(!S.ob.length)return;S.ob=[];save();renderOb();toast('Outbox cleared')};
 document.addEventListener('change',function(e){var el=e.target;if(!el.dataset||!el.dataset.br)return;var p=el.dataset.br.split('|'),dt=p[0],b=S.broth[dt]=S.broth[dt]||{},v=el.value.trim();
@@ -1535,7 +1549,7 @@ $('#eotmForm').addEventListener('submit',function(e){e.preventDefault();var m=S.
   var x={n:n,role:$('#eo_r').value.trim(),why:why,by:S.role,on:nowIso(),sent:1};S.eotm[m]=S.eotm[m]||{};S.eotm[m][d]=x;queue('eotm',{site:SCODE,month:m,dept:d,to:'Hanna Awang',n:n,role:x.role,why:why});save();['#eo_n','#eo_r','#eo_w'].forEach(function(k){$(k).value=''});renderPeople();renderOb();toast('Queued for Hanna')});
 $('#gapForm').addEventListener('submit',function(e){e.preventDefault();var w=$('#gp_w').value.trim(),f=$('#gp_f').value;if(!w||!f){toast('Add who and a start date');return}var g={id:'g'+Date.now(),who:w,area:'',from:f,to:$('#gp_t').value,hrs:+$('#gp_h').value||null,plan:$('#gp_p').value.trim(),cov:$('#gp_p').value.trim()?'part':'none',src:'GM entry'};S.gaps.push(g);queue('gap',g);save();['#gp_w','#gp_f','#gp_t','#gp_h','#gp_p'].forEach(function(k){$(k).value=''});renderGaps();renderOb();toast('Gap added')});
 $('#newAct').addEventListener('submit',function(e){e.preventDefault();var t=$('#na_t').value.trim(),o=$('#na_o').value.trim(),d=$('#na_d').value,er=$('#naErr');
-  if(!t||!o){er.hidden=false;er.textContent='Add the action and an owner.';return}er.hidden=true;var na={id:Date.now(),t:t,o:o,d:d,s:'open',ev:'',src:$('#na_s').value,wc:S.wc,esc:$('#na_e').checked?1:0};S.acts.push(na);queue('add',na);$('#na_e').checked=false;$('#na_t').value=$('#na_o').value=$('#na_d').value='';S.filter='open';save();renderActs();renderOb();toast('Action added')});
+  if(!t||!o){er.hidden=false;er.textContent='Add the action and an owner.';return}er.hidden=true;var na={id:Date.now(),t:t,o:o,d:d,s:'open',ev:'',src:$('#na_s').value,wc:S.wc,esc:$('#na_e').checked?1:0};S.acts.push(na);if(ASH)asanaSend({op:'add',site:SCODE,id:na.id,t:t,o:o,d:d,src:na.src,wc:na.wc,esc:na.esc});else queue('add',na);$('#na_e').checked=false;$('#na_t').value=$('#na_o').value=$('#na_d').value='';S.filter='open';save();renderActs();renderOb();toast('Action added')});
 var hsh=(location.hash||'').slice(1);if(['overview','kpi','droo','daily','stock','people','actions'].indexOf(hsh)>-1){S.tab=hsh;S.per='week'}if(hsh==='month')S.per='month';
 if(idx(S.wc)<0)S.wc=CUR;if(MONTHS.indexOf(S.month)<0)S.month=MONTHS[0];
 if(NODEL&&S.tab==='droo')S.tab='overview';
@@ -1555,7 +1569,7 @@ function stripDel(){
     Array.prototype.forEach.call(tb.rows,function(r){if(r.cells.length===n)ix.forEach(function(k){r.cells[k].hidden=true})})});
 }
 if(NODEL){var _ra=renderAll;renderAll=function(){_ra.apply(this,arguments);stripDel()};var _rm=renderMonth;renderMonth=function(){_rm.apply(this,arguments);stripDel()};var _rd=renderDaily;renderDaily=function(){_rd.apply(this,arguments);stripDel()}}
-renderAll();
+renderAll();asanaFlush();window.addEventListener('online',asanaFlush);
 window.addEventListener('resize',function(){if(S.per==='week'&&S.tab==='droo')renderDroo()});
 })();
 </script>
