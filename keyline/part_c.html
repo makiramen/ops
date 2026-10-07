@@ -158,7 +158,7 @@ function renderGate(){
   const p = gateState(), el = document.getElementById('gate'), m = window.KEYLINE_DATA.meta;
   if(!p.length){
     el.innerHTML = '<div class="gate gate-ok"><span class="dot"></span><div><b>Safe to order</b>'+
-      '<small>Kobas position '+m.reportDate+', '+m.importedLabel+'. All nine sites present, all 13 keylines found.</small></div></div>';
+      '<small>Kobas stock as at '+m.importedLabel.replace('pulled from Kobas ','')+', last full count '+m.reportDate+'. All nine sites present, all 13 keylines found.</small></div></div>';
     return;
   }
   const stop = p.some(x=>x.stop);

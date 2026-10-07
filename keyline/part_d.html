@@ -210,7 +210,7 @@ function renderMail(){
   document.getElementById('mailprev').innerHTML =
     '<div class="mail"><div class="h"><b>To:</b> sophie@makiramen.com, srawut@makiramen.com<br>'+
     '<b>Subject:</b> Keyline: '+urgent.length+' urgent, '+order.length+' to order<br>'+
-    '<b>Sent:</b> 07:00 &middot; Kobas position '+m.reportDate+', '+m.importedLabel+'</div>'+body+
+    '<b>Sent:</b> 07:00 &middot; Kobas stock as at '+m.importedLabel.replace('pulled from Kobas ','')+', last full count '+m.reportDate+'</div>'+body+
     '<p class="note">Order quantities are already net of stock in hand and of anything on its way, so order exactly what the Order column says. Days left is that site own average daily usage against the Kobas position. URGENT means the next routine delivery will not arrive in time, so order it AND call your AM. No email ever goes to a supplier.</p></div>';
 }
 
@@ -276,7 +276,7 @@ function renderAll(){
   document.getElementById('clk').textContent = NOW.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) + ' UK';
   document.getElementById('today').textContent = NOW.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   const m = window.KEYLINE_DATA.meta;
-  document.getElementById('foot').innerHTML = 'Kobas position '+m.reportDate+' · '+m.importedLabel+
+  document.getElementById('foot').innerHTML = 'Kobas stock as at '+m.importedLabel.replace('pulled from Kobas ','')+' · last full count '+m.reportDate+
     ' · '+ROWS.length+' lines across '+SITES.length+' sites · engine v'+m.version+
     '. Cut-off countdowns run on your device clock, so this page re-reads itself as the day moves.';
 }
