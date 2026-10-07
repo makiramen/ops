@@ -1,4 +1,4 @@
-name: Daily tab (cash-up + reviews + Reviews Intelligence)
+name: Daily tab (cash-up + reviews + Reviews Intelligence + Deliveroo daily ops)
 
 # Hourly on purpose, 03/09/2026. Three slots a day was not enough for two separate reasons.
 # 1. GITHUB DROPS AND DELAYS CRON. Of the three scheduled slots on 02/09 the 08:15 one never ran
@@ -35,7 +35,17 @@ jobs:
           python-version: '3.12'
 
       - name: Install
-        run: pip install --quiet google-auth requests
+        run: pip install --quiet google-auth requests google-api-python-client
+
+      # 07/10/2026: Deliveroo daily ops ride the same run as the cash-up and reviews, so the AM CC daily tab
+      # (Deliveroo chip and panel) and the Area Room update together. Source: Deliveroo Daily Master sheet, filled
+      # hourly by the Apps Script from Brogan's morning drops. The file lands in data/ before the build below, so
+      # daily_cloud_run.py ships it in the same commit. A failed pull keeps the last good file and never blocks the tab.
+      - name: Deliveroo daily ops (estate file)
+        continue-on-error: true
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+        run: python3 site_cc/pipeline/pull_deliveroo_daily.py --estate data/deliveroo_daily.json
 
       - name: Fetch the two Drive mirrors (twice each, must be byte-identical)
         env:
@@ -74,6 +84,20 @@ jobs:
           echo '### stderr tail' >> "$GITHUB_STEP_SUMMARY"; tail -n 25 /tmp/run.err >> "$GITHUB_STEP_SUMMARY"
           # 0 = shipped or nothing to ship; 11 = D not filed yet (normal at 12:15). Anything else fails the job loudly.
           if [ "$code" = "0" ] || [ "$code" = "11" ]; then exit 0; else exit "$code"; fi
+
+      # When the cash-up has nothing new (exit 11) the build ships nothing, so ship the Deliveroo file on its own.
+      - name: Ship Deliveroo daily ops if the build did not
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          if [ -z "$(git status --porcelain -- data/deliveroo_daily.json)" ]; then echo "Deliveroo daily ops: nothing to ship"; exit 0; fi
+          git config user.name "maki-nori"; git config user.email "michael@makiramen.com"
+          git add data/deliveroo_daily.json
+          git commit -q -m "Deliveroo daily ops: $(TZ=Europe/London date +'%Y-%m-%d %H:%M') UK"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          for i in 1 2 3; do git push "$URL" HEAD:main && exit 0; git fetch "$URL" main && git rebase FETCH_HEAD; done
+          exit 1
 
       - name: Keep the report and logs
         if: always()
