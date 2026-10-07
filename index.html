@@ -1269,15 +1269,15 @@
       #tab-daily .dly-rv .rv-day { display:block; font-size:10px; font-weight:700; color:var(--band); }
       #tab-daily tr.dly-rvrow > td { background:#FAFAFA; padding:0; border-top:0; }
       #tab-daily .dly-rv.roo-red { border-color:var(--red); }
-      #tab-daily .roo-panel table { border-collapse:collapse; font-size:12px; width:auto; }
+      #tab-daily .roo-panel { padding:12px 16px 15px; text-align:left; white-space:normal; }
+      #tab-daily .roo-panel h4 { margin:0 0 8px; font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; }
+      #tab-daily .roo-panel table.roo-full { border-collapse:collapse; font-size:12px; width:100%; table-layout:auto; }
       #tab-daily .roo-panel th, #tab-daily .roo-panel td { padding:5px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
       #tab-daily .roo-panel th:first-child, #tab-daily .roo-panel td:first-child { text-align:left; }
       #tab-daily .roo-panel th { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-3); background:transparent; }
-      #tab-daily .roo-panel .roo-wrap > div { overflow-x:auto; min-width:0; }
       #tab-daily .roo-panel tr.sel td { background:var(--band-bg, #fff4ee); font-weight:700; }
       #tab-daily .roo-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; background:#cbd5e1; }
       #tab-daily .roo-dot.r { background:var(--red); }
-      #tab-daily .roo-wrap { display:grid; grid-template-columns:1fr; gap:14px; }
       #tab-daily .rv-panel { padding:12px 16px 15px; text-align:left; white-space:normal; }
       #tab-daily .rv-panel h4 { margin:8px 0 6px; font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; }
       #tab-daily .rv-panel h4:first-child { margin-top:0; }
@@ -5856,40 +5856,94 @@ const MEETING_RISK = {
       + (iss.length ? '<span class="rv-n">' + esc(iss.join(' \u00b7 ')) + '</span>' : '') + '</button>';
   }
   function addDays(iso, n) { return new Date(Date.parse(iso + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10); }
-  function mondayOf(iso) { var x = new Date(iso + 'T00:00:00Z'); return addDays(iso, -((x.getUTCDay() + 6) % 7)); }
   // Expanded panel under the site row: last 7 days to the selected day (orders, prep, order duration, issues, day RAG), the 7 day
   // total against the 7 days before, and Deliveroo's weekly figures (rider wait, open hours, busy mode) this week vs last.
+  // Expanded panel under the site row (full width). Top: weekly Deliveroo scorecard for the latest two completed weeks
+  // (revenue, orders, AOV, rating, open %, prep, inaccuracy %, rider wait %, overall), same thresholds as the Deliveroo RAG tab.
+  // Below: last 7 days to the selected day with delivery £ (cash up, all platforms), orders, prep, order duration, missing items,
+  // cancellations, rejections and the day's Red Light; then the 7 day total against the 7 days before.
+  var rooWk = null;   // weeks_index.json, loaded once
+  var rooWkCache = {}, rooDayCache = {};
+  function rooFetch(url) { return fetch(url + '?cb=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }); }
+  function rooWeekFiles(date) {
+    var base = (typeof DATA_DIR === 'string' ? DATA_DIR : './data/');
+    var p = rooWk ? Promise.resolve(rooWk) : rooFetch(base + 'weeks_index.json').then(function (j) { rooWk = j || { weeks: [] }; return rooWk; });
+    return p.then(function (ix) {
+      var mons = (ix.weeks || []).map(function (w) { return w.monday; }).filter(function (m) { return m <= date; }).sort().reverse().slice(0, 2);
+      return Promise.all(mons.map(function (m) {
+        if (rooWkCache[m]) return Promise.resolve(rooWkCache[m]);
+        return rooFetch(base + 'all_sites_wc_' + m + '.json').then(function (j) { rooWkCache[m] = { monday: m, data: j }; return rooWkCache[m]; });
+      }));
+    });
+  }
+  function rooDayFile(d) {
+    if (cache[d]) return Promise.resolve(cache[d]);
+    if (rooDayCache[d] !== undefined) return Promise.resolve(rooDayCache[d]);
+    return rooFetch(DIR + 'daily_' + d + '.json').then(function (j) { rooDayCache[d] = j; return j; });
+  }
+  function rooTint(band) { return band === 'green' ? 'background:#ecfdf5;color:var(--green)' : band === 'amber' ? 'background:#fffbeb;color:var(--amber)' : band === 'red' ? 'background:#fef2f2;color:var(--red)' : 'color:var(--ink-3)'; }
   function rooRow(date, code, name) {
     var q0 = ROO && ROO.d[date] && ROO.d[date][code];
     if (!q0) return '';
+    return '<tr class="dly-rvrow" id="roorow-' + esc(code) + '" style="display:none"><td colspan="' + NCOL + '"><div class="roo-panel" data-date="' + esc(date) + '" data-code="' + esc(code) + '" data-name="' + esc(name) + '"><div class="sub">Loading Deliveroo detail…</div></div></td></tr>';
+  }
+  function rooFill(panel) {
+    if (panel.getAttribute('data-built')) return;
+    panel.setAttribute('data-built', '1');
+    var date = panel.getAttribute('data-date'), code = panel.getAttribute('data-code'), name = panel.getAttribute('data-name');
     var days = [], prev = [];
     for (var i = 6; i >= 0; i--) days.push(addDays(date, -i));
     for (var j = 13; j >= 7; j--) prev.push(addDays(date, -j));
-    var n1 = function (v, dp, u) { return v == null ? '<span class="dly-m">\u00b7</span>' : v.toFixed(dp) + (u || ''); };
-    var h = '<div class="roo-panel"><div class="roo-wrap"><div><h4>Deliveroo \u00b7 ' + esc(name) + ' \u00b7 last 7 days to ' + shortDate(date) + '</h4>'
-      + '<table><thead><tr><th>Day</th><th>Red Light</th><th>Orders</th><th>Prep</th><th>Order duration</th><th>Missing items</th><th>Cancels (rest. error)</th><th>Rejections</th></tr></thead><tbody>';
-    var agg = function (ds) { var o = { n: 0, ord: 0, pw: 0, pn: 0, red: 0, miss: 0, rej: 0, can: 0 }; ds.forEach(function (d) { var q = ROO.d[d] && ROO.d[d][code]; if (!q) return; o.n++; o.ord += q[0] || 0; if (q[1] != null) { o.pw += q[1] * (q[0] || 1); o.pn += (q[0] || 1); } if (q[7] === 1) o.red++; if (q[3]) o.miss++; o.rej += q[6] || 0; o.can += q[4] || 0; }); o.prep = o.pn ? o.pw / o.pn : null; return o; };
+    Promise.all([rooWeekFiles(date), Promise.all(days.concat(prev).map(rooDayFile))]).then(function (res) {
+      var weeks = res[0], dayFiles = {};
+      days.concat(prev).forEach(function (d, k) { dayFiles[d] = res[1][k]; });
+      panel.innerHTML = rooPanelHtml(date, code, name, days, prev, weeks, dayFiles);
+    });
+  }
+  function rooPanelHtml(date, code, name, days, prev, weeks, dayFiles) {
+    var n1 = function (v, dp, u) { return v == null ? '<span class="dly-m">·</span>' : v.toFixed(dp) + (u || ''); };
+    var dot = function (v) { return '<span class="dly-m">·</span>'; };
+    // Weekly scorecard
+    var h = '<h4>Deliveroo · ' + esc(name) + '</h4>';
+    var haveDefs = (typeof DELIV_METRIC_DEFS !== 'undefined' && typeof _delivBand === 'function' && typeof _delivRollup === 'function');
+    h += '<table class="roo-full"><thead><tr><th>Week</th><th>Revenue</th><th>Orders</th><th>AOV</th><th>Rating</th><th>Open %</th><th>Prep</th><th>Inacc %</th><th>Rider %</th><th>Busy %</th><th>Overall</th></tr></thead><tbody>';
+    var wrows = 0;
+    (weeks || []).forEach(function (w) {
+      var sites = w.data && w.data.sites, sd = sites ? (Array.isArray(sites) ? sites.filter(function (x) { return x.code === code; })[0] : sites[code]) : null;
+      var d = sd && sd.deliveroo;
+      if (!d) return;
+      wrows++;
+      var band = function (f) { var m = haveDefs ? DELIV_METRIC_DEFS.filter(function (x) { return x[0] === f; })[0] : null; return m ? _delivBand(d[f], m[2], m[3], m[4]) : 'missing'; };
+      var roll = haveDefs ? _delivRollup(d) : { rag: 'missing', drivers: '' };
+      h += '<tr><td>w/c ' + shortDate(w.monday) + (d.partial ? ' <span class="dly-m">(partial)</span>' : '') + '</td>'
+        + '<td><b>' + (d.sales == null ? '·' : fmtG(d.sales)) + '</b>' + (d.wow && d.wow.gmv_pct != null ? '<span class="sub ' + (d.wow.gmv_pct >= 0 ? 'dly-g' : 'dly-r') + '">' + fmtSigned(d.wow.gmv_pct) + ' WoW</span>' : '') + '</td>'
+        + '<td>' + (d.orders == null ? '·' : d.orders) + '</td><td>' + (d.aov == null ? '·' : fmtG2(d.aov)) + '</td>'
+        + '<td style="' + rooTint(band('rating')) + '">' + n1(d.rating, 2) + '</td>'
+        + '<td style="' + rooTint(band('open_hours_pct')) + '">' + n1(d.open_hours_pct, 1) + '</td>'
+        + '<td style="' + rooTint(band('avg_prep_min')) + '">' + n1(d.avg_prep_min, 1) + '</td>'
+        + '<td style="' + rooTint(band('inaccuracy_pct')) + '">' + n1(d.inaccuracy_pct, 1) + '</td>'
+        + '<td style="' + rooTint(band('rider_wait_5min_pct')) + '">' + n1(d.rider_wait_5min_pct, 1) + '</td>'
+        + '<td>' + n1(d.busy_mode_pct, 1) + '</td>'
+        + '<td style="' + rooTint(roll.rag) + ';font-weight:800" title="' + esc(roll.drivers) + '">' + (roll.rag === 'missing' ? '·' : roll.rag.toUpperCase()) + '</td></tr>';
+    });
+    if (!wrows) h += '<tr><td colspan="11" class="dly-m">No weekly Deliveroo figures for this site yet.</td></tr>';
+    h += '</tbody></table><div class="sub" style="margin:4px 0 12px">Weekly figures from the Deliveroo weekly summary (same source and thresholds as the Deliveroo RAG tab). Revenue is Deliveroo GMV.</div>';
+    // Daily table
+    h += '<table class="roo-full"><thead><tr><th>Day</th><th>Red Light</th><th>Delivery £</th><th>Orders</th><th>Prep</th><th>Order duration</th><th>Inacc %</th><th>Cancels (rest. error)</th><th>Rejections</th></tr></thead><tbody>';
+    var delv = function (d) { var f = dayFiles[d]; var x = f && f.sites && f.sites[code]; return x && x.sales ? x.sales.delivery : null; };
+    var agg = function (ds) { var o = { n: 0, ord: 0, pw: 0, pn: 0, red: 0, miss: 0, rej: 0, can: 0, dv: 0, dn: 0 }; ds.forEach(function (d) { var v = delv(d); if (v != null) { o.dv += v; o.dn++; } var q = ROO.d[d] && ROO.d[d][code]; if (!q) return; o.n++; o.ord += q[0] || 0; if (q[1] != null) { o.pw += q[1] * (q[0] || 1); o.pn += (q[0] || 1); } if (q[7] === 1) o.red++; if (q[3]) o.miss++; o.rej += q[6] || 0; o.can += q[4] || 0; }); o.prep = o.pn ? o.pw / o.pn : null; return o; };
     days.forEach(function (d) {
-      var q = ROO.d[d] && ROO.d[d][code], rag = rooRag(q);
-      h += '<tr' + (d === date ? ' class="sel"' : '') + '><td>' + shortDate(d) + '</td><td><span class="roo-dot ' + rag + '"></span></td>';
+      var q = ROO.d[d] && ROO.d[d][code], rag = rooRag(q), v = delv(d);
+      h += '<tr' + (d === date ? ' class="sel"' : '') + '><td>' + shortDate(d) + '</td><td><span class="roo-dot ' + rag + '"></span></td><td>' + (v == null ? '<span class="dly-m">·</span>' : fmtG(v)) + '</td>';
       if (!q) { h += '<td colspan="6" class="dly-m" style="text-align:left">no Deliveroo row</td></tr>'; return; }
-      h += '<td>' + (q[0] == null ? '\u00b7' : q[0]) + '</td><td class="' + (q[1] == null ? 'dly-m' : (q[7] === 1 ? 'dly-r' : 'dly-g')) + '">' + n1(q[1], 1, ' min') + '</td><td>' + n1(q[2], 1, ' min') + '</td>'
-        + '<td>' + (q[3] == null ? '\u00b7' : q[3].toFixed(1) + '%') + '</td><td class="' + (q[4] ? 'dly-r' : '') + '">' + (q[4] == null ? '\u00b7' : q[4]) + '</td><td class="' + (q[6] ? 'dly-r' : '') + '">' + (q[6] == null ? '\u00b7' : q[6]) + '</td></tr>';
+      h += '<td>' + (q[0] == null ? '·' : q[0]) + '</td><td class="' + (q[1] == null ? 'dly-m' : (q[7] === 1 ? 'dly-r' : 'dly-g')) + '">' + n1(q[1], 1, ' min') + '</td><td>' + n1(q[2], 1, ' min') + '</td>'
+        + '<td>' + (q[3] == null ? '·' : q[3].toFixed(1) + '%') + '</td><td class="' + (q[4] ? 'dly-r' : '') + '">' + (q[4] == null ? '·' : q[4]) + '</td><td class="' + (q[6] ? 'dly-r' : '') + '">' + (q[6] == null ? '·' : q[6]) + '</td></tr>';
     });
     var A = agg(days), B = agg(prev);
-    var tot = function (lab, o) { return '<tr style="font-weight:700"><td>' + lab + '</td><td>' + (o.n ? '<span class="roo-dot ' + (o.red || o.can || o.rej ? 'r' : 'g') + '"></span>' : '') + '</td><td>' + (o.n ? o.ord : '\u00b7') + '</td><td class="' + (o.prep == null ? 'dly-m' : (o.red ? 'dly-r' : 'dly-g')) + '">' + n1(o.prep, 1, ' min') + (o.red ? ' <span class="dly-m" style="font-weight:600">' + o.red + ' red</span>' : '') + '</td><td></td><td>' + (o.n ? o.miss + ' day' + (o.miss === 1 ? '' : 's') : '\u00b7') + '</td><td class="' + (o.can ? 'dly-r' : '') + '">' + (o.n ? o.can : '\u00b7') + '</td><td class="' + (o.rej ? 'dly-r' : '') + '">' + (o.n ? o.rej : '\u00b7') + '</td></tr>'; };
-    h += tot('7 days (' + A.n + ' with data)', A) + tot('7 days before (' + shortDate(prev[0]) + ' to ' + shortDate(prev[6]) + ')', B) + '</tbody></table>'
-      + '<div class="sub" style="margin-top:8px"><span class="roo-dot r"></span>Red Light: prep above 15.00 min, or any restaurant error cancellation or rejection that day. Missing items are shown but do not trigger a light. Prep over 7 days is weighted by orders.</div></div>';
-    var wc = mondayOf(date), pw = addDays(wc, -7), W = (ROO.w || {}), cur = (W[wc] || {})[code] || [], prv = (W[pw] || {})[code] || [];
-    var M = [['Rider wait over 5 min', 0, -1], ['Scheduled hours open', 1, 1], ['Time in busy mode', 2, -1]];
-    h += '<div><h4>Weekly (Deliveroo reports these by week)</h4><table><thead><tr><th>Measure</th><th>w/c ' + shortDate(wc) + '</th><th>w/c ' + shortDate(pw) + '</th><th>Change</th></tr></thead><tbody>';
-    M.forEach(function (m) {
-      var a = cur[m[1]], b = prv[m[1]], ch = '';
-      if (a != null && b != null) { var d = a - b, good = m[2] * d > 0, bad = m[2] * d < 0; ch = '<span class="' + (good ? 'dly-g' : (bad ? 'dly-r' : 'dly-m')) + '">' + (good ? '\u25b2 ' : (bad ? '\u25bc ' : '\u25cf ')) + (d > 0 ? '+' : '') + d.toFixed(1) + 'pp</span>'; }
-      h += '<tr><td>' + m[0] + '</td><td>' + n1(a, 1, '%') + '</td><td>' + n1(b, 1, '%') + '</td><td>' + (ch || '<span class="dly-m">\u00b7</span>') + '</td></tr>';
-    });
-    h += '</tbody></table><div class="sub" style="margin-top:8px">Rider wait shows a dot when Deliveroo does not report it for a low volume week.<br>Source: Deliveroo Daily Master, latest day ' + shortDate(ROO.to) + '.</div></div></div></div>';
-    return '<tr class="dly-rvrow" id="roorow-' + esc(code) + '" style="display:none"><td colspan="' + NCOL + '">' + h + '</td></tr>';
+    var tot = function (lab, o) { return '<tr style="font-weight:700"><td>' + lab + '</td><td>' + (o.n ? '<span class="roo-dot ' + (o.red || o.can || o.rej ? 'r' : 'g') + '"></span>' : '') + '</td><td>' + (o.dn ? fmtG(o.dv) : '·') + '</td><td>' + (o.n ? o.ord : '·') + '</td><td class="' + (o.prep == null ? 'dly-m' : (o.red ? 'dly-r' : 'dly-g')) + '">' + n1(o.prep, 1, ' min') + (o.red ? ' <span class="dly-m" style="font-weight:600">' + o.red + ' red</span>' : '') + '</td><td></td><td>' + (o.n ? o.miss + ' day' + (o.miss === 1 ? '' : 's') : '·') + '</td><td class="' + (o.can ? 'dly-r' : '') + '">' + (o.n ? o.can : '·') + '</td><td class="' + (o.rej ? 'dly-r' : '') + '">' + (o.n ? o.rej : '·') + '</td></tr>'; };
+    h += tot('7 days to ' + shortDate(date), A) + tot('7 days before (' + shortDate(prev[0]) + ' to ' + shortDate(prev[6]) + ')', B) + '</tbody></table>'
+      + '<div class="sub" style="margin-top:8px"><span class="roo-dot r"></span>Red Light: prep above 15.00 min, or any restaurant error cancellation or rejection that day. Delivery £ is every platform as cashed up (Auto Cash Up); Inacc % is Deliveroo missing items. Source: Deliveroo Daily Master, latest day ' + shortDate(ROO.to) + '.</div>';
+    return h;
   }
 
   var fmtG = function (n) {
@@ -6319,6 +6373,7 @@ const MEETING_RISK = {
       if (!rrow) return;
       var ropen = rrow.style.display !== 'none';
       rrow.style.display = ropen ? 'none' : '';
+      if (!ropen) { var pnl = rrow.querySelector('.roo-panel'); if (pnl) rooFill(pnl); }
       b.setAttribute('aria-expanded', ropen ? 'false' : 'true');
       b.classList.toggle('open', !ropen);
       return;
