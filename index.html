@@ -1268,6 +1268,16 @@
       #tab-daily .dly-rv .rv-neg { display:block; font-size:10px; font-weight:800; color:var(--red); }
       #tab-daily .dly-rv .rv-day { display:block; font-size:10px; font-weight:700; color:var(--band); }
       #tab-daily tr.dly-rvrow > td { background:#FAFAFA; padding:0; border-top:0; }
+      #tab-daily .dly-rv.roo-red { border-color:var(--red); }
+      #tab-daily .roo-panel table { border-collapse:collapse; font-size:12px; width:auto; }
+      #tab-daily .roo-panel th, #tab-daily .roo-panel td { padding:5px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+      #tab-daily .roo-panel th:first-child, #tab-daily .roo-panel td:first-child { text-align:left; }
+      #tab-daily .roo-panel th { font-size:10px; text-transform:uppercase; letter-spacing:.4px; color:var(--ink-3); background:transparent; }
+      #tab-daily .roo-panel .roo-wrap > div { overflow-x:auto; min-width:0; }
+      #tab-daily .roo-panel tr.sel td { background:var(--band-bg, #fff4ee); font-weight:700; }
+      #tab-daily .roo-dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:middle; background:#cbd5e1; }
+      #tab-daily .roo-dot.r { background:var(--red); }
+      #tab-daily .roo-wrap { display:grid; grid-template-columns:1fr; gap:14px; }
       #tab-daily .rv-panel { padding:12px 16px 15px; text-align:left; white-space:normal; }
       #tab-daily .rv-panel h4 { margin:8px 0 6px; font-size:11px; font-weight:800; letter-spacing:.4px; text-transform:uppercase; }
       #tab-daily .rv-panel h4:first-child { margin-top:0; }
@@ -5820,18 +5830,66 @@ const MEETING_RISK = {
       .then(function (j) { ROO = (j && j.d) ? j : null; return ROO; })
       .catch(function () { ROO = null; return null; });
   }
-  function rooCell(date, code) {
-    var q = ROO && ROO.d[date] && ROO.d[date][code];
-    if (!q) return '<span class="dly-m" title="No Deliveroo daily row for this site and day">\u00b7</span>';
-    var red = q[7] === 1, iss = [];
+  // Binary Red Light for Deliveroo ops, no amber: prep above 15.00 min (the Red Light rule), or any restaurant error
+  // cancellation or rejection that day. 'm' = no figures.
+  function rooRag(q) {
+    if (!q || q[1] == null) return 'm';
+    return (q[7] === 1 || q[4] > 0 || q[6] > 0) ? 'r' : 'g';
+  }
+  function rooIss(q) {
+    var iss = [];
     if (q[3]) iss.push(q[3].toFixed(1) + '% missing');
     if (q[6]) iss.push(q[6] + ' rej');
     if (q[4]) iss.push(q[4] + ' cancel');
+    return iss;
+  }
+  function rooCell(date, code) {
+    var q = ROO && ROO.d[date] && ROO.d[date][code];
+    if (!q) return '<span class="dly-m" title="No Deliveroo daily row for this site and day">\u00b7</span>';
+    var red = rooRag(q) === 'r', iss = rooIss(q);
     var tip = 'Deliveroo ' + date + ': ' + (q[0] == null ? '' : q[0] + ' orders, ') + (q[1] == null ? '' : 'prep ' + q[1].toFixed(1) + ' min, ')
-      + (q[2] == null ? '' : 'order duration ' + q[2].toFixed(1) + ' min') + (iss.length ? '; ' + iss.join(', ') : '; no missing items, cancellations or rejections');
-    return '<span title="' + esc(tip) + '"><b>' + (q[0] == null ? '\u00b7' : q[0]) + '</b> orders'
-      + '<span class="sub"><span class="' + (q[1] == null ? 'dly-m' : (red ? 'dly-r' : 'dly-g')) + '">' + (q[1] == null ? '\u00b7' : q[1].toFixed(1) + ' min prep') + '</span>'
-      + (iss.length ? ' <span class="dly-r">' + esc(iss.join(' \u00b7 ')) + '</span>' : '') + '</span></span>';
+      + (q[2] == null ? '' : 'order duration ' + q[2].toFixed(1) + ' min') + (iss.length ? '; ' + iss.join(', ') : '; no missing items, cancellations or rejections') + '. Click for the last 7 days.';
+    return '<button type="button" class="dly-rv' + (red ? ' roo-red' : '') + '" data-roo="' + esc(code) + '" aria-expanded="false" title="' + esc(tip) + '">'
+      + '<span class="rv-star ' + (q[1] == null ? 'dly-m' : (q[7] === 1 ? 'dly-r' : 'dly-g')) + '">' + (q[1] == null ? '\u2014' : q[1].toFixed(1) + ' min') + '</span>'
+      + '<span class="rv-n">' + (q[0] == null ? '\u00b7' : q[0]) + ' orders</span>'
+      + (red ? '<span class="rv-neg">\u25cf Red Light</span>' : '')
+      + (iss.length ? '<span class="rv-n">' + esc(iss.join(' \u00b7 ')) + '</span>' : '') + '</button>';
+  }
+  function addDays(iso, n) { return new Date(Date.parse(iso + 'T00:00:00Z') + n * 864e5).toISOString().slice(0, 10); }
+  function mondayOf(iso) { var x = new Date(iso + 'T00:00:00Z'); return addDays(iso, -((x.getUTCDay() + 6) % 7)); }
+  // Expanded panel under the site row: last 7 days to the selected day (orders, prep, order duration, issues, day RAG), the 7 day
+  // total against the 7 days before, and Deliveroo's weekly figures (rider wait, open hours, busy mode) this week vs last.
+  function rooRow(date, code, name) {
+    var q0 = ROO && ROO.d[date] && ROO.d[date][code];
+    if (!q0) return '';
+    var days = [], prev = [];
+    for (var i = 6; i >= 0; i--) days.push(addDays(date, -i));
+    for (var j = 13; j >= 7; j--) prev.push(addDays(date, -j));
+    var n1 = function (v, dp, u) { return v == null ? '<span class="dly-m">\u00b7</span>' : v.toFixed(dp) + (u || ''); };
+    var h = '<div class="roo-panel"><div class="roo-wrap"><div><h4>Deliveroo \u00b7 ' + esc(name) + ' \u00b7 last 7 days to ' + shortDate(date) + '</h4>'
+      + '<table><thead><tr><th>Day</th><th>Red Light</th><th>Orders</th><th>Prep</th><th>Order duration</th><th>Missing items</th><th>Cancels (rest. error)</th><th>Rejections</th></tr></thead><tbody>';
+    var agg = function (ds) { var o = { n: 0, ord: 0, pw: 0, pn: 0, red: 0, miss: 0, rej: 0, can: 0 }; ds.forEach(function (d) { var q = ROO.d[d] && ROO.d[d][code]; if (!q) return; o.n++; o.ord += q[0] || 0; if (q[1] != null) { o.pw += q[1] * (q[0] || 1); o.pn += (q[0] || 1); } if (q[7] === 1) o.red++; if (q[3]) o.miss++; o.rej += q[6] || 0; o.can += q[4] || 0; }); o.prep = o.pn ? o.pw / o.pn : null; return o; };
+    days.forEach(function (d) {
+      var q = ROO.d[d] && ROO.d[d][code], rag = rooRag(q);
+      h += '<tr' + (d === date ? ' class="sel"' : '') + '><td>' + shortDate(d) + '</td><td><span class="roo-dot ' + rag + '"></span></td>';
+      if (!q) { h += '<td colspan="6" class="dly-m" style="text-align:left">no Deliveroo row</td></tr>'; return; }
+      h += '<td>' + (q[0] == null ? '\u00b7' : q[0]) + '</td><td class="' + (q[1] == null ? 'dly-m' : (q[7] === 1 ? 'dly-r' : 'dly-g')) + '">' + n1(q[1], 1, ' min') + '</td><td>' + n1(q[2], 1, ' min') + '</td>'
+        + '<td>' + (q[3] == null ? '\u00b7' : q[3].toFixed(1) + '%') + '</td><td class="' + (q[4] ? 'dly-r' : '') + '">' + (q[4] == null ? '\u00b7' : q[4]) + '</td><td class="' + (q[6] ? 'dly-r' : '') + '">' + (q[6] == null ? '\u00b7' : q[6]) + '</td></tr>';
+    });
+    var A = agg(days), B = agg(prev);
+    var tot = function (lab, o) { return '<tr style="font-weight:700"><td>' + lab + '</td><td>' + (o.n ? '<span class="roo-dot ' + (o.red || o.can || o.rej ? 'r' : 'g') + '"></span>' : '') + '</td><td>' + (o.n ? o.ord : '\u00b7') + '</td><td class="' + (o.prep == null ? 'dly-m' : (o.red ? 'dly-r' : 'dly-g')) + '">' + n1(o.prep, 1, ' min') + (o.red ? ' <span class="dly-m" style="font-weight:600">' + o.red + ' red</span>' : '') + '</td><td></td><td>' + (o.n ? o.miss + ' day' + (o.miss === 1 ? '' : 's') : '\u00b7') + '</td><td class="' + (o.can ? 'dly-r' : '') + '">' + (o.n ? o.can : '\u00b7') + '</td><td class="' + (o.rej ? 'dly-r' : '') + '">' + (o.n ? o.rej : '\u00b7') + '</td></tr>'; };
+    h += tot('7 days (' + A.n + ' with data)', A) + tot('7 days before (' + shortDate(prev[0]) + ' to ' + shortDate(prev[6]) + ')', B) + '</tbody></table>'
+      + '<div class="sub" style="margin-top:8px"><span class="roo-dot r"></span>Red Light: prep above 15.00 min, or any restaurant error cancellation or rejection that day. Missing items are shown but do not trigger a light. Prep over 7 days is weighted by orders.</div></div>';
+    var wc = mondayOf(date), pw = addDays(wc, -7), W = (ROO.w || {}), cur = (W[wc] || {})[code] || [], prv = (W[pw] || {})[code] || [];
+    var M = [['Rider wait over 5 min', 0, -1], ['Scheduled hours open', 1, 1], ['Time in busy mode', 2, -1]];
+    h += '<div><h4>Weekly (Deliveroo reports these by week)</h4><table><thead><tr><th>Measure</th><th>w/c ' + shortDate(wc) + '</th><th>w/c ' + shortDate(pw) + '</th><th>Change</th></tr></thead><tbody>';
+    M.forEach(function (m) {
+      var a = cur[m[1]], b = prv[m[1]], ch = '';
+      if (a != null && b != null) { var d = a - b, good = m[2] * d > 0, bad = m[2] * d < 0; ch = '<span class="' + (good ? 'dly-g' : (bad ? 'dly-r' : 'dly-m')) + '">' + (good ? '\u25b2 ' : (bad ? '\u25bc ' : '\u25cf ')) + (d > 0 ? '+' : '') + d.toFixed(1) + 'pp</span>'; }
+      h += '<tr><td>' + m[0] + '</td><td>' + n1(a, 1, '%') + '</td><td>' + n1(b, 1, '%') + '</td><td>' + (ch || '<span class="dly-m">\u00b7</span>') + '</td></tr>';
+    });
+    h += '</tbody></table><div class="sub" style="margin-top:8px">Rider wait shows a dot when Deliveroo does not report it for a low volume week.<br>Source: Deliveroo Daily Master, latest day ' + shortDate(ROO.to) + '.</div></div></div></div>';
+    return '<tr class="dly-rvrow" id="roorow-' + esc(code) + '" style="display:none"><td colspan="' + NCOL + '">' + h + '</td></tr>';
   }
 
   var fmtG = function (n) {
@@ -6002,7 +6060,7 @@ const MEETING_RISK = {
       + '<td>' + splitBar(s) + '</td>'
       + '<td>' + rvChip(rv, code) + '</td>'
       + '<td>' + rooCell(p.date, code) + '</td></tr>'
-      + rvRow(rv, code);
+      + rvRow(rv, code) + rooRow(p.date, code, s.name);
   }
 
   function bandRow(p, cl, rv) {
@@ -6203,7 +6261,7 @@ const MEETING_RISK = {
       + 'FOH and BOH are actual completed shifts, shown in £ and as a share of the final total labour cost. '
       + 'Wage % is total labour ÷ sales. Grouped by region, then sales highest first. '
       + 'Source: Auto Cash Up workbook, <b>Raw Data 2</b>. Refreshed daily at 12:15 Dubai.'
-      + (ROO ? '<br><b>Deliveroo</b> is the day\'s orders delivered, estimated prep time (red above 15.00 min, the Red Light rule) and any missing items %, restaurant error cancellations or rejections, from the Deliveroo Daily Master sheet (Deliveroo\'s morning CSV drops, ingested hourly), latest day ' + shortDate(ROO.to) + '. A dot means no Deliveroo row for that site and day.' : '')
+      + (ROO ? '<br><b>Deliveroo</b> is the day\'s orders delivered, estimated prep time (red above 15.00 min, the Red Light rule) and any missing items %, restaurant error cancellations or rejections, from the Deliveroo Daily Master sheet (Deliveroo\'s morning CSV drops, ingested hourly), latest day ' + shortDate(ROO.to) + '. Red Light when prep is above 15.00 min or there is any restaurant error cancellation or rejection. Click a cell for the last 7 days and the weekly figures. A dot means no Deliveroo row for that site and day.' : '')
       + (rv
         ? '<br><b>Google reviews</b> lead on the rolling <b>7 days</b> to ' + shortDate(rv.window_to)
           + ' \u2014 about 65 reviews a day arrive across 19 sites, too few to judge a site on one day. '
@@ -6254,6 +6312,17 @@ const MEETING_RISK = {
   // Expand / collapse a site's review cards. Delegated and bound ONCE, because
   // render() replaces the whole table body on every day change.
   elTab.addEventListener('click', function (ev) {
+    var b = ev.target;
+    while (b && b !== elTab && !(b.getAttribute && b.getAttribute('data-roo'))) b = b.parentNode;
+    if (b && b !== elTab) {
+      var rrow = document.getElementById('roorow-' + b.getAttribute('data-roo'));
+      if (!rrow) return;
+      var ropen = rrow.style.display !== 'none';
+      rrow.style.display = ropen ? 'none' : '';
+      b.setAttribute('aria-expanded', ropen ? 'false' : 'true');
+      b.classList.toggle('open', !ropen);
+      return;
+    }
     var el = ev.target;
     while (el && el !== elTab && !(el.className && String(el.className).indexOf('dly-rv') === 0)) {
       el = el.parentNode;
