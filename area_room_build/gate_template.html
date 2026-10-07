@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AM Control Centre</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light;
+  --maki-orange:#E94E1B;--maki-orange-soft:#F47C24;--maki-orange-bg:#FFF1EA;--maki-orange-ring:#E94E1B33;
+  --maki-ink:#1A1410;--maki-cream:#FFF8F0;
+  --bg:#f4f5f9;--surface:#fff;--surface-2:#fafbfd;--ink:#0f172a;--ink-2:#475569;--ink-3:#94a3b8;--line:#e2e8f0;
+  --red:#dc2626;--red-bg:#fef2f2;--amber:#d97706;--amber-bg:#fffbeb;--green:#059669;--green-bg:#ecfdf5;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 12px rgba(15,23,42,.06);
+  --shadow-lg:0 4px 24px rgba(15,23,42,.08),0 16px 40px rgba(15,23,42,.12);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1280px;margin:0 auto;padding:24px}
+
+/* header: copy of the AM Control Centre header */
+.maki-brand-bar{background:var(--maki-cream);border-bottom:2px solid var(--maki-orange);padding:14px 32px;display:flex;align-items:center;gap:18px;box-shadow:0 1px 0 rgba(233,78,27,.06)}
+.maki-logo{height:48px;width:auto;display:block;flex-shrink:0}
+.maki-brand-title{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.maki-brand-name{font-size:14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--maki-ink);line-height:1}
+.maki-brand-name .dot{color:var(--maki-orange);margin:0 8px}
+.maki-brand-sub{font-size:13px;font-weight:600;color:var(--maki-orange);line-height:1.2}
+.maki-brand-kanji{font-family:"Noto Sans JP","Plus Jakarta Sans",sans-serif;font-size:13px;font-weight:700;color:var(--maki-orange);letter-spacing:.04em;white-space:nowrap;cursor:default;user-select:none;-webkit-user-select:none;transition:text-shadow .3s}
+.maki-brand-kanji:hover{text-shadow:0 0 1px rgba(233,78,27,.25)}
+.maki-brand-chip{background:var(--maki-orange-bg);border:1px solid var(--maki-orange-ring);color:var(--maki-orange);padding:5px 12px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.week-toggle-bar{display:flex;align-items:center;gap:8px}
+.week-toggle-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.week-select{font:inherit;font-size:13px;font-weight:600;padding:7px 12px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink)}
+@media(max-width:720px){.maki-brand-bar{padding:10px 16px;gap:12px;flex-wrap:wrap}.maki-logo{height:38px}.week-toggle-bar{width:100%}}
+
+.shell-note{background:#fff;border:1px dashed var(--line);border-radius:14px;padding:28px;color:var(--ink-3);text-align:center;font-size:13px}
+
+/* ============ GATE ============ */
+#gate{position:fixed;inset:0;z-index:200;display:none;align-items:center;justify-content:center;background:radial-gradient(1200px 600px at 50% 40%,rgba(233,78,27,.28),rgba(26,20,16,.92) 60%),#1A1410;padding:16px}
+#gate.open{display:flex;animation:fadeIn .35s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.gate-card{width:100%;max-width:420px;background:#1f1813;border:1px solid rgba(233,78,27,.35);border-radius:20px;padding:34px 28px 26px;color:#fff;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.5);position:relative;overflow:hidden}
+.gate-card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:linear-gradient(90deg,var(--maki-orange),var(--maki-orange-soft))}
+.torii{font-family:"Noto Sans JP",sans-serif;font-weight:900;font-size:64px;line-height:1;color:var(--maki-orange);text-shadow:0 0 30px rgba(233,78,27,.55);margin-bottom:6px}
+.gate-title{font-size:13px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#f8e9df}
+.gate-sub{font-size:12.5px;color:#b9a99c;margin:6px 0 22px}
+.gate-input{width:100%;font:inherit;font-size:16px;text-align:center;letter-spacing:.2em;padding:13px 14px;border-radius:12px;border:1px solid #4a3a2f;background:#14100c;color:#fff;outline:none}
+.gate-input:focus{border-color:var(--maki-orange);box-shadow:0 0 0 3px rgba(233,78,27,.25)}
+.gate-btn{margin-top:12px;width:100%;font:inherit;font-weight:800;font-size:14px;letter-spacing:.06em;padding:12px;border:0;border-radius:12px;background:var(--maki-orange);color:#fff;cursor:pointer}
+.gate-btn:hover{background:#d4430f}
+.gate-err{min-height:18px;font-size:12px;color:#fca5a5;margin-top:10px}
+.gate-close{position:absolute;top:10px;right:12px;background:none;border:0;color:#8c7b6e;font-size:22px;cursor:pointer;line-height:1}
+.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.regions{display:grid;gap:12px;margin-top:4px}
+.region-btn{display:block;width:100%;text-align:left;font:inherit;color:#fff;background:#14100c;border:1px solid #4a3a2f;border-radius:14px;padding:16px 18px;cursor:pointer;transition:all .15s}
+.region-btn:hover{border-color:var(--maki-orange);background:#22180f;transform:translateY(-1px)}
+.region-btn b{display:block;font-size:20px;font-weight:800}
+.region-btn span{font-size:12.5px;color:#b9a99c}
+.region-btn i{font-style:normal;font-family:"Noto Sans JP",sans-serif;color:var(--maki-orange);float:right;font-weight:900;font-size:22px;margin-top:2px}
+
+/* ============ AREA ROOM ============ */
+#room{position:fixed;inset:0;z-index:150;background:var(--bg);overflow:auto;display:none}
+#room.open{display:block;animation:fadeIn .3s ease}
+.room-bar{position:sticky;top:0;z-index:20;background:#1A1410;color:#fff;border-bottom:3px solid var(--maki-orange);padding:12px 24px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.room-mark{font-family:"Noto Sans JP",sans-serif;font-weight:900;font-size:24px;color:var(--maki-orange)}
+.room-title{font-weight:800;font-size:16px;letter-spacing:.02em}
+.room-title small{display:block;font-size:11.5px;font-weight:500;color:#b9a99c;letter-spacing:0}
+.seg{display:inline-flex;background:#2a211b;border-radius:10px;padding:3px;margin-left:auto}
+.seg button{font:inherit;font-size:12.5px;font-weight:700;color:#d6c7bb;background:none;border:0;padding:7px 14px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--maki-orange);color:#fff}
+.room-x{background:none;border:1px solid #4a3a2f;color:#d6c7bb;border-radius:9px;padding:6px 10px;font:inherit;font-size:12px;font-weight:700;cursor:pointer}
+.room-x:hover{border-color:var(--maki-orange);color:#fff}
+.room-wrap{max-width:1280px;margin:0 auto;padding:20px 24px 60px}
+.tabbar{display:flex;flex-wrap:wrap;gap:4px;background:rgba(255,255,255,.9);border:1px solid var(--line);border-radius:12px;padding:7px;margin-bottom:18px;box-shadow:var(--shadow)}
+.tabbar::-webkit-scrollbar{display:none}
+.tabbtn{flex:none;border:0;background:transparent;color:var(--ink-2);font-weight:600;font-size:13px;padding:8px 14px;border-radius:9px;cursor:pointer;font-family:inherit;white-space:nowrap}
+.tabbtn:hover{background:var(--surface-2);color:var(--ink)}
+.tabbtn.active{background:var(--maki-orange-bg);color:var(--maki-orange)}
+.pane{display:none}.pane.on{display:block}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.card h2{margin:0 0 4px;font-size:15.5px;font-weight:800}
+.card .sub{font-size:12px;color:var(--ink-3);margin-bottom:12px}
+.grid-sites{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:16px}
+.site-tile{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--shadow);border-top:3px solid var(--maki-orange)}
+.site-tile h3{margin:0;font-size:15px;font-weight:800}
+.site-tile .lead{font-size:11.5px;color:var(--ink-3);margin-bottom:8px}
+.kv{display:flex;justify-content:space-between;font-size:12.5px;padding:3px 0;border-bottom:1px dashed #eef1f5}
+.kv:last-child{border:0}
+.kv span{color:var(--ink-2)}.kv b{font-weight:700}
+
+.tblwrap{overflow-x:auto;margin:0 -4px}
+table.t{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+table.t th{text-align:left;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-2);background:#f6f2ec;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+table.t th.c,table.t td.c{text-align:center}
+table.t td{padding:8px 10px;border-bottom:1px solid #eef1f5;vertical-align:middle}
+table.t tr.grp td{background:#fcfaf7;font-weight:800;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--maki-orange);padding-top:10px}
+table.t td.m{font-weight:600}
+table.t th.now{background:var(--maki-orange-bg);color:var(--maki-orange)}
+table.t td.now{background:#fffaf6}
+.cell{display:inline-flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;font-weight:700}
+.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.dot.g{background:var(--green)}.dot.r{background:var(--red)}.dot.a{background:var(--amber)}.dot.n{background:#cbd5e1}
+.na{color:var(--ink-3);font-size:11.5px;font-weight:600}
+.fut{color:#cbd5e1;font-weight:700}
+.sch{color:var(--ink-3);font-style:italic;font-weight:600;font-size:12px}
+.arr{font-size:11px;font-weight:800}
+.arr.g{color:var(--green)}.arr.r{color:var(--red)}.arr.n{color:var(--ink-3)}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:11.5px;font-weight:700;white-space:nowrap}
+.p-g{background:var(--green-bg);color:var(--green)}.p-a{background:var(--amber-bg);color:var(--amber)}.p-r{background:var(--red-bg);color:var(--red)}.p-n{background:#f1f5f9;color:#64748b}.p-o{background:var(--maki-orange-bg);color:var(--maki-orange)}
+.banner{display:flex;gap:10px;align-items:flex-start;background:var(--maki-orange-bg);border:1px solid var(--maki-orange-ring);color:#7c2d12;border-radius:12px;padding:12px 14px;font-size:12.5px;margin-bottom:14px}
+.banner b{color:var(--maki-orange)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-2);margin:8px 0 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.chk{font-size:12px;color:var(--ink-2);display:inline-flex;gap:6px;align-items:center;cursor:pointer;user-select:none}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.row2{grid-template-columns:1fr}}
+.bar{height:8px;border-radius:5px;background:#eef1f5;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--maki-orange);border-radius:5px}
+.people{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin-bottom:16px}
+.person{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);position:relative}
+.person .av{width:40px;height:40px;border-radius:12px;background:var(--maki-orange);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:16px;float:left;margin-right:12px}
+.person h3{margin:0;font-size:15px;font-weight:800}
+.person .role{font-size:12px;color:var(--ink-3);margin-bottom:12px}
+.person .today{clear:both;background:#fcfaf7;border-radius:10px;padding:10px 12px;font-size:13px}
+.person .today b{color:var(--maki-orange)}
+.person ul{margin:10px 0 0;padding-left:18px;font-size:12.5px;color:var(--ink-2)}
+.person li{margin:3px 0}
+.timeline{list-style:none;margin:0;padding:0}
+.timeline li .pill{align-self:flex-start}
+.timeline li{display:flex;gap:12px;padding:8px 0;border-bottom:1px dashed #eef1f5;font-size:13px}
+.timeline li:last-child{border:0}
+.timeline .when{flex:none;width:92px;font-weight:800;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.timeline li.past{opacity:.45}
+.timeline li.next .when{color:var(--maki-orange)}
+.muted{color:var(--ink-3);font-size:12px}
+.foot{font-size:11.5px;color:var(--ink-3);margin-top:20px;text-align:center}
+@media(max-width:720px){.room-bar{padding:10px 16px}.room-wrap{padding:14px 16px 50px}.seg{margin-left:0}}
+
+/* site daily sheet */
+#sheet{position:fixed;inset:0;z-index:180;display:none;background:rgba(15,10,6,.45)}
+#sheet.open{display:block;animation:fadeIn .2s ease}
+.sheet-panel{position:absolute;top:0;right:0;bottom:0;width:min(860px,100%);background:var(--bg);overflow:auto;box-shadow:-20px 0 60px rgba(0,0,0,.25);animation:slideIn .25s ease}
+@keyframes slideIn{from{transform:translateX(40px);opacity:.4}to{transform:none;opacity:1}}
+.sheet-head{position:sticky;top:0;z-index:5;background:#1A1410;color:#fff;border-bottom:3px solid var(--maki-orange);padding:14px 20px;display:flex;align-items:center;gap:12px}
+.sheet-head h2{margin:0;font-size:18px;font-weight:800}
+.sheet-head small{display:block;color:#b9a99c;font-size:12px;font-weight:500}
+.sheet-body{padding:18px 20px 50px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;box-shadow:var(--shadow)}
+.kpi span{display:block;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink-3)}
+.kpi b{display:flex;align-items:center;gap:7px;font-size:20px;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi small{color:var(--ink-3);font-size:11.5px}
+.rv{border-bottom:1px dashed #eef1f5;padding:9px 0;font-size:13px}
+.rv:last-child{border:0}
+.rv .st{font-weight:800;color:var(--maki-orange);margin-right:6px;letter-spacing:1px}
+.rv.bad .st{color:var(--red)}
+.rv .who{color:var(--ink-3);font-size:11.5px}
+[data-site]{cursor:pointer}
+.site-tile[data-site]:hover{border-color:var(--maki-orange);transform:translateY(-1px);transition:.15s}
+td.sitecell[data-site]:hover{color:var(--maki-orange);text-decoration:underline}
+.negbtn{font:inherit;font-size:11.5px;font-weight:700;color:var(--red);background:var(--red-bg);border:1px solid #fecaca;border-radius:999px;padding:2px 9px;cursor:pointer;margin-left:4px}
+.negbtn:hover{background:var(--red);color:#fff}
+.tap{font-size:11px;color:var(--maki-orange);font-weight:700;margin-top:6px}
+</style>
+</head>
+<body>
+
+<header class="maki-brand-bar" role="banner">
+  <img class="maki-logo" alt="Maki &amp; Ramen" src="data:image/png;base64,__LOGO__">
+  <div class="maki-brand-title">
+    <div class="maki-brand-name">Maki <span class="dot">&bull;</span> Ramen</div>
+    <div class="maki-brand-sub">Area Management Control Centre</div>
+  </div>
+  <span class="maki-brand-kanji" id="kanji" aria-hidden="true">寿司とラーメン</span>
+  <span class="maki-brand-chip">v1.0 &middot; AM</span>
+  <div class="week-toggle-bar">
+    <label class="week-toggle-label" for="wk">Week</label>
+    <select id="wk" class="week-select"><option>Week of 2026-09-28 &middot; 2026-10-04</option></select>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="shell-note">Prototype shell. The live AM Control Centre tabs sit here once this is pushed.</div>
+</div>
+
+<!-- GATE -->
+<div id="gate" role="dialog" aria-modal="true" aria-label="Area Room">
+  <div class="gate-card" id="gcard">
+    <button class="gate-close" id="gclose" aria-label="Close">&times;</button>
+    <div class="torii">門</div>
+    <div class="gate-title">The Area Room</div>
+    <div id="step-pass">
+      <div class="gate-sub">Area managers only</div>
+      <div id="gform">
+        <select id="guser" class="gate-input" aria-label="Name" style="letter-spacing:.04em;margin-bottom:10px;appearance:auto"><option value="">Who are you?</option></select>
+        <input id="gpass" class="gate-input" type="password" placeholder="合言葉" aria-label="Password" autocomplete="off">
+        <button class="gate-btn" id="gbtn" type="button">Enter</button>
+      </div>
+      <div class="gate-err" id="gerr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ROOM -->
+<div id="room">
+  <div class="room-bar">
+    <span class="room-mark">門</span>
+    <div class="room-title"><span id="rtitle">Area Room</span><small id="rsub"></small></div>
+    <span style="margin-left:auto"></span>
+    <button class="room-x" id="rlock">Lock</button>
+  </div>
+  <div class="room-wrap">
+    <nav class="tabbar" id="tabs">
+      <button class="tabbtn active" data-p="score">Weekly scorecard</button>
+      <button class="tabbtn" data-p="deliv">Delivery</button>
+      <button class="tabbtn" data-p="clean">Cleanliness</button>
+      <button class="tabbtn" data-p="b2b">B2B &middot; Kei</button>
+      <button class="tabbtn" data-p="team">Kaitlin &amp; Kei</button>
+    </nav>
+    <section class="pane on" id="p-score"></section>
+    <section class="pane" id="p-deliv"></section>
+    <section class="pane" id="p-clean"></section>
+    <section class="pane" id="p-b2b"></section>
+    <section class="pane" id="p-team"></section>
+    <div class="foot" id="foot"></div>
+  </div>
+</div>
+
+
+<!-- SITE DAILY -->
+<div id="sheet"><div class="sheet-panel"><div class="sheet-head"><span class="room-mark">日</span><div style="flex:1"><h2 id="shname"></h2><small id="shsub"></small></div><button class="room-x" id="shclose">Close</button></div><div class="sheet-body" id="shbody"></div></div></div>
+<script>__PURECRYPTO__</script>
+<script id="payload" type="application/json">__PAYLOAD__</script>
+<script>
+(function(){
+"use strict";
+var BLOB=JSON.parse(document.getElementById("payload").textContent);
+var D=null, REGION="South", SHOW_RUNIN=false;
+var $=function(id){return document.getElementById(id)};
+function b64(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function same(a,b){if(a.length!==b.length)return false;var ok=true;for(var i=0;i<a.length;i++)if(a[i]!==b[i])ok=false;return ok}
+function unlock(name,pw){
+  return new Promise(function(res,rej){setTimeout(function(){
+    try{
+      var U=BLOB.u&&BLOB.u[name];if(!U)return rej(new Error("bad"));
+      var ku=PC.pbkdf2(new TextEncoder().encode(pw),b64(U.s),BLOB.n,64),ui=b64(U.i),wk=b64(U.k);
+      var wm=new Uint8Array(ui.length+wk.length);wm.set(ui);wm.set(wk,ui.length);
+      if(!same(PC.hmac(ku.subarray(32),wm),b64(U.t)))return rej(new Error("bad"));
+      var km=PC.ctr(ku.subarray(0,32),ui,wk),iv=b64(BLOB.i),ct=b64(BLOB.c),tag=b64(BLOB.t);
+      var m=new Uint8Array(iv.length+ct.length);m.set(iv);m.set(ct,iv.length);
+      var calc=PC.hmac(km.subarray(32),m),ok=calc.length===tag.length;
+      for(var i=0;i<tag.length;i++)if(calc[i]!==tag[i])ok=false;
+      if(!ok)return rej(new Error("bad"));
+      res(JSON.parse(new TextDecoder().decode(PC.ctr(km.subarray(0,32),iv,ct))));
+    }catch(e){rej(e)}
+  },30)});
+}
+function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v)}catch(e){return null}}
+
+/* ---------- logins + usage log (Area Room log sheet, Michael only) ---------- */
+var LOG_URL="__LOGURL__";
+function logUse(name,kind){
+  if(!LOG_URL||LOG_URL.indexOf("http")!==0)return;
+  try{fetch(LOG_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},keepalive:true,
+    body:JSON.stringify({name:name,kind:kind,at:new Date().toISOString(),w:screen.width,ua:navigator.userAgent.slice(0,160)})}).catch(function(){})}catch(e){}
+}
+Object.keys(BLOB.u||{}).forEach(function(n){var o=document.createElement("option");o.value=n;o.textContent=n;$("guser").appendChild(o)});
+
+/* ---------- gate wiring ---------- */
+var clicks=0,timer=null;
+$("kanji").addEventListener("click",function(){
+  openGate();
+});
+function openGate(){
+  $("gate").classList.add("open");
+  var saved=ss("ar_pw"),su=ss("ar_u");
+  if(saved&&su&&!D){$("guser").value=su;tryPw(saved,true);return}
+  if(D){showRegions();return}
+  $("step-pass").style.display="";
+  setTimeout(function(){($("guser").value?$("gpass"):$("guser")).focus()},50);
+}
+function closeGate(){$("gate").classList.remove("open");$("gerr").textContent="";$("gpass").value=""}
+$("gclose").onclick=closeGate;
+$("gate").addEventListener("click",function(e){if(e.target===$("gate"))closeGate()});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){if($("room").classList.contains("open"))return;closeGate()}});
+$("gbtn").addEventListener("click",function(){tryPw($("gpass").value,false)});
+$("gpass").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();tryPw($("gpass").value,false)}});
+function tryPw(pw,silent){
+  var who=$("guser").value;
+  if(!who){$("gerr").textContent="Pick your name first.";$("guser").focus();return}
+  if(!pw)return;
+  $("gerr").textContent="Opening…";
+  unlock(who,pw.trim().toLowerCase()).then(function(data){
+    D=data;ss("ar_pw",pw.trim().toLowerCase());ss("ar_u",who);logUse(who,silent?"reopened":"logged in");showRegions();
+  }).catch(function(){
+    ss("ar_pw",null);if(!silent)logUse(who,"wrong password");
+    if(!silent){$("gerr").textContent="That is not the word.";var c=$("gcard");c.classList.remove("shake");void c.offsetWidth;c.classList.add("shake");$("gpass").select()}
+    else{$("step-pass").style.display="";$("gpass").focus()}
+  });
+}
+function showRegions(){closeGate();openRoom()}
+Array.prototype.forEach.call(document.querySelectorAll(".region-btn"),function(b){b.onclick=function(){REGION=b.dataset.r;closeGate();openRoom()}});
+Array.prototype.forEach.call(document.querySelectorAll("#rseg button"),function(b){b.onclick=function(){REGION=b.dataset.r;render()}});
+$("rlock").onclick=function(){$("room").classList.remove("open");document.body.style.overflow="";ss("ar_pw",null);ss("ar_u",null);D=null};
+if(location.hash==="#enter")setTimeout(openGate,0);
+Array.prototype.forEach.call(document.querySelectorAll(".tabbtn"),function(b){b.onclick=function(){
+  Array.prototype.forEach.call(document.querySelectorAll(".tabbtn"),function(x){x.classList.toggle("active",x===b)});
+  Array.prototype.forEach.call(document.querySelectorAll(".pane"),function(p){p.classList.toggle("on",p.id==="p-"+b.dataset.p)});
+}});
+function openRoom(){$("room").classList.add("open");document.body.style.overflow="hidden";render()}
+
+/* ---------- helpers ---------- */
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function fmt(v,dp){if(v==null||v==="")return null;return Number(v).toLocaleString("en-GB",{minimumFractionDigits:dp||0,maximumFractionDigits:dp||0})}
+function dd(iso){var p=iso.split("-");return p[2]+"/"+p[1]}
+function sitesIn(r,incSupport){var out=[];for(var c in D.sites_meta){var m=D.sites_meta[c];if(incSupport||!m.support)out.push(c)}return out}
+function todayISO(){return D.today}
+function curPeriod(){var t=todayISO();for(var i=0;i<D.periods.length;i++){var p=D.periods[i];if(t>=p[2]&&t<=p[3])return p[0]}return null}
+function weekData(code,pkey){
+  var p=D.periods.filter(function(x){return x[0]===pkey})[0];if(!p)return null;
+  var w=D.sites.by_week[p[2]];return w?(w[code]||null):undefined;
+}
+function runinWeeks(){return D.sites.weeks_available.filter(function(w){return w<"2026-09-28"})}
+function cell(v,ok,unit,dp){
+  if(v===undefined)return '<span class="fut">·</span>';
+  if(v==null)return '<span class="na">n/a</span>';
+  var cls=ok==null?"n":(ok?"g":"r");
+  return '<span class="cell"><span class="dot '+cls+'"></span>'+fmt(v,dp)+(unit||"")+'</span>';
+}
+function headCols(first){
+  var cur=curPeriod(),h='<tr><th>'+first+'</th><th>Site</th><th class="c">Target</th>';
+  if(SHOW_RUNIN)runinWeeks().forEach(function(w){h+='<th class="c">w/c '+dd(w)+'</th>'});
+  D.periods.forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+p[1]+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">'+dd(p[2])+'</span></th>'});
+  return h+'</tr>';
+}
+
+/* ---------- render ---------- */
+function render(){
+  Array.prototype.forEach.call(document.querySelectorAll("#rseg button"),function(b){b.classList.toggle("on",b.dataset.r===REGION)});
+  $("rtitle").textContent="Area Room · South";
+  $("rsub").textContent="Lincoln (AM) · Kaitlin (DAM) · Kei (B2B, acting GM Lakeside) · Month 1 runs 12/10 to 08/11";
+  $("foot").textContent="Built "+D.built+" · Data encrypted on the page · Lock when done";
+  renderScore();renderDeliv();renderClean();renderB2B();renderTeam();
+}
+
+function renderScore(){
+  var codes=sitesIn(REGION,false),T=D.targets,cur=curPeriod();
+  var tiles='<div class="grid-sites">';
+  codes.forEach(function(c){
+    var m=D.sites_meta[c],w=weekData(c,"base")||{};
+    var sv=(w.sales!=null&&w.sales_t)?((w.sales/w.sales_t-1)*100):null;
+    tiles+='<div class="site-tile" data-site="'+c+'"><h3>'+m.name+'</h3><div class="lead">'+esc(m.lead)+' · GM '+esc(w.gm||"TBC")+'</div>'+
+      '<div class="kv"><span>Sales vs target</span><b style="color:'+(sv==null?'inherit':(sv>=0?'var(--green)':'var(--red)'))+'">'+(sv==null?'n/a':(sv>=0?'+':'')+sv.toFixed(1)+'%')+'</b></div>'+
+      '<div class="kv"><span>Sales</span><b>£'+fmt(w.sales)+'</b></div>'+
+      '<div class="kv"><span>Covers</span><b>'+fmt(w.covers)+'</b></div>'+
+      '<div class="kv"><span>Food %</span><b>'+(w.food!=null?w.food.toFixed(1)+'%':'n/a')+'</b></div>'+
+      '<div class="kv"><span>Efficiency</span><b>'+(w.eff!=null?w.eff:'n/a')+'</b></div><div class="tap">Open daily ›</div></div>';
+  });
+  tiles+='</div>';
+  var rows=[
+    {k:"Labour %",t:function(c){return T[c].labour},tl:function(c){return T[c].labour+'%'},v:function(w){return w.wage},ok:function(v,c){return v<=T[c].labour},u:"%",dp:1},
+    {k:"New Google reviews",t:function(c){return T[c].reviews},tl:function(c){return T[c].reviews},v:function(w){return w.rev},ok:function(v,c){return v>=T[c].reviews}},
+    {k:"App sign ups",tl:function(c){return T[c].signups==null?'None':T[c].signups},v:function(w,c,wk){var S=D.signups&&D.signups.weekly[c];return S?(S[wk]!=null?S[wk]:0):null},ok:function(v,c){return T[c].signups==null?null:v>=T[c].signups},src:"new Ramen Royalty members, counted at the site of their first visit"},
+    {k:"RR vouchers redeemed",all:true,tl:function(c){return c==="MakiNori"?'None':'Track'},v:function(w,c,wk){return vWeek(c,wk)},vh:vCell,src:"Ramen Royalty vouchers used, matched to the member bill at the till. Small figure is £5 welcome vouchers"},
+    {k:"Compliance %",tl:function(){return '95%'},v:function(w,c,wk){var M=D.compliance&&D.compliance[c];if(!M)return null;return M[wk]&&M[wk].pct!=null?M[wk].pct:null},ok:function(v){return v>=95},dp:1,u:"%",src:"Mapal weekly compliance. Southampton is not on Mapal yet"},
+    {k:"Training tracker %",tl:function(){return '95%'},v:function(){return null},src:"Management Training Tracker, feed not wired yet"},
+    {k:"Cleanliness /5",tl:function(){return '3 or above'},v:function(c,pk){return cleanScore(c,pk)},ok:function(v){return v>=3},dp:1,src:"Lincoln's weekly sheet"}
+  ];
+  var h='<div class="card"><h2>Weekly scorecard · '+REGION+'</h2><div class="sub">Baseline is the week before the plan (w/c 28/09). Weeks 1 to 4 fill as each week closes. Green hits target, red misses.</div>'+
+    '<label class="chk"><input type="checkbox" id="runin" '+(SHOW_RUNIN?'checked':'')+'> Show the 3 run in weeks before baseline</label>'+
+    '<div class="tblwrap" style="margin-top:10px"><table class="t">'+headCols("Measure");
+  rows.forEach(function(r){
+    h+='<tr class="grp"><td colspan="'+(3+D.periods.length+(SHOW_RUNIN?runinWeeks().length:0))+'">'+r.k+(r.src?' <span style="text-transform:none;letter-spacing:0;color:var(--ink-3);font-weight:600">· '+r.src+'</span>':'')+'</td></tr>';
+    (r.all?sitesIn(REGION,true):codes).forEach(function(c){
+      h+='<tr><td class="m"></td><td class="sitecell" data-site="'+c+'">'+D.sites_meta[c].name+(D.sites_meta[c].support?' <span class="pill p-n">support</span>':'')+'</td><td class="c">'+r.tl(c)+'</td>';
+      if(r.vh){
+        if(SHOW_RUNIN)runinWeeks().forEach(function(wk){h+='<td class="c">'+r.vh(c,wk)+'</td>'});
+        D.periods.forEach(function(p){h+='<td class="c'+(p[0]===cur?' now':'')+'">'+r.vh(c,p[2])+'</td>'});
+        h+='</tr>';return;
+      }
+      if(SHOW_RUNIN)runinWeeks().forEach(function(wk){var w=D.sites.by_week[wk][c];var v=w?r.v(w,c,wk):null;h+='<td class="c">'+cell(v,(v!=null&&r.ok)?r.ok(v,c):null,r.u,r.dp)+'</td>'});
+      D.periods.forEach(function(p){
+        var w=weekData(c,p[0]);var v;
+        if(r.k==="Cleanliness /5"){v=cleanScore(c,p[0]);if(v===null&&w===undefined)v=undefined}
+        else v=(w===undefined)?undefined:r.v(w||{},c,p[2]);
+        if(r.k==="App sign ups"&&T[c].signups==null)v=(w===undefined)?undefined:null;
+        h+='<td class="c'+(p[0]===cur?' now':'')+'">'+cell(v,(v!=null&&v!==undefined&&r.ok)?r.ok(v,c):null,r.u,r.dp)+'</td>';
+      });
+      h+='</tr>';
+    });
+  });
+  h+='</table></div><div class="legend"><span><i class="dot g"></i>On target</span><span><i class="dot r"></i>Off target</span><span><span class="na">n/a</span> source not wired yet</span><span><span class="fut">·</span> week not closed</span></div></div>';
+  $("p-score").innerHTML=tiles+h;
+  $("runin").onchange=function(){SHOW_RUNIN=this.checked;renderScore();renderDeliv()};
+}
+
+/* Ramen Royalty vouchers per site: [vouchers, of which £5 welcome, of which firm match]. Maki Nori is not on Ramen Royalty. */
+function vWeek(c,wk){var V=D.vouchers;if(!V||c==="MakiNori")return null;var x=V.weekly[c]&&V.weekly[c][wk];return x||[0,0,0]}
+function vDay(c,d){var V=D.vouchers;if(!V||c==="MakiNori")return null;var x=V.daily[c]&&V.daily[c][d];return x||[0,0,0]}
+function vCell(c,wk){
+  if(c==="MakiNori")return '<span class="na">Not on RR</span>';
+  if(!D.vouchers)return '<span class="na">n/a</span>';
+  if(wk>D.today)return '<span class="fut">·</span>';
+  var x=vWeek(c,wk);return '<span class="cell">'+fmt(x[0])+(x[0]?' <small style="color:var(--ink-3);font-weight:600">£5 '+x[1]+'</small>':'')+'</span>';
+}
+function cleanScore(c,pk){
+  if(!D.clean||!D.clean[c]||!D.clean[c][pk])return null;
+  var a=D.clean[c][pk].lincoln||D.clean[c][pk];var keys=["foh","toilets","office","storage","entrance"];var s=0,n=0;
+  keys.forEach(function(k){if(a[k]!=null){s+=a[k];n++}});return n?s/n:null;
+}
+
+function renderDeliv(){
+  var codes=sitesIn(REGION,true),cur=curPeriod();
+  var M=[{k:"Rating",f:"d_rating",up:true,dp:2,u:""},{k:"Open %",f:"d_open",up:true,dp:1,u:"%"},{k:"Prep time",f:"d_prep",up:false,dp:1,u:" min"},{k:"Inaccurate order %",f:"d_inacc",up:false,dp:1,u:"%"},{k:"Rider wait time %",f:"d_rider",up:false,dp:1,u:"%"}];
+  var ncol=3+D.periods.length+(SHOW_RUNIN?runinWeeks().length:0);
+  var h='<div class="banner"><span>🛵</span><div><b>Deliveroo ops are live.</b> Baseline is w/c 28/09 from the Deliveroo weekly RAG ops report. The target is better than the week before, every week. Rider wait shows n/a when Deliveroo does not report it for a low volume week.</div></div>';
+  h+='<div class="card"><h2>Delivery scorecard · '+REGION+'</h2><div class="sub">Arrow compares with the previous column. Green moved the right way or held.</div><div class="tblwrap"><table class="t">'+
+    headCols("Metric").replace('<th class="c">Target</th>','<th class="c">Direction</th>');
+  M.forEach(function(m){
+    h+='<tr class="grp"><td colspan="'+ncol+'">'+m.k+'</td></tr>';
+    codes.forEach(function(c){
+      var meta=D.sites_meta[c];
+      h+='<tr><td></td><td>'+meta.name+(meta.support?' <span class="pill p-n">support</span>':'')+'</td><td class="c">'+(m.up?'↑ Up':'↓ Down')+'</td>';
+      if(!meta.droo){h+='<td class="c" colspan="'+(D.periods.length+(SHOW_RUNIN?runinWeeks().length:0))+'"><span class="na">Not in the Deliveroo feed</span></td></tr>';return}
+      var prev=null,cols=[];
+      if(SHOW_RUNIN)runinWeeks().forEach(function(wk){var w=D.sites.by_week[wk][c];cols.push({v:w?w[m.f]:null,now:false})});
+      D.periods.forEach(function(p){var w=weekData(c,p[0]);cols.push({v:w===undefined?undefined:(w?w[m.f]:null),now:p[0]===cur})});
+      cols.forEach(function(x){
+        var inner;
+        if(x.v===undefined)inner='<span class="fut">·</span>';
+        else if(x.v==null)inner='<span class="na">n/a</span>';
+        else{
+          var arrow='';
+          if(prev!=null){var diff=x.v-prev;var good=m.up?diff>=0:diff<=0;arrow=' <span class="arr '+(Math.abs(diff)<1e-9?'n':(good?'g':'r'))+'">'+(Math.abs(diff)<1e-9?'＝':(diff>0?'▲':'▼'))+'</span>'}
+          inner='<span class="cell">'+fmt(x.v,m.dp)+m.u+arrow+'</span>';prev=x.v;
+        }
+        h+='<td class="c'+(x.now?' now':'')+'">'+inner+'</td>';
+      });
+      h+='</tr>';
+    });
+  });
+  h+='</table></div></div>';
+  h+=renderDrooDaily(codes);
+  $("p-deliv").innerHTML=h;
+}
+
+/* Daily Deliveroo ops: last 7 days per site against the 7 days before (baseline). Source: Deliveroo Daily Master via the nightly estate file. */
+function renderDrooDaily(codes){
+  var Q=D.droo_daily;
+  if(!Q||!Q.d||!Object.keys(Q.d).length)return '<div class="card"><h2>Daily Deliveroo ops</h2><div class="sub">Not wired yet: the nightly estate file data/deliveroo_daily.json has not landed. Orders, prep time, missing items, cancellations and rejections by day will show here.</div></div>';
+  var days=Object.keys(Q.d).sort(),last=days[days.length-1];
+  function addD(d,n){return new Date(Date.parse(d+"T00:00:00Z")+n*864e5).toISOString().slice(0,10)}
+  function dm(d){return d.slice(8,10)+"/"+d.slice(5,7)}
+  function dow(d){return ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][(new Date(d+"T00:00:00Z").getUTCDay()+6)%7]}
+  var cur=[],prv=[];for(var i=6;i>=0;i--)cur.push(addD(last,-i));for(var j=13;j>=7;j--)prv.push(addD(last,-j));
+  function agg(c,ds){var o={n:0,orders:0,pw:0,pn:0,red:0,miss:0,rej:0,can:0};ds.forEach(function(d){var q=Q.d[d]&&Q.d[d][c];if(!q)return;o.n++;o.orders+=q[0]||0;if(q[1]!=null){o.pw+=q[1]*(q[0]||1);o.pn+=(q[0]||1)}if(q[7])o.red++;if(q[3])o.miss++;o.rej+=q[6]||0;o.can+=q[4]||0});o.prep=o.pn?o.pw/o.pn:null;return o}
+  var h='<div class="card"><h2>Daily Deliveroo ops · '+REGION+'</h2><div class="sub">Last 7 days to '+dow(last)+' '+dm(last)+', with the 7 days before as the baseline. Prep is red above 15.00 min (Red Light rule). Issues are missing items %, restaurant error cancellations and rejections.</div><div class="tblwrap"><table class="t"><tr><th>Site</th><th></th>';
+  cur.forEach(function(d){h+='<th class="c'+(d===last?' now':'')+'">'+dow(d)+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">'+dm(d)+'</span></th>'});
+  h+='<th class="c">7 days</th><th class="c">Baseline<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">'+dm(prv[0])+' to '+dm(prv[6])+'</span></th></tr>';
+  codes.forEach(function(c){
+    var meta=D.sites_meta[c];
+    if(!meta.droo){h+='<tr><td class="m">'+meta.name+'</td><td colspan="'+(cur.length+3)+'"><span class="na">Not in the Deliveroo feed</span></td></tr>';return}
+    var A=agg(c,cur),B=agg(c,prv);
+    var rows=[["Orders",function(q){return q[0]==null?'<span class="na">n/a</span>':'<b>'+q[0]+'</b>'},function(o){return o.n?'<b>'+o.orders+'</b>':'<span class="na">n/a</span>'}],
+      ["Prep min",function(q){return q[1]==null?'<span class="na">n/a</span>':'<span class="cell"><span class="dot '+(q[7]?'r':'g')+'"></span>'+q[1].toFixed(1)+'</span>'},function(o){return o.prep==null?'<span class="na">n/a</span>':'<span class="cell"><span class="dot '+(o.red?'r':'g')+'"></span>'+o.prep.toFixed(1)+(o.red?' <span class="na">'+o.red+' red</span>':'')+'</span>'}],
+      ["Issues",function(q){var iss=[];if(q[3])iss.push(q[3].toFixed(1)+'% miss');if(q[6])iss.push(q[6]+' rej');if(q[4])iss.push(q[4]+' can');return iss.length?'<span style="color:var(--red);font-weight:700;font-size:11.5px">'+iss.join(', ')+'</span>':'<span class="dot g"></span>'},function(o){if(!o.n)return '<span class="na">n/a</span>';var iss=[];if(o.miss)iss.push(o.miss+'d miss');if(o.rej)iss.push(o.rej+' rej');if(o.can)iss.push(o.can+' can');return iss.length?'<span style="color:var(--red);font-weight:700;font-size:11.5px">'+iss.join(', ')+'</span>':'<span class="dot g"></span>'}]];
+    rows.forEach(function(r,i){
+      h+='<tr><td class="m">'+(i===0?meta.name+(meta.support?' <span class="pill p-n">support</span>':''):'')+'</td><td>'+r[0]+'</td>';
+      cur.forEach(function(d){var q=Q.d[d]&&Q.d[d][c];h+='<td class="c'+(d===last?' now':'')+'">'+(q?r[1](q):'<span class="fut">·</span>')+'</td>'});
+      h+='<td class="c">'+r[2](A)+'</td><td class="c">'+r[2](B)+'</td></tr>';
+    });
+  });
+  h+='</table></div><div class="legend"><span><i class="dot g"></i>Prep 15.00 min or under, no issues</span><span><i class="dot r"></i>Prep above 15.00 min</span><span><span class="fut">·</span> no Deliveroo row that day</span><span>Source: Deliveroo Daily Master (Deliveroo\'s morning CSV drops, ingested hourly), latest day '+dm(Q.to||last)+'</span></div></div>';
+  return h;
+}
+
+
+function renderClean(){
+  var codes=sitesIn(REGION,false),cur=curPeriod();
+  var A=[["foh","Front of house"],["toilets","Toilets"],["office","Office"],["storage","Storage"],["entrance","Entrance and outside"]];
+  var h='';
+  if(!D.clean)h+='<div class="banner"><span>🧽</span><div><b>Waiting on Lincoln\'s sheet.</b> Each site gets one score out of 5 a week, the average of five areas. Scores wire in automatically as soon as the spreadsheet lands. Kaitlin\'s own score sits next to Lincoln\'s so the two can be compared.</div></div>';
+  h+='<div class="card"><h2>Cleanliness · '+REGION+'</h2><div class="sub">Minimum 3 out of 5. Any area scoring 1 is fixed within 24 hours.</div><div class="tblwrap"><table class="t"><tr><th>Site</th><th>Area</th>';
+  D.periods.filter(function(p){return p[0]!=="base"}).forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+p[1]+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">L · K</span></th>'});
+  h+='</tr>';
+  codes.forEach(function(c){
+    A.concat([["_site","Site score"]]).forEach(function(a,i){
+      h+='<tr'+(a[0]==="_site"?' style="background:#fcfaf7"':'')+'><td class="m">'+(i===0?D.sites_meta[c].name:'')+'</td><td'+(a[0]==="_site"?' style="font-weight:800"':'')+'>'+a[1]+'</td>';
+      D.periods.filter(function(p){return p[0]!=="base"}).forEach(function(p){
+        var rec=D.clean&&D.clean[c]&&D.clean[c][p[0]];
+        var L=null,K=null;
+        if(rec){
+          if(a[0]==="_site"){L=avg(rec.lincoln);K=avg(rec.kaitlin)}else{L=rec.lincoln&&rec.lincoln[a[0]];K=rec.kaitlin&&rec.kaitlin[a[0]]}
+        }
+        var started=p[2]<=D.today;
+        h+='<td class="c'+(p[0]===cur?' now':'')+'">'+(!started?'<span class="fut">·</span>':(sc(L)+' <span class="muted">·</span> '+sc(K)))+'</td>';
+      });
+      h+='</tr>';
+    });
+  });
+  h+='</table></div><div class="legend"><span>L Lincoln</span><span>K Kaitlin</span><span><i class="dot g"></i>3 or above</span><span><i class="dot r"></i>below 3</span></div></div>';
+  h+='<div class="card"><h2>Scoring scale</h2><div class="tblwrap"><table class="t" style="min-width:0"><tr><th class="c">Score</th><th>Standard</th><th>What it looks like</th></tr>'+
+   [[5,"Spotless","Nothing to fix. Deep clean areas done. Ready for an inspection at any time."],[4,"Good","Clean throughout. One or two minor points, fixed on the spot."],[3,"Acceptable (minimum)","Clean wherever guests can see. A few points in the office or storage to fix the same day."],[2,"Below standard","Visible dirt or build up, or cleaning tasks clearly missed. Needs action today."],[1,"Unacceptable","A food safety risk, or dirt a guest would notice straight away. Fixed within 24 hours."]]
+   .map(function(r){return '<tr><td class="c"><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'}).join('')+'</table></div></div>';
+  $("p-clean").innerHTML=h;
+  function avg(o){if(!o)return null;var s=0,n=0;for(var k in o)if(o[k]!=null){s+=o[k];n++}return n?s/n:null}
+  function sc(v){if(v==null)return '<span class="na">n/a</span>';return '<span class="cell"><span class="dot '+(v>=3?'g':'r')+'"></span>'+v.toFixed(1)+'</span>'}
+}
+
+function offer(o){var n=Number(o);if(o!==''&&!isNaN(n))return (n<1?Math.round(n*100):Math.round(n))+'% off';return String(o).replace(/ACTI VE/,'ACTIVE').replace(/EVENMTS/,'EVENTS')}
+function renderB2B(){
+  var B=D.b2b,K=B.kpi,cur=curPeriod();
+  var LON=["Soho","Maki Nori","Shoreditch"],STH=["Lakeside","Southampton"];
+  var mine=LON.concat(STH);
+  var P=[["sep","Sep"],["w1","Week 1"],["w2","Week 2"],["w3","Week 3"],["w4","Week 4"]];
+  var PUSH={w1:4,w2:4,w3:4,w4:1};/* Deliveroo push 12/10 to 02/11, Mon to Thu */
+  function v(pk,f){return K[pk]==null?undefined:K[pk][f]}
+  function monthSum(f){var s=0,any=false;["w1","w2","w3","w4"].forEach(function(p){var x=v(p,f);if(x!=null){s+=x;any=true}});return any?s:null}
+  function rag(val,t){if(val==null||t==null)return null;return val>=t?"g":(val>=0.75*t?"a":"r")}
+  var rows=[
+    {k:"Active partnerships",t:5,f:"partnerships"},
+    {k:"Student accommodation stands",t:4,f:"stands"},
+    {k:"App sign ups",t:1000,f:null,note:"geo tag report not wired"},
+    {k:"Outreach: new contacts, Soho",t:10,f:"out_Soho",site:"Soho"},
+    {k:"Outreach: new contacts, Maki Nori",t:10,f:"out_Maki Nori",site:"Maki Nori"},
+    {k:"Outreach: new contacts, Shoreditch",t:10,f:"out_Shoreditch",site:"Shoreditch"},
+    {k:"Outreach: new contacts, Lakeside",t:10,f:"out_Lakeside",site:"Lakeside"},
+    {k:"Outreach: new contacts, Southampton",t:10,f:"out_Southampton",site:"Southampton"},
+    {k:"Shopping centre opportunities acted on",t:"All",f:null,note:"logged below"},
+    {k:"Paid events",t:1,f:"paid_events"},
+    {k:"Frozen Ramen units",t:50,f:null,note:"no units column in the tracker yet"},
+    {k:"Seasonal promos live on time",t:"All",f:null,note:"see Kaitlin & Kei tab"},
+    {k:"Deliveroo promo days, Soho",t:5,promo:"Soho"},
+    {k:"Deliveroo promo days, Maki Nori",t:5,promo:"Maki Nori"},
+    {k:"Deliveroo promo days, Shoreditch",t:5,promo:"Shoreditch"},
+    {k:"Deliveroo promo days, Lakeside",t:5,promo:"Lakeside"},
+    {k:"Deliveroo promo days, Southampton",t:5,promo:"Southampton"},
+    {k:"B2B revenue (recorded, no target this month)",t:"",f:null,note:"est. monthly value of live partners: £"+fmt(Object.keys(B.snap).reduce(function(s,k){return s+B.snap[k].value},0))}
+  ];
+  var h='<div class="card"><h2>Kei\'s monthly KPI scorecard</h2><div class="sub">Pulled from the MR South England B2B Master Tracker. Sep is the pre plan baseline. Green hit, amber 75% or more, red below. The month works if 7 of 9 are green and none are red.</div><div class="tblwrap"><table class="t"><tr><th>KPI</th><th class="c">Target</th>';
+  P.forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+p[1]+'</th>'});
+  h+='<th class="c">Month total</th><th class="c">Result</th></tr>';
+  rows.forEach(function(r){
+    var dim=r.site&&mine.indexOf(r.site)<0||r.promo&&mine.indexOf(r.promo)<0;
+    h+='<tr'+(dim?' style="opacity:.45"':'')+'><td class="m">'+r.k+(r.note?'<div class="muted" style="font-weight:500">'+esc(r.note)+'</div>':'')+'</td><td class="c">'+(typeof r.t==="number"?fmt(r.t):r.t)+'</td>';
+    var tot=null;
+    if(r.promo){
+      var noDroo=r.promo==="Maki Nori";
+      P.forEach(function(p){h+='<td class="c'+(p[0]===cur?' now':'')+'">'+(p[0]==="sep"?'<span class="na">n/a</span>':(noDroo?'<span class="na">n/a</span>':'<span class="sch">'+PUSH[p[0]]+' sch</span>'))+'</td>'});
+      h+='<td class="c">'+(noDroo?'<span class="na">not on Deliveroo</span>':'<span class="sch">13 sch</span>')+'</td><td class="c"><span class="fut">·</span></td></tr>';return;
+    }
+    P.forEach(function(p){
+      var x=r.f?v(p[0],r.f):(K[p[0]]==null?undefined:null);
+      var rg=(p[0]!=="sep"||true)&&x!=null&&typeof r.t==="number"?rag(x,r.t):null;
+      h+='<td class="c'+(p[0]===cur?' now':'')+'">'+(x===undefined?'<span class="fut">·</span>':(x==null?'<span class="na">n/a</span>':'<span class="cell">'+(p[0]==="sep"&&rg?'<span class="dot '+rg+'"></span>':'')+fmt(x)+'</span>'))+'</td>';
+    });
+    tot=r.f?monthSum(r.f):null;
+    var rr=typeof r.t==="number"&&tot!=null?rag(tot,r.t):null;
+    h+='<td class="c">'+(tot==null?'<span class="fut">·</span>':'<b>'+fmt(tot)+'</b>')+'</td><td class="c">'+(rr?'<span class="pill p-'+rr+'">'+{g:"Green",a:"Amber",r:"Red"}[rr]+'</span>':'<span class="fut">·</span>')+'</td></tr>';
+  });
+  h+='</table></div><div class="legend"><span><span class="sch">4 sch</span> scheduled by the Deliveroo push (30% off £20 or more, Mon to Thu, 12/10 to 02/11); confirmed once the offers feed shows it</span></div></div>';
+
+  /* pipeline snapshot */
+  h+='<div class="row2"><div class="card"><h2>Pipeline by site · '+REGION+'</h2><div class="sub">Live tracker as of today. Overdue: next follow up date passed. Stale: contacted over 7 days ago with no follow up.</div><div class="tblwrap"><table class="t" style="min-width:520px"><tr><th>Site</th><th class="c">Leads</th><th class="c">Contacted</th><th class="c">In play</th><th class="c">Live</th><th class="c">Est. £/month</th><th class="c">Stale</th></tr>';
+  mine.forEach(function(s){var x=B.snap[s];h+='<tr><td class="m">'+s+(s==="Lakeside"?' <span class="pill p-o">Kei</span>':'')+'</td><td class="c">'+x.leads+'</td><td class="c">'+x.contacted+'</td><td class="c">'+x.in_play+'</td><td class="c"><b>'+x.live+'</b></td><td class="c">£'+fmt(x.value)+'</td><td class="c">'+(x.no_follow?'<span class="pill p-r">'+x.no_follow+'</span>':'0')+'</td></tr>'});
+  h+='</table></div><div class="muted" style="margin-top:8px">'+esc(B.dash_note)+' Source: MR South England B2B Master Tracker'+(B.src?' ('+esc(B.src)+')':'')+'.</div></div>';
+
+  /* live partners */
+  var live=B.live.filter(function(l){return mine.indexOf(l.site)>=0});
+  h+='<div class="card"><h2>Live partners · '+live.length+'</h2><div class="sub">Counts only once the partner is visibly promoting us. Screenshot evidence lives in the tracker.</div><div class="tblwrap" style="max-height:330px;overflow:auto"><table class="t" style="min-width:420px"><tr><th>Partner</th><th>Site</th><th>Offer</th><th class="c">£/mo</th><th class="c">Last</th></tr>';
+  live.forEach(function(l){h+='<tr><td>'+esc(l.business)+'</td><td>'+esc(l.site)+'</td><td class="muted">'+esc(offer(l.offer))+'</td><td class="c">'+(l.value?'£'+fmt(l.value):'')+'</td><td class="c">'+(l.last?dd(l.last):'')+'</td></tr>'});
+  h+='</table></div></div></div>';
+
+  /* events + student + catering + frozen */
+  var ev=B.events.filter(function(e){return e.date>="2026-10-01"||/TBC|Oct/i.test(e.date)});
+  h+='<div class="row2"><div class="card"><h2>Events and promos ahead</h2><div class="sub">From the Events tab. Kei tells the sites what is coming so they are staffed and stocked.</div><ul class="timeline">';
+  ev.sort(function(a,b){return String(a.date).localeCompare(String(b.date))}).forEach(function(e){
+    var st=String(e.status).toLowerCase();var cls=/confirm|book|complete/.test(st)?"p-g":(/follow|contacted/.test(st)?"p-a":"p-n");
+    h+='<li><span class="when">'+(/^\d{4}-/.test(e.date)?dd(e.date):esc(e.date))+'</span><span style="flex:1">'+esc(e.name)+' <span class="muted">'+esc(e.site||"")+' '+esc(e.type)+'</span></span><span class="pill '+cls+'">'+esc(e.status)+'</span></li>'});
+  h+='</ul></div>';
+  var S=B.stud,C=B.catering;
+  h+='<div class="card"><h2>Student accommodation</h2><div class="sub">50 buildings across London and Southampton, four stands a month.</div>'+
+    '<div class="kv"><span>Buildings on the list</span><b>'+S.total+' ('+S.london+' London, '+S.southampton+' Southampton)</b></div>'+
+    '<div class="kv"><span>Contacted</span><b>'+S.contacted+'</b></div><div class="kv"><span>Stands run</span><b>'+S.stands_done+'</b></div>'+
+    '<div class="bar" style="margin:8px 0 14px"><i style="width:'+Math.min(100,S.stands_done/4*100)+'%"></i></div>'+
+    '<h2 style="margin-top:6px">Catering</h2><div class="kv"><span>Leads</span><b>'+C.total+'</b></div><div class="kv"><span>Sample arranged</span><b>'+(C.counts["Sample Arranged"]||0)+'</b></div><div class="kv"><span>Won</span><b>'+(C.counts["Won"]||0)+'</b> </div>'+
+    '<div class="muted" style="margin:4px 0 12px">'+C.won.map(function(x){return esc(x.name)}).join(", ")+'</div>'+
+    '<h2>Frozen Ramen prospects</h2>';
+  Object.keys(B.frozen).filter(function(s){return mine.indexOf(s)>=0}).forEach(function(s){var f=B.frozen[s],tot=0;for(var k in f.counts)tot+=f.counts[k];
+    h+='<div style="padding:5px 0;border-bottom:1px dashed #eef1f5;font-size:12.5px"><b>'+s+'</b> · '+tot+' stores · '+(f.counts["Contacted"]||0)+' contacted'+(f.negotiating.length?' · <span style="color:var(--maki-orange)">negotiating: '+esc(f.negotiating.join(", "))+'</span>':'')+'</div>'});
+  h+='</div></div>';
+  if(REGION==="South"){
+    h+='<div class="card"><h2>Shopping centres · Westquay and Lakeside</h2><div class="sub">Every offer acted on. Monthly check with centre management.</div><div class="tblwrap"><table class="t" style="min-width:420px"><tr><th>Contact</th><th>Site</th><th>Status</th><th class="c">Last</th></tr>';
+    B.centres.forEach(function(l){h+='<tr><td>'+esc(l.business)+'</td><td>'+l.site+'</td><td>'+(l.status?esc(l.status):'<span class="pill p-r">Not logged</span>')+'</td><td class="c">'+(l.last?dd(l.last):'')+'</td></tr>'});
+    h+='</table></div></div>';
+  }
+  $("p-b2b").innerHTML=h;
+}
+
+function renderTeam(){
+  var t=new Date(D.today+"T12:00:00"),dow=t.getDay();/* 0 Sun */
+  var started=D.today>="2026-10-13";
+  var K={0:["Off"],1:["Off"],2:["Nori","Soho"],3:["Shoreditch","Shoreditch"],4:["Shoreditch","Shoreditch"],5:["Nori","Soho"],6:["Nori","Soho"]};
+  var L={0:"Southampton · stocktake and fire alarm test, all sites",1:"Shoreditch · Monday sweep of every site's task list",2:"Shoreditch · KPI meeting 3pm",3:"Off",4:"Off",5:"Lakeside",6:"Southampton"};
+  var days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  var k=K[dow];var kt=k[0]==="Off"?"<b>Day off</b>":"Lunch <b>"+k[0]+"</b> · Dinner <b>"+k[1]+"</b> · 11:00 to 21:00";
+  var h='<div class="people">';
+  h+='<div class="person"><div class="av">Ka</div><h3>Kaitlin</h3><div class="role">Deputy Area Manager · Soho, Maki Nori, Shoreditch</div><div class="today">'+(started?'Today ('+days[dow]+'): '+kt:'Plan starts <b>Tue 13/10</b>. From then: '+kt.replace("<b>Day off</b>","day off")+' on '+days[dow]+'s')+'</div>'+
+    '<ul><li>Labour: Soho 25%, Nori 35%, Shoreditch 25%</li><li>Reviews a week: 40 / 30 / 40, plus 100 sign ups at Soho and Shoreditch</li><li>Cleanliness 3 out of 5, 95% checklists on Mapal</li><li>Daily message to Lincoln, weekly report before Tuesday KPI</li><li>Monthly audits for all three by Sat 07/11</li></ul>'+
+    '<div class="muted" style="margin-top:8px">End of day messages: not wired yet. Will drop in here once we pick the channel she sends them on.</div></div>';
+  h+='<div class="person"><div class="av">Ke</div><h3>Kei</h3><div class="role">B2B, whole region 3.5 days a week · Acting GM Lakeside</div><div class="today">Pipeline: <b>'+Object.keys(D.b2b.snap).reduce(function(s,x){return s+D.b2b.snap[x].leads},0)+'</b> leads · <b>'+Object.keys(D.b2b.snap).reduce(function(s,x){return s+D.b2b.snap[x].live},0)+'</b> live partners · <b>'+Object.keys(D.b2b.snap).reduce(function(s,x){return s+D.b2b.snap[x].no_follow},0)+'</b> stale follow ups</div>'+
+    '<ul><li>9 monthly KPIs, 7 green and none red = month worked</li><li>Outreach gap: Southampton, Lakeside, Nori</li><li>Hire and train a Lakeside AGM who can grow into the GM</li><li>Leads the seasonal promos with Lincoln</li><li>Weekly B2B update before Tuesday KPI</li></ul></div>';
+  h+='<div class="person"><div class="av">Li</div><h3>Lincoln</h3><div class="role">Area Manager · Lakeside, Southampton, Shoreditch, O2 support</div><div class="today">Today ('+days[dow]+'): <b>'+L[dow]+'</b></div>'+
+    '<ul><li>Runs Tuesday KPI 3pm, reviews Kaitlin and Kei</li><li>Monday sweep of every site\'s admin</li><li>Monthly audits for Lakeside and Southampton</li><li>Cleanliness walk round scores (sheet to come)</li></ul></div>';
+  h+='</div>';
+
+  /* four week plan */
+  var cur=curPeriod();
+  var F=[["Labour","Daily shift plan review and labour cuts from day one.","Cuts running as routine. Rota changes agreed with managers.","Labour % closing in on target.","At or under target at all three sites."],
+  ["Service flow","On the floor every service. Queue and table turn gaps listed, first fixes made.","Fixes in place at all three sites.","Managers running the flow to standard.","Flow holds on the days she is not in."],
+  ["Reviews and sign ups","Ask built into every service, tracked per shift.","Every team member asking. Weekly numbers climbing.","Closing in on the weekly targets.","Weekly targets hit."],
+  ["Cleanliness","Full sweep every visit. Weekly checklists live on Mapal. First scores recorded.","Checklists completed every week. Urgent issues closed within 24 hours.","Checklists done without chasing. Every site 3 out of 5 or above.","95% compliance and 3 out of 5 held at all three sites."],
+  ["Coaching managers","Pre shift briefs every service, led by Kaitlin.","Managers lead the briefs with her alongside.","Managers leading briefs and the floor to standard.","Training tracker at 95%. Standards hold without her."],
+  ["Brand pack","Uniforms, table setup and greetings checked. Correct on the spot.","Whole team in correct uniform. Tables set to standard.","Greetings used by every team member without prompting.","Brand pack followed on the days she is not in."],
+  ["Delivery","Delivery station set up and stocked. Baseline recorded.","Packing to the new layout. Mistakes and spillages falling.","All five metrics better than baseline.","All five improved for a third week running."],
+  ["Events, promos, QR","Materials and QR codes on every table. Gaps fixed.","Everything up to date. Team briefed on live promos.","Checked every visit, no gaps.","Holds on the days she is not in."]];
+  h+='<div class="card"><h2>Kaitlin\'s four week plan</h2><div class="sub">Each week raises the standard. Review in the week of 09/11.</div><div class="tblwrap"><table class="t"><tr><th>Focus</th>';
+  ["w1","w2","w3","w4"].forEach(function(p,i){var pp=D.periods[i+1];h+='<th'+(p===cur?' class="now"':'')+'>Week '+(i+1)+' · '+dd(pp[2])+'</th>'});
+  h+='</tr>';
+  F.forEach(function(r){h+='<tr><td class="m">'+r[0]+'</td>';for(var i=1;i<5;i++)h+='<td'+(("w"+i)===cur?' class="now"':'')+' style="font-size:12.5px;color:var(--ink-2)">'+r[i]+'</td>';h+='</tr>'});
+  h+='</table></div></div>';
+
+  /* key dates */
+  var KD=[["2026-10-12","Month 1 starts. Deliveroo push live (30% off £20 or more, Mon to Thu, to 02/11)"],["2026-10-13","Kaitlin starts at Soho, Nori and Shoreditch. First Tuesday KPI 3pm"],["2026-10-16","Southampton Uni campus pop up"],["2026-10-30","Maki Afterdark at Soho"],["2026-10-31","Halloween · end of October Frozen Ramen target review"],["2026-11-05","Bonfire Night"],["2026-11-07","All three DAM monthly audits done"],["2026-11-08","Diwali · Month 1 ends"],["2026-11-09","Month 1 review week: targets for month 2 including a B2B revenue target"],["2026-11-27","Black Friday · Westquay and Lakeside footfall"]];
+  h+='<div class="row2"><div class="card"><h2>Key dates</h2><ul class="timeline">';
+  var nextDone=false;
+  KD.forEach(function(x){var past=x[0]<D.today;var nx=!past&&!nextDone;if(nx)nextDone=true;h+='<li class="'+(past?'past':'')+(nx?' next':'')+'"><span class="when">'+dd(x[0])+'</span><span>'+x[1]+'</span></li>'});
+  h+='</ul></div>';
+  h+='<div class="card"><h2>Weekly rhythm</h2><ul class="timeline">'+
+    [["Daily","Kaitlin sends Lincoln a quick message on the day"],["Same day","Kei updates the tracker after any B2B activity"],["Sunday am","Stocktake and fire alarm test, every site"],["Mon 14:00","Weekly admin done on the Management Task List by 17:00"],["Monday","Lincoln sweeps every site's task list"],["Before Tue","Kaitlin's weekly report and scorecard, Kei's B2B update"],["Tue 15:00","KPI meeting, every site in its own slot"],["Monthly","Audit for every site · Kei's scorecard closed and scored"]]
+    .map(function(x){return '<li><span class="when">'+x[0]+'</span><span>'+x[1]+'</span></li>'}).join('')+'</ul></div></div>';
+  $("p-team").innerHTML=h;
+}
+/* ---------- site daily ---------- */
+document.addEventListener("click",function(e){var t=e.target.closest&&e.target.closest("[data-site]");if(t&&D&&D.daily.sites[t.dataset.site])openDaily(t.dataset.site)});
+$("shclose").onclick=function(){$("sheet").classList.remove("open")};
+$("sheet").addEventListener("click",function(e){if(e.target===$("sheet"))$("sheet").classList.remove("open")});
+document.addEventListener("keydown",function(e){if(e.key==="Escape")$("sheet").classList.remove("open")});
+function openDaily(c){
+  var m=D.sites_meta[c],S=D.daily.sites[c],dates=D.daily.dates,T=D.targets[c]||{},wk=weekData(c,"base")||{};
+  var latest=dates[0],L=S[latest]||{};
+  $("shname").textContent=m.name+" · Daily";
+  $("shsub").textContent=m.lead+" · GM "+(wk.gm||"TBC")+(m.support?" · franchise site, no cash up in the daily feed (sign ups and vouchers only)":" · latest cash up "+L.day+" "+dd(latest));
+  function k(lbl,val,ok,sub){return '<div class="kpi"><span>'+lbl+'</span><b>'+(ok==null?'':'<i class="dot '+(ok?'g':'r')+'"></i>')+val+'</b>'+(sub?'<small>'+sub+'</small>':'')+'</div>'}
+  var h='<div class="kpis">'+
+    k("Sales",L.sales!=null?'£'+fmt(L.sales):'n/a',L.vs!=null?L.vs>=0:null,L.target?'target £'+fmt(L.target)+' · '+(L.vs>=0?'+':'')+(L.vs!=null?L.vs.toFixed(1):'')+'%':'')+
+    k("Covers",L.covers!=null?fmt(L.covers):'n/a',null,L.spend!=null?'avg spend £'+L.spend.toFixed(2):'')+
+    k("Wage %",L.wage!=null?L.wage.toFixed(1)+'%':'n/a',(L.wage!=null&&T.labour)?L.wage<=T.labour:null,T.labour?'target '+T.labour+'% · '+(L.hours!=null?L.hours+' hrs':''):'')+
+    k("Reviews today",L.rev_n!=null?L.rev_n:'n/a',null,L.rev_avg!=null?'avg '+L.rev_avg.toFixed(2)+'★'+(L.rev_neg?' · '+L.rev_neg+' negative':''):'')+
+    k("Sign ups today",(D.signups&&D.signups.daily[c])?((D.signups.daily[c][latest])||0):'n/a',null,'first visit at this site')+
+    (function(){if(c==="MakiNori")return k("Vouchers today",'n/a',null,'Maki Nori is not on Ramen Royalty');var x=vDay(c,latest);return k("Vouchers today",x?x[0]:'n/a',null,x?(x[1]+' £5 welcome · '+(x[0]-x[1])+' rewards'):'')})()+
+    k("Delivery sales",L.delivery!=null?'£'+fmt(L.delivery):'n/a',null,'from the cash up')+'</div>';
+  /* last 7 days */
+  var ws=0,wt=0,wc=0,wl=0,wr=0,wn=0;
+  dates.forEach(function(d){var r=S[d]||{};ws+=r.sales||0;wt+=r.target||0;wc+=r.covers||0;wl+=r.labour||0;wr+=r.rev_n||0;wn+=r.rev_neg||0});
+  if(!m.support)h+='<div class="banner"><span>📅</span><div><b>Last '+dates.length+' days ('+dd(dates[dates.length-1])+' to '+dd(dates[0])+'):</b> £'+fmt(ws)+' vs £'+fmt(wt)+' target ('+(wt?((ws/wt-1)*100>=0?'+':'')+((ws/wt-1)*100).toFixed(1)+'%':'n/a')+') · '+fmt(wc)+' covers · wage '+(ws?(wl/ws*100).toFixed(1)+'%':'n/a')+' · '+wr+' reviews'+(wn?', '+wn+' negative':'')+'</div></div>';
+  h+='<div class="card"><h2>Last '+dates.length+' days</h2><div class="sub">Latest cash up on top.</div><div class="tblwrap"><table class="t" style="min-width:600px"><tr><th>Day</th><th class="c">Sales</th><th class="c">vs target</th><th class="c">Covers</th><th class="c">Spend</th><th class="c">Wage %</th><th class="c">Hours</th><th class="c">Sign ups</th><th class="c">Vouchers</th><th class="c">Reviews</th></tr>';
+  dates.forEach(function(d,i){var r=S[d]||{};
+    h+='<tr'+(i===0?' style="background:#fffaf6"':'')+'><td class="m">'+(r.day||'')+' '+dd(d)+'</td><td class="c">'+(r.sales!=null?'£'+fmt(r.sales):'<span class="na">n/a</span>')+'</td>'+
+      '<td class="c">'+(r.vs!=null?'<span class="cell"><span class="dot '+(r.vs>=0?'g':'r')+'"></span>'+(r.vs>=0?'+':'')+r.vs.toFixed(1)+'%</span>':'<span class="na">n/a</span>')+'</td>'+
+      '<td class="c">'+(r.covers!=null?fmt(r.covers):'')+'</td><td class="c">'+(r.spend!=null?'£'+r.spend.toFixed(2):'')+'</td>'+
+      '<td class="c">'+(r.wage!=null?'<span class="cell"><span class="dot '+(T.labour?(r.wage<=T.labour?'g':'r'):'n')+'"></span>'+r.wage.toFixed(1)+'%</span>':'<span class="na">n/a</span>')+'</td>'+
+      '<td class="c">'+(r.hours!=null?r.hours:'')+'</td><td class="c">'+((D.signups&&D.signups.daily[c])?(D.signups.daily[c][d]||0):'<span class="na">n/a</span>')+'</td><td class="c">'+(function(){var x=vDay(c,d);return x?(x[0]+(x[0]?' <small style="color:var(--ink-3)">£5 '+x[1]+'</small>':'')):'<span class="na">n/a</span>'})()+'</td><td class="c">'+(r.rev_n!=null?r.rev_n+(r.rev_neg?' <button class="negbtn" data-neg="'+d+'">'+r.rev_neg+' neg ›</button>':''):'')+'</td></tr>'});
+  h+='</table></div><div class="legend"><span>Wage dot uses the site\'s plan target ('+(T.labour||'n/a')+'%)</span><span>Vouchers: Ramen Royalty vouchers used, matched to the member bill at the till (Trifft records no site on a voucher), so a single day can be out by one or two</span></div></div>';
+  h+='<div id="negbox"></div>';
+  var R=(L.reviews||[]).slice().sort(function(a,b){return a.stars-b.stars||String(b.date).localeCompare(a.date)});
+  var W=L.window||{};
+  h+='<div class="card"><h2>Google reviews, last 7 days</h2><div class="sub">'+(W.n!=null?W.n+' reviews · avg '+(W.avg!=null?W.avg.toFixed(2):'n/a')+'★ · '+(W.neg||0)+' negative':'')+'. Lowest first.</div>';
+  if(!R.length)h+='<div class="muted">No reviews with comments this week.</div>';
+  R.forEach(function(x){h+='<div class="rv'+(x.stars<=3?' bad':'')+'"><span class="st">'+'★★★★★'.slice(0,x.stars)+'</span>'+esc(x.text)+' <div class="who">'+esc(x.author)+' · '+dd(x.date)+'</div></div>'});
+  h+='</div>';
+  $("shbody").innerHTML=h;$("sheet").classList.add("open");
+  Array.prototype.forEach.call($("shbody").querySelectorAll(".negbtn"),function(b){b.onclick=function(ev){ev.stopPropagation();
+    var d=b.dataset.neg,r=S[d]||{},L2=r.neg_list||[],box=$("negbox");
+    var x='<div class="card" style="border-color:var(--red)"><h2>Negative reviews · '+(r.day||'')+' '+dd(d)+'</h2><div class="sub">'+r.rev_neg+' review'+(r.rev_neg>1?'s':'')+' at 3 stars or below.</div>';
+    L2.forEach(function(v){x+='<div class="rv bad"><span class="st">'+'★★★★★'.slice(0,v.stars)+'</span>'+esc(v.text||'')+' <div class="who">'+esc(v.author||'')+' · '+dd(String(v.date).slice(0,10))+'</div></div>'});
+    var miss=(r.rev_neg||0)-L2.length;if(miss>0)x+='<div class="muted">'+miss+' left a star rating with no comment.</div>';
+    box.innerHTML=x+'</div>';box.scrollIntoView({behavior:"smooth",block:"start"});
+  }});$("sheet").querySelector(".sheet-panel").scrollTop=0;
+}
+})();
+</script>
+</body>
+</html>
