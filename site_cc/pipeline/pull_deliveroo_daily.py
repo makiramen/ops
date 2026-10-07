@@ -6,7 +6,8 @@ Writes two things:
   --site CODE --data DIR   droo_daily.json for one site (the Site CC daily tab)
   --estate FILE            one estate file keyed by day then site (the AM CC daily tab and the Area Room)
 
-Row layout per day: [orders, prep_mins, aod_mins, missing_items_pct, cancel_rest_err, cancel_rest_err_pct, rejections, prep_red]
+Row layout per day: [orders, prep_mins, aod_mins, missing_items_pct, cancel_rest_err, cancel_rest_err_pct, rejections, prep_red, rider_wait_gt5_pct, open_hours_pct, busy_mode_pct]
+  The last three are the figures in that day's drop (the Apps Script stores RWT, open hours and busy mode on the drop's day from 07/10/2026).
   prep_red = 1 when the sheet says RED (prep above 15.00 min, the Red Light rule), 0 for GREEN, null when there is no prep figure.
   Missing figures are null (Deliveroo reports rejections by neighbourhood, so a site without a mapped hood has null, not 0).
 Week rows (w/c Monday): [rider_wait_gt5_pct, open_hours_pct, busy_mode_pct], from the same summary rows (weekly grain on the sheet).
@@ -47,8 +48,9 @@ for r in rows[1:]:
     if row[0] is not None:row[0]=int(row[0])
     if row[4] is not None:row[4]=int(row[4])
     if row[6] is not None:row[6]=int(row[6])
-    DAY.setdefault(code,{})[d]=row
     w=[num(r[ix['rider_wait_gt5_pct']]),num(r[ix['open_hours_pct']]),num(r[ix['busy_mode_pct']])]
+    row+=w   # 07/10/2026: RWT, open hours, busy mode as reported in that day's drop (week to date at Deliveroo)
+    DAY.setdefault(code,{})[d]=row
     if any(x is not None for x in w):
         wc=monday(d);cur=WEEK.setdefault(code,{}).get(wc,[None,None,None])
         WEEK[code][wc]=[cur[i] if cur[i] is not None else w[i] for i in range(3)]
@@ -73,7 +75,7 @@ if A.site:
     else:
         dd=DAY.get(A.site,{})
         write(os.path.join(A.data,'droo_daily.json'),{'src':src,'pulled':pulled,'site':A.site,'to':latest(dd),'d':dd,'w':WEEK.get(A.site,{}),
-              'k':['orders','prep','aod','missing_pct','cancel','cancel_pct','rejections','prep_red'],'wk':['rider_wait_pct','open_pct','busy_pct']},f'deliveroo daily {A.site}')
+              'k':['orders','prep','aod','missing_pct','cancel','cancel_pct','rejections','prep_red','rider_wait_pct','open_pct','busy_pct'],'wk':['rider_wait_pct','open_pct','busy_pct']},f'deliveroo daily {A.site}')
 if A.estate:
     byday={};byweek={}
     for code,dd in DAY.items():
@@ -84,4 +86,4 @@ if A.estate:
     to=max([d for d,v in byday.items() if any(r[1] is not None for r in v.values())] or [None])
     os.makedirs(os.path.dirname(os.path.abspath(A.estate)),exist_ok=True)
     write(A.estate,{'src':src,'pulled':pulled,'to':to,'d':byday,'w':{wc:dict(sorted(v.items())) for wc,v in byweek.items()},
-          'k':['orders','prep','aod','missing_pct','cancel','cancel_pct','rejections','prep_red'],'wk':['rider_wait_pct','open_pct','busy_pct'],'prep_red_above':15},'deliveroo daily estate')
+          'k':['orders','prep','aod','missing_pct','cancel','cancel_pct','rejections','prep_red','rider_wait_pct','open_pct','busy_pct'],'wk':['rider_wait_pct','open_pct','busy_pct'],'prep_red_above':15},'deliveroo daily estate')
