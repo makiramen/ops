@@ -635,7 +635,7 @@ try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in
 var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
 S.acts=S.acts.filter(function(y){return LIVEIDS[y.id]||(y.gid&&LIVEIDS['g'+y.gid])||typeof y.id==='number'});
 ACTS.forEach(function(a){var x=S.acts.filter(function(y){return y.id===a.id||(a.gid&&y.gid===a.gid)})[0];if(!x){S.acts.push(a);return}
-  ['gid','ag','loc','ca'].forEach(function(k){if(a[k]!=null)x[k]=a[k]});if(a.d)x.d=a.d;if(a.s==='closed')x.s='closed'});
+  ['gid','ag','loc','ca','t','o','src','wc'].forEach(function(k){if(a[k]!=null)x[k]=a[k]});if(a.d)x.d=a.d;if(a.s==='closed')x.s='closed'});  /* 08/10: text, owner, source, w/c always refreshed from the build (owner name map) */
 if(!Array.isArray(S.pend))S.pend=[];
 GAPS0.forEach(function(g){if(!S.gaps.some(function(x){return x.id===g.id}))S.gaps.push(g)});
 function queue(op,o){S.ob.push({ts:new Date().toISOString().slice(0,16),op:op,o:o});}
