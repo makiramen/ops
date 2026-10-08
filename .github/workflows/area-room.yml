@@ -59,8 +59,14 @@ jobs:
           latest = str(json.load(open('data/daily/daily_index.json')).get('latest', ''))
           m = re.search(r'area-room-built: (\S+) daily:(\S+)', open('area_room.html', encoding='utf-8').read(400)) if os.path.exists('area_room.html') else None
           built, carries = (m.group(1), m.group(2)) if m else ('', '')
-          if built == today.isoformat() and (carries >= D or carries >= latest):
-              say(f'Already built today carrying {carries}, skipping'); print('go=0'); raise SystemExit
+          # 08/10/2026: the 10:00 build can land before the Google reviews do (Ross's pull writes the sheet late morning).
+          # When the daily tab has shipped reviews for D since the room was built, rebuild so the gate carries them.
+          try: rv_latest = str(json.load(open('data/daily/daily_reviews_index.json')).get('latest', ''))
+          except Exception: rv_latest = ''
+          m2 = re.search(r'reviews:(\S+)', open('area_room.html', encoding='utf-8').read(400)) if os.path.exists('area_room.html') else None
+          carries_rv = m2.group(1) if m2 else ''
+          if built == today.isoformat() and (carries >= D or carries >= latest) and carries_rv >= rv_latest:
+              say(f'Already built today carrying {carries} (reviews {carries_rv}), skipping'); print('go=0'); raise SystemExit
           if latest < D:
               # is a daily tab run still going? its finish wakes this workflow again
               req = urllib.request.Request(f"https://api.github.com/repos/{os.environ['REPO']}/actions/workflows/daily-tab.yml/runs?per_page=5",

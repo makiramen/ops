@@ -278,9 +278,11 @@ def build_daily(days=7):
     dates = sorted((idx or {}).get("dates", []), reverse=True)[:days]
     if not dates:
         dates = sorted([f[6:16] for f in os.listdir(os.path.join(HERE, "daily")) if f.startswith("daily_2")], reverse=True)[:days]
-    out = {"dates": dates, "sites": {}}
+    out = {"dates": dates, "sites": {}, "reviews_latest": "none"}
     for d_ in dates:
         cu, rv = _get("daily_%s.json" % d_), _get("daily_reviews_%s.json" % d_)
+        if rv and out["reviews_latest"] == "none":
+            out["reviews_latest"] = d_   # newest day with a reviews file; the build marker carries it
         for c in ["M17", "M18", "M19", "M20", "MakiNori", "O2"]:
             row = {"day": (cu or {}).get("day") or dt.date.fromisoformat(d_).strftime("%A")}
             s = ((cu or {}).get("sites") or {}).get(c)
@@ -550,7 +552,7 @@ def build():
     logo = base64.b64encode(open(os.path.join(HERE, "maki-logo1.png"), "rb").read()).decode()
     html = tpl.replace("__PURECRYPTO__", open(os.path.join(HERE, "purecrypto.js"), encoding="utf-8").read()).replace("__PAYLOAD__", json.dumps(blob)).replace("__LOGURL__", LOG_URL).replace("__LOGO__", logo)
     # marker the scheduler and the guard read: build day (UK) and the AM CC daily day it carries
-    html = html.replace("<!doctype html>", "<!doctype html>\n<!-- area-room-built: %s daily:%s -->" % (TODAY.isoformat(), (payload["daily"]["dates"] or ["none"])[0]), 1)
+    html = html.replace("<!doctype html>", "<!doctype html>\n<!-- area-room-built: %s daily:%s reviews:%s -->" % (TODAY.isoformat(), (payload["daily"]["dates"] or ["none"])[0], payload["daily"].get("reviews_latest", "none")), 1)
     out = os.environ.get("AREA_ROOM_OUT", os.path.join(HERE, "area_room.html"))
     open(out, "w", encoding="utf-8").write(html)
     if "--debug" in sys.argv:
