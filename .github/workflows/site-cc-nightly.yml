@@ -6,7 +6,12 @@ on:
     # The guard below only builds inside the 05:00 to 07:59 and 09:00 to 11:59 UK windows (BST and GMT),
     # and only once per window: later starts skip once a build exists since the window opened.
     - cron: '7,22,37,52 4-11 * * *'
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      chained:
+        description: 'Set by the daily tab when it ships; build only if the daily tab is newer than our last build'
+        type: boolean
+        default: false
   # 08/10/2026: chained to the daily tab. Reviews and Deliveroo land early, the cash-up is the only late feed, so when
   # the daily tab ships D every page rebuilds together: AM CC (the daily tab itself), then the Area Room and the Site CC.
   workflow_run:
@@ -30,8 +35,9 @@ jobs:
       - name: UK window and already built guard
         id: guard
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "Manual run"; echo "go=1" >> $GITHUB_OUTPUT; exit 0; fi
-          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+          CHAINED="${{ github.event.inputs.chained || 'false' }}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$CHAINED" != "true" ]; then echo "Manual run"; echo "go=1" >> $GITHUB_OUTPUT; exit 0; fi
+          if [ "${{ github.event_name }}" = "workflow_run" ] || [ "$CHAINED" = "true" ]; then
             # Woken by a daily tab finish: build only if the daily tab now carries yesterday (D) and was generated after our last build.
             python3 - <<'PY' >> $GITHUB_OUTPUT
           import json, glob, datetime as d

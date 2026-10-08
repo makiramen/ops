@@ -14,7 +14,11 @@ on:
   workflow_dispatch:
     inputs:
       force:
-        description: 'Build now, ignore the 10:00 and already built checks'
+        description: 'Build now, ignore the already built checks'
+        type: boolean
+        default: false
+      chained:
+        description: 'Set by the daily tab when it ships; the guard decides'
         type: boolean
         default: false
   workflow_run:

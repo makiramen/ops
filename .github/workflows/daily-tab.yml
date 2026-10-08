@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # 08/10/2026: the run wakes the Area Room and the Site CC (workflow_dispatch) when it ships
 
 concurrency:
   group: daily-tab
@@ -98,6 +99,23 @@ jobs:
           URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
           for i in 1 2 3; do git push "$URL" HEAD:main && exit 0; git fetch "$URL" main && git rebase FETCH_HEAD; done
           exit 1
+
+      # 08/10/2026: chained morning build. workflow_run does not reach the Area Room or the Site CC reliably (runs the
+      # scheduler starts with the job token raise no events), so the daily tab dispatches them itself, but
+      # only when this run shipped the cash-up or reviews. Each has its own guard, so a redundant dispatch is a no-op.
+      - name: Wake the Area Room and the Site CC when something shipped
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}   # the job token dispatches fine (the reliable scheduler proves it daily)
+        run: |
+          shipped=$(python3 -c "import json;R=json.load(open('/tmp/report.json'));print(1 if R.get('shipped') else 0)" 2>/dev/null || echo 0)
+          if [ "$shipped" != "1" ]; then echo "nothing shipped, not waking the Area Room or the Site CC"; exit 0; fi
+          for wf in area-room.yml site-cc-nightly.yml; do
+            curl -sS -o /dev/null -w "$wf dispatch: %{http_code}\n" -X POST \
+              -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" \
+              "https://api.github.com/repos/${{ github.repository }}/actions/workflows/$wf/dispatches" \
+              -d '{"ref":"main","inputs":{"chained":"true"}}' || true
+          done
 
       - name: Keep the report and logs
         if: always()
