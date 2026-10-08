@@ -631,6 +631,9 @@ var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{}
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
 ['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
+/* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
+var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
+S.acts=S.acts.filter(function(y){return LIVEIDS[y.id]||(y.gid&&LIVEIDS['g'+y.gid])||typeof y.id==='number'});
 ACTS.forEach(function(a){var x=S.acts.filter(function(y){return y.id===a.id||(a.gid&&y.gid===a.gid)})[0];if(!x){S.acts.push(a);return}
   ['gid','ag','loc','ca'].forEach(function(k){if(a[k]!=null)x[k]=a[k]});if(a.d)x.d=a.d;if(a.s==='closed')x.s='closed'});
 if(!Array.isArray(S.pend))S.pend=[];
