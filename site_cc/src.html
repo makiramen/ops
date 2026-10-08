@@ -1213,11 +1213,11 @@ function effLadder(L,dp){
 function renderStandingWeek(){
   var wc=S.wc,pw=prevW(wc),live=wc===CUR;
   var sq=live?qOf(TODAY):qOf(wc),pq=prevQ(sq);
-  var cur=lgSeason(sq,live?null:wc),last=lgSeason(pq,live?null:wc),open=qMondays(sq).filter(function(m){return m>=TODAY||!live})[0]||qMondays(sq)[0];
+  var cur=lgSeason(sq,live?null:wc),last=lgSeason(pq,live?null:wc),open=qMondays(sq).filter(function(m){return !STAND.lg[m]})[0]||qMondays(sq)[0];   /* first week of the season not yet scored: w/c 05/10 for Q4 2026, counted once it closes (08/10 fix, said w/c 12/10) */
   var pend=qMondays(pq).filter(function(m){return !STAND.lg[m]&&m<=TODAY}),pending=pend.length;
   var e=STAND.eff[wc],pe=pw?STAND.eff[pw.wc]:null,h='';
   var curBig=cur.weeks?posTxt(cur.me)+' <span style="font-size:15px;color:var(--ink-2)">of '+TIERSITES.length+'</span>':'0 pts';
-  var curSub=cur.weeks?TIER+' tier · '+cur.me.p+' pts after '+cur.weeks+' week'+(cur.weeks>1?'s':''):'New season, every site level on 0. First week counted: w/c '+dm(open)+'.';
+  var curSub=cur.weeks?TIER+' tier · '+cur.me.p+' pts after '+cur.weeks+' week'+(cur.weeks>1?'s':''):'New season, every site level on 0. First week counted: w/c '+dm(open)+', scored when it closes.';
   var lastLine='<span class="small">'+qLabel(pq)+' final: <b style="color:var(--ink)">'+(last.weeks?posTxt(last.me)+' of '+TIERSITES.length+', '+last.me.p+' pts':'n/a')+'</b>'+(last.weeks&&last.me.rank>1?', '+(last.rows[0].p-last.me.p)+' behind Maki '+last.rows[0].c.slice(1):last.weeks?' 🏆':'')+(pending&&live?' · w/c '+pend.map(dm).join(', ')+' still to close':'')+'</span>';
   h+=standCard('Efficiency · whole group · week',e&&e[0]?ord(e[0])+' <span style="font-size:15px;color:var(--ink-2)">of '+e[1]+'</span>':'n/a','w/c '+dm(wc)+' · score '+(e?e[2]:'n/a')+' / 100'+(pe?' · last week '+ord(pe[0]):''),(pe&&e?mv(pe[0],e[0])+' <span class="small">vs last week</span>':'')+effLadder(EALL[wc]));
   var ym=wc.slice(0,7),mt=effMonth(ym,wc),pm=effMonth(prevYm(ym));
