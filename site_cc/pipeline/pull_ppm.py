@@ -14,7 +14,7 @@ it=[[x['ppm'],x['who'],x['due'],x['m'],x['note'],None,''] for x in src['items'] 
 # PPM line -> Mapal form name test. Conservative: a weekly in house log (Fire Alarm Testing) must not close a contractor service.
 MATCH=[(r'fire risk',r'fire risk'),(r'fire alarm',r'fire alarm.*(service|servic|maint|contractor|certif)'),(r'emergency light',r'emergency light.*(3|three|annual|service|certif|test)'),
        (r'extinguisher',r'extinguisher.*(service|servic|annual|certif|inspection)'),(r'gas safety|cp42',r'gas safety|cp42'),(r'eicr',r'eicr|electrical installation'),
-       (r'\bpat\b',r'\bpat\b|portable appliance'),(r'tr19|extraction|duct',r'tr19|extraction clean|duct'),(r'pest',r'pest'),(r'grease',r'grease'),
+       (r'\bpat\b',r'\bpat\b|portable appliance'),(r'tr19|extraction|duct',r'tr19|extraction clean|duct'),(r'pest',r'pest control'),   # not the daily 'check for signs of pest activity' task(r'grease',r'grease'),
        (r'legionella',r'legionella|water (hygiene|risk)'),(r'\blift\b',r'\blift\b'),(r'sprinkler',r'sprinkler'),(r'asbestos',r'asbestos')]
 def addm(d,m):
     y,mo=d.year,d.month+int(m);y+=(mo-1)//12;mo=(mo-1)%12+1
