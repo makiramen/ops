@@ -568,7 +568,7 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
 
   <!-- WEEK: ACTIONS -->
   <section class="pane" data-p="actions" hidden>
-    <div class="row"><div><div class="eyebrow">Actions</div><h2>Actions &amp; compliance</h2><div class="sub">Data, diagnosis, action, owner, follow-up, closure. Every action from w/c 28/09 is a task in the Asana project Maki &amp; Ramen Management (site section). Mark done completes the Asana task straight away; a task completed in Asana moves to Completed here at the next nightly sync.</div></div>
+    <div class="row"><div><div class="eyebrow">Actions</div><h2>Actions &amp; compliance</h2><div class="sub">Data, diagnosis, action, owner, follow-up, closure. Every action from 06/10/2026 is a task in the Asana project Maki &amp; Ramen Management (site section). Mark done completes the Asana task straight away; a task completed in Asana moves to Completed here at the next nightly sync.</div></div>
       <button type="button" class="btn" id="btnAsana">Sync outbox</button></div>
     <div class="card" id="obCard" hidden><div class="ch"><h3>Sync outbox</h3><span class="small" id="obMeta"></span></div><div class="small" style="margin-bottom:6px">This page works fully offline. Changes that could not reach Asana (no signal, or an action not in Asana yet) queue here; Asana changes are retried when the page is next open online. Copy and send to your AM if they stay waiting.</div><textarea id="obTxt" rows="5" readonly aria-label="Queued changes"></textarea><div class="obx" style="margin-top:6px"><button type="button" class="btn sm pri" id="obCopy">Copy changes</button><button type="button" class="btn sm" id="obClear">Mark as sent</button></div></div>
     <div class="grid" id="actTiles"></div>
@@ -589,7 +589,7 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
           <button type="button" data-fl="open" aria-pressed="true">Open</button><button type="button" data-fl="done" aria-pressed="false">Marked done</button><button type="button" data-fl="closed" aria-pressed="false">Completed</button>
         </div></div>
       <div class="tscroll"><table><thead><tr><th>Action</th><th>Raised at</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody id="actRows"></tbody></table></div>
-      <div class="small" style="margin-top:8px">Every GM/HC, GMH chef and AM meeting action from w/c 28/09 lands here and in the site section of the Asana project; tasks added straight in Asana show here too. <span class="tag t-auto">ASANA</span> means it is an Asana task; <span class="tag t-no">ASANA QUEUED</span> means it goes up at the next nightly sync; <span class="tag t-auto">SUPPORT</span> means a support team (EC, maintenance, marketing) is assigned too. Status here is cached for offline use.</div>
+      <div class="small" style="margin-top:8px">Every GM/HC, GMH chef and AM meeting action from 06/10/2026 lands here and in the site section of the Asana project; tasks added straight in Asana show here too. <span class="tag t-auto">ASANA</span> means it is an Asana task; <span class="tag t-no">ASANA QUEUED</span> means it goes up at the next nightly sync; <span class="tag t-auto">SUPPORT</span> means a support team (EC, maintenance, marketing) is assigned too. Status here is cached for offline use.</div>
     </div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Maintenance log</h3><span class="mtTL"></span></div><div class="maintBox"></div></div>
@@ -914,11 +914,18 @@ function rooCells(dt){var q=DD[dt];if(!q)return '<td class="r ph">·</td><td cla
   var iss=[];if(q[3])iss.push(q[3].toFixed(1)+'% missing');if(q[6])iss.push(q[6]+' rej');if(q[4])iss.push(q[4]+' cancel');
   return '<td class="r">'+(q[0]==null?NA:q[0])+'</td><td class="r'+(q[1]==null?'':' c-'+(q[7]?'r':'g'))+'" title="'+(q[2]!=null?'Average order duration '+q[2].toFixed(1)+' min':'')+'">'+(q[1]==null?NA:q[1].toFixed(1)+' min')+'</td><td class="small'+(iss.length?' c-r':'')+'">'+(iss.length?iss.join(' · '):'<span class="c-g">none</span>')+'</td>'}
 function mondayOf(d){var x=new Date(d+'T00:00:00Z');return addD(d,-((x.getUTCDay()+6)%7))}
-function renderRooOps(anchor){var el=$('#rooOps');if(!el)return;var wc=mondayOf(anchor),pw=addD(wc,-7),cur=DW[wc]||[],prv=DW[pw]||[];
-  var M=[['Rider wait over 5 min',0,'%',-1],['Scheduled hours open',1,'%',1],['Time in busy mode',2,'%',-1]];
-  var h='<div class="tscroll"><table><thead><tr><th>Deliveroo ops (weekly, Deliveroo reports these by week)</th><th class="r">w/c '+dm(wc)+'</th><th class="r">w/c '+dm(pw)+'</th><th class="r">Change</th></tr></thead><tbody>';
-  M.forEach(function(m){var a=cur[m[1]],b=prv[m[1]];h+='<tr><td>'+m[0]+'</td><td class="r">'+(a==null?NA:a.toFixed(1)+m[2])+'</td><td class="r">'+(b==null?NA:b.toFixed(1)+m[2])+'</td><td class="r">'+(a==null||b==null?'<span class="ph">·</span>':(function(d){var good=m[3]*d>0,bad=m[3]*d<0;return '<span class="chg '+(good?'up':bad?'down':'flat')+'">'+(good?'▲ ':bad?'▼ ':'● ')+sgn(d,1,'pp')+'</span>'})(a-b))+'</td></tr>'});
-  h+='</tbody></table></div><div class="small" style="margin-top:6px">Source: '+esc(DROO.src||'')+(DROO.to?', latest day '+dmy(DROO.to):'')+'. Rider wait shows n/a when Deliveroo does not report it for a low volume week.</div>';
+function rooBand(v,g,a,hi){if(v==null)return '';return hi?(v>=g?'g':v>=a?'a':'r'):(v<=g?'g':v<=a?'a':'r')}
+function renderRooOps(anchor){var el=$('#rooOps');if(!el)return;var days=[anchor];for(var j=1;j<=7;j++)days.push(addD(anchor,-j));
+  /* same thresholds as the AM Control Centre Deliveroo panel: rider wait green to 2%, amber to 4%; open hours green 98%+, amber 95%+; busy mode 0 green, amber to 10% */
+  var M=[['Rider wait over 5 min',8,2,4,false],['Scheduled hours open',9,98,95,true],['Time in busy mode',10,0,10,false]];
+  var cell=function(v,m){if(v==null)return '<td class="r ph">·</td>';var b=rooBand(v,m[2],m[3],m[4]);return '<td class="r'+(b?' c-'+b:'')+'">'+v.toFixed(1)+'%</td>'};
+  var h='<div class="tscroll"><table><thead><tr><th>Day</th>'+M.map(function(m){return '<th class="r">'+m[0]+'</th>'}).join('')+'</tr></thead><tbody>';
+  h+='<tr class="sechd"><td colspan="4">Daily · '+dm(days[7])+' to '+dm(anchor)+', latest on top</td></tr>';
+  days.forEach(function(dt){var q=DD[dt];h+='<tr><td><b>'+dayName(dt)+'</b> '+dm(dt)+'</td>'+M.map(function(m){var v=q?q[m[1]]:null;if(q&&v==null&&m[1]===8)v=0;return cell(v,m)}).join('')+'</tr>'});
+  var wc=mondayOf(anchor),pw=addD(wc,-7),cur=DW[wc]||[],prv=DW[pw]||[];
+  var wrow=function(lab,w){return '<tr class="tot"><td>'+lab+'</td>'+M.map(function(m){var v=w[m[1]-8];if(w.length&&v==null&&m[1]===8)v=0;return cell(v,m)}).join('')+'</tr>'};
+  h+='<tr class="sechd"><td colspan="4">Weekly, as Deliveroo reports it</td></tr>'+wrow('Week to date · w/c '+dm(wc),cur)+wrow('Last week · w/c '+dm(pw),prv);
+  h+='</tbody></table></div><div class="small" style="margin-top:6px">Source: '+esc(DROO.src||'')+(DROO.to?', latest day '+dmy(DROO.to):'')+'. Each morning drop\'s figures sit on that day; a blank rider wait is 0. Days before the feed started show a dot. The weekly figures are on the weekly tab too.</div>';
   el.innerHTML=h}
 function renderDaily(){
   var lastDay=Object.keys(DAY).sort().pop(),anchor=isCur()?(lastDay>addD(S.wc,6)?lastDay:addD(S.wc,6)):addD(S.wc,6);
@@ -937,8 +944,8 @@ function renderDaily(){
   var A=agg7(cur),B=agg7(prv),L=agg7([addD(anchor,-7)]);
   var chRow='<tr class="tot"><td>vs same day last week ('+dm(addD(anchor,-7))+')</td><td class="r">'+ch(A.n?A.s:null,L.n?L.s:null,'pct',1)+'</td><td class="r ph">·</td><td class="r">'+ch(A.var,L.var,'pp',1)+'</td><td class="r">'+ch(A.dn?A.d:null,L.dn?L.d:null,'pct',1)+'</td><td class="r">'+ch(A.rn?A.ro:null,L.rn?L.ro:null,'n',1)+'</td><td class="r">'+ch(A.rprep,L.rprep,'min',-1)+'</td><td class="r ph">·</td><td class="r">'+ch(A.n?A.c:null,L.n?L.c:null,'pct',1)+'</td><td class="r">'+ch(A.sph,L.sph,'gbp',1)+'</td><td class="r ph">·</td><td class="r ph">·</td><td class="r">'+ch(A.lab,L.lab,'pp',-1)+'</td><td class="r">'+ch(A.rv,L.rv,'n',1)+'</td><td class="r ph">·</td></tr>';
   var sec=function(t){return '<tr class="sechd"><td colspan="15">'+t+'</td></tr>'};
-  $('#dailyRows').innerHTML=sec((isCur()?'Latest cash-up day':'Last day of the week')+' · '+dayName(anchor)+' '+dm(anchor))+row(anchor)+chRow+sec('Previous 7 days · '+dm(prv[0])+' to '+dm(prv[6]))+prv.map(row).join('')+tot('7 day total',B);renderRooOps(anchor);
-  $('#dailyWin').textContent=(isCur()?'Latest cash-up day, '+dmy(anchor)+', on top; the 7 days before it underneath.':'Sunday '+dmy(anchor)+' on top; the 7 days before it underneath.');
+  $('#dailyRows').innerHTML=sec((isCur()?'Latest cash-up day':'Last day of the week')+' · '+dayName(anchor)+' '+dm(anchor))+row(anchor)+chRow+sec('Previous 7 days · '+dm(prv[6])+' back to '+dm(prv[0]))+prv.slice().reverse().map(row).join('')+tot('7 day total',B);renderRooOps(anchor);
+  $('#dailyWin').textContent=(isCur()?'Latest cash-up day, '+dmy(anchor)+', on top; the 7 days before it underneath, newest first.':'Sunday '+dmy(anchor)+' on top; the 7 days before it underneath, newest first.');
   /* reviews: last 7 days, with the 7 before as context */
   var wr=revIn(prv[0],anchor),pr=revIn(addD(prv[0],-8),addD(prv[0],-1));
   $('#rvHead').textContent='Google reviews · '+dm(prv[0])+' to '+dm(anchor)+' · '+wr.length;
@@ -951,7 +958,7 @@ function renderDaily(){
   var bc=function(v,k){if(v==null)return '<td class="ph">·</td>';var s=BROTH.spec[k],ok=v>=s[0]&&v<=s[1];return '<td class="c-'+(ok?'g':'r')+'">'+v.toFixed(1)+'</td>'};
   var brow=function(dt){var b=BROTH.d[dt]||[null,null],st=BST[brothSt(dt)];return '<tr><td><b>'+dayName(dt)+'</b> '+dm(dt)+'</td>'+bc(b[0],'tk')+bc(b[1],'tp')+'<td><span class="pill '+st[0]+'">'+st[1]+'</span></td></tr>'};
   var bsec=function(t){return '<tr class="sechd"><td colspan="4">'+t+'</td></tr>'};
-  $('#brothTable').innerHTML='<thead><tr><th>Day</th><th>Tonkotsu · spec 6.0 to 7.0</th><th>Tori Paitan · spec 4.0 to 5.0</th><th>Day</th></tr></thead><tbody>'+bsec((isCur()?'Latest cash-up day':'Last day of the week'))+brow(anchor)+bsec('Previous 7 days · '+(B.brn?B.br+' / '+B.brn+' in spec':'n/a'))+prv.map(brow).join('')+'</tbody>';
+  $('#brothTable').innerHTML='<thead><tr><th>Day</th><th>Tonkotsu · spec 6.0 to 7.0</th><th>Tori Paitan · spec 4.0 to 5.0</th><th>Day</th></tr></thead><tbody>'+bsec((isCur()?'Latest cash-up day':'Last day of the week'))+brow(anchor)+bsec('Previous 7 days · '+(B.brn?B.br+' / '+B.brn+' in spec':'n/a'))+prv.slice().reverse().map(brow).join('')+'</tbody>';
   var dv=(BROTH.dev||[]).filter(function(x){return x[0]>=prv[0]&&x[0]<=anchor});
   $('#brothFoot').textContent='Source: '+BROTH.src+', '+dmy(BROTH.from)+' to '+dmy(BROTH.to)+'. A missed check counts as a fail.'+(dv.length?' Mapal deviations in these 8 days: '+dv.map(function(x){return dm(x[0])+' '+(x[1]==='pork'?'tonkotsu':'tori paitan')+' '+x[2]+' ('+x[3]+')'}).join(', ')+'.':'');
 }

@@ -88,6 +88,12 @@ for t in AS.get('tasks',[]):
     a={'id':'as'+t['gid'],'gid':t['gid'],'ag':1,'t':t['t'],'o':t.get('o') or 'Unassigned','d':t.get('d'),'src':'Asana','wc':t.get('cr')}
     if t['c']:a['s']='closed';a['ca']=t.get('ca')
     ACTS.append(a)
+# Clean start 06/10/2026 (Michael, 08/10): no action or compliance history from before sources.cutoff shows on the page
+CUT=(SJ.get('sources') or {}).get('cutoff') or '0000'
+ACTS=[a for a in ACTS if (a.get('wc') or a.get('d') or '9999')>=CUT]
+MCOMP=JD('mcomp.json',{'w':[],'chain':[],'to':None,'src':'Mapal compliance not pulled yet'})
+CUTW=(datetime.date.fromisoformat(CUT)-datetime.timedelta(datetime.date.fromisoformat(CUT).weekday())).isoformat() if CUT!='0000' else '0000'
+MCOMP['w']=[w for w in MCOMP.get('w',[]) if str(w[0])>=CUTW];MCOMP['chain']=[c for c in MCOMP.get('chain',[]) if str(c[0])>=CUTW]
 SITE['asana']={'hook':(SJ['sources'].get('asana') or {}).get('webapp'),'on':bool(AS)}
 MT=JD('maint.json',{'pulled':None,'open':[],'done':[],'recap':{'items':[]},'n':{}});PPM=JD('ppm.json',{'asof':None,'items':[]})
 dly=J('daily.json');cov=J('covers.json');dlv=J('delivery.json') if SC.get('delivery',True)!=False else {'d':{}};
@@ -116,7 +122,7 @@ C=lambda o:json.dumps(o,ensure_ascii=False,separators=(',',':'))
 T={'__TODAY__':TODAY.isoformat(),'__WK__':json.dumps(WK,separators=(',',':')),'__STAND__':R('stand.json'),'__EALL__':R('effall.json'),
    '__EFF__':R('eff.json').replace(' \u2014 ',', ').replace('\u2014',', '),'__LOY__':R('loyalty.json'),'__COV__':R('covers.json'),'__DEL__':C(dlv),'__DROO__':C(DD),
    '__ACTS__':C(ACTS),'__COMP__':C(J('compliance.json')),'__TEAM__':C(J('team.json')),'__GAPS__':C(J('gaps.json')),'__DAILY__':R('daily.json'),
-   '__KL__':C(J('keyline.json')),'__BROTH__':R('broth.json'),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__MCOMP__':C(JD('mcomp.json',{'w':[],'chain':[],'to':None,'src':'Mapal compliance not pulled yet'})),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE),'__MAINT__':C(MT).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__PPM__':C(PPM)}
+   '__KL__':C(J('keyline.json')),'__BROTH__':R('broth.json'),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__MCOMP__':C(MCOMP),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE),'__MAINT__':C(MT).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__PPM__':C(PPM)}
 s=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src.html')).read()
 ND=lambda v:v.replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')  # feed text (reviews, notes, actions) never brings a dash in
 for k,v in T.items():s=s.replace(k,ND(v))
