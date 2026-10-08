@@ -54,8 +54,8 @@ jobs:
           def say(m): print(m, file=sys.stderr)
           if os.environ['FORCE'] == 'true':
               say('Manual force run'); print('go=1'); raise SystemExit
-          if now.hour < 10:
-              say(f'{now:%H:%M} UK, before 10:00, skipping'); print('go=0'); raise SystemExit
+          # 08/10/2026: no 10:00 floor any more. Reviews (06:00 pull) and Deliveroo land early; the cash-up is the only
+          # late feed, so the room builds the moment the daily tab ships D (workflow_run), whatever the clock says.
           latest = str(json.load(open('data/daily/daily_index.json')).get('latest', ''))
           m = re.search(r'area-room-built: (\S+) daily:(\S+)', open('area_room.html', encoding='utf-8').read(400)) if os.path.exists('area_room.html') else None
           built, carries = (m.group(1), m.group(2)) if m else ('', '')

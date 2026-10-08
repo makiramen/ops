@@ -7,6 +7,11 @@ on:
     # and only once per window: later starts skip once a build exists since the window opened.
     - cron: '7,22,37,52 4-11 * * *'
   workflow_dispatch: {}
+  # 08/10/2026: chained to the daily tab. Reviews and Deliveroo land early, the cash-up is the only late feed, so when
+  # the daily tab ships D every page rebuilds together: AM CC (the daily tab itself), then the Area Room and the Site CC.
+  workflow_run:
+    workflows: ['Daily tab (cash-up + reviews + Reviews Intelligence + Deliveroo daily ops)']
+    types: [completed]
 
 concurrency:
   group: site-cc-nightly
@@ -26,6 +31,25 @@ jobs:
         id: guard
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "Manual run"; echo "go=1" >> $GITHUB_OUTPUT; exit 0; fi
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            # Woken by a daily tab finish: build only if the daily tab now carries yesterday (D) and was generated after our last build.
+            python3 - <<'PY' >> $GITHUB_OUTPUT
+          import json, glob, datetime as d
+          from zoneinfo import ZoneInfo
+          D = (d.datetime.now(ZoneInfo('Europe/London')).date() - d.timedelta(days=1)).isoformat()
+          try: ix = json.load(open('data/daily/daily_index.json'))
+          except Exception: ix = {}
+          gen = str(ix.get('_generated_at', ''))[:16]
+          b = ''
+          for f in glob.glob('site/*/build_log.json'):
+              try: b = max(b, json.load(open(f))['built'][:16])
+              except Exception: pass
+          go = str(ix.get('latest', '')) >= D and gen > b
+          print(f'daily tab latest {ix.get("latest")} generated {gen}, Site CC last built {b or "never"}: ' + ('building' if go else 'nothing new, skipping'))
+          print('go=' + ('1' if go else '0'))
+          PY
+            exit 0
+          fi
           H=$(TZ=Europe/London date +%H)
           case "$H" in 05|06|07) WS=05;; 09|10|11) WS=09;; *) echo "UK hour $H, outside the build windows, skipping"; echo "go=0" >> $GITHUB_OUTPUT; exit 0;; esac
           START=$(TZ=Europe/London date -d "today ${WS}:00" +%s)
