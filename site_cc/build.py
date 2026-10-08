@@ -21,7 +21,7 @@ TN=[k for k,v in TIERS.items() if CODE in v]
 SITE={'code':CODE,'name':SC['name'],'label':SC.get('label') or CODE,'cluster':SC.get('cluster',''),'am':SC.get('am',''),'dam':SC.get('dam',''),
       'tier':TN[0] if TN else None,'tiers':TIERS,'dec':(SJ.get('clusters') or {}).get(SC.get('cluster'),{}).get('dec',''),'sph':SC.get('sph',22),'gm':None,'tierSites':TIERS[TN[0]] if TN else [],'compTab':SC.get('compliance_tab'),
       'has':{'delivery':SC.get('delivery',True)!=False,'loyalty':bool(SC.get('loyalty_venue')),'mapal':bool(SC.get('mapal_location')),'broth':bool(SC.get('broth_label')),'comp':bool(SC.get('compliance_tab'))},
-      'sites':[[c,v.get('label') or c,v['name']] for c,v in SJ['sites'].items() if v.get('live')]}
+      'sites':[]}   # 08/10/2026 (Michael): no site switcher on the page, a site sees only itself
 
 # Weekly KPI rows and Deliveroo weekly (pull_amcc.py writes weekly.json)
 W=J('weekly.json');main=W['main'];droo=W['droo']
@@ -71,7 +71,7 @@ def kobas(s):
     return d if d<=TODAY else d.replace(year=d.year-1)
 MP=JD('mapal.json',{'f':[],'to':None,'src':'Mapal forms not pulled yet'})
 RI=JD('revintel.json',{'r':[],'tax':{},'praise':{},'ann':{},'built':None,'to':None,'src':'Reviews Intelligence not pulled yet'})
-SITE['gm']=RI.get('gm')
+SITE['gm']=SC.get('gm') or RI.get('gm')   # sites.json gm wins (Michael 08/10: M7 GM is Rory Ferguson)
 ACTS=JD('actions.json',[])+JD('amcc_actions.json',[])
 # Asana sync (pull_asana.py writes asana.json): link each action to its task, Completed in Asana = Completed here, tasks made in Asana show too
 AS=JD('asana.json',{});AT={t['gid']:t for t in AS.get('tasks',[])};AMAP=AS.get('map',{})

@@ -261,13 +261,11 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
     <span class="bchip">v1.0 · Site</span>
     <div class="ctl">
       <span class="clab">Site</span>
-      <select class="sel" id="siteSel" aria-label="Site"></select>
+      <span class="sel" id="siteName" style="cursor:default"></span>
       <span class="clab">Period</span>
       <div class="seg" role="group" aria-label="Period"><button type="button" data-per="week" aria-pressed="true">Week</button><button type="button" data-per="month" aria-pressed="false">Month</button></div>
       <select class="sel" id="weekSel" aria-label="Week"></select>
       <select class="sel" id="monthSel" aria-label="Month" hidden></select>
-      <span class="clab">View as</span>
-      <div class="seg" role="group" aria-label="View as"><button type="button" data-role="GM" aria-pressed="true">GM</button><button type="button" data-role="AM" aria-pressed="false">AM</button></div>
     </div>
   </div>
 </header>
@@ -629,7 +627,7 @@ var COMP=__COMP__,TEAM=__TEAM__,GAPS0=__GAPS__,MAINT=__MAINT__,PPM=__PPM__;
 var TODAY='__TODAY__';
 var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
-['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});if(!Array.isArray(S.signlog))S.signlog=[];
+['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
 var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
@@ -1516,8 +1514,7 @@ $('#siteH1').innerHTML=esc(SITE.label)+' <span>·</span> '+esc(SITE.name);
 document.title=SITE.label+' '+SITE.name+' · Site Control Centre';
 $('#siteMeta').innerHTML='GM '+(SITE.gm&&!/vacant/i.test(SITE.gm)?esc(SITE.gm):'<b style="color:var(--red-ink)">'+(SITE.gm?'vacant':'not on file')+'</b>')+' · AM '+esc(SITE.am)+(SITE.dam?' · DAM '+esc(SITE.dam):'')+(SITE.dec?' · DEC '+esc(SITE.dec):'')+' · '+esc(SITE.cluster);
 $$('.decName').forEach(function(e){e.textContent=SITE.dec||'DEC'});
-$('#siteSel').innerHTML=(SITE.sites||[]).map(function(x){return '<option value="'+x[0]+'"'+(x[0]===SCODE?' selected':'')+'>'+esc(x[1]+' · '+x[2])+'</option>'}).join('')+'<option value="__all">All sites…</option>';
-$('#siteSel').addEventListener('change',function(e){var v=e.target.value;location.href=v==='__all'?'../':'../'+v+'/'});
+$('#siteName').textContent=SITE.label+' · '+SITE.name;   /* 08/10/2026 (Michael): no site switcher, a site sees only itself */
 /* reviews tab and audit report: own listener, runs before the main one */
 document.addEventListener('click',function(e){
   if(e.target.closest('[data-repx]')||e.target.id==='repOvl'){repClose();e.stopImmediatePropagation();return}
