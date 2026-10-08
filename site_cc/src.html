@@ -1282,7 +1282,7 @@ function renderMaint(mj){var M=MAINT||{},O=M.open||[],D=M.done||[],n=nowIso(),N=
 /* PPM schedule (certificates and contractor checks): next due per check, from the PPM contractors file */
 function ppmRows(){var n=nowIso();return PPM.items.map(function(it){var due=it[2],m=it[3],r,st;
   if(!due){r='r';st='No date'}else{var k=dd(n,due);if(k<0){r='r';st='Overdue '+(-k)+'d'}else if(k<=42){r='a';st='Due in '+k+'d'}else{r='g';st='In date'}}
-  return {lab:esc(it[0]),who:it[1],last:null,m:m,note:(m?'every '+m+' months':'')+(it[4]?(m?' · ':'')+it[4]:''),r:r,st:st,due:due}})}
+  return {lab:esc(it[0])+(it[6]?' <a href="'+esc(it[6])+'" target="_blank" rel="noopener" class="small">Open in Mapal</a>':''),who:it[1],last:it[5]||null,m:m,note:(m?'every '+m+' months':'')+(it[4]?(m?' · ':'')+it[4]:''),r:r,st:st,due:due}})}
 /* Mapal task compliance: Mapal Weekly Compliance Tracker (on time %, open deviations, flag), weekly */
 var MCOMP=__MCOMP__;
 function mcompRag(x){return !x?'n':x[3]==='RED'?'r':x[3]==='WATCH'?'a':'g'}
@@ -1302,7 +1302,7 @@ function renderComp2(){var hasP=PPM.items&&PPM.items.length,rows=hasP?ppmRows():
   $('#compTL').innerHTML=$('#ovCompTL').innerHTML=TL(o,red.length?red.length+' red':amb.length?amb.length+' due soon':'All in date');
   var order={r:0,a:1,n:2,g:3};rows.sort(function(a,b){return order[a.r]-order[b.r]||(a.due||'9').localeCompare(b.due||'9')});
   $('#compTable').innerHTML='<thead><tr><th>Check</th><th>Contractor</th><th class="r">Last done</th><th class="r">Next due</th><th>Status</th></tr></thead><tbody>'+rows.map(function(x){return '<tr><td class="mname">'+x.lab+(x.note?'<small>'+esc(x.note)+'</small>':'')+'</td><td class="small">'+esc(x.who)+'</td><td class="r small">'+(x.last==='on site'?'On site':x.last?dmy(x.last):NA)+'</td><td class="r small">'+(x.due?dmy(x.due):NA)+'</td><td>'+TL(x.r,x.st)+'</td></tr>'}).join('')+'</tbody>';
-  $('#compFoot').textContent=hasP?ok+' of '+rows.length+' in date. Amber means due within 6 weeks. Source: '+PPM.src+', as of '+dmy(PPM.asof)+'. Next due dates as the PPM schedule has them: book the contractor before the date and update the schedule after the visit.':ok+' of '+rows.length+' in date. Amber means due within 6 weeks. Source: '+COMP.src+', pulled '+dmy(COMP.pulled)+'. No record means the tracker cell is blank: upload the certificate and the date. Contractor names are as the tracker has them; to be checked against current contracts.';
+  $('#compFoot').textContent=hasP?ok+' of '+rows.length+' in date. Amber means due within 6 weeks. Source: '+PPM.src+', as of '+dmy(PPM.asof)+'. Last done and next due come from the Mapal log where the site has one, otherwise as the PPM schedule has them: book the contractor before the date and complete the Mapal form after the visit.':ok+' of '+rows.length+' in date. Amber means due within 6 weeks. Source: '+COMP.src+', pulled '+dmy(COMP.pulled)+'. No record means the tracker cell is blank: upload the certificate and the date. Contractor names are as the tracker has them; to be checked against current contracts.';
   var soon=red.concat(amb).slice(0,4);
   $('#ovComp').innerHTML='<div class="big" style="font-size:22px">'+red.length+' red · '+amb.length+' due soon</div>'+red.concat(amb).map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:6px;margin-top:6px"><div><b>'+x.lab+'</b><div class="small">'+esc(x.who)+' · '+(x.due?'due '+dmy(x.due):'no date on file')+'</div></div>'+TL(x.r,x.st)+'</div>'}).join('');
 }
