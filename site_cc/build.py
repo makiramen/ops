@@ -75,6 +75,9 @@ SITE['gm']=RI.get('gm')
 ACTS=JD('actions.json',[])+JD('amcc_actions.json',[])
 # Asana sync (pull_asana.py writes asana.json): link each action to its task, Completed in Asana = Completed here, tasks made in Asana show too
 AS=JD('asana.json',{});AT={t['gid']:t for t in AS.get('tasks',[])};AMAP=AS.get('map',{})
+ANAMES={k.lower():v for k,v in ((SJ['sources'].get('asana') or {}).get('names') or {}).items()}
+for t in AS.get('tasks',[]):
+    if t.get('o') and t['o'].lower() in ANAMES:t['o']=ANAMES[t['o'].lower()]  # email shown as a name
 for a in ACTS:
     g=AMAP.get(str(a['id']))
     if g and g in AT:

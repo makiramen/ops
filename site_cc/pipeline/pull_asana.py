@@ -35,11 +35,16 @@ acts = ld('actions.json', []) + ld('amcc_actions.json', [])
 ST = ld('asana.json', {})
 MAP = ST.get('map') or {}          # page action id (as str) -> Asana task gid
 FROM = CFG.get('from', '2026-09-28')
+NAMES_MAP = {k.lower(): v for k, v in (CFG.get('names') or {}).items()}  # Asana users whose display name is their email
+def who(t):
+    u = t.get('assignee') or {}
+    n, e = (u.get('name') or '').strip(), (u.get('email') or '').strip().lower()
+    return NAMES_MAP.get(e) or NAMES_MAP.get(n.lower()) or n or None
 
 def section():
     out, off = [], None
     while True:
-        q = {'section': SEC, 'limit': 100, 'opt_fields': 'name,completed,completed_at,due_on,assignee.name,created_at,parent'}
+        q = {'section': SEC, 'limit': 100, 'opt_fields': 'name,completed,completed_at,due_on,assignee.name,assignee.email,created_at,parent'}
         if off: q['offset'] = off
         r = call('GET', '/tasks', q=q)
         out += [t for t in r['data'] if not t.get('parent')]
@@ -65,7 +70,7 @@ for a in acts:
 # 2. read the whole section back
 tasks = section()
 T = [{'gid': t['gid'], 't': t['name'], 'c': 1 if t['completed'] else 0, 'ca': (t.get('completed_at') or '')[:10] or None,
-      'd': t.get('due_on'), 'o': (t.get('assignee') or {}).get('name'), 'cr': (t.get('created_at') or '')[:10]} for t in tasks]
+      'd': t.get('due_on'), 'o': who(t), 'cr': (t.get('created_at') or '')[:10]} for t in tasks]
 out = {'site': A.site, 'section': SEC, 'project': CFG['project'], 'pulled': datetime.date.today().isoformat(), 'map': MAP, 'tasks': T}
 print(f'{A.site}: created {made}, section has {len(T)} tasks ({sum(t["c"] for t in T)} completed)')
 if not A.check:
