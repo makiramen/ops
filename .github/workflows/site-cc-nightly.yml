@@ -40,18 +40,22 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_run" ] || [ "$CHAINED" = "true" ]; then
             # Woken by a daily tab finish: build only if the daily tab now carries yesterday (D) and was generated after our last build.
             python3 - <<'PY' >> $GITHUB_OUTPUT
-          import json, glob, datetime as d
+          import json, glob, sys, datetime as d
           from zoneinfo import ZoneInfo
           D = (d.datetime.now(ZoneInfo('Europe/London')).date() - d.timedelta(days=1)).isoformat()
-          try: ix = json.load(open('data/daily/daily_index.json'))
-          except Exception: ix = {}
+          def J(p):
+              try: return json.load(open(p))
+              except Exception: return {}
+          ix = J('data/daily/daily_index.json'); latest = str(ix.get('latest', ''))
           gen = str(ix.get('_generated_at', ''))[:16]
+          rl = str(J('data/daily/daily_reviews_index.json').get('latest', ''))
+          if rl: gen = max(gen, str(J(f'data/daily/daily_reviews_{rl}.json').get('_generated_at', ''))[:16])
           b = ''
           for f in glob.glob('site/*/build_log.json'):
-              try: b = max(b, json.load(open(f))['built'][:16])
+              try: b = max(b, J(f)['built'][:16])
               except Exception: pass
-          go = str(ix.get('latest', '')) >= D and gen > b
-          print(f'daily tab latest {ix.get("latest")} generated {gen}, Site CC last built {b or "never"}: ' + ('building' if go else 'nothing new, skipping'))
+          go = latest >= D and gen > b
+          print(f'daily tab carries {latest} (reviews {rl or "none"}) generated {gen}, Site CC last built {b or "never"}: ' + ('building' if go else 'nothing new, skipping'), file=sys.stderr)
           print('go=' + ('1' if go else '0'))
           PY
             exit 0
