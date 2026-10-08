@@ -269,13 +269,11 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
     <span class="bchip">v1.0 · Site</span>
     <div class="ctl">
       <span class="clab">Site</span>
-      <select class="sel" id="siteSel" aria-label="Site"></select>
+      <span class="sel" id="siteName" style="cursor:default"></span>
       <span class="clab">Period</span>
       <div class="seg" role="group" aria-label="Period"><button type="button" data-per="week" aria-pressed="true">Week</button><button type="button" data-per="month" aria-pressed="false">Month</button></div>
       <select class="sel" id="weekSel" aria-label="Week"></select>
       <select class="sel" id="monthSel" aria-label="Month" hidden></select>
-      <span class="clab">View as</span>
-      <div class="seg" role="group" aria-label="View as"><button type="button" data-role="GM" aria-pressed="true">GM</button><button type="button" data-role="AM" aria-pressed="false">AM</button></div>
     </div>
   </div>
 </header>
@@ -626,7 +624,7 @@ var LOY={"src":"RAMEN_ROYALTY (AUTO), DAILY VISITS and DAILY METRICS tabs, servi
 function loyWeek(wc){var b=new Date(wc+'T00:00:00Z').getTime(),o={b:0,m:0,s:0,n:0,days:0};for(var i=0;i<7;i++){var k=new Date(b+i*864e5).toISOString().slice(0,10);if(k<LOY.launch||k>LOY.to)continue;o.days++;var r=LOYD[k];if(r){o.n++;o.b+=r[0];o.m+=r[1];o.s+=r[2]}}return o.days?o:null}
 WK.forEach(function(w){var l=loyWeek(w.wc);w.loyB=l?l.b:null;w.loyM=l?l.m:null;w.loyS=l?l.s:null;w.loyDays=l?l.days:0;w.loyShare=l&&w.covers?l.b/w.covers*100:null});
 var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8},peer:{n:'Leeds (M10)',roas:4.57,spend:447.23}};
-var SITE={"code":"M14","name":"Meadowhall","label":"Maki 14","cluster":"North England & Midlands","am":"Inka Cheung","dam":"Amy Tang","tier":"Chūmori 中盛り","tiers":{"Kobachi 小鉢":["M1","M6","IKI2"],"Chūmori 中盛り":["M3","M7","M12","M10","M11","M14","M17"],"Ōmori 大盛り":["M8","M13","M15","M9","M16","M18"]},"dec":"Artur Mroczkowski","sph":22,"gm":"(vacant)","tierSites":["M3","M7","M12","M10","M11","M14","M17"],"compTab":"M14","has":{"delivery":true,"loyalty":true,"mapal":true,"broth":true,"comp":true},"sites":[["M7","Maki 7","St James Quarter"],["M14","Maki 14","Meadowhall"]],"asana":{"hook":"https://script.google.com/macros/s/AKfycbx-hFjHkT3MATPGV0J65gjOl0VKv4xRukLvoJ-atyLNrwNXx3dDhrPilUFhuwDGiIqmig/exec","on":true}},SCODE=SITE.code;
+var SITE={"code":"M14","name":"Meadowhall","label":"Maki 14","cluster":"North England & Midlands","am":"Inka Cheung","dam":"Amy Tang","tier":"Chūmori 中盛り","tiers":{"Kobachi 小鉢":["M1","M6","IKI2"],"Chūmori 中盛り":["M3","M7","M12","M10","M11","M14","M17"],"Ōmori 大盛り":["M8","M13","M15","M9","M16","M18"]},"dec":"Artur Mroczkowski","sph":22,"gm":"(vacant)","tierSites":["M3","M7","M12","M10","M11","M14","M17"],"compTab":"M14","has":{"delivery":true,"loyalty":true,"mapal":true,"broth":true,"comp":true},"sites":[],"asana":{"hook":"https://script.google.com/macros/s/AKfycbx-hFjHkT3MATPGV0J65gjOl0VKv4xRukLvoJ-atyLNrwNXx3dDhrPilUFhuwDGiIqmig/exec","on":true}},SCODE=SITE.code;
 /* Sites with no delivery (sites.json delivery:false, e.g. M7 SJQ): no delivery sales, Deliveroo rating, prep or Deliveroo tab. */
 var NODEL=SITE.has.delivery===false;
 var CUR=WK.length?WK[WK.length-1].wc:'2026-10-08';
@@ -637,7 +635,7 @@ var COMP={"src":"NE/Midland Site Compliance Tracker, tab M14","url":"https://doc
 var TODAY='2026-10-08';
 var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
-['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});if(!Array.isArray(S.signlog))S.signlog=[];
+['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
 var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
@@ -1524,8 +1522,7 @@ $('#siteH1').innerHTML=esc(SITE.label)+' <span>·</span> '+esc(SITE.name);
 document.title=SITE.label+' '+SITE.name+' · Site Control Centre';
 $('#siteMeta').innerHTML='GM '+(SITE.gm&&!/vacant/i.test(SITE.gm)?esc(SITE.gm):'<b style="color:var(--red-ink)">'+(SITE.gm?'vacant':'not on file')+'</b>')+' · AM '+esc(SITE.am)+(SITE.dam?' · DAM '+esc(SITE.dam):'')+(SITE.dec?' · DEC '+esc(SITE.dec):'')+' · '+esc(SITE.cluster);
 $$('.decName').forEach(function(e){e.textContent=SITE.dec||'DEC'});
-$('#siteSel').innerHTML=(SITE.sites||[]).map(function(x){return '<option value="'+x[0]+'"'+(x[0]===SCODE?' selected':'')+'>'+esc(x[1]+' · '+x[2])+'</option>'}).join('')+'<option value="__all">All sites…</option>';
-$('#siteSel').addEventListener('change',function(e){var v=e.target.value;location.href=v==='__all'?'../':'../'+v+'/'});
+$('#siteName').textContent=SITE.label+' · '+SITE.name;   /* 08/10/2026 (Michael): no site switcher, a site sees only itself */
 /* reviews tab and audit report: own listener, runs before the main one */
 document.addEventListener('click',function(e){
   if(e.target.closest('[data-repx]')||e.target.id==='repOvl'){repClose();e.stopImmediatePropagation();return}
