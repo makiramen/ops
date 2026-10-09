@@ -1,0 +1,4079 @@
+#!/usr/bin/env python3
+"""
+bake_ops_command.py  -- Pipe 9 (Ops Command daily snapshot)
+Bakes one data/ops_command/snapshot_<pull_date>.json per day for the Ops Command
+dashboard (command/index.html + the desktop artifact), and prepends the date to
+snapshot_index.json. Structured JSON replaces the markdown-pipe-table SNAPSHOT
+string the artifact used to carry between SNAPSHOT-START/END markers.
+SOURCE
+  Neon Postgres warehouse (system of record for all ETL feeds), table
+  etl_feed_rows(feed, pull_date, row_num, data jsonb, loaded_at).
+  Connection : WAREHOUSE_DSN env var (the same secret the ETL workflows use).
+  This pipe reads the warehouse DIRECTLY -- the "Ops Command KPIs" Google Sheet
+  is a serving layer for chat sessions, not a source, and reading it back as
+  text was two lossy hops for data that started structured (13/08/2026).
+TRAPS, WITH DATES (house rule: write them down where the next person will look)
+  * DEEP vs DAILY FEED NAMESPACES (13/08/2026). The 03:00 deep pull and the
+    08:15 daily export both wrote feed 'Flow Modules' with the same pull_date,
+    and pg_loader replaces per (feed, pull_date) -- so the export's ~456-row
+    module CATALOGUE clobbered the ~4,700-row per-trainee pull every morning.
+    Fixed by namespacing: per-trainee data is 'Deep Flow Modules' etc. This pipe
+    PROBES for the Deep feed and falls back to the un-prefixed one, and always
+    records which it used in the block's `source_feed`.
+  * Flow Trainees.branch holds a branch ID, not a name (13/08/2026). Join
+    through Flow Branches id -> name or every site reads "121711".
+  * module_status is COMPOSITE, comma-joined: 'In Progress, Overdue',
+    'Not Yet Started, Overdue' (13/08/2026). Overdue is a flag on top of a
+    state -- match as a substring; = 'Overdue' silently finds nothing. Never
+    render Overdue as a stack segment beside the states: it double-counts.
+  * Flow Certificates exposes NO expiry field (only certificate_url,
+    module_name, trainee_id) (13/08/2026). Emitted as a `gaps` entry every run
+    so the blind spot stays visible until the source improves.
+  * SUPPLIER ATTRIBUTION (13/08/2026, resolved same day). The Delivery/
+    Supplier Issue Form HAS a 'Supplier?' task (free-text 'Supplier Name').
+    'GC Form Task Answers' first LANDED in the warehouse with run #35 on
+    13/08/2026 (earlier probes found it absent - that was timing: the pg
+    dual-write was only added 12/08 and the sheet tab's idempotent skip
+    bypassed it). Each pull covers a rolling ~7-day window, so this pipe
+    dedupes by FormId/AnswerID ACROSS pull_dates - history accumulates from
+    13/08/2026 onward. First real data: Lynas 14 answered issues in 7 days
+    while form-TITLE attribution showed Lynas 0. Titles lie; answers don't.
+  * EVENT DATES vs PULL DATES (13/08/2026). Date-range filtering must slice
+    on the event's own date - AnsweredDateTime for form answers/issues,
+    module_completed_date for training - never on pull_date. pull_date is
+    when the ETL ran, not when the thing happened.
+  * module_completed_date is UK-format 'DD/MM/YYYY HH:MM' (13/08/2026);
+    AnsweredDateTime is ISO. Both parsed defensively, bad values skipped.
+  * "Sosltice" is a live typo in a GetCompliant form title (13/08/2026). Both
+    spellings map to supplier Solstice here; fix at source when possible.
+  * GC Forms Overview LocationGroupName/Id are entirely null (13/08/2026), so
+    form completion cannot be split by site -- only by form and folder.
+  * The legacy Feed Status ('ok'/'failed'/'empty') reflects the SHEETS write,
+    not the data: the warehouse sheet hit Google's 10M-cell ceiling on
+    12/08/2026 and healthy feeds were stamped 'empty'. Feed health here is
+    measured against Postgres row counts, which is the point of this pipe.
+  * SQL uses position(x in y), never LIKE -- no literal '%' in query strings,
+    so psycopg parameter substitution can't be tripped (13/08/2026).
+HOUSE RULES HONOURED
+  nulls + a named entry in `gaps`, never silent zeros; every derived signal
+  carries a `basis` string; independent data families are independent blocks;
+  the site map lives in this builder, not the shell; history is append-only
+  (dated files, index prepended, nothing rewritten).
+USAGE
+  WAREHOUSE_DSN=postgres://... python3 builders/bake_ops_command.py [--date YYYY-MM-DD]
+  Writes data/ops_command/snapshot_<date>.json and updates snapshot_index.json.
+  Exit 0 on success, 1 on any failure (nothing partially written).
+"""
+from __future__ import annotations
+import argparse, collections, datetime, hashlib, json, os, re, sys
+# psycopg2 is imported lazily in main(): with OPS_WAREHOUSE_SOURCE=archive the
+# bake needs no Postgres driver at all, and requiring one would defeat the point.
+# OPS_OUT_DIR lets a test bake into a temp directory (16/09/2026). Without it
+# tests/price_spike_attribution_test.py would write its synthetic snapshot over
+# a real one and prepend a made-up date to snapshot_index.json - a fixture that
+# can corrupt the history it is meant to protect is worse than no fixture.
+OUT_DIR = (os.environ.get("OPS_OUT_DIR")
+           or os.path.join(os.path.dirname(__file__), "..", "data", "ops_command"))
+# Site map lives in the builder (house rule) -- classification, not presentation.
+# type: restaurant | factory | entity (non-trading legal vehicles on the roster)
+SITE_TYPES = {
+    "AA Factory1 Limited": "factory",
+    "Maki Property Ltd": "entity",
+    "M1TOO Ltd": "entity",
+    "South Ikigai Ltd": "entity",
+    "Renfield Good Food Ltd": "restaurant",
+    "Fountain Good Food Ltd": "restaurant",
+}
+# Ross, 18 Aug 2026: the Show filter groups sites by AM REGION (replacing the
+# site-type split). Mapping follows the AM Manual's three clusters (Scotland &
+# Newcastle / North England & Midlands / South England), confirmed by Ross --
+# deliberately organisational, not geographic: Newcastle+METRO sit under
+# Scotland, Renfield (Glasgow) under North England, Birmingham under South
+# England, because that is who manages them. Best-fit for the three sites the
+# manual doesn't cover (also Ross-confirmed): O2 Arena -> south (London,
+# host-region AM), AA Factory1 + Maki Property -> scotland. Any site missing
+# from this map gets a named gap and shows under All only -- never guessed.
+SITE_REGIONS = {
+    "M1TOO Ltd": "scotland",              # M1 WR
+    "Fountain Good Food Ltd": "scotland", # M3 Fountainbridge
+    "South Ikigai Ltd": "scotland",       # M5 Iki 2
+    "Maki Bath St": "scotland",           # M6
+    "Maki SJQ Ltd": "scotland",           # M7
+    "Maki Newcastle Ltd": "scotland",     # M12 -- Scotland & Newcastle cluster
+    "Maki Aberdeen Ltd": "scotland",      # M13
+    "Maki METRO": "scotland",             # M15 -- Scotland & Newcastle cluster
+    "AA Factory1 Limited": "scotland",    # best-fit (factory)
+    "Maki Property Ltd": "scotland",      # best-fit (entity)
+    "Renfield Good Food Ltd": "north",    # M8 -- North England & Midlands cluster
+    "Maki Manchester LTD": "north",       # M9
+    "Maki Leeds Ltd": "north",            # M10
+    "Maki Leicester Ltd": "north",        # M11
+    "Maki Meadowhall": "north",           # M14
+    "Maki Nottingham Ltd": "north",       # M16
+    "Maki Lakeside": "south",             # M17
+    "Maki Soho": "south",                 # M18
+    "Maki Shoreditch": "south",           # M19
+    "Maki Southampton": "south",          # M20
+    "Maki Birmingham Ltd": "south",       # M21 -- South England cluster
+    "Maki Nori": "south",
+    "Maki O2 Arena": "south",             # best-fit (franchise MAF3, London)
+    # Ross, 09/09/2026: Braehead was the one site in the estate with no region,
+    # so it fell out of every regional view and into the named-gap list. It is a
+    # FRANCHISE, like Maki O2 Arena, which is why the AM Manual's three clusters
+    # do not name it - so it takes the same best-fit rule this map already uses
+    # for O2: the host region's AM. Braehead is in Glasgow, hence scotland.
+    # Note this is host-region, NOT geography: this map deliberately puts
+    # Renfield (Glasgow) under north and Newcastle under scotland, because
+    # region here means who manages a site, never where it is.
+    "Maki Braehead": "scotland",          # best-fit (franchise, Glasgow - host-region AM)
+}
+SUPPLIER_MATCH = [("Lynas","Lynas"),("Solstice","Solstice"),("Solstice","Sosltice"),
+                  ("TWF","TWF"),("M&R","M&R")]
+# Canonical supplier names + the needles that identify them (18/08/2026, for
+# the Supplier Issues tab). Two jobs, one map:
+#   1. Canonicalise the free-text 'Supplier?' ANSWER ('Jfc' / 'Breaks' /
+#      'Blue Ocean' / 'LYNAS FOODSERVICE' all -> one canonical name), so the
+#      supplier table doesn't split one supplier across spelling variants.
+#   2. TEXT-MATCH attribution (Ross's direction, 18/08): when the form has no
+#      usable 'Supplier?' answer, scan ALL the form's answers for a known
+#      supplier name and bucket the issue there. Merged silently with answered
+#      attribution in the UI, but every issue row carries an 'attribution'
+#      field ('answered'|'text'|None) so the evidence trail stays auditable.
+# Needles shorter than 4 chars only match as whole words (JFC inside a word
+# would be noise). Needles in ANSWER_ONLY_NEEDLES are trusted only when they
+# arrive as the answer to 'Supplier?' -- e.g. the common misspelling 'Breaks'
+# means Brakes as an answer, but 'breaks' inside free text usually doesn't.
+SUPPLIERS = [
+    ("Lynas",         ["lynas"]),
+    ("Harro",         ["harro"]),
+    ("Brakes",        ["brakes","breaks"]),
+    ("JFC",           ["jfc"]),
+    ("JFE",           ["jfe"]),
+    ("Blue Ocean",    ["blue ocean"]),
+    ("Solstice",      ["solstice","sosltice"]),
+    ("TWF",           ["twf","true world"]),
+    ("Perfect Ted",   ["perfect ted"]),
+    ("LWC",           ["lwc"]),
+    ("Hodgson Fish",  ["hodgson"]),
+    ("Dunster Farm",  ["dunster"]),
+    ("FreshFV",       ["freshfv","fresh fv"]),
+    ("Global Fruits", ["global fruit"]),
+    ("Boba Box",      ["boba box"]),
+    ("PCY",           ["pcy"]),
+    ("AA Factory",    ["aa factory"]),
+    # Added 26/08/2026 from the live Kobas supplier list (34 distinct names in
+    # the Ops Deliveries report). Unmapped names are NOT dropped - they keep
+    # supplier_canon=null and render under their verbatim Kobas name - but
+    # mapping them here is what lets an emailed order and a filed issue meet
+    # on the same row of the OTIF table. Deliberately NOT mapped: 'J&S' and
+    # 'LTH'. Both are short enough to fire inside unrelated free text during
+    # the text-attribution scan, and a wrong attribution is worse than none.
+    ("Wellocks",      ["wellock"]),
+    ("John Vallance", ["vallance"]),
+    ("Dunns",         ["dunns"]),
+    ("Campbells",     ["campbell"]),
+    ("Tazaki",        ["tazaki"]),
+    ("Shield Foods",  ["shield food"]),
+    ("Kirkstall Brewery", ["kirkstall"]),
+    ("ETeaket",       ["eteaket"]),
+    ("Eddies Seafood", ["eddies seafood"]),
+    ("Daata Meats",   ["daata"]),
+    ("Rahmans",       ["rahman"]),
+    ("F&J Food",      ["f&j food"]),
+    ("Wismetta",      ["wismetta"]),
+    ("Logistics RHQ", ["logistics - rhq"]),
+]
+ANSWER_ONLY_NEEDLES = {"breaks"}
+# Answers that mean "no supplier named", never a supplier called N/A:
+NONE_ANSWERS = {"n/a","na","none","-","nil","other supplier","other","unknown","?","tbc","x"}
+def canon_supplier(text, from_answer=False):
+    """Canonical supplier name for a string, or None. from_answer=True treats
+    the string as the form's 'Supplier?' answer (none-tokens -> None, and the
+    answer-only needles are allowed); otherwise it's a free-text scan."""
+    if not text: return None
+    t = text.strip().lower()
+    if from_answer and t in NONE_ANSWERS: return None
+    for name, needles in SUPPLIERS:
+        for nd in needles:
+            if not from_answer and nd in ANSWER_ONLY_NEEDLES: continue
+            if len(nd) < 4:
+                if re.search(r"(?<![a-z0-9])"+re.escape(nd)+r"(?![a-z0-9])", t): return name
+            elif nd in t:
+                return name
+    return None
+# Cross-reference join key (14/08/2026): site names differ across systems -
+# GC LocationNameLabel vs Kobas 'Venue Placed' vs 'Site' are spelled
+# differently for the same physical site ('Maki SJQ Ltd' vs 'Maki SJQ',
+# 'Maki METRO' vs 'Maki Metro'). Hand-built from the live distinct-value
+# lists, same house rule as SITE_TYPES: the site map lives in the builder,
+# not inferred by fuzzy matching in the shell. key -> (GC name, Kobas name,
+# display label). Sites seen on only one side are deliberately left out
+# (see the standing gap emitted in main()) rather than guessed.
+SITE_ALIASES = {
+    "aa_factory1":   ("AA Factory1 Limited",   "AA Factory1 Limited",        "AA Factory1"),
+    "aberdeen":      ("Maki Aberdeen Ltd",     "Maki Aberdeen",              "Maki Aberdeen"),
+    "bath_st":       ("Maki Bath St",          "Maki Bath Street",           "Maki Bath Street"),
+    "birmingham":    ("Maki Birmingham Ltd",   "Maki Birmingham",            "Maki Birmingham"),
+    "lakeside":      ("Maki Lakeside",         "Maki Lakeside",              "Maki Lakeside"),
+    "leeds":         ("Maki Leeds Ltd",        "Maki Leeds",                 "Maki Leeds"),
+    "leicester":     ("Maki Leicester Ltd",    "Maki Leicester",             "Maki Leicester"),
+    "metro":         ("Maki METRO",            "Maki Metro",                 "Maki Metro"),
+    "manchester":    ("Maki Manchester LTD",   "Maki Manchester",            "Maki Manchester"),
+    "newcastle":     ("Maki Newcastle Ltd",    "Maki Newcastle",             "Maki Newcastle"),
+    "nori":          ("Maki Nori",             "Maki NORI",                  "Maki Nori"),
+    "nottingham":    ("Maki Nottingham Ltd",   "Maki Nottingham",            "Maki Nottingham"),
+    "sjq":           ("Maki SJQ Ltd",          "Maki SJQ",                   "Maki SJQ"),
+    "shoreditch":    ("Maki Shoreditch",       "Maki Shoreditch",            "Maki Shoreditch"),
+    "soho":          ("Maki Soho",             "Maki SOHO",                  "Maki Soho"),
+    "southampton":   ("Maki Southampton",      "Maki Southampton",           "Maki Southampton"),
+    "o2_arena":      ("Maki O2 Arena",         "Maki O2 Arena",              "Maki O2 Arena"),
+    "renfield":      ("Renfield Good Food Ltd","Maki Renfield",              "Maki Renfield"),
+    "south_ikigai":  ("South Ikigai Ltd",      "Ikigai Ramen South Bridge",  "South Ikigai"),
+    # Ross, 09/09/2026: four pairs added, none of them guessed. Flow Branches
+    # carries `trainee_feed_identifier` beside `name` - Flow's own record of
+    # which Kobas venue a GetCompliant location IS. It reproduces all nineteen
+    # hand-built pairs above, 19 for 19, and is stable across all 25 archived
+    # pulls, which is what makes it evidence rather than a coincidence.
+    #
+    # It proves IDENTITY, never the literal string: it writes 'Maki METRO' where
+    # Kobas writes 'Maki Metro', and slugs some ('Maki-yorkshire-LTD'). So every
+    # Kobas value below is the exact string as it appears in the Kobas feeds
+    # themselves, counted in the archive, not copied from Flow.
+    "fountainbridge":("Fountain Good Food Ltd", "Maki Fountainbridge",        "Maki Fountainbridge"),
+    "m1too":         ("M1TOO Ltd",              "Maki 1/2 (Nicolson St)",     "Maki 1/2 Nicolson St"),
+    "meadowhall":    ("Maki Meadowhall",        "Maki Yorkshire",             "Maki Meadowhall"),
+    "braehead":      ("Maki Braehead",          "Maki Braehead",              "Maki Braehead"),
+}
+# STILL UNMATCHED, AND DELIBERATELY SO - this is the honest remainder, not an
+# oversight, and it is shorter than it was:
+#   Kobas-side with no GetCompliant location and no Flow branch in ANY pull:
+#     'Maki Leith', 'Maki Manchester NQ', 'Maki West End'. Giving these keys
+#     would put site names on the Cross-Reference tab that can never carry a
+#     broth check or a compliance form, which is worse than leaving them out.
+#   'OLD: Maki Bath Street' and 'OLD: Maki Renfield' are superseded Kobas
+#     venues; their live counterparts are already mapped.
+#   'Maki Property Ltd' is Head Office and 'Maki EH1 Ltd' has no Kobas venue at
+#     all - neither takes deliveries, so neither can be cross-referenced.
+# GC-side sites with no confirmed Kobas match (as of 14/08/2026): Fountain
+# Good Food Ltd, M1TOO Ltd, Maki Meadowhall, Maki Property Ltd. Kobas-side
+# sites with no GC broth-check match: Maki 1/2 (Nicolson St), Maki
+# Fountainbridge, Maki Leith, Maki Manchester NQ, Maki West End, Maki
+# Yorkshire, and the two 'OLD: ...' rows. These are excluded from
+# cross-referencing, not guessed at - see the gaps entry.
+# Issue-nature keyword heuristic (14/08/2026): the only feed with a REAL
+# category taxonomy is the 10-row Gmail 'Supplier Issues' feed. Everything
+# from GetCompliant delivery/supplier forms is free text in the 'Issue?'
+# task answer, so this buckets by keyword - labelled a heuristic everywhere
+# it surfaces, never presented as ground truth.
+ISSUE_KEYWORDS = [
+    ("shortage", ["missing", "lack of", "short delivery", "shortage", "didn't receive",
+                  "not received", "did not receive"]),
+    ("damage_quality", ["damage", "damaged", "bad quality", "mould", "mold",
+                        "black dots", "rotten", "spoiled", "off ", "quality"]),
+    ("wrong_item", ["wrong", "substitut", "incorrect item", "wrong order"]),
+    ("temperature", ["temperature", "frozen", "thawed", "warm delivery", "cold chain"]),
+    ("invoice_credit", ["invoice", "credit", "overcharge", "charged"]),
+]
+def classify_issue(text):
+    if not text: return None
+    t = text.strip().lower()
+    if t in ("n/a", "na", "none", "-", "nil"): return "no_issue_recorded"
+    for cat, kws in ISSUE_KEYWORDS:
+        for kw in kws:
+            if kw in t: return cat
+    return "other"
+# Ross, 18 Aug 2026: the Training tab's analyst view counts ONLY mandatory
+# compliance training. Confirmed set (safety & food core + region-specific
+# licensing + internal mandatory), matched on trim(module_name) against the
+# exact names observed live in Deep Flow Modules. Licensing region-fit is
+# handled naturally by assignment: a Scottish site has no 'Licensing England
+# & Wales' assignments, so its cell renders as no-data, never a penalty.
+# HR/people modules (Sexual Harassment, Data Privacy, D&I, Disability
+# Awareness, Anti-Modern Slavery) are deliberately NOT in this list.
+#
+# Ross, 03/09/2026: 'Mapal Run through' and 'Mapal Run through Management'
+# come OUT. They are training in how to use Mapal itself, not a safety, food
+# or licensing obligation - the only kind this view is meant to count. Their
+# rows are still pulled and still appear under "All modules"; what changes is
+# that nobody is counted non-compliant for them. Two of the eleven heatmap
+# columns go with them.
+MANDATORY_MODULES = [
+    "COSHH: Working With Hazardous Substances - UK",
+    "First Aid Awareness",
+    "Health and Safety Level 2",
+    "Food Safety Level 2",
+    "Food Allergens",
+    "Fire Safety Awareness",
+    "Licensing Scotland",
+    "Licensing England & Wales",
+    "MRSOS Training Module",
+]
+# Ross, 09/09/2026: THIS LIST WAS A SECOND, DISAGREEING DECLARATION OF WHICH
+# FEEDS ARE EXPECTED, and the disagreement was on the Overview every day. It
+# named 13 feeds; feeds_manifest.json - which the verifier has always treated
+# as the authority - names 32 as `expected` and separately marks 10 as
+# `known_broken`. Two of the 13 here, GC Deviations and GC Waste Registered,
+# have been known_broken in the manifest since 28/08 with the note "fetch fails
+# daily", and the bake went on emitting verdict=MISSING for them anyway, which
+# turned into a standing red signal: "2 expected feeds absent". A permanent red
+# for two feeds somebody already triaged is not a signal, it is furniture, and
+# it sat directly above the ones that mattered.
+#
+# The manifest is now the single source. A feed the manifest calls known_broken
+# or best_effort can never be MISSING here; only `expected` can.
+#
+# Checked before switching, against the 10/09 archive: all 32 manifest-expected
+# feeds have rows, so this removes two false MISSING rows and adds none. The
+# fallback list is kept for the case where the manifest cannot be read at all -
+# losing the manifest should not silently mean "nothing is expected".
+EXPECTED_FEEDS_FALLBACK = [
+    "Flow Trainees","Flow Branches","Flow Modules","Flow Certificates",
+    "Deep Flow Modules","Deep Flow Certificates",
+    "GC Forms Overview","GC Central Module Tasks","GC Locations",
+    "Kobas Orders",
+    "Factory Broth Readings",
+]
+def expected_feeds():
+    """Feed names the manifest marks `expected`; the fallback if it is unreadable."""
+    try:
+        with open(os.path.join(OUT_DIR, "feeds_manifest.json")) as fh_:
+            return [f["name"] for f in json.load(fh_)["feeds"]
+                    if f.get("status") == "expected"]
+    except Exception as e:
+        print(f"[bake] feeds_manifest.json unreadable ({e}) - "
+              f"falling back to the built-in expected list")
+        return list(EXPECTED_FEEDS_FALLBACK)
+def supplier_of(form):
+    for sup, needle in SUPPLIER_MATCH:
+        if needle.lower() in (form or "").lower(): return sup
+    return "Unattributed"
+# Ross, 27/08/2026, verbatim: "Tonkotsu should be between 8 and 9 after ice ...
+# for chicken broth it should be between 5 and 6". The first real after-ice
+# SPEC this system has ever had - every string in the factory block used to say
+# no target band existed, because until now none did. Bounds are INCLUSIVE:
+# 8.0 and 9.0 both pass.
+#
+# A product with no entry here is NOT graded and NOT flagged - it gets a named
+# gap instead. Inventing a band for it would be exactly the fabrication the
+# rest of this block refuses: 'Ikigai Chicken Broth' appears in the form and
+# Ross did not give it a range, so it stays ungraded until he does.
+FACTORY_BROTH_BANDS = {
+    "Tonkotsu Broth": (8.0, 9.0),
+    "Chicken Broth":  (5.0, 6.0),
+}
+#: The day the band above was agreed. The factory broth score is a data card and
+#: grades the whole feed against it, which is right for a card. The Quality KR is
+#: a JUDGEMENT on the same readings, and a reading taken before the spec existed
+#: was taken by a factory that had not been told the target - so the KR's basis
+#: counts those readings and says so, rather than quietly scoring thirteen months
+#: against a band that is three weeks old. Move this only if Ross re-dates the spec.
+FB_BAND_SET = "2026-08-27"
+#: How many months of the broth KR the scorecard's month picker offers. Each
+#: month carries its own basis (~1.5KB), and the feed gains a month forever, so
+#: this is a bound on the snapshot rather than a judgement about the data: two
+#: years is more than anyone compares a KR across, and the readings themselves
+#: stay whole on the Quality tab regardless.
+FB_MONTHS_MAX = 24
+def fb_grade(product, score):
+    """'in' | 'low' | 'high' for a graded product, None when it has no band."""
+    band = FACTORY_BROTH_BANDS.get(product or "")
+    if band is None or score is None:
+        return None
+    lo, hi = band
+    return "low" if score < lo else "high" if score > hi else "in"
+
+
+# ---- THE OKR SCORECARD: the bands, and the thirty KRs they score -----------
+# Ross, 21/09/2026. The Overview is scored against Matthew's "2026 Operations
+# Input" sheet now - six objectives, thirty KRs - not the Master Operating
+# Manual. The rules this obeys are in the comment block above the scorecard
+# section; RULE 2 CHANGED on that date and this table is the change.
+#
+# EVERY BAND IS WRITTEN DOWN HERE AND NOWHERE ELSE. A threshold that is not in
+# this table does not exist: the shell colours nothing and decides nothing, and
+# no row invents a tolerance of its own. Adding a band means adding it here, in
+# front of Ross, which is the whole point of having a table.
+#
+# THE SHAPE IS DELIBERATELY DULL. Each band is (direction, [(threshold, score)])
+# evaluated in order, 0 if nothing matches. 'ge' means the value must be >= the
+# threshold, 'le' that it must be <=. Somebody checking whether 93.5 scores 50
+# or 0 should be able to do it by eye - and the sheet's own formulas are the
+# cautionary tale. Its OO2 KR4 efficiency formula is NON-MONOTONIC: written as
+# nested IFs with a gap nobody spotted, it scores 93.5 as 0 while scoring a
+# WORSE 93.0 as 50. A sorted threshold list cannot have a gap. Do not port the
+# sheet's formulas; they are the thing this replaces.
+OKR_BANDS = {
+    # >=95% targets. OO2 KR1 (PPM), OO3 KR4 (OTIF), OO4 KR3 (tracked), OO4 KR5.
+    "pct95":       ("ge", [(95, 100), (90, 80), (85, 50)]),
+    # OO2 KR2, repeat maintenance issues: the value is the PERCENTAGE CHANGE
+    # against the baseline, so -20 is a 20% reduction and lower is better.
+    "repeat":      ("le", [(-20, 100), (-10, 80), (0, 50)]),
+    # Count-to-zero KRs. OO2 KR3 (closures), OO4 KR1 (logistics disruptions).
+    "zero":        ("le", [(0, 100), (1, 80), (3, 50)]),
+    # OO3 KR3 (menu items unavailable) is the strict one: the sheet gives it no
+    # 80 band at all, so one failure drops straight to 50.
+    "zero_strict": ("le", [(0, 100), (1, 50)]),
+    # 100% targets. OO2 KR4 (statutory), OO4 KR4 (credit notes).
+    "full":        ("ge", [(100, 100), (99, 80), (98, 50)]),
+    "contact":     ("ge", [(100, 100), (95, 80), (90, 50)]),   # OO2 KR5
+    "issues":      ("le", [(10, 100), (20, 80), (40, 50)]),    # OO3 KR1, Ross 21/09
+    "spikes":      ("le", [(3, 100), (4, 80), (5, 50)]),       # OO3 KR2
+    # OO3 KR5: the value is the DAY OF THE MONTH the statement was generated on.
+    "audit":       ("le", [(3, 100), (10, 50)]),
+    "damaged":     ("le", [(5, 100), (7, 80), (10, 50)]),      # OO4 KR2
+    # OO5 KR1/KR2. NOTE THE INPUT: not the mean, but how far the monthly mean
+    # falls OUTSIDE its product's band (0 when it is inside). Keeping the table
+    # uniform costs one line at the call site and buys a band you can read.
+    "density":     ("le", [(0, 100), (0.5, 80), (1.0, 50)]),
+    # OO5 KR3: the value is the ABSOLUTE variance, so sign is dropped first.
+    "stock":       ("le", [(5, 100), (7.5, 80), (10, 50)]),
+    "comp":        ("ge", [(95, 100), (94, 80), (92.5, 50)]),  # OO5 KR4
+    "prod":        ("ge", [(98, 100), (97, 80), (95, 50)]),    # OO5 KR5
+}
+
+#: Which bands Ross has actually agreed, and which are still PROPOSED. A
+#: proposed band scores exactly like an agreed one - the difference is that the
+#: row says so, on the page, until Matthew confirms it. Rule 3 still holds
+#: above all of this: no target, no score.
+OKR_BAND_STATUS = {
+    "pct95": "agreed", "zero": "agreed", "zero_strict": "agreed",
+    "full": "agreed", "contact": "agreed", "issues": "agreed",
+    "spikes": "agreed", "comp": "agreed", "prod": "agreed",
+    "repeat": "proposed", "audit": "proposed", "damaged": "proposed",
+    "density": "proposed", "stock": "proposed",
+}
+
+#: A KR with no source yet names the PHASE that will give it one. Rule 4 has
+#: not changed - a grey row states its blocker - but the blocker is now also a
+#: schedule, so the grey rows read as the build's remaining work rather than as
+#: something nobody noticed.
+OKR_PENDING = {
+    ("OO1", "KR1"): "Finance-entered on the Operations Input sheet; read in Phase 5 as a score only",
+    ("OO1", "KR2"): "Finance-entered on the Operations Input sheet; read in Phase 5 as a score only",
+    ("OO1", "KR3"): "Finance-entered on the Operations Input sheet; read in Phase 5 as a score only",
+    ("OO1", "KR4"): "Finance-entered on the Operations Input sheet; read in Phase 5 as a score only",
+    ("OO1", "KR5"): "Finance-entered on the Operations Input sheet; read in Phase 5 as a score only",
+    ("OO4", "KR1"): "the 'KR1: Zero service disruptions...' log tab on the Operations Input sheet; read in Phase 2",
+    ("OO4", "KR2"): "factory-attributed damage on broth and sauce lines in the GetCompliant issue forms; Phase 2. Step 0 found ZERO such forms in the covered window - the factory has never been named as a supplier on one - so expect this to stay grey until the Supplier? picker in GetCompliant offers the factory",
+    ("OO4", "KR3"): "internal orders marked received in Kobas; Phase 2. Step 0 found internal orders CAN be isolated (factory as sending venue) but carry no received status at all, so this may stay grey",
+    ("OO4", "KR4"): "Finance-entered on the Operations Input sheet; read in Phase 2",
+    ("OO4", "KR5"): "the unweighted mean of per-supplier issue-free rates; Phase 2, from the same data as OO3 KR4",
+    ("OO5", "KR4"): "factory scheduled-task on-time from GetCompliant; Phase 3",
+    ("OO5", "KR5"): "production orders to the factory, from the JFC PO emails and the site-orders table; Phase 3",
+    ("OO6", "KR1"): "no agreed measure. Ross signs one off after Step 0 before anything is built",
+    ("OO6", "KR2"): "no agreed measure, and no dated demand event exists in any feed to build one from",
+    ("OO6", "KR3"): "no agreed measure. Step 0 found no site has ever stock-counted a frozen-ramen SKU",
+    ("OO6", "KR4"): "no agreed measure, and no par-level field for frozen ramen exists in any feed",
+    ("OO6", "KR5"): "no agreed measure, and no feed carries a product dimension on an invoice",
+}
+
+#: RAG follows the SCORE, never the other way round, and never in the shell.
+#: This is the only place the mapping exists.
+OKR_RAG = {100: "green", 80: "amber", 50: "amber", 0: "red"}
+
+
+def okr_score(band, value):
+    """The 100/80/50/0 score for `value` under `band`, or None.
+
+    None in, None out - rule 3. A KR with no value is not a KR that scored
+    zero, and the distinction is the difference between "nobody measured this"
+    and "this failed", which are the two things a scorecard must never confuse.
+    """
+    if value is None or band is None:
+        return None
+    spec = OKR_BANDS.get(band)
+    if spec is None:
+        return None
+    direction, table = spec
+    for threshold, score in table:
+        if (value >= threshold) if direction == "ge" else (value <= threshold):
+            return score
+    return 0
+
+
+def okr_density_outside(mean, band):
+    """How far a monthly mean falls outside its band; 0 when inside.
+
+    Feeds the `density` band. Bounds are INCLUSIVE, matching FACTORY_BROTH_BANDS.
+    """
+    if mean is None or not band:
+        return None
+    lo, hi = band
+    if mean < lo:
+        return round(lo - mean, 4)
+    if mean > hi:
+        return round(mean - hi, 4)
+    return 0.0
+
+
+#: The six objectives, in sheet order, with the labels the sheet gives them.
+OKR_OBJECTIVES = [
+    ("OO1", "7% Net Profit"),
+    ("OO2", "Maintenance"),
+    ("OO3", "Supply Chain"),
+    ("OO4", "Logistics"),
+    ("OO5", "Production"),
+    ("OO6", "Frozen Ramen"),
+]
+
+#: OO1 is FINANCE'S, and it is excluded from the Operations %. It is shown
+#: because Ross is measured on the same sheet, not because he owns it.
+OKR_OPERATIONS_OBJECTIVES = ("OO2", "OO3", "OO4", "OO5", "OO6")
+
+#: The thirty KRs, in sheet order. `text` is VERBATIM from the sheet, including
+#: its spacing, its misspellings and its inconsistent "KR 1:" / "KR2 :" / "KR:"
+#: prefixes. Do not tidy them: this list is the contract with Matthew's sheet,
+#: and a KR that reads differently here from there is a KR two people will
+#: disagree about in a meeting.
+#:
+#: (objective, kr, text, owner, target, band)
+#: band None means the KR carries no band - OO1, which is read from the sheet
+#: already scored, and the OO6 rows nobody has defined a measure for yet.
+OKR_SPEC = [
+    ("OO1", "KR1", "KR1: Actual W/R% (20%)", "Finance", "per sheet", None),
+    ("OO1", "KR2", "KR2: Actual FR% (35%)", "Finance", "per sheet", None),
+    ("OO1", "KR3", "KR3: Actual V/R% (13%)", "Finance", "per sheet", None),
+    ("OO1", "KR4", "KR4: Actual NP% (4-10%)", "Finance", "per sheet", None),
+    ("OO1", "KR5", "KR5: MA Completion by 7th of every month", "Finance",
+     "per sheet", None),
+
+    ("OO2", "KR1", "KR1: Complete ≥95% of planned preventative maintenance "
+     "(PPM) tasks on time", "Operations", "≥95%", "pct95"),
+    ("OO2", "KR2", "KR2: Reduce repeat maintenance issues by ≥20%",
+     "Operations", "≥-20% vs baseline", "repeat"),
+    ("OO2", "KR3", "KR3: Achieve zero unplanned restaurant closures due to "
+     "maintenance failures", "Operations", "0", "zero"),
+    ("OO2", "KR4", "KR4: Maintain 100% statutory compliance across all sites",
+     "Operations", "100%", "full"),
+    ("OO2", "KR5", "KR5: 100% Completion of Maintenance Contact Sheets - Proof "
+     "Required", "Operations", "100%", "contact"),
+
+    ("OO3", "KR1", "KR 1: Minimise delivery issues with suppliers", "Operations",
+     "≤10", "issues"),
+    ("OO3", "KR2", "KR2 : Price change spike (3 items)", "Operations",
+     "≤3", "spikes"),
+    ("OO3", "KR3", "KR3: Zero menu items unavailable due to supply failure",
+     "Operations", "0", "zero_strict"),
+    ("OO3", "KR4", "KR 4: ≥95% on-time, in-full deliveries", "Operations",
+     "≥95%", "pct95"),
+    ("OO3", "KR5", "KR5: Monthly Supplier Audit Completion", "Operations",
+     "statement by the 3rd", "audit"),
+
+    ("OO4", "KR1", "KR1: Zero service disruptions caused by logistics delays "
+     "(24 hour Max)", "Operations", "0", "zero"),
+    ("OO4", "KR2", "KR2: 5 critical SKUs damaged in transit (Broth and Sauces)",
+     "Operations", "≤5", "damaged"),
+    ("OO4", "KR3", "KR3: ≥95% of deliveries tracked end-to-end "
+     "(departure → receipt) (KOBAS)", "Operations", "≥95%", "pct95"),
+    # "KR:" not "KR4:" - the sheet's own typo, kept verbatim.
+    ("OO4", "KR4", "KR: 100% of delivery credit notes and refunds actioned "
+     "through MAPAL and Finance", "Finance", "100%", "full"),
+    ("OO4", "KR5", "KR5 95% Aggregated Supplier perfomance", "Operations",
+     "≥95%", "pct95"),
+
+    ("OO5", "KR1", "KR1: Maintain Pork broth density within 8-9", "Operations",
+     "8-9", "density"),
+    ("OO5", "KR2", "KR2: Maintain Chicken broth density within 5-6",
+     "Operations", "5-6", "density"),
+    ("OO5", "KR3", "KR3: +/-5% Variance on stocktake", "Operations",
+     "+/-5%", "stock"),
+    ("OO5", "KR4", "KR4: Aggregated Weekly Compliance Score", "Operations",
+     "≥95", "comp"),
+    ("OO5", "KR5", "KR5: ≥98% of production orders completed in full",
+     "Operations", "≥98%", "prod"),
+
+    ("OO6", "KR1", "KR1:Maintain 100% Supply Chain availibility", "Operations",
+     "100%", None),
+    ("OO6", "KR2", "KR2: 98% On time demand creation", "Operations", "98%", None),
+    ("OO6", "KR3", "KR3: Live inventory of all forzen ramen and all locations",
+     "Operations", "not set", None),
+    ("OO6", "KR4", "KR4: Updated Par Levels", "Operations", "not set", None),
+    ("OO6", "KR5", "KR5: Seperation of Invoices associated with Frozen Ramen at "
+     "Factory Level", "Operations", "not set", None),
+]
+
+#: A Brix reading this instrument can physically produce. Used ONLY to decide
+#: how to read an ambiguous cell format - never to reject a reading.
+FB_PLAUSIBLE_LO, FB_PLAUSIBLE_HI = 0.5, 30.0
+def fb_num(v):
+    """One refractometer reading as a float, or None if it is not a number.
+
+    Readings arrive as the SHEET RENDERS them, so this has to read what the
+    factory actually typed rather than what a strict float() will accept.
+    Three real cases, all confirmed against the batch's own before-ice
+    reading (28/08/2026) - every one of these was previously being mangled or
+    dropped, and Ross's instruction was to ignore no reading:
+
+      '8,7'    DECIMAL COMMA. Staff type it as often as a point. The old code
+               stripped commas as thousands separators, turning 8.7 into 87 -
+               which then read as a batch three times over spec. Four readings
+               (8,7 / 8,0 / 8,0 / 5,2) were wrong this way, and they were the
+               reason a 'suspect' rule existed at all.
+      '8.4’'   TRAILING JUNK. A stray typographic apostrophe. float() raised,
+               so the reading was dropped entirely and counted as non-numeric.
+      '8.60%'  PERCENT-FORMATTED CELL. The cell really does hold 0.086 - the
+               person typed 8.6 into a cell someone had formatted as a
+               percentage. Dividing by 100 is right about the cell and wrong
+               about the batch, so where /100 lands outside anything a
+               refractometer can read AND the face value is plausible, the
+               face value wins. '900.00%' still reads as 9 (900/100), which
+               is what the sheet's derived tabs contain.
+
+    Anything genuinely non-numeric is still None, counted, and never guessed
+    at. A comma is only a decimal point when it is followed by one or two
+    digits and nothing else - '1,234' stays 1234.
+    """
+    s = (v or "").strip()
+    if not s:
+        return None
+    pct = s.endswith("%")
+    if pct:
+        s = s[:-1].strip()
+    if re.fullmatch(r"-?\d+,\d{1,2}", s):
+        s = s.replace(",", ".")
+    else:
+        s = s.replace(",", "")
+    m = re.match(r"-?\d*\.?\d+", s)
+    if not m:
+        return None
+    n = float(m.group(0))
+    if not pct:
+        return n
+    scaled = n / 100
+    if FB_PLAUSIBLE_LO <= scaled <= FB_PLAUSIBLE_HI:
+        return scaled
+    if FB_PLAUSIBLE_LO <= n <= FB_PLAUSIBLE_HI:
+        return n
+    return scaled
+FB_MAX_LAG_DAYS = 7
+def fb_parse_date(val):
+    """A UK-format DD/MM/YYYY leading date, or None if it is not one."""
+    try:
+        d = datetime.datetime.strptime((val or "").strip()[:10], "%d/%m/%Y").date()
+    except ValueError:
+        return None
+    return d if 2000 <= d.year <= 2100 else None
+def fb_date(form_date, ts):
+    """(iso_date, dated_from_timestamp) for one refractometer response.
+
+    The form's own 'Date' field is the right field to PREFER: a batch made late
+    one night is often submitted the next morning, and the operator dates it to
+    the production day rather than the submission day.
+
+    But it is hand-typed next to an automatic Timestamp, so it is trusted only
+    when it PARSES and is PLAUSIBLE - and those are two different tests:
+      * doesn't parse: '03/08/0025' for 03/08/2025.
+      * parses and is wrong: batch 080925B is dated 08/09/2024 and was
+        submitted 08/09/2025. Exactly a year out, perfectly well-formed, and
+        contradicted by the batch number itself, which reads 08/09/25.
+    A production date AFTER its own submission is impossible, and one more than
+    FB_MAX_LAG_DAYS before it is a slip rather than a late entry: 3 readings of
+    1,461 in the first full pull were 14, 30 and 365 days out, and every one of
+    them was contradicted by its own batch number. Left alone, the 365-day one
+    stretched the dashboard's whole date range back a year on its own.
+
+    Either failure falls back to the Timestamp's date and is counted, so the
+    row says where its date came from. A reading neither field can date is
+    returned undated and disclosed, never dated by guess.
+    """
+    d_form, d_ts = fb_parse_date(form_date), fb_parse_date(ts)
+    if d_form is not None:
+        if d_ts is None:
+            return d_form.isoformat(), False          # nothing to check it against
+        if 0 <= (d_ts - d_form).days <= FB_MAX_LAG_DAYS:
+            return d_form.isoformat(), False
+    if d_ts is not None:
+        return d_ts.isoformat(), True
+    return None, False
+def _mon(d):
+    """Monday of the ISO week containing YYYY-MM-DD.
+
+    Module level since 16/09/2026: the KR2 spike trend buckets by report week
+    inside the price block, which runs well before the scorecard where this
+    used to live. Two copies of a week-start rule is how two trends end up
+    disagreeing about which week a Sunday belongs to.
+    """
+    dt=datetime.date.fromisoformat(d[:10])
+    return (dt-datetime.timedelta(days=dt.weekday())).isoformat()
+
+
+def has_feed(cur, feed):
+    """Has this feed EVER landed. Deliberately not a freshness test.
+
+    Retention keeps 14 pulls and a feed that never lands again never
+    accumulates more, so it is never trimmed - this stays True forever once a
+    feed has landed even once. Fine for "does this column exist"; wrong for
+    "may I quote a number from it". Use feed_fresh_within() for anything a
+    reader would take as current.
+    """
+    cur.execute("SELECT 1 FROM etl_feed_rows WHERE feed=%s LIMIT 1", (feed,))
+    return cur.fetchone() is not None
+
+
+def feed_fresh_within(cur, feed, days, today=None):
+    """True when the feed's newest pull is within `days` of `today`.
+
+    The guard has_feed cannot be. On 03/09/2026 the weekly outstanding-orders
+    report had not been produced since 18/08 - Kobas stopped sending it - yet
+    has_feed stayed True off retained pulls, so the honest "unavailable"
+    branch was unreachable and the fallback would have published a confident
+    "0 orders / GBP 0.00" for a week that actually held GBP 153k.
+    """
+    cur.execute("SELECT max(pull_date) FROM etl_feed_rows WHERE feed=%s",
+                (feed,))
+    row = cur.fetchone()
+    lp = row[0] if row else None
+    if lp is None:
+        return False
+    if not isinstance(lp, datetime.date):
+        lp = fb_parse_date(str(lp))
+        if lp is None:
+            return False
+    ref = fb_parse_date(today) if isinstance(today, str) else today
+    ref = ref or datetime.date.today()
+    return (ref - lp).days <= days
+L = "(SELECT max(pull_date) FROM etl_feed_rows WHERE feed=%s)"
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--date", default=None, help="pull date to stamp (default: max pull_date in warehouse)")
+    a = ap.parse_args()
+    # Phase 2 of the Neon exit. OPS_WAREHOUSE_SOURCE=archive reads the committed
+    # pull archive through DuckDB instead of Postgres; every query below is
+    # unchanged either way. Default is still Postgres, so this is inert until
+    # something sets it - which is what makes the two runnable back to back and
+    # diffable. See builders/archive_source.py.
+    if os.environ.get("OPS_WAREHOUSE_SOURCE") == "archive":
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        import archive_source
+        # One directory, or several joined by os.pathsep in precedence order -
+        # normally "warehouse_direct:warehouse_archive", because neither covers
+        # the whole span on its own. archive_source resolves the overlap per
+        # (pull_date, feed) rather than concatenating.
+        adir = os.environ.get("OPS_ARCHIVE_DIR") or sys.exit(
+            "OPS_ARCHIVE_DIR not set (warehouse_direct and/or warehouse_archive, "
+            f"joined by {os.pathsep!r}, highest precedence first)")
+        conn = archive_source.connect(
+            adir, manifest=os.path.join(OUT_DIR, "feeds_manifest.json"))
+        # The snapshot is published on a public Pages site and read by scheduled
+        # reports that quote its provenance line. It named Neon regardless of
+        # where the rows came from, which is a lie the moment this branch runs.
+        # Basenames, not the paths: this line is published on a public site and
+        # quoted in reports, and OPS_ARCHIVE_DIR is an absolute runner path.
+        src_label = ("committed pull archive (%s) via bake_ops_command.py "
+                     "(Pipe 9); feed health measured against the archive, "
+                     "not the Sheets write"
+                     % ", ".join(os.path.basename(d.rstrip("/")) or d
+                                 for d in archive_source.archive_dirs(adir)))
+    else:
+        try:
+            import psycopg2
+        except ImportError:
+            sys.exit("psycopg2 is required: pip install psycopg2-binary")
+        dsn = os.environ.get("WAREHOUSE_DSN") or sys.exit("WAREHOUSE_DSN not set")
+        conn = psycopg2.connect(dsn)
+        src_label = ("Neon Postgres warehouse via bake_ops_command.py (Pipe 9); "
+                     "feed health measured against Postgres, not the Sheets write")
+    cur = conn.cursor()
+    gaps, snap = [], {}
+    cur.execute("SELECT max(pull_date)::text FROM etl_feed_rows")
+    pull = a.date or (cur.fetchone() or [None])[0] or datetime.date.today().isoformat()
+    # ---- feed health (Postgres truth) ----
+    cur.execute(
+        "SELECT feed, max(pull_date)::text, "
+        " count(*) FILTER (WHERE pull_date=(SELECT max(p2.pull_date) FROM etl_feed_rows p2 WHERE p2.feed=e.feed)), "
+        " (current_date - max(pull_date)) FROM etl_feed_rows e GROUP BY feed")
+    fh, seen = [], set()
+    for feed, latest, n, age in cur.fetchall():
+        seen.add(feed); age = int(age or 0)
+        verdict = "OK" if (n and age<=1) else "WATCH" if (n and age<=3) else "STALE" if n else "EMPTY"
+        fh.append({"feed":feed,"latest_pull":latest,"rows":n,"age_days":age,"verdict":verdict})
+    for feed in expected_feeds():
+        if feed not in seen:
+            fh.append({"feed":feed,"latest_pull":None,"rows":0,"age_days":None,"verdict":"MISSING"})
+    order={"MISSING":0,"STALE":1,"EMPTY":2,"WATCH":3,"OK":4}
+    fh.sort(key=lambda r:(order.get(r["verdict"],9),r["feed"]))
+    snap["feed_health"]=fh
+    # ---- training by site (Deep feed preferred; branch id -> name join) ----
+    deep, base = "Deep Flow Modules", "Flow Modules"
+    feed = deep if has_feed(cur, deep) else base
+    cur.execute("SELECT count(*) FROM etl_feed_rows WHERE feed=%s AND pull_date="+L+
+                " AND nullif(data->>'trainee_id','') IS NOT NULL", (feed, feed))
+    linked = (cur.fetchone() or [0])[0] or 0
+    training=[]
+    if linked:
+        cur.execute(
+          "WITH m AS (SELECT data->>'trainee_id' tid, coalesce(data->>'module_status','') st "
+          "  FROM etl_feed_rows WHERE feed=%s AND pull_date="+L+
+          "  AND nullif(data->>'trainee_id','') IS NOT NULL), "
+          "t AS (SELECT data->>'id' id, nullif(data->>'branch','') bid FROM etl_feed_rows "
+          "  WHERE feed='Flow Trainees' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Trainees')), "
+          "b AS (SELECT data->>'id' id, nullif(data->>'name','') name FROM etl_feed_rows "
+          "  WHERE feed='Flow Branches' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Branches')) "
+          "SELECT coalesce(b.name,'Branch '||t.bid,'(no branch)'), count(DISTINCT m.tid), count(*), "
+          " count(*) FILTER (WHERE m.st='Complete'), "
+          " count(*) FILTER (WHERE position('Overdue' in m.st)>0), "
+          " count(*) FILTER (WHERE position('Not Yet Started' in m.st)>0) "
+          "FROM m JOIN t ON t.id=m.tid LEFT JOIN b ON b.id=t.bid GROUP BY 1", (feed, feed))
+        for site, ppl, mods, comp, ovd, ns in cur.fetchall():
+            training.append({"site":site,"site_type":SITE_TYPES.get(site,"restaurant"),
+              "people":ppl,"modules":mods,"complete":comp,
+              "pct_complete":round(100.0*comp/mods,1) if mods else None,
+              "overdue":ovd,"not_started":ns})
+        training.sort(key=lambda r:(r["pct_complete"] if r["pct_complete"] is not None else 999))
+    else:
+        gaps.append(f"{feed} exposes no trainee_id, so training cannot be attributed to a site "
+                    "(resolves once the namespaced 03:00 deep pull has landed)")
+    # ---- outstanding training by person, for the per-site drill-down ----
+    # Every module row that isn't Complete (Not Yet Started / In Progress,
+    # each optionally +", Overdue"), with the person's name and due date, so
+    # clicking a site on the Training tab can show who owes what and by when.
+    # module_due_date is UK-format 'DD/MM/YYYY' (fixed length 10, checked live
+    # 18/08/2026 -- unlike module_completed_date it never carries a time and
+    # is either exactly 10 chars or absent, so no defensive length/slash check
+    # is needed here). This is a current-state snapshot like training.sites
+    # above (due dates are in the future, not an event that already
+    # happened), so it is NOT sliced by the date-range filter client-side.
+    outstanding=[]
+    if linked:
+        cur.execute(
+          "WITH m AS (SELECT data->>'trainee_id' tid, data->>'module_name' mn, "
+          "  data->>'module_status' st, nullif(data->>'module_due_date','') dd "
+          "  FROM etl_feed_rows WHERE feed=%s AND pull_date="+L+
+          "  AND nullif(data->>'trainee_id','') IS NOT NULL "
+          "  AND data->>'module_status'<>'Complete'), "
+          "t AS (SELECT data->>'id' id, nullif(data->>'forename','') fn, "
+          "  nullif(data->>'surname','') sn, nullif(data->>'branch','') bid FROM etl_feed_rows "
+          "  WHERE feed='Flow Trainees' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Trainees')), "
+          "b AS (SELECT data->>'id' id, nullif(data->>'name','') name FROM etl_feed_rows "
+          "  WHERE feed='Flow Branches' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Branches')) "
+          "SELECT coalesce(b.name,'Branch '||t.bid,'(no branch)'), "
+          " trim(coalesce(t.fn,'')||' '||coalesce(t.sn,'')), m.mn, m.st, "
+          " CASE WHEN m.dd IS NOT NULL THEN substr(m.dd,7,4)||'-'||substr(m.dd,4,2)||'-'||substr(m.dd,1,2) END "
+          "FROM m JOIN t ON t.id=m.tid LEFT JOIN b ON b.id=t.bid", (feed, feed))
+        for site, person, module, status, due in cur.fetchall():
+            outstanding.append({"site":site,"person":person or "(unnamed)","module":module,
+              "status":status,"overdue":bool(status and "Overdue" in status),"due":due,
+              "mand":(module or "").strip() in MANDATORY_MODULES})
+        # 2101 rows, and many share a site and a due date - without person and
+        # module the tie order is whatever the join happened to emit.
+        outstanding.sort(key=lambda r:(r["site"], r["due"] is None, r["due"] or "",
+                                       r["person"] or "", r["module"] or ""))
+    # Completion EVENTS by day+site, so ranges filter on when modules were
+    # actually completed, not on pull_date. module_completed_date is UK-format
+    # 'DD/MM/YYYY HH:MM' (13/08/2026); parsed defensively, bad values skipped.
+    completions=[]
+    if linked:
+        cur.execute(
+          "WITH m AS (SELECT data->>'trainee_id' tid, nullif(data->>'module_completed_date','') cd, "
+          "  trim(coalesce(data->>'module_name','')) mn "
+          "  FROM etl_feed_rows WHERE feed=%s AND pull_date="+L+
+          "  AND data->>'module_status'='Complete' "
+          "  AND nullif(data->>'module_completed_date','') IS NOT NULL), "
+          "t AS (SELECT data->>'id' id, nullif(data->>'branch','') bid FROM etl_feed_rows "
+          "  WHERE feed='Flow Trainees' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Trainees')), "
+          "b AS (SELECT data->>'id' id, nullif(data->>'name','') name FROM etl_feed_rows "
+          "  WHERE feed='Flow Branches' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Branches')), "
+          "p AS (SELECT coalesce(b.name,'Branch '||t.bid,'(no branch)') site, m.mn, "
+          "  CASE WHEN length(m.cd)>=10 AND substr(m.cd,3,1)='/' AND substr(m.cd,6,1)='/' "
+          "       THEN substr(m.cd,7,4)||'-'||substr(m.cd,4,2)||'-'||substr(m.cd,1,2) END d "
+          "  FROM m JOIN t ON t.id=m.tid LEFT JOIN b ON b.id=t.bid) "
+          "SELECT d, site, count(*), count(*) FILTER (WHERE mn=ANY(%s)) FROM p WHERE d IS NOT NULL "
+          "GROUP BY 1,2 ORDER BY 1 DESC, 2 LIMIT 4000", (feed, feed, MANDATORY_MODULES))
+        completions=[{"d":r[0],"site":r[1],"n":r[2],"nm":r[3]} for r in cur.fetchall()]
+    # ---- mandatory compliance heatmap (site x module) ----
+    # Ross, 18 Aug 2026: analyst view of MANDATORY compliance training only
+    # (see MANDATORY_MODULES above). Two grains from the same join:
+    #   cells -- per site x module {assigned, complete, overdue} for the
+    #            heatmap (a site with assigned=0 for a module simply has no
+    #            cell -- the shell renders a dash, never a penalty);
+    #   sites -- per-site rollup incl. people_overdue = DISTINCT people with
+    #            >=1 overdue mandatory module (the actionable number).
+    # Current-state snapshot like training.sites -- NOT sliced by the
+    # date-range filter client-side.
+    mandatory={}
+    if linked:
+        mand_cells=[]
+        cur.execute(
+          "WITH m AS (SELECT data->>'trainee_id' tid, trim(coalesce(data->>'module_name','')) mn, "
+          "  coalesce(data->>'module_status','') st "
+          "  FROM etl_feed_rows WHERE feed=%s AND pull_date="+L+
+          "  AND nullif(data->>'trainee_id','') IS NOT NULL "
+          "  AND trim(coalesce(data->>'module_name','')) = ANY(%s)), "
+          "t AS (SELECT data->>'id' id, nullif(data->>'branch','') bid FROM etl_feed_rows "
+          "  WHERE feed='Flow Trainees' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Trainees')), "
+          "b AS (SELECT data->>'id' id, nullif(data->>'name','') name FROM etl_feed_rows "
+          "  WHERE feed='Flow Branches' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Branches')) "
+          "SELECT coalesce(b.name,'Branch '||t.bid,'(no branch)'), m.mn, count(*), "
+          " count(*) FILTER (WHERE m.st='Complete'), "
+          " count(*) FILTER (WHERE position('Overdue' in m.st)>0) "
+          "FROM m JOIN t ON t.id=m.tid LEFT JOIN b ON b.id=t.bid GROUP BY 1,2",
+          (feed, feed, MANDATORY_MODULES))
+        for site, mn, assigned, comp, ovd in cur.fetchall():
+            mand_cells.append({"site":site,"module":mn,"assigned":assigned,
+              "complete":comp,"overdue":ovd})
+        mand_sites=[]
+        cur.execute(
+          "WITH m AS (SELECT data->>'trainee_id' tid, "
+          "  coalesce(data->>'module_status','') st "
+          "  FROM etl_feed_rows WHERE feed=%s AND pull_date="+L+
+          "  AND nullif(data->>'trainee_id','') IS NOT NULL "
+          "  AND trim(coalesce(data->>'module_name','')) = ANY(%s)), "
+          "t AS (SELECT data->>'id' id, nullif(data->>'branch','') bid FROM etl_feed_rows "
+          "  WHERE feed='Flow Trainees' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Trainees')), "
+          "b AS (SELECT data->>'id' id, nullif(data->>'name','') name FROM etl_feed_rows "
+          "  WHERE feed='Flow Branches' AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Branches')) "
+          "SELECT coalesce(b.name,'Branch '||t.bid,'(no branch)'), count(DISTINCT m.tid), "
+          " count(*), count(*) FILTER (WHERE m.st='Complete'), "
+          " count(DISTINCT m.tid) FILTER (WHERE position('Overdue' in m.st)>0) "
+          "FROM m JOIN t ON t.id=m.tid LEFT JOIN b ON b.id=t.bid GROUP BY 1",
+          (feed, feed, MANDATORY_MODULES))
+        for site, ppl, assigned, comp, p_ovd in cur.fetchall():
+            mand_sites.append({"site":site,"site_type":SITE_TYPES.get(site,"restaurant"),
+              "people":ppl,"assigned":assigned,"complete":comp,
+              "pct":round(100.0*comp/assigned,1) if assigned else None,
+              "people_overdue":p_ovd})
+        # The heatmap is indexed by site x module in the shell, so cell order does
+        # not drive display - but an unsorted list still rewrites the committed
+        # snapshot on every bake. It was the last of the eight non-deterministic
+        # lists, and the only one that had no sort at all rather than a partial one.
+        mand_cells.sort(key=lambda r:(r["site"] or "", r["module"] or ""))
+        # ties on pct kept whatever order the GROUP BY produced
+        mand_sites.sort(key=lambda r:(r["pct"] if r["pct"] is not None else 999,
+                                      r["site"] or ""))
+        seen_mods={c["module"] for c in mand_cells}
+        mandatory={
+          "modules":[mn for mn in MANDATORY_MODULES if mn in seen_mods],
+          "cells":mand_cells,"sites":mand_sites,
+          "basis":"mandatory compliance modules only ("+", ".join(MANDATORY_MODULES)+"); "
+          "matched on trim(module_name) in Deep Flow Modules; assigned = module rows for "
+          "people at the site, complete = module_status='Complete', people_overdue = "
+          "distinct people with >=1 overdue mandatory module -- current state, not sliced "
+          "by the date range above"}
+    else:
+        gaps.append("mandatory-compliance training block skipped: no per-trainee module rows "
+                    "in this pull (resolves once the namespaced 03:00 deep pull has landed)")
+    snap["training"]={"source_feed":feed,"sites":training,"completions":completions,
+      "completions_basis":"count of modules with module_status='Complete' grouped by "
+      "module_completed_date (the completion EVENT date) and site; capped at 4000 day-site rows; "
+      "nm = the mandatory-compliance subset of n (see training.mandatory.basis)",
+      "mandatory":mandatory,
+      "outstanding":outstanding,
+      "outstanding_basis":"every module row with module_status<>'Complete' (Not Yet Started / "
+      "In Progress, each optionally +', Overdue'), joined to the trainee's name and site; "
+      "due date is module_due_date -- current state, not sliced by the date range above"}
+    # ---- site -> AM region map for the shell's Show filter ----
+    # Single source of truth lives here per house rule (like SITE_TYPES); the
+    # shell reads snap.site_regions and never hardcodes a site list. Any site
+    # seen in training that isn't mapped is named in gaps, never guessed.
+    # Gotcha found live 18/08/2026: at least one Flow branch name ('Maki O2
+    # Arena') uses NON-BREAKING spaces (U+00A0), so both this check and the
+    # shell's lookup normalise NBSP->space before matching.
+    snap["site_regions"]=SITE_REGIONS
+    def _norm_site(s): return (s or "").replace("\xa0"," ").strip()
+    unmapped=sorted({r["site"] for r in training if _norm_site(r["site"]) not in SITE_REGIONS})
+    if unmapped:
+        gaps.append("sites with no AM region in SITE_REGIONS (they appear under the "
+                    "All filter only until the builder map is updated): "+", ".join(unmapped))
+    # ---- compliance ----
+    forms=[]
+    if has_feed(cur,"GC Forms Overview"):
+        cur.execute(
+          "SELECT coalesce(nullif(data->>'FolderName',''),'(no folder)'), "
+          " coalesce(nullif(data->>'FormName',''),'(unnamed)'), "
+          " coalesce((data->>'CompletedFormsCount')::int,0), coalesce((data->>'OngoingFormsCount')::int,0), "
+          " coalesce((data->>'DeviationsCount')::int,0), coalesce((data->>'OpenDeviationsCount')::int,0), "
+          " lower(coalesce(data->>'IsArchieved','')), lower(coalesce(data->>'IsDeleted','')), "
+          " nullif(data->>'FormVersionId',''), nullif(data->>'FormId','') "
+          "FROM etl_feed_rows WHERE feed='GC Forms Overview' AND pull_date="
+          "(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='GC Forms Overview')")
+        # Ross, 09/09/2026: IsArchieved / IsDeleted / FormVersionId are in every
+        # source row and were being discarded right here, so nothing downstream
+        # could tell a live form version from a dead one. That is how the
+        # "Open deviations" tile reached 285 when the live estate is 189, and
+        # how the supplier total reached 219 when live is 123.
+        #
+        # 'IsArchieved' is spelled that way in GETCOMPLIANT'S OWN SCHEMA. It is
+        # not a typo in this file. Do NOT "correct" it to IsArchived - the key
+        # would stop matching, every row would read false, and every archived
+        # version would come silently back into the totals.
+        #
+        # FormVersionId is this feed's real key; FormId REPEATS. On the 09/09
+        # pull FormId 17460 appears on eight of the thirteen delivery/supplier
+        # rows under five different names. So a row here is a form VERSION.
+        _tf=lambda v:str(v or "").strip() in ("true","1","yes","t")
+        for folder,form,comp,ong,dev,opn,arch,dele,ver,fid in cur.fetchall():
+            tot=comp+ong
+            forms.append({"folder":folder,"form":form,"completed":comp,"ongoing":ong,
+              "pct_complete":round(100.0*comp/tot,1) if tot else None,
+              "deviations":dev,"open":opn,
+              "archived":_tf(arch),"deleted":_tf(dele),
+              "live":not (_tf(arch) or _tf(dele)),
+              "version":ver,"form_id":fid})
+        # A dead version still reporting open deviations is not a backlog, it is
+        # a GetCompliant artefact: version 34231 of the Delivery/Supplier Issue
+        # Form carries 96 open deviations while reporting zero deviations raised
+        # and zero forms completed. Name it rather than quietly dropping it -
+        # somebody will otherwise ask why the number fell.
+        _dead=[f_ for f_ in forms if not f_["live"] and f_["open"]]
+        if _dead:
+            gaps.append(
+              f"{sum(f_['open'] for f_ in _dead)} open deviations sit on "
+              f"{len(_dead)} ARCHIVED or DELETED form version(s) in GetCompliant "
+              f"(worst: '{max(_dead,key=lambda f_:f_['open'])['form']}' version "
+              f"{max(_dead,key=lambda f_:f_['open'])['version']}). They are excluded "
+              "from the open counts on this dashboard because a retired form version "
+              "cannot accrue a real backlog - one of them reports 0 deviations raised "
+              "and 0 forms completed alongside its 96 open. They are still listed on "
+              "the Compliance tab, flagged. Clearing them is a GetCompliant admin job.")
+    else: gaps.append("GC Forms Overview absent from warehouse")
+    areas=[]
+    if has_feed(cur,"GC Central Module Tasks"):
+        cur.execute(
+          "SELECT coalesce(nullif(data->>'AreaName',''),'(no area)'), count(*), "
+          " count(*) FILTER (WHERE lower(coalesce(data->>'IsDeviationOverdue','')) IN ('true','1','yes')), "
+          " count(*) FILTER (WHERE lower(coalesce(data->>'IsPaused','')) IN ('true','1','yes')), "
+          " count(DISTINCT data->>'ProcedureName') "
+          "FROM etl_feed_rows WHERE feed='GC Central Module Tasks' AND pull_date="
+          "(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='GC Central Module Tasks') "
+          "GROUP BY 1 ORDER BY 3 DESC, 2 DESC, 1")
+        areas=[{"area":r[0],"tasks":r[1],"overdue":r[2],"paused":r[3],"procedures":r[4]} for r in cur.fetchall()]
+    # Form-answer EVENTS by day (deduped by AnswerID across overlapping pulls)
+    # - lets the shell's date range slice by when forms were actually answered.
+    answers_by_day=[]
+    if has_feed(cur,"GC Form Task Answers"):
+        cur.execute(
+          "WITH a AS (SELECT DISTINCT ON (data->>'AnswerID') "
+          "   left(data->>'AnsweredDateTime',10) d, "
+          "   lower(coalesce(data->>'IsDeviation','')) dev "
+          " FROM etl_feed_rows WHERE feed='GC Form Task Answers' "
+          " ORDER BY data->>'AnswerID', pull_date DESC) "
+          "SELECT d, count(*), count(*) FILTER (WHERE dev IN ('true','1','yes')) "
+          "FROM a WHERE d IS NOT NULL GROUP BY 1 ORDER BY 1")
+        answers_by_day=[{"d":r[0],"answers":r[1],"deviations":r[2]} for r in cur.fetchall()]
+    snap["compliance"]={"forms":forms,"areas":areas,"answers_by_day":answers_by_day,
+      "answers_basis":"form task answers per AnsweredDateTime day, deduped by AnswerID "
+      "across pulls; history accumulates from 13/08/2026 (first landing of the answers feed)"}
+    # ---- suppliers (delivery/supplier issue forms; NOT a measured OTIF) ----
+    sups=[]
+    for f in forms:
+        n=f["form"]
+        if "eliver" in n or "upplier" in n:
+            sups.append({"supplier":supplier_of(n),"form":n,"completed":f["completed"],
+                         "raised":f["deviations"],"open":f["open"],
+                         "live":f["live"],"archived":f["archived"],"deleted":f["deleted"],
+                         "version":f["version"],"form_id":f["form_id"]})
+    # Ross, 09/09/2026: LIVE VERSIONS ONLY in the totals. Every retired version
+    # is still listed above in suppliers.forms with its flags, so nothing is
+    # hidden - it just stops being counted. On the 09/09 pull this is the
+    # difference between 219 and 123, and 96 of the 96 removed sit on ONE
+    # archived version that reports zero deviations raised and zero forms
+    # completed. A number nobody can defend in a supplier conversation is worse
+    # than no number, which is the whole reason KR1 replaced this as the
+    # headline; this makes what remains defensible too.
+    sups_all_versions=list(sups)   # kept for suppliers.kr1.open_note, below
+    agg={}
+    for s_ in sups:
+        if not s_["live"]: continue
+        a_=agg.setdefault(s_["supplier"],{"forms":0,"completed":0,"raised":0,"open":0})
+        a_["forms"]+=1
+        for k in ("completed","raised","open"): a_[k]+=s_[k]
+    # -- per-issue supplier attribution from the answers feed ----------------
+    # 'GC Form Task Answers' landed 13/08/2026 (run #35). Each pull covers a
+    # rolling ~7-day window, so issues are deduped by FormId ACROSS pull_dates
+    # (latest row wins) and history accumulates day by day. The issue's own
+    # event date is min(AnsweredDateTime) per form - the shell's date-range
+    # filter slices on THAT, never on pull_date.
+    issues=[]; answered=[]; ans_src=None
+    if has_feed(cur, "GC Form Task Answers"):
+        ans_src="GC Form Task Answers"
+        cur.execute(
+          "WITH a AS (SELECT DISTINCT ON (data->>'FormId', data->>'TaskID') "
+          "   data->>'FormId' fid, coalesce(data->>'FormTemplateName',data->>'FormName','') tpl, "
+          "   coalesce(data->>'TaskName','') task, nullif(data->>'Answer','') ans, "
+          "   nullif(data->>'LocationNameLabel','') site, "
+          "   left(data->>'AnsweredDateTime',10) d, "
+          "   lower(coalesce(data->>'IsOpenDeviation','')) opn "
+          " FROM etl_feed_rows WHERE feed='GC Form Task Answers' "
+          " ORDER BY data->>'FormId', data->>'TaskID', pull_date DESC) "
+          "SELECT fid, max(tpl), min(d), "
+          " max(CASE WHEN position('upplier' in task)>0 THEN ans END), "
+          " max(site), bool_or(opn IN ('true','1','yes')), "
+          " max(CASE WHEN task='Issue?' THEN ans END), "
+          " string_agg(ans,' ') "
+          "FROM a WHERE position('eliver' in tpl)>0 OR position('upplier' in tpl)>0 "
+          "GROUP BY fid ORDER BY 3 DESC, fid LIMIT 2000")
+        for fid,tpl,d,ans,site,opn,issue_text,alltext in cur.fetchall():
+            # Attribution ladder (18/08/2026, Ross's direction):
+            #   1. the form's own 'Supplier?' answer, canonicalised
+            #   2. a non-empty answer that isn't a known supplier or a
+            #      none-token is kept verbatim (title-cased) - a real answer
+            #      naming a supplier this map doesn't know yet
+            #   3. no usable answer -> text-search ALL the form's answers for
+            #      a known supplier name (attribution='text')
+            #   4. still nothing -> null, never a fake name
+            sup=None; attribution=None
+            c=canon_supplier(ans, from_answer=True)
+            if c:
+                sup,attribution=c,"answered"
+            else:
+                t=(ans or "").strip().lower()
+                if t and t not in NONE_ANSWERS:
+                    sup,attribution=ans.strip().title()[:40],"answered"
+                else:
+                    m=canon_supplier(alltext) or canon_supplier(issue_text)
+                    if m: sup,attribution=m,"text"
+            issues.append({"d":d,"supplier":sup,"attribution":attribution,
+              "site":site,"form":tpl,"open":bool(opn),
+              "issue_text":issue_text,"category":classify_issue(issue_text)})
+        agg2={}
+        for i_ in issues:
+            k=i_["supplier"] or "(no supplier answer)"
+            agg2[k]=agg2.get(k,0)+1
+        answered=[{"supplier":k,"answers":v} for k,v in
+                  sorted(agg2.items(), key=lambda kv:-kv[1])]
+    else:
+        gaps.append("'GC Form Task Answers' absent from the warehouse - per-issue "
+            "supplier attribution and answer-date filtering unavailable until the "
+            "daily export lands it")
+    snap["suppliers"]={"answered_source":ans_src,"answered":answered,"issues":issues,
+      "issues_basis":"one row per delivery/supplier issue form submission in GC Form Task "
+      "Answers, deduped by FormId across pulls; d = min(AnsweredDateTime); supplier = the "
+      "form's own 'Supplier?' answer canonicalised to a standard supplier name; when the "
+      "form names no supplier, a text search of all its answers for known supplier names "
+      "attributes it instead (attribution='text', a heuristic); null when neither finds "
+      "one, never a fake name",
+      "note":"GetCompliant delivery/supplier issue forms - the only supplier signal the "
+      "estate produces, and self-reported rather than a measured OTIF. This used to read "
+      "'the Mapal supplier feeds fail at fetch', which framed it as a credentials problem "
+      "waiting to be fixed. It was not: those feeds were Mapal Easilys, the business does "
+      "not use Easilys (Ross, 27/08/2026), and they have been removed from the pull. There "
+      "is no delivered-vs-ordered source behind them to unlock.","totals":[{"supplier":k,**v} for k,v in
+      sorted(agg.items(),key=lambda kv:(-kv[1]["open"], kv[0] or ""))],"forms":sorted(sups,key=lambda r:(-r["open"], r["form"] or ""))}
+    cat_agg={}
+    for i_ in issues:
+        c=i_.get("category") or "uncategorized"
+        cat_agg[c]=cat_agg.get(c,0)+1
+    snap["suppliers"]["issue_categories"]=[{"category":k,"n":v} for k,v in
+      sorted(cat_agg.items(),key=lambda kv:-kv[1])]
+    snap["suppliers"]["issue_categories_basis"]=("keyword heuristic over each issue's free-"
+      "text 'Issue?' answer, not an official taxonomy - only the 10-row Gmail 'Supplier "
+      "Issues' feed has a real Issue Category field; buckets: shortage, damage_quality, "
+      "wrong_item, temperature, invoice_credit, no_issue_recorded, other")
+    # ---- quality / broth checks (GC Scheduled Task Answers; event-dated) ----
+    # Ross, verbatim: a top-level view where broth quality check scores can be
+    # seen "broken down by site (branch) at a glance". These do NOT live in
+    # Flow Appraisals (checked: 0 of 672 appraisal rows mention broth) - they
+    # are numeric density readings in GetCompliant's scheduled tasks.
+    BROTH_TASKS={"Chicken Broth Check":"chicken","Tonkotsu Broth Check":"tonkotsu"}
+    # Ross, 27/08/2026: "Chicken broth should be within 1 from 6 and the tonkotsu
+    # between 6-7" - the SITE spec, and a separate thing from the factory's
+    # after-ice band. Chicken's is stated as a tolerance (6 ± 1) rather than a
+    # pair of bounds, so it is written out as 5-7 here and rendered as the
+    # bounds it is. Inclusive, like the factory's.
+    #
+    # These do NOT transfer either way. The factory reads the batch after ice
+    # (tonkotsu 8-9); these read broth as served (tonkotsu 6-7). Same
+    # instrument, different point in the broth's life, and the numbers say so.
+    SITE_BROTH_BANDS={"chicken":(5.0,7.0),"tonkotsu":(6.0,7.0)}
+    broth_cells=[]; broth_deviations=[]
+    site_grades={"in":0,"low":0,"high":0}
+    if has_feed(cur,"GC Scheduled Task Answers"):
+        cur.execute(
+          "WITH a AS (SELECT DISTINCT ON (data->>'AnswerID') "
+          "   data->>'TaskName' task, nullif(data->>'LocationNameLabel','') site, "
+          "   left(data->>'AnsweredDateTime',10) d, nullif(data->>'Answer','') ans, "
+          "   lower(coalesce(data->>'IsOpenDeviation','')) opn, "
+          "   lower(coalesce(data->>'IsDeviation','')) dev "
+          " FROM etl_feed_rows WHERE feed='GC Scheduled Task Answers' "
+          "  AND data->>'TaskName' IN ('Chicken Broth Check','Tonkotsu Broth Check') "
+          " ORDER BY data->>'AnswerID', pull_date DESC) "
+          "SELECT task, site, d, ans, opn, dev FROM a WHERE d IS NOT NULL AND site IS NOT NULL")
+        cell_agg={}
+        for task,site,d,ans,opn,dev in cur.fetchall():
+            kind=BROTH_TASKS.get(task)
+            if not kind: continue
+            val=None
+            if ans is not None:
+                try: val=float(ans)
+                except ValueError: val=None
+            key=(site,kind,d)
+            c=cell_agg.setdefault(key,{"vals":[],"missed":0,"n":0})
+            c["n"]+=1
+            if val is not None: c["vals"].append(val)
+            else: c["missed"]+=1
+            if dev in ("true","1","yes"):
+                broth_deviations.append({"site":site,"kind":kind,"d":d,"value":val,
+                  "open":opn in ("true","1","yes")})
+        for (site,kind,d),c in cell_agg.items():
+            val=round(sum(c["vals"])/len(c["vals"]),2) if c["vals"] else None
+            band=SITE_BROTH_BANDS.get(kind)
+            grade=None; miss=None
+            if val is not None and band:
+                lo,hi=band
+                if val<lo:   grade,miss="low",round(lo-val,2)
+                elif val>hi: grade,miss="high",round(val-hi,2)
+                else:        grade,miss="in",0.0
+            broth_cells.append({"site":site,"kind":kind,"d":d,
+              "value":val,"checks":c["n"],"checks_missed":c["missed"],
+              "band":list(band) if band else None,"grade":grade,"miss":miss})
+            if grade: site_grades[grade]+=1
+        broth_deviations.sort(key=lambda r:r["d"],reverse=True)
+    else:
+        gaps.append("'GC Scheduled Task Answers' absent from the warehouse - broth quality "
+            "checks (Chicken/Tonkotsu Broth Check) unavailable")
+    if broth_cells:
+        sg=site_grades; sg_tot=sg["in"]+sg["low"]+sg["high"]
+        if sg_tot:
+            gaps.append("Site broth readings are graded against Ross's SITE band (chicken "
+                "6+/-1 i.e. 5-7, tonkotsu 6-7), which is NOT the factory's after-ice band "
+                "(tonkotsu 8-9, chicken 5-6): same instrument, different point in the broth's "
+                "life. "+str(sg["in"])+" of "+str(sg_tot)+" site readings are in band, "
+                +str(sg["low"])+" below and "+str(sg["high"])+" above")
+        ungraded_kinds=sorted({c["kind"] for c in broth_cells
+                               if c["value"] is not None and not c.get("grade")})
+        if ungraded_kinds:
+            gaps.append("Site broth readings for "+", ".join(repr(k) for k in ungraded_kinds)
+                +" have no band and are not graded - shown uncoloured rather than guessed at")
+    snap["quality"]={"broth":{"cells":broth_cells,"deviations":broth_deviations[:200],
+      "tasks":BROTH_TASKS,
+      "bands":{k:list(v) for k,v in SITE_BROTH_BANDS.items()},"grades":site_grades,
+      "basis":"one cell per site + check-type + day from GC Scheduled Task Answers, "
+      "deduped by AnswerID across pulls, averaged if >1 reading landed that day; "
+      "'checks_missed' counts non-numeric answers (e.g. 'Not registered on time') "
+      "separately from checks_missed==checks meaning value is null (no numeric reading "
+      "that day); event-dated on AnsweredDateTime, never pull_date"}}
+    # ---- factory broth score (Factory Broth Readings; the refractometer form) ----
+    # Ross, 27/08/2026: a factory-level broth score on this page, by batch,
+    # scored on the AFTER-ICE reading.
+    #
+    # A DIFFERENT MEASUREMENT FROM THE BLOCK ABOVE, NOT MORE OF IT. Those cells
+    # are per-SITE GetCompliant checks of broth as it is served; these are the
+    # factory's own refractometer readings of the batch it produced, one form
+    # submission per batch, taken before and after ice is added. Different
+    # instrument, different moment, different scale - so they are separate
+    # blocks, never averaged into one another and never plotted on one axis.
+    #
+    # BEFORE-ICE IS CARRIED BUT IS NOT THE SCORE. Ross was explicit: the score
+    # is the after-ice reading. Before-ice rides along because it is what the
+    # dilution is measured against and the pair is only meaningful together.
+    #
+    # NEWEST PULL ONLY. The feed is a whole-sheet copy every day (see
+    # factory_broth.py in the ETL repo), so one pull is the complete history to
+    # date - dedup across pulls would need a key the form does not have, since
+    # two submissions can share a Timestamp to the second (30/07/2025 21:17:35
+    # covers batches 3007A, 3007B and 3007C).
+    FB_FEED = "Factory Broth Readings"
+    # 2,000, not 500 (27/08/2026). The first real pull landed 1,461 scored
+    # readings - thirteen months of production - and a 500 cap truncated the
+    # dashboard to the most recent five months on its first day. The card
+    # disclosed the truncation honestly, but a page built for comparing this
+    # month's broth against last year's should not have to. 1,461 readings cost
+    # ~220KB in the snapshot and the form adds ~3 a day, so this holds the whole
+    # history plus a couple of years of it; the truncation notice stays for the
+    # day that stops being true.
+    FB_CAP = 2000
+    fb_readings=[]; fb_total=0; fb_pull=None; fb_pct=0; fb_comma=0; fb_ts_dated=0
+    fb_median=None; fb_suspect=0
+    fb_grades={"in":0,"low":0,"high":0,"ungraded":0,"out_suspect":0}
+    fb_excl={"no_after_ice":0,"undated":0,"non_numeric":0}
+    if has_feed(cur,FB_FEED):
+        cur.execute("SELECT max(pull_date)::text FROM etl_feed_rows WHERE feed=%s",(FB_FEED,))
+        fb_pull=(cur.fetchone() or [None])[0]
+        cur.execute(
+          "SELECT data->>'Timestamp', data->>'Date', data->>'Batch Number', "
+          " data->>'Product Name', data->>'Reading Before Adding Ice', "
+          " data->>'Reading After Adding Ice' "
+          "FROM etl_feed_rows WHERE feed=%s AND pull_date="+L, (FB_FEED,FB_FEED))
+        for ts,dt,batch,product,before,after in cur.fetchall():
+            fb_total+=1
+            raw=(after or "").strip()
+            if not raw:
+                # Every response before 13/08/2025 predates the two ice
+                # questions on the form. No after-ice reading means no score -
+                # counted and disclosed, never scored as a zero.
+                fb_excl["no_after_ice"]+=1; continue
+            d,from_ts=fb_date(dt,ts)
+            if d is None:
+                fb_excl["undated"]+=1; continue
+            val=fb_num(raw)
+            if val is None:
+                fb_excl["non_numeric"]+=1; continue
+            if from_ts: fb_ts_dated+=1
+            if raw.endswith("%"): fb_pct+=1
+            if re.fullmatch(r"-?\d+,\d{1,2}", raw.rstrip("%").strip()): fb_comma+=1
+            prod=(product or "").strip() or None
+            score=round(val,2)
+            fb_readings.append({"d":d,"ts":ts,
+              "batch":(batch or "").strip() or None,
+              "product":prod,
+              "score":score,"before":fb_num(before),
+              "band":list(FACTORY_BROTH_BANDS[prod]) if prod in FACTORY_BROTH_BANDS else None,
+              "grade":fb_grade(prod,score),
+              "date_source":"timestamp" if from_ts else "form"})
+        # The same batch and product read twice in one day is real - it happens
+        # (210825B, 21/08/2025, 7 then 9). Both rows stay and both are marked,
+        # so the reader sees two readings rather than a duplicated row, and
+        # nothing is quietly averaged away.
+        seen={}
+        for r in fb_readings:
+            k=(r["batch"],r["product"],r["d"]); seen[k]=seen.get(k,0)+1
+        for r in fb_readings:
+            r["repeat"]=seen[(r["batch"],r["product"],r["d"])]>1
+        # ---- implausible readings, flagged and kept ----------------------
+        # This used to fire on six readings - 87.0, 80.0, 80.0, 52.0, 0.09 and
+        # one dropped outright - which were read on 27/08/2026 as factory
+        # keying slips and reported to Ross as such. They were not. Every one
+        # was a reading this parser was mangling: four decimal commas, one
+        # percent-formatted cell and one stray apostrophe (see fb_num). The
+        # sheet was right and the code was wrong, and the check that was meant
+        # to catch bad data was instead reporting the bug that created it.
+        #
+        # The rule stays, because a genuine lost decimal point is a real thing
+        # that will happen and the damage is real: the card's colour scale runs
+        # min-to-max, so a single 87 pushes every genuine 4-to-12 reading into
+        # the bottom seventh of the scale and the whole column shades the same.
+        # It should now fire on nothing, and if it fires again the first
+        # question is whether fb_num has met a format it does not know yet.
+        #
+        # Anything it does catch is FLAGGED, not dropped and not repaired.
+        # Dropping loses a real record of what was entered, dividing by ten is
+        # inventing data, and the row is the only thing that will make anyone
+        # fix the sheet. This band is derived from the data (a third of the
+        # median to three times it) and is NOT the spec band. Those are two
+        # different things and must stay that way: FACTORY_BROTH_BANDS says
+        # whether a batch met spec, this says whether the number was typed
+        # correctly - collapsing them would put typos into the out-of-spec
+        # count and send someone to the factory over them.
+        fb_median=None
+        vals=sorted(r["score"] for r in fb_readings)
+        if vals:
+            n=len(vals)
+            fb_median=vals[n//2] if n%2 else round((vals[n//2-1]+vals[n//2])/2,2)
+        fb_suspect=0
+        for r in fb_readings:
+            r["suspect"]=bool(fb_median and (r["score"]>3*fb_median
+                                             or r["score"]<fb_median/3))
+            if r["suspect"]: fb_suspect+=1
+        fb_readings.sort(key=lambda r:(r["d"],r["ts"] or ""),reverse=True)
+        for r in fb_readings:
+            g=r["grade"]
+            if g is None:
+                fb_grades["ungraded"]+=1
+            else:
+                fb_grades[g]+=1
+                if g!="in" and r["suspect"]: fb_grades["out_suspect"]+=1
+        ungraded=sorted({r["product"] or "(no product named)"
+                         for r in fb_readings if r["grade"] is None})
+        if ungraded:
+            gaps.append(str(fb_grades["ungraded"])+" refractometer reading(s) are NOT "
+                "graded because their product has no after-ice band: "
+                +", ".join(repr(x) for x in ungraded)+". Shown and counted, never "
+                "coloured pass or fail - a band has to be given, not guessed")
+        if fb_suspect:
+            gaps.append(str(fb_suspect)+" refractometer reading(s) are outside a "
+                "third to three times the median of "+str(fb_median)+" - a missed "
+                "decimal point ('87' for 8.7) or a percent-formatted cell. They are "
+                "kept and flagged, never repaired or dropped. They are graded against "
+                "the spec band like any other reading, so a mis-key reads as out of "
+                "spec - the 'out_suspect' count says how many of the out-of-band "
+                "readings are these: fix them at source and both numbers drop")
+        gaps.append("The factory broth score carries no factory: the refractometer "
+            "form has no site field, so readings cannot be split between the Glasgow, "
+            "Edinburgh and Shoreditch factories - an out-of-spec batch cannot be traced "
+            "to the line that made it")
+    else:
+        gaps.append("'"+FB_FEED+"' absent from the warehouse - the factory broth "
+            "score (refractometer readings by batch) is unavailable until the daily "
+            "export lands it")
+    if fb_excl["no_after_ice"]:
+        gaps.append(str(fb_excl["no_after_ice"])+" refractometer response(s) carry no "
+            "after-ice reading (the form gained that question on 13/08/2025) and are "
+            "excluded from the factory broth score rather than scored as zero")
+    if fb_ts_dated:
+        gaps.append(str(fb_ts_dated)+" refractometer reading(s) are dated from the "
+            "submission timestamp because the form's own hand-typed Date field either "
+            "did not parse ('03/08/0025') or contradicted that timestamp - dated after "
+            "its own submission, or more than "+str(FB_MAX_LAG_DAYS)+" days before it - "
+            "fix at source when possible")
+    if fb_pct:
+        gaps.append(str(fb_pct)+" after-ice reading(s) arrived percent-formatted and "
+            "were converted: '900.00%' is 9, and '8.60%' is a cell holding 0.086 "
+            "because someone typed 8.6 into a cell already formatted as a percentage - "
+            "read as 8.6, which is what its 11.4 before-ice reading says it was. Worth "
+            "clearing the percent formatting on that column at source")
+    if fb_comma:
+        gaps.append(str(fb_comma)+" reading(s) were typed with a DECIMAL COMMA ('8,7' "
+            "for 8.7) and are read as such. Until 28/08/2026 the comma was stripped as "
+            "a thousands separator, so these read as 87, 80, 80 and 52 and were "
+            "reported as factory keying slips - they were this builder's bug, not the "
+            "factory's, and the sheet needs no correction")
+    snap["quality"]["factory"]={
+      "readings":fb_readings[:FB_CAP],"scored":len(fb_readings),
+      "median":fb_median,"suspect":fb_suspect,
+      "bands":{k:list(v) for k,v in FACTORY_BROTH_BANDS.items()},"grades":fb_grades,
+      "responses":fb_total,"truncated":len(fb_readings)>FB_CAP,
+      "excluded":fb_excl,"source_feed":FB_FEED,"pull_date":fb_pull,
+      "formats":{"percent":fb_pct,"decimal_comma":fb_comma},
+      "basis":"one row per refractometer form submission at the factory, from the "
+      "newest pull of '"+FB_FEED+"' (a whole-sheet copy, so one pull is the full "
+      "history); score = the reading taken AFTER adding ice, Ross's definition, with "
+      "the before-ice reading carried alongside for context; event-dated on the form's "
+      "own Date field, falling back to the submission timestamp when that does not "
+      "parse OR contradicts it (a date after its own submission, or more than "
+      +str(FB_MAX_LAG_DAYS)+" days before it, is a typo), never on pull_date; responses with no after-ice reading are excluded and "
+      "counted in 'excluded', never scored as zero; 'repeat' marks a batch and product "
+      "read more than once on the same day - both readings are kept, neither averaged; "
+      "'grade' is the reading against its product's after-ice SPEC BAND (Ross, 27/08/2026: "
+      "tonkotsu 8-9, chicken 5-6, bounds inclusive) - 'in', 'low', 'high', or null for a "
+      "product with no band, which is never graded or coloured; 'suspect' is a SEPARATE, "
+      "much cruder test for keying slips (outside a third to three times the median, e.g. "
+      "87 for 8.7), kept apart from the band so a typo is not read as a batch that missed "
+      "spec - 'grades.out_suspect' counts the overlap"}
+    # ---- scheduled task completion rate ON TIME by site (GC Scheduled Task Answers) ----
+    # Ross, 15 Aug: the Task Completion page was reading GC Form Task Answers
+    # (Closed/Open FORM state - a current-state backlog snapshot). Ross asked
+    # for the SCHEDULED task on-time completion rate instead - a different
+    # feed, a different question ("did the recurring checklist get done by
+    # its deadline"), and it turns out to be naturally event-dated rather
+    # than a snapshot.
+    #
+    # GC Scheduled Task Answers carries every recurring checklist item
+    # (cleaning, prep, temperature, broth checks, etc: 40+ distinct TaskName
+    # values, ~36k rows per pull across 23 sites) with a genuine
+    # DueDateTime and a system-computed IsSystemOverdue flag. When a task
+    # is completed before its DueDateTime, IsSystemOverdue=false and Answer
+    # carries the real response. When nobody completes it in time,
+    # GetCompliant auto-closes the row at the deadline with
+    # Answer='Not registered on time' and IsSystemOverdue=true - checked
+    # live: 100% correlation between IsSystemOverdue=true and that exact
+    # Answer text, across every row in the latest pull.
+    #
+    # Cross-pull dedup by AnswerID (the pattern used everywhere else in this
+    # builder) does NOT work here: the auto-closed "missed" rows carry a
+    # BLANK AnswerID (verified live - all 1,463 of them in one pull
+    # collapsed to a single DISTINCT ON row, silently discarding the rest).
+    # TaskID+DueDateTime isn't a safe substitute either - the same task can
+    # recur more than once a day sharing an identical nominal due timestamp
+    # (checked live: 36,457 rows but only 2,625 distinct TaskID+DueDateTime
+    # pairs in one pull). Rather than invent a fragile synthetic key, this
+    # block reads the MOST RECENT PULL ONLY. Each pull already carries a
+    # trailing ~7-9 day window on its own (verified live), so this still
+    # gives a meaningful multi-day picture and refreshes cleanly every day
+    # Pipe 9 runs - it just doesn't accumulate a longer history the way the
+    # AnswerID-keyed feeds do.
+    TASK_DRILLDOWN_CAP=300
+    task_cells=[]; task_drilldown={}
+    if has_feed(cur,"GC Scheduled Task Answers"):
+        cur.execute(
+          "SELECT nullif(data->>'LocationNameLabel','') site, "
+          "  data->>'TaskName' task, left(data->>'DueDateTime',10) d, "
+          "  data->>'DueDateTime' due, data->>'AnsweredDateTime' answered, "
+          "  nullif(data->>'Answer','') ans, "
+          "  lower(coalesce(data->>'IsSystemOverdue','')) overdue, "
+          "  lower(coalesce(data->>'IsDeleted','')) del "
+          "FROM etl_feed_rows WHERE feed='GC Scheduled Task Answers' "
+          "  AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows "
+          "    WHERE feed='GC Scheduled Task Answers')")
+        rows=cur.fetchall()
+        cell_agg={}; by_site={}
+        for site,task,d,due,answered,ans,overdue,del_ in rows:
+            if site is None or d is None: continue
+            if del_ in ("true","1","yes"): continue
+            late=overdue in ("true","1","yes")
+            key=(site,d)
+            c=cell_agg.setdefault(key,{"on_time":0,"missed":0})
+            if late: c["missed"]+=1
+            else: c["on_time"]+=1
+            by_site.setdefault(site,[]).append({"task":task,"due":due,
+              "answered":answered,"answer":ans,"late":late,"d":d})
+        for (site,d),c in sorted(cell_agg.items()):
+            task_cells.append({"site":site,"d":d,"on_time":c["on_time"],
+              "missed":c["missed"]})
+        for site,items in by_site.items():
+            items.sort(key=lambda r:(r["due"] or "", r["task"] or "",
+                                     r["answered"] or ""), reverse=True)
+            task_drilldown[site]={"tasks":items[:TASK_DRILLDOWN_CAP],"total":len(items),
+              "truncated":len(items)>TASK_DRILLDOWN_CAP}
+    else:
+        gaps.append("'GC Scheduled Task Answers' absent from the warehouse - scheduled "
+            "task on-time completion by site unavailable")
+    snap["tasks"]={"cells":task_cells,"drilldown":task_drilldown,
+      "basis":"per scheduled-task instance from GC Scheduled Task Answers, most recent "
+      "pull only (cross-pull AnswerID dedup isn't reliable here - GetCompliant's "
+      "auto-generated 'missed' placeholder rows carry no AnswerID; see builder comments); "
+      "a task counts ON TIME when IsSystemOverdue=false (answered before its "
+      "DueDateTime) and MISSED when IsSystemOverdue=true (GetCompliant auto-closed it at "
+      "the deadline with Answer='Not registered on time'); event-dated on DueDateTime - "
+      "the scheduled day, not pull_date - so the date-range filter slices both the "
+      "per-site bars/table and the drill-down; deleted rows excluded; drill-down capped "
+      f"at {TASK_DRILLDOWN_CAP} rows per site, most recent due date first (see "
+      "'total'/'truncated' per site for anything past the cap)"}
+    # ---- supply / projected spend this week, by site + supplier ----
+    # Ross, 17 Aug: replace the "orders outstanding" aging/backlog framing
+    # with a forward-looking view - what do we expect to SPEND this week,
+    # broken down by site and supplier. "This week" = the Mon-Sun week
+    # containing today (Postgres current_date), matched against each order's
+    # own delivery date. Site+supplier is a genuinely new cut: the old aging
+    # block only ever grouped by supplier (site was fetched but unused).
+    #
+    # SOURCE CHANGE (26/08/2026). The primary source is now the 'Kobas Order
+    # Emails' feed - a daily IMAP parse of the confirmation emails Kobas sends
+    # to ross@makiramen.com. It replaces the 'Kobas Pending Orders' route,
+    # which logged in to Kobas headlessly and committed a JSON file into the
+    # ETL repo for this workflow to check out. That route never once completed
+    # in Actions; the checkout step and its ETL_REPO_TOKEN are gone, and this
+    # builder no longer reads any checked-out etl-data/ directory. The email
+    # feed arrives in the warehouse like every other feed.
+    #
+    # WHAT THE EMAIL SOURCE CANNOT DO, STATED PLAINLY (26/08/2026):
+    #  * NO DELIVERED/PENDING SPLIT. Confirmation emails record an order being
+    #    placed and carry no status. The split that the pending-orders route
+    #    supported is REMOVED rather than faked - week_totals has no
+    #    delivered/pending keys on this source and the site boxes carry no
+    #    split bar.
+    #  * PARTIAL SUPPLIER COVERAGE. Kobas only emails a confirmation for
+    #    suppliers configured to receive their orders by email. On discovery
+    #    that was 6 of 31 estate suppliers (LWC depots, Brakes, Perfect Ted);
+    #    Lynas, HARRO, JFC, TRUE WORLD FOODS, Solstice and AA Factory transmit
+    #    another way and produce nothing, which is ~80% of estate spend. Ross
+    #    is switching the rest on in Kobas, so coverage grows by itself.
+    #    Nothing here filters by supplier - a new supplier appears the day its
+    #    first email lands. The shortfall is measured below against the weekly
+    #    outstanding-orders report and emitted as a named gap listing exactly
+    #    which suppliers are still missing, so it self-clears as Ross works
+    #    through them.
+    #  * CANCELLATIONS ARE INVISIBLE. An order cancelled in Kobas without a
+    #    re-sent email stays in the week's total.
+    FULFIL_FEED="Kobas Report - Maki Ramen - Weekly Outstanding Stock Orders Report"
+    # Manifest cadence for that report is 8 days; allow one more before it is
+    # too stale to quote a figure from.
+    FULFIL_MAX_STALE_DAYS=9
+    # 26/08/2026: this is the EXISTING 'Kobas Orders' feed, not a new one.
+    # daily_export.py has parsed Kobas order-confirmation emails into it since
+    # 13/08/2026; it was upgraded the same day to emit an ISO delivery date and
+    # an item count, and to dedupe latest-wins. Adding a second feed over the
+    # same emails would have duplicated a healthy one and thrown away a
+    # fortnight of history.
+    ORDER_EMAIL_FEED="Kobas Orders"
+    WEEK_DRILL_CAP=400
+    # Dedup key is the Kobas Reference, latest pull wins, then latest placed_at
+    # within a pull - amended orders are understood to re-send the same
+    # reference. Re-pulling the same orders daily is expected and correct.
+    # 26/08/2026: a row CARRYING 'Delivery Date ISO' now outranks one without,
+    # ahead of pull_date. Rows written before the parser upgrade have no ISO
+    # date and so cannot be date-filtered at all; without this a legacy row in
+    # a newer pull would shadow the usable one and drop the order out of both
+    # the week and the OTIF month, with no gap note - order_feed_usable only
+    # checks that SOME row somewhere carries an ISO date. Preferring the
+    # richer shape is free when both rows are current.
+    # Field names are the feed's own (Title Case) - they predate this work and
+    # other consumers read them. 'Delivery Date ISO' is the sortable date;
+    # 'Delivery Date' is the raw '28th Aug 2026' string the feed has always
+    # carried and is deliberately NOT used for filtering.
+    ORDER_EMAIL_DEDUP=(
+      "SELECT DISTINCT ON (data->>'Order Ref') "
+      "   data->>'Order Ref' ref, nullif(data->>'Supplier','') sup, "
+      "   nullif(data->>'Site','') site, "
+      "   nullif(data->>'Delivery Date ISO','') dd, "
+      "   nullif(data->>'Order Email Date','') emailed, "
+      "   nullif(data->>'Created By','') staff, data->>'Line Items' lines, "
+      "   data->>'Items Ordered' items, data->>'Order Value GBP' total "
+      " FROM etl_feed_rows WHERE feed=%s "
+      " ORDER BY data->>'Order Ref', "
+      "          (nullif(data->>'Delivery Date ISO','') IS NULL), "
+      "          pull_date DESC, "
+      "          data->>'Order Placed At' DESC")
+    week_spend=[]; price_watch=[]; week_days=[]; week_drill=[]
+    week_drill_total=0; week_spend_source=None; week_spend_basis=None; week_totals=None
+    supplier_totals=[]; supplier_totals_basis=None
+    supplier_totals_all=[]; supplier_totals_all_basis=None; supplier_totals_all_meta=None
+    supply_coverage=None
+    cur.execute("SELECT date_trunc('week',current_date)::date, "
+                "(date_trunc('week',current_date)+interval '6 day')::date")
+    week_start,week_end=cur.fetchone()
+    week_start,week_end=week_start.isoformat(),week_end.isoformat()
+
+    def _num(v, cast=float, default=0):
+        try: return cast(v)
+        except (TypeError,ValueError): return default
+
+    # ---- primary source: Kobas Orders (order-confirmation emails) ----
+    # A feed present but written by the PRE-26/08 parser carries no
+    # 'Delivery Date ISO' on any row, so nothing can be date-filtered. That is
+    # a real state between deploying the parser upgrade and running the
+    # backfill, and it must fall back rather than render an empty week that
+    # looks like nobody ordered anything.
+    order_feed_usable=False
+    if has_feed(cur, ORDER_EMAIL_FEED):
+        cur.execute("SELECT count(*) FROM etl_feed_rows WHERE feed=%s "
+                    "AND nullif(data->>'Delivery Date ISO','') IS NOT NULL",
+                    (ORDER_EMAIL_FEED,))
+        order_feed_usable=bool((cur.fetchone() or [0])[0])
+        if not order_feed_usable:
+            gaps.append(f"'{ORDER_EMAIL_FEED}' is present but no row carries a "
+                "'Delivery Date ISO' - these rows predate the 26/08/2026 parser "
+                "upgrade and cannot be date-filtered. Projected spend is falling "
+                "back to the weekly outstanding-orders report until the backfill "
+                "(run_kobas_orders.py --since) has run")
+    if order_feed_usable:
+        cur.execute("SELECT max(pull_date)::text FROM etl_feed_rows WHERE feed=%s",
+                    (ORDER_EMAIL_FEED,))
+        oe_pull=(cur.fetchone() or [None])[0] or "(unknown pull_date)"
+        cur.execute("WITH o AS ("+ORDER_EMAIL_DEDUP+") "
+                    "SELECT ref,sup,site,dd,staff,lines,items,total FROM o "
+                    "WHERE dd IS NOT NULL AND dd::date BETWEEN %s AND %s",
+                    (ORDER_EMAIL_FEED,week_start,week_end))
+        rows=[]
+        for ref,sup,site,dd,staff,lines,items,total in cur.fetchall():
+            rows.append({"ref":ref,"sup":sup or "(no supplier)","site":site or "(no site)",
+              "d":dd,"staff":staff,"lines":_num(lines,int),"items":_num(items,int),
+              "value":_num(total,float,0.0)})
+        agg={}; by_day={}
+        for r in rows:
+            a_=agg.setdefault((r["site"],r["sup"]),
+                              {"orders":0,"lines":0,"items":0,"value":0.0})
+            a_["orders"]+=1; a_["lines"]+=r["lines"]
+            a_["items"]+=r["items"]; a_["value"]+=r["value"]
+            d_=by_day.setdefault(r["d"],{"orders":0,"value":0.0})
+            d_["orders"]+=1; d_["value"]+=r["value"]
+        for (site,sup),a_ in agg.items():
+            week_spend.append({"site":site,"supplier":sup,
+              # canonical supplier key so the Supplier Issues tab's profile
+              # modal can join this spend to issue attribution (18/08/2026);
+              # display keeps the Kobas name, the join uses supplier_canon
+              "supplier_canon":canon_supplier(sup),
+              "orders":a_["orders"],"lines":a_["lines"],"items":a_["items"],
+              "value_gbp":round(a_["value"],2)})
+        week_spend.sort(key=lambda r:-r["value_gbp"])
+        # Same rows, rolled up by supplier instead of site+supplier, so the
+        # question "what are we spending with each supplier" is answered
+        # without the reader summing a site table by eye.
+        #
+        # DELIVERIES is a distinct (site, delivery date), not an order count:
+        # two orders to one site arriving the same day are one delivery, and
+        # this week that is 68 orders arriving as 61 deliveries. It is derived
+        # from order confirmations, so it counts SCHEDULED deliveries - nothing
+        # in this source observes whether one arrived. The OTIF card on the
+        # same page counts deliveries the same way, so the two agree.
+        sup_agg={}
+        for r in rows:
+            a_=sup_agg.setdefault(r["sup"],{"orders":0,"lines":0,"items":0,
+                                            "value":0.0,"slots":set(),"sites":set()})
+            a_["orders"]+=1; a_["lines"]+=r["lines"]; a_["items"]+=r["items"]
+            a_["value"]+=r["value"]
+            a_["slots"].add((r["site"],r["d"])); a_["sites"].add(r["site"])
+        supplier_totals=[{"supplier":sup,"supplier_canon":canon_supplier(sup),
+                          "orders":a_["orders"],"deliveries":len(a_["slots"]),
+                          "lines":a_["lines"],"items":a_["items"],
+                          "sites":len(a_["sites"]),
+                          "value_gbp":round(a_["value"],2)}
+                         for sup,a_ in sup_agg.items()]
+        supplier_totals.sort(key=lambda r:(-r["value_gbp"],r["supplier"]))
+        supplier_totals_basis=("Same orders as the site table above, grouped by the "
+            "supplier name Kobas sends. Deliveries counts distinct site+delivery-date "
+            "combinations, so two orders to one site on one day are one delivery; "
+            "lines and items are the order email's own Line Items and Items Ordered "
+            "totals. Scheduled deliveries, not confirmed ones - an order confirmation "
+            "says a delivery was booked, never that it turned up.")
+
+        # ---- all-time supplier totals ----
+        # Same dedup, no week filter. Kept as its own query rather than widening
+        # the one above, so the weekly figures the KPI strip reconciles against
+        # cannot be disturbed by anything here.
+        #
+        # WHERE THE COVERAGE STARTS, MEASURED RATHER THAN ASSUMED. This feed is
+        # a rolling 14-day IMAP window over order-confirmation emails, so it has
+        # a hard left edge and no knowledge of anything before it. The edge is
+        # not a guess: it is the earliest email date in the archive. Deliveries
+        # near that edge are still short, because their orders were emailed
+        # BEFORE it - so the first trustworthy delivery date is the edge plus
+        # the longest order-to-delivery lead actually observed, and the first
+        # trustworthy Monday is the one on or after that. Both are recomputed
+        # every bake, so this stays true as the archive grows rather than
+        # freezing today's dates into a comment.
+        cur.execute("WITH o AS ("+ORDER_EMAIL_DEDUP+") "
+                    "SELECT ref,sup,site,dd,emailed,lines,items,total FROM o "
+                    "WHERE dd IS NOT NULL",(ORDER_EMAIL_FEED,))
+        all_rows=[]
+        for ref,sup,site,dd,emailed,lines,items,total in cur.fetchall():
+            all_rows.append({"sup":sup or "(no supplier)","site":site or "(no site)",
+              "d":dd,"emailed":emailed,"lines":_num(lines,int),"items":_num(items,int),
+              "value":_num(total,float,0.0)})
+        if all_rows:
+            a_agg={}
+            for r in all_rows:
+                a_=a_agg.setdefault(r["sup"],{"orders":0,"lines":0,"items":0,
+                                              "value":0.0,"slots":set(),"sites":set()})
+                a_["orders"]+=1; a_["lines"]+=r["lines"]; a_["items"]+=r["items"]
+                a_["value"]+=r["value"]
+                a_["slots"].add((r["site"],r["d"])); a_["sites"].add(r["site"])
+            supplier_totals_all=[{"supplier":sup,"supplier_canon":canon_supplier(sup),
+                                  "orders":a_["orders"],"deliveries":len(a_["slots"]),
+                                  "lines":a_["lines"],"items":a_["items"],
+                                  "sites":len(a_["sites"]),
+                                  "value_gbp":round(a_["value"],2)}
+                                 for sup,a_ in a_agg.items()]
+            supplier_totals_all.sort(key=lambda r:(-r["value_gbp"],r["supplier"]))
+            dds=sorted(r["d"] for r in all_rows)
+            leads=[(datetime.date.fromisoformat(r["d"])
+                    -datetime.date.fromisoformat(r["emailed"])).days
+                   for r in all_rows if r["emailed"] and r["d"]]
+            cov=min((r["emailed"] for r in all_rows if r["emailed"]),default=None)
+            max_lead=max(leads) if leads else 0
+            complete_from=None
+            if cov:
+                safe=datetime.date.fromisoformat(cov)+datetime.timedelta(days=max_lead)
+                mon=safe-datetime.timedelta(days=safe.weekday())
+                if mon<safe: mon+=datetime.timedelta(days=7)
+                complete_from=mon.isoformat()
+            # Weeks the reader should not treat as a like-for-like comparison:
+            # too early for full email coverage, or not finished being ordered.
+            wk_orders={}
+            for r in all_rows:
+                d_=datetime.date.fromisoformat(r["d"])
+                wk_orders.setdefault((d_-datetime.timedelta(days=d_.weekday())).isoformat(),
+                                     {"orders":0,"value":0.0})
+                k_=(d_-datetime.timedelta(days=d_.weekday())).isoformat()
+                wk_orders[k_]["orders"]+=1; wk_orders[k_]["value"]+=r["value"]
+            partial=[]
+            for wmon,v in sorted(wk_orders.items()):
+                why=None
+                if complete_from and wmon<complete_from:
+                    why=("starts before the feed's email coverage does, so orders "
+                         "placed for it were never captured")
+                elif wmon>=week_start:
+                    why="still being ordered into"
+                if why:
+                    partial.append({"w":wmon,"orders":v["orders"],
+                                    "value_gbp":round(v["value"],2),"why":why})
+            supplier_totals_all_meta={
+              "orders":len(all_rows),
+              # (supplier, site, date), NOT (site, date). The per-supplier rows
+              # each count their own site+date slots, so collapsing across
+              # suppliers here would make this total disagree with the table it
+              # describes - one site taking two suppliers in a day is two
+              # deliveries, not one. Measured: 200, not 174.
+              "deliveries":len({(r["sup"],r["site"],r["d"]) for r in all_rows}),
+              "value_gbp":round(sum(r["value"] for r in all_rows),2),
+              "first_delivery":dds[0],"last_delivery":dds[-1],
+              "coverage_start":cov,"max_lead_days":max_lead,
+              "complete_from":complete_from,
+              "weeks":len(wk_orders),"partial_weeks":partial}
+            supplier_totals_all_basis=(
+              "Every order the Kobas Orders feed has ever captured, deduped by Kobas "
+              f"Reference, grouped by supplier: {len(all_rows)} orders with delivery dates "
+              f"{dds[0]} to {dds[-1]}. NOT A COMPLETE TRADING HISTORY. The feed is a rolling "
+              "14-day window over order-confirmation emails, so it knows nothing before its "
+              f"first captured email ({cov}); with the longest observed order-to-delivery "
+              f"lead being {max_lead} day(s), deliveries are only fully covered from "
+              f"{complete_from} onward"
+              + (f", which leaves {len(partial)} week(s) that should not be compared "
+                 "like for like with the rest" if partial else "")
+              + ". Scheduled deliveries, not confirmed ones - an order confirmation says a "
+                "delivery was booked, never that it turned up.")
+        week_days=[{"d":d,"orders":v["orders"],"value_gbp":round(v["value"],2)}
+                   for d,v in sorted(by_day.items())]
+        drill_all=sorted(rows,key=lambda r:(r["d"] or "",-r["value"]))
+        week_drill_total=len(drill_all)
+        week_drill=[{"site":r["site"],"order_no":r["ref"],"supplier":r["sup"],
+                     "d":r["d"],"lines":r["lines"],"items":r["items"],
+                     "value_gbp":round(r["value"],2),"staff":r["staff"]}
+                    for r in drill_all[:WEEK_DRILL_CAP]]
+        # Totals computed once here from the FULL row set (never from the
+        # capped week_drill) so the KPI strip is exact even when the drill
+        # table is truncated.
+        week_totals={"orders":len(rows),
+          "lines":sum(r["lines"] for r in rows),
+          "items":sum(r["items"] for r in rows),
+          "value_gbp":round(sum(r["value"] for r in rows),2)}
+        week_spend_source="order_emails"
+        week_spend_basis=(f"Kobas Orders (daily IMAP parse of Kobas order-confirmation "
+            f"emails, pull_date={oe_pull}): one row per order, deduped by Kobas Reference "
+            "(latest pull wins), summing the email's own TOTAL for orders whose DELIVERY date "
+            "falls in the current Mon-Sun week, all venues including franchises. Orders as "
+            "PLACED - confirmation emails carry no delivered status, so there is no "
+            "delivered/pending split on this source and none is shown; a cancellation made in "
+            "Kobas without a re-sent email stays in the total")
+        try:
+            stale_days=(datetime.date.today()-datetime.date.fromisoformat(oe_pull)).days
+            if stale_days>=2:
+                gaps.append(f"Kobas Orders was last pulled {oe_pull} ({stale_days}d ago) "
+                    "- the daily IMAP fetch may be failing; check the maki-hospitality-etl "
+                    "daily-export run and the GMAIL_APP_PASSWORD secret")
+        except ValueError:
+            pass
+        # -- supplier coverage vs the weekly outstanding report -------------
+        # The report sees every supplier the estate orders from; the emails see
+        # only those Kobas transmits by email. Naming the difference turns an
+        # invisible 80% shortfall into a checklist that empties itself as Ross
+        # enables the remaining suppliers in Kobas (26/08/2026).
+        if has_feed(cur,FULFIL_FEED):
+            cur.execute("SELECT DISTINCT nullif(data->>'Supplier/Sending Venue','') "
+                        "FROM etl_feed_rows WHERE feed=%s",(FULFIL_FEED,))
+            report_sups={s for (s,) in cur.fetchall() if s}
+            cur.execute("WITH o AS ("+ORDER_EMAIL_DEDUP+") SELECT DISTINCT sup FROM o "
+                        "WHERE dd IS NOT NULL",(ORDER_EMAIL_FEED,))
+            email_sups={s for (s,) in cur.fetchall() if s}
+            email_keys={(canon_supplier(s) or s.strip().lower()) for s in email_sups}
+            missing=sorted({s for s in report_sups
+                            if (canon_supplier(s) or s.strip().lower()) not in email_keys})
+            if missing:
+                shown=", ".join(missing[:8])+("…" if len(missing)>8 else "")
+                gaps.append(f"Kobas Orders covers {len(email_sups)} supplier(s); "
+                    f"{len(missing)} supplier(s) the estate orders from send no confirmation "
+                    f"email and are therefore ABSENT from projected spend this week: {shown}. "
+                    "Kobas only emails a confirmation for suppliers configured to receive "
+                    "orders by email - enabling it per supplier in Kobas closes this gap, and "
+                    "this note shrinks as it is done")
+            supply_coverage={"suppliers_in_emails":sorted(email_sups),
+              "suppliers_missing_from_emails":missing,
+              "basis":"distinct suppliers in the Kobas Orders feed vs distinct "
+              "'Supplier/Sending Venue' in the weekly outstanding-orders report, matched on "
+              "the canonical supplier name where one is known"}
+        else:
+            gaps.append("Supplier coverage of the Kobas Orders feed cannot be checked "
+                "this bake: the weekly outstanding-orders report is absent, so there is "
+                "nothing to measure the email feed's supplier list against")
+    # ---- fallback: weekly outstanding-orders report ----
+    # feed_fresh_within, NOT has_feed: a report that stopped being sent keeps
+    # has_feed True off retained pulls forever, which made the honest
+    # "unavailable" branch below dead code.
+    elif feed_fresh_within(cur,FULFIL_FEED,FULFIL_MAX_STALE_DAYS,pull):
+        cur.execute(
+          "WITH o AS (SELECT DISTINCT ON (data->>'Order ID') "
+          "   data->>'Order ID' oid, nullif(data->>'Supplier/Sending Venue','') sup, "
+          "   nullif(data->>'Venue Placed','') site, nullif(data->>'Order Value','') val, "
+          "   nullif(data->>'Target Delivery Date','') target "
+          " FROM etl_feed_rows WHERE feed=%s ORDER BY data->>'Order ID', pull_date DESC) "
+          "SELECT oid, sup, site, val FROM o "
+          "WHERE target IS NOT NULL AND target::date BETWEEN %s AND %s",
+          (FULFIL_FEED,week_start,week_end))
+        agg3={}
+        for oid,sup,site,val in cur.fetchall():
+            if not oid: continue
+            k=(site or "(no site)",sup or "(no supplier)")
+            a_=agg3.setdefault(k,{"orders":0,"value":0.0})
+            a_["orders"]+=1
+            a_["value"]+=_num(val,float,0.0)
+        # An empty result is indistinguishable from frozen content, and
+        # "GBP 0.00 / 0 orders" renders on the card identically to a real
+        # figure. A week with no outstanding order due does not happen in
+        # this business, so treat it as no answer rather than an answer of
+        # zero - the card shows an em dash and the gap says why.
+        if agg3:
+            for (site,sup),a_ in agg3.items():
+                week_spend.append({"site":site,"supplier":sup,"orders":a_["orders"],
+                  "value_gbp":round(a_["value"],2),
+                  # no line/item counts exist in the report - null, never 0, so the
+                  # shell renders an em dash rather than implying an empty order
+                  "lines":None,"items":None,
+                  "supplier_canon":canon_supplier(sup)})
+            week_spend.sort(key=lambda r:-r["value_gbp"])
+            # Same roll-up, but this source carries no line, item or per-delivery
+            # detail. Those stay null, never 0, so the shell renders an em dash
+            # rather than implying an order with nothing on it.
+            sup_agg3={}
+            for (site,sup),a_ in agg3.items():
+                b_=sup_agg3.setdefault(sup,{"orders":0,"value":0.0,"sites":set()})
+                b_["orders"]+=a_["orders"]; b_["value"]+=a_["value"]; b_["sites"].add(site)
+            supplier_totals=[{"supplier":sup,"supplier_canon":canon_supplier(sup),
+                              "orders":b_["orders"],"deliveries":None,
+                              "lines":None,"items":None,"sites":len(b_["sites"]),
+                              "value_gbp":round(b_["value"],2)}
+                             for sup,b_ in sup_agg3.items()]
+            supplier_totals.sort(key=lambda r:(-r["value_gbp"],r["supplier"]))
+            supplier_totals_basis=("Weekly outstanding-orders report grouped by supplier. "
+                "That report carries no line, item or delivery-date detail per order, so "
+                "those columns are blank rather than zero - only spend and order count are "
+                "known on this source, and both are a projection from outstanding orders.")
+            week_spend_source="weekly_report_fallback"
+            week_spend_basis=("Kobas Orders feed missing - projected spend falling back to "
+                "the weekly outstanding-orders report (may be up to 7 days stale): one row per "
+                "site+supplier combination (deduped by Order ID across weekly pulls, latest pull "
+                "wins), summing Order Value for orders whose Target Delivery Date falls within the "
+                "current Mon-Sun week - a projection from outstanding orders, not a measured or "
+                "confirmed spend figure, and it carries no delivered/pending split and no line or "
+                "item counts")
+            gaps.append("Kobas Orders feed missing - projected spend falling back to the "
+                "weekly outstanding-orders report (may be up to 7 days stale)")
+        else:
+            week_spend_source="unavailable"
+            week_spend_basis=("the weekly outstanding-orders report is present but "
+                "carries no order with a Target Delivery Date in this week - its "
+                "content is frozen or this week is not covered, so projected spend "
+                "is unavailable rather than zero")
+            supplier_totals_basis=week_spend_basis
+            gaps.append("Kobas Orders feed missing, and the weekly outstanding-orders "
+                "report has no order due this week - projected spend this week is "
+                "unavailable, reported as unavailable and NOT as zero")
+    else:
+        week_spend_source="weekly_report_fallback"
+        week_spend_basis=("neither the Kobas Orders feed nor the weekly "
+            "outstanding-orders report is available this bake")
+        gaps.append(f"'{FULFIL_FEED}' absent from the warehouse, and the Kobas Orders "
+            "feed is absent too - projected spend this week unavailable")
+
+    if week_spend_source=="weekly_report_fallback":
+        gaps.append("Projected spend this week (fallback figure) is a proxy, not a confirmed "
+            "figure: it sums Order Value on currently-outstanding orders whose Target Delivery "
+            "Date falls in the current Mon-Sun week - it will overstate spend for any order "
+            "that later slips to a different week, and it says nothing about orders not yet "
+            "placed. There is no delivered-vs-ordered signal anywhere in the estate to true "
+            "this up against: the Mapal Easilys feeds that used to be named here as the fix "
+            "were removed on 27/08/2026 because the business does not use Easilys, so this is "
+            "a missing SOURCE, not a broken feed - closing it needs a system that records "
+            "deliveries, not a credential")
+        gaps.append("Some 'outstanding' orders in the Kobas report carry Order Placed dates back "
+            "to 2024 and still show status=pending - almost certainly abandoned/never closed out "
+            "in the source system rather than a live backlog; if one of these happens to carry a "
+            "Target Delivery Date in the current week it is still included as-is")
+
+    # ---- monthly supplier OTIF (deliveries vs issues recorded) ------------
+    # Ross's definition, locked 26/08/2026, verbatim: "match the deliveries
+    # amount for the month to the amount of issues recorded in that month".
+    # Per supplier per calendar month:
+    #     otif_pct = max(0, deliveries - issues) / deliveries * 100
+    # null (rendered as an em dash) when deliveries = 0. This is an
+    # ISSUE-FREE-DELIVERY RATE, not a measured on-time-in-full: nothing here
+    # observes whether a delivery was on time or complete, only whether
+    # somebody filed an issue against that supplier in the same month. It is
+    # NOT a one-to-one match either - one issue form can describe several
+    # problems and several issues can land on one delivery. Ross has accepted
+    # both approximations; the per-issue detail stays on the Supplier Issues
+    # tab. A measured OTIF needs a source that records what was DELIVERED,
+    # and the estate does not have one: the Mapal Easilys feeds that this
+    # comment used to point at were removed on 27/08/2026 (the business does
+    # not use Easilys). The open item is a missing system, not a broken feed.
+    OTIF_FIRST_MONTH="2026-08"
+    # Ross, 09/09/2026: this constant is the date the ANSWERS FEED FIRST LANDED,
+    # not the date its data begins, and the two are eight days apart. Each pull
+    # reaches back ~9 days, so the 13/08 pull already carried answers from 05/08.
+    # Renamed to say what it is, and the figure quoted to the reader is now
+    # MEASURED from the rows rather than assumed from the landing date - the old
+    # note told Ross August "counts only start mid-month" when in fact it covers
+    # 5-31 Aug, understating his own coverage by more than a week.
+    ISSUES_FEED_LANDED="2026-08-13"
+    ISSUES_HISTORY_START=min((i_.get("d") or "9999" for i_ in issues),
+                             default=ISSUES_FEED_LANDED)
+    # ---- KR1: delivery issues per month, by ANSWERED supplier -------------
+    # Ross, 09/09/2026: the headline supplier number is now FORMS RAISED IN THE
+    # MONTH BY ANSWERED SUPPLIER, measured against Supply KR1 (<=10 a month).
+    # Open/closed state is out of the headline entirely. It depended on sites
+    # closing forms in GetCompliant and they largely do not, so "214 open" grew
+    # on its own; and it was never a count of forms anyway - see the
+    # open_note below before putting that number in front of anyone.
+    #
+    # COMPUTED OUTSIDE THE OTIF BLOCK ON PURPOSE. This rollup used to live
+    # inside `if week_spend_source=="order_emails"`, so a bake where the Kobas
+    # Orders feed had not landed produced no monthly issue counts at all - even
+    # though issues come from GetCompliant and have nothing to do with Kobas.
+    # KR1 must not go dark because a different system's email did not arrive.
+    #
+    # THE MONTH IS min(AnsweredDateTime), NOT the form's creation date. That is
+    # not a detail: six forms created in March/June 2026 were bulk-answered on
+    # 11/08/2026 at Maki O2 Arena (five of them answered literally "N/A"), so
+    # bucketing on creation date moves August from 78 forms to 72 and Lynas
+    # from 53 to 52. Answer date is when the issue was actually reported.
+    KR1_TARGET=10
+    # issues_by_month stays {month: {supplier: int}} because the OTIF block
+    # downstream reads it that way; the richer per-supplier detail accumulates
+    # alongside it in kr1_detail rather than by reshaping it.
+    issues_by_month={}; unattributed={}; month_span={}; kr1_detail={}
+    for i_ in issues:
+        d=i_.get("d") or ""
+        if len(d)<7 or d[:7]<OTIF_FIRST_MONTH: continue
+        m=d[:7]
+        lo_,hi_=month_span.get(m,(d,d)); month_span[m]=(min(lo_,d),max(hi_,d))
+        if i_.get("supplier"):
+            issues_by_month.setdefault(m,{})
+            issues_by_month[m][i_["supplier"]]=issues_by_month[m].get(i_["supplier"],0)+1
+            e_=kr1_detail.setdefault(m,{}).setdefault(i_["supplier"],
+                 {"open":0,"sites":set(),"answered":0,"text":0})
+            if i_.get("open"): e_["open"]+=1
+            if i_.get("site"): e_["sites"].add(i_["site"])
+            if i_.get("attribution")=="answered": e_["answered"]+=1
+            elif i_.get("attribution")=="text": e_["text"]+=1
+        else:
+            unattributed[m]=unattributed.get(m,0)+1
+    # The answer feed reaches back only ~9 days from each pull, so the earliest
+    # month in range starts wherever the first archived pull could see, not on
+    # the 1st. August begins on the 5th. Saying "August: 78" without saying
+    # "5-31 Aug" invents a month-on-month trend out of a coverage edge.
+    answers_newest=max((i_.get("d") or "" for i_ in issues), default="")
+    kr1_months=[]
+    for m in sorted(set(issues_by_month)|set(unattributed)|set(month_span)):
+        if m>(pull or datetime.date.today().isoformat())[:7]: continue
+        # "open" travels as a SECONDARY column, never as the headline. It is
+        # counted from the per-issue rows (IsOpenDeviation on the answer), so it
+        # reconciles with the raised count on its own row - the GC Forms Overview
+        # figure never could, being a sum over form versions.
+        _dt=kr1_detail.get(m) or {}
+        rows_=sorted(({"supplier":s,"issues":n,
+                       "open":(_dt.get(s) or {}).get("open",0),
+                       "sites":len((_dt.get(s) or {}).get("sites") or ()),
+                       "answered":(_dt.get(s) or {}).get("answered",0),
+                       "text":(_dt.get(s) or {}).get("text",0)}
+                      for s,n in (issues_by_month.get(m) or {}).items()),
+                     key=lambda r:(-r["issues"],r["supplier"]))
+        att=sum(r["issues"] for r in rows_); un=unattributed.get(m,0)
+        first_,last_=month_span.get(m,(None,None))
+        cov=[]
+        if first_ and not first_.endswith("-01"):
+            cov.append(f"first answer {first_} - nothing before it is in range")
+        month_end=(datetime.date(int(m[:4]),int(m[5:7]),28)+datetime.timedelta(days=4))
+        month_end=(month_end-datetime.timedelta(days=month_end.day)).isoformat()
+        if last_ and last_<month_end:
+            cov.append(f"last answer {last_}"+(" - the month is not over" if month_end>=(pull or "")[:10] else ""))
+        # Only the month the feed actually stops inside (and any later one) can
+        # be undercounted by that lag. Hanging this warning on a closed month
+        # like August would tell the reader a settled figure is provisional.
+        if answers_newest and pull and answers_newest<pull and m>=answers_newest[:7]:
+            cov.append(f"the answer feed's newest row is {answers_newest} but this bake is stamped "
+                       f"{pull}, so the last {(datetime.date.fromisoformat(pull)-datetime.date.fromisoformat(answers_newest)).days} "
+                       f"day(s) are missing and this month is an UNDERCOUNT")
+        kr1_months.append({"month":m,"suppliers":rows_,
+          "issues":att+un,"attributed":att,"unattributed":un,
+          "open":sum(r["open"] for r in rows_),
+          # An explicit flag rather than leaving the shell to read prose: a
+          # month the feed stops inside is an undercount, and a card must be
+          # able to say so without regexing coverage_note.
+          "undercount":bool(answers_newest and pull and answers_newest<pull
+                            and m>=answers_newest[:7]),
+          "target":KR1_TARGET,
+          # Green when the target is met, red when it is not. The Master
+          # Operating Manual gives a target and no tolerance, so there is no
+          # amber band here to invent.
+          "rag":("green" if att+un<=KR1_TARGET else "red"),
+          "first_answer":first_,"last_answer":last_,
+          "coverage_note":"; ".join(cov) or None})
+    snap["suppliers"]["kr1"]={"target":KR1_TARGET,"months":kr1_months,
+      "basis":("one row per delivery/supplier issue form submission in GC Form Task Answers, "
+        "deduped by FormId, bucketed on the month of its own answer date (min AnsweredDateTime) "
+        "and attributed to the supplier ANSWERED on the form, falling back to a supplier name "
+        "found in the free-text issue where the question was left blank. Counts forms RAISED in "
+        "the month; it says nothing about whether they were closed."),
+      # Measured, not hard-coded: this note quoted "96 of the 214 on the 07/09
+      # pull" and was stale within two days. The same staleness that made the
+      # alias gap wrong.
+      "open_note":(lambda _all,_live,_dead:
+        f"The old headline, '{_all} open', is not published as a KR any more and should not be "
+        f"quoted. It summed OpenDeviationsCount over GC Forms Overview rows, which are FORM "
+        f"VERSIONS, not forms"
+        + (f": {_all-_live} of the {_all} sit on ARCHIVED or DELETED versions (the raw field is "
+           f"'IsArchieved' - GetCompliant's own misspelling, do not 'fix' it)"
+           + (f", {max(_dead,key=lambda f_:f_['open'])['open']} of them on one version that "
+              f"simultaneously reports 0 deviations raised and 0 forms completed" if _dead else "")
+           if _all>_live else "")
+        + f". The live-version total is {_live}. Closing state also depends on sites closing forms "
+          "in GetCompliant, which they largely do not."
+        )(sum(f_["open"] for f_ in sups_all_versions),
+          sum(f_["open"] for f_ in sups_all_versions if f_["live"]),
+          [f_ for f_ in sups_all_versions if not f_["live"] and f_["open"]])}
+
+    otif_months=[]; otif_basis=None
+    if week_spend_source=="order_emails":
+        cur.execute("WITH o AS ("+ORDER_EMAIL_DEDUP+") "
+                    "SELECT substr(dd,1,7) m, sup, count(*) FROM o "
+                    "WHERE dd IS NOT NULL AND dd>=%s GROUP BY 1,2",
+                    (ORDER_EMAIL_FEED,OTIF_FIRST_MONTH+"-01"))
+        deliveries={}
+        for m,sup,n in cur.fetchall():
+            if not m: continue
+            name=(sup or "(no supplier)").strip()
+            key=canon_supplier(name) or name
+            d_=deliveries.setdefault(m,{})
+            e_=d_.setdefault(key,{"supplier":key,"supplier_canon":canon_supplier(name),
+                                  "deliveries":0,"issues":0})
+            e_["deliveries"]+=n
+        # Ross, 09/09/2026: PER-SUPPLIER COVERAGE, because feed-level coverage is
+        # what made this metric indefensible. Lynas read 0% for August - 34
+        # "deliveries" against 53 issues - and the reason is not that Lynas
+        # failed 53 times. It is that the numerator and the denominator cover
+        # DIFFERENT DATE RANGES: issues run 05-31 Aug, while the Kobas order
+        # email feed only starts partway through the month, and starts on a
+        # different day for every supplier. A rate whose top and bottom measure
+        # different fortnights is not a rate.
+        # Compare September, where the feed covers the whole month: Lynas 97
+        # deliveries, 18 issues, 81.4% - a number you could put to Nad.
+        cur.execute("WITH o AS ("+ORDER_EMAIL_DEDUP+") "
+                    "SELECT sup, min(dd) FROM o WHERE dd IS NOT NULL GROUP BY 1",
+                    (ORDER_EMAIL_FEED,))
+        first_dd={}
+        for sup,mn in cur.fetchall():
+            key=canon_supplier((sup or "").strip()) or (sup or "").strip()
+            if mn and (key not in first_dd or mn<first_dd[key]): first_dd[key]=mn
+        # Issues come from the SAME list the Supplier Issues tab renders and the
+        # SAME rollup the KR1 gauge reads, so all three always reconcile.
+        # Rebuilding them here (as this block used to) was how the OTIF card
+        # and the KR would have been free to drift apart.
+        months=sorted(set(deliveries)|set(issues_by_month)|set(unattributed))
+        cutoff=(pull or datetime.date.today().isoformat())[:7]
+        months=[m for m in months if OTIF_FIRST_MONTH<=m<=cutoff]
+        for m in months:
+            sups=dict(deliveries.get(m,{}))
+            for key,n in (issues_by_month.get(m,{}) or {}).items():
+                e_=sups.setdefault(key,{"supplier":key,"supplier_canon":canon_supplier(key),
+                                        "deliveries":0,"issues":0})
+                e_["issues"]=n
+            rows_=[]
+            for e_ in sups.values():
+                dl,iss=e_["deliveries"],e_["issues"]
+                # A supplier-month is measurable only when the order emails cover
+                # the WHOLE month for THAT supplier. Otherwise the denominator is
+                # a fragment of the month the numerator counts, and the honest
+                # output is "not measured" plus what would close it - never a
+                # plausible-looking percentage.
+                fd=first_dd.get(e_["supplier"])
+                if not dl:
+                    why=("no Kobas order-confirmation email for this supplier - "
+                         "enable order-by-email for it in Kobas to measure this")
+                elif not fd or fd>m+"-01":
+                    why=(f"order emails for this supplier only start {fd}, "
+                         f"partway through {m} - the delivery count is a fragment of "
+                         f"the month the issue count covers")
+                else:
+                    why=None
+                rows_.append({**e_,"measurable":why is None,"not_measured":why,
+                  "coverage_from":fd,
+                  "otif_pct":(round(100.0*max(0,dl-iss)/dl,1) if (dl and why is None) else None)})
+            rows_.sort(key=lambda r:(-r["deliveries"],r["supplier"]))
+            dl_tot=sum(r["deliveries"] for r in rows_)
+            iss_tot=sum(r["issues"] for r in rows_)
+            # The all-supplier total is measurable only over the suppliers that
+            # are themselves measurable. Summing every supplier and dividing
+            # would smuggle the partial-coverage months back in through the
+            # total, which is the number the KPI tile shows.
+            meas=[r for r in rows_ if r["measurable"]]
+            dl_m=sum(r["deliveries"] for r in meas); iss_m=sum(r["issues"] for r in meas)
+            otif_months.append({"month":m,"suppliers":rows_,
+              "deliveries":dl_tot,"issues":iss_tot,
+              "measurable_suppliers":len(meas),"measurable_of":len(rows_),
+              "measurable_deliveries":dl_m,"measurable_issues":iss_m,
+              "unattributed_issues":unattributed.get(m,0),
+              "otif_pct":round(100.0*max(0,dl_m-iss_m)/dl_m,1) if dl_m else None})
+        otif_basis=("ISSUE-FREE DELIVERY RATE (INDICATIVE) - this is NOT OTIF and must not be "
+            "labelled as one: nothing here observes whether a delivery was on time, and one "
+            "delivery can carry several issue forms, so the rate can only ever be a lower bound. "
+            "deliveries = orders with a delivery date in the month from the Kobas Order Emails "
+            "feed (deduped by Kobas Reference); issues = supplier issues from GC Form Task "
+            "Answers whose own answer date falls in the month, deduped by FormId - the identical "
+            "rows the Supplier Issues tab and the KR1 gauge read, so all three reconcile; "
+            "rate = max(0, deliveries - issues) / deliveries, and is published ONLY for a "
+            "supplier-month whose order emails cover the whole month for that supplier. Every "
+            "other supplier-month carries not_measured saying why, and is excluded from the "
+            "all-supplier total. Real OTIF needs a source that records what was DELIVERED "
+            "against what was ORDERED - Mapal Supplier Orders, or a delivery file from Lynas.")
+    else:
+        gaps.append("Monthly supplier OTIF unavailable: it needs the Kobas Orders feed "
+            "for its delivery counts, and that feed is absent this bake")
+    PRICE_FEED="Kobas Report - Weekly Ingredient Price Changes Report"
+    # Ross, 01/09/2026: update the price watch every time the report arrives,
+    # and flag (1) an increase that has since held, (2) a price that keeps
+    # moving. Both need HISTORY, and this block used to read exactly one pull
+    # - so it showed the newest report and nothing else, and had no way to
+    # know whether a rise had stuck or a price had bounced.
+    #
+    # WHAT A "REPORT" IS. Kobas emails this weekly; the export pulls it every
+    # day, so the same report is archived several days running. Four distinct
+    # reports arrived in the ten pulls to 31/08. So the unit of time here is a
+    # DISTINCT REPORT, identified by its content, dated by the first pull that
+    # carried it - not pull_date, which would count one report four times and
+    # make every price look like it changed daily.
+    #
+    # Dating by first-seen is deliberately conservative. A pull gap (an export
+    # that failed, or the 3-day email window that lost the 24-31/08 report on
+    # three days) can only make a report look NEWER than it is, so the
+    # "held for N days" test under-states age and never over-fires.
+    #
+    # WHAT A ROW IS. Each row is one change EVENT, not one item: an item can
+    # appear several times in a single report, and the report carries no
+    # per-event timestamp, so within a report the only ordering is row_num.
+    # 'Old Price' is the literal string 'New' for an item priced for the first
+    # time - that is not an increase and is counted separately.
+    PRICE_SETTLED_DAYS=14          # Ross: "more than 2 weeks"
+    PRICE_FLUX_REPORTS=2           # moved in at least this many distinct reports
+    PRICE_FLUX_REVERSALS=2         # and changed direction at least this often
+    PRICE_SUSPECT_UP=100.0         # a jump this big is a re-spec, not a price rise
+    PRICE_SUSPECT_DOWN=-50.0
+    PRICE_STALE_DAYS=10            # a weekly report older than this is a gap
+    # --- KR2 price spikes, per supplier (16/09/2026) ---------------------
+    PRICE_SPIKE_PCT=10.0           # Ross: a single-report rise of 10% or more
+    PRICE_SPIKE_ORDERED_WEEKS=8    # only ingredients actually ordered recently
+    PRICE_SPIKE_MAX_PER_SUPPLIER=3 # the KR target: <=3 spikes a month each
+    # How much of the price report has to be attributable to a named supplier
+    # before this system will put supplier names on a scorecard row. Ross set
+    # it. It is NOT a quality bar on the join - measured against the export
+    # diff, the two inferred routes are 100% right where they fire - it is a
+    # COVERAGE bar, and coverage is limited by how often the pack-price export
+    # is taken. Under it, KR2 stays not_measured and says the live rate, so
+    # the row turns itself on the moment the exports catch up.
+    PRICE_ATTRIBUTION_MIN_PCT=90.0
+    PACK_FEED="Kobas Pack Prices"
+    PACK_STALE_DAYS=14
+    price_reports=[]; price_settled=[]; price_flux=[]; price_suspect=[]
+    price_items=0; newest_report=None
+    # Initialised HERE, not inside the has_feed branch below: the snapshot
+    # publishes it unconditionally, so a day without the price feed (the
+    # weekly report missed its window, or the export skipped it) would
+    # otherwise fail the whole bake on a NameError.
+    price_supplier_seen=set()
+    # Same reason as price_supplier_seen above: the attribution block below
+    # publishes unconditionally, so a day without the price report must not
+    # take the whole bake down on a NameError.
+    att_by_route=collections.Counter(); att_unattributed=collections.Counter()
+    att_total=0
+    spike_events=[]; spike_months=[]; spike_weeks={}
+    spike_unattributed=0; spike_dupe_skipped=0; ordered_recent=None
+
+    # ---- WHOSE price moved -----------------------------------------------
+    # THE JOIN EVERYONE REACHES FOR FIRST DOES NOT EXIST, so do not re-add it.
+    # The obvious plan is report 'Parent ID' = export 'Ingredient Id'. It
+    # matches ZERO of 1,236 rows and always will: Parent ID is the PARENT
+    # INGREDIENT and Ingredient Id is a SUPPLIER PACK LINE underneath it.
+    # CHICKEN KARAAGE is parent 1965, whose pack lines are 1966 (Lynas), 2576
+    # (Dunster) and 13241 (JFC), all 10 x 1000g. Both sets live in 1635..13784,
+    # every Parent ID falls in a GAP of the Ingredient Id set, and two
+    # independent draws that dense would overlap on about 94 - so zero is
+    # structural, not a sampling accident. A third feed settles it: the Weekly
+    # Stock Check Edits report's 'Ingredient ID' shares 53.7% with Parent ID
+    # and 0.0% with the export. Measured by check_pack_price_attribution.py in
+    # MakiManc/maki-hospitality-etl; re-run it before doubting this.
+    #
+    # NOR IS IT 'Parent ID + 1'. That lands on a same-name export line for 84%
+    # of report rows and on a different name for 0% of them, because a parent
+    # and its first pack line are allocated consecutively - which is exactly
+    # what makes it look like the answer. It names whichever supplier line was
+    # created FIRST under the parent, not the one that moved: scored against
+    # ground truth it is 200/365, a coin flip, and it would systematically
+    # blame the incumbent supplier for a newcomer's price.
+    #
+    # THREE ROUTES, IN ORDER OF EVIDENCE, and each row records which one it
+    # used so the drill-down can show its working:
+    #   diff    two exports bracket the change and one Ingredient Id moved by
+    #           exactly that old->new. The export row carries Supplier Name, so
+    #           this is not inference at all. It is also the only GROUND TRUTH
+    #           available, which is what the other two are scored against.
+    #   unique  only one supplier sells that ingredient in that pack.
+    #   price   several do, but exactly one is currently AT the old or the new
+    #           price.
+    # Scored against 'diff': unique 195/195 and price 156/156 correct, 351
+    # agree, 0 disagree. So an unattributed row is a COVERAGE gap, never a
+    # wrong name - which is why the unattributed are published as a counted,
+    # named gap and never as a supplier called "(none)".
+    def _pk_name(s):
+        """Ingredient names join case- and whitespace-insensitively.
+
+        The report writes 'Prawn use for seafood ramen and sushi nigiri' where
+        the export writes it in capitals, and either side can carry a double
+        space. Exact matching costs real rows silently.
+        """
+        return " ".join((s or "").strip().upper().split())
+    def _pk_pack(ps,uv):
+        """Pack size + unit volume as strings that compare ACROSS sources.
+
+        The report ships Pack Size as a JSON float (10.0), the export as a bare
+        integer ('10'). Compared raw they match nothing, and that failure looks
+        exactly like the namespace problem above - so it is normalised once,
+        here, rather than at each call site.
+        """
+        def one(v):
+            f=fb_num(v)
+            if f is not None and f==int(f): return str(int(f))
+            return "" if v is None else str(v).strip()
+        return (one(ps),one(uv))
+    def _code_key(code):
+        """A Supplier Code with punctuation stripped.
+
+        Kobas records a second pack variant by appending dots to the supplier's
+        own code - S6005 / S6005. / 60166 / 60166.. - so two lines that differ
+        only by punctuation are ONE line duplicated, not two prices. They are
+        collapsed rather than flagged; what survives the collapse and is still
+        doubled is a real duplicate.
+        """
+        return re.sub(r"[^a-z0-9]","",(code or "").lower())
+    pack_snaps=[]; pack_newest={}; pack_newest_date=None
+    pack_by_np={}; pack_truth={}; pack_dupe=set()
+    pack_rows=0; pack_twins=0; pack_twins_wide=0; pack_zero=0
+    if has_feed(cur,PACK_FEED):
+        cur.execute(
+          "SELECT pull_date::text d, data->>'Ingredient Id' iid, "
+          " data->>'Supplier Name' sup, data->>'Ingredient Category Name' cat, "
+          " data->>'Ingredient Name' nm, data->>'Supplier Code' code, "
+          " data->>'Pack Size' ps, data->>'Unit Volume' uv, "
+          " data->>'Current Price' cp "
+          "FROM etl_feed_rows WHERE feed=%s ORDER BY pull_date, row_num",
+          (PACK_FEED,))
+        by_pull={}
+        for d,iid,sup,cat,nm,code,ps,uv,cp in cur.fetchall():
+            if not iid: continue
+            by_pull.setdefault(d,{})[str(iid)]={
+              "sup":(sup or "").strip() or None,"cat":(cat or "").strip() or None,
+              "nm":nm,"code":(code or "").strip() or None,
+              "ps":ps,"uv":uv,"price":fb_num(cp)}
+        pack_snaps=[(d,by_pull[d]) for d in sorted(by_pull)]
+        if pack_snaps:
+            pack_newest_date,pack_newest=pack_snaps[-1]
+            pack_rows=len(pack_newest)
+            # A line priced 0.00 is a placeholder Kobas never filled in, not a
+            # free ingredient. It cannot evidence a price either way, so it is
+            # counted, disclosed, and kept out of every route below.
+            live={i:r for i,r in pack_newest.items() if r["price"]}
+            pack_zero=len(pack_newest)-len(live)
+            # Collapse the punctuated code twins FIRST, then whatever is still
+            # doubled is a genuine duplicate. Doing it the other way round
+            # reports Kobas's own bookkeeping as a data-quality problem.
+            groups={}
+            for i,r in live.items():
+                groups.setdefault((r["sup"],r["cat"],_pk_name(r["nm"]))+_pk_pack(r["ps"],r["uv"]),[]).append((i,r))
+            for k,g in groups.items():
+                keep={}
+                for i,r in g:
+                    ck=_code_key(r["code"])
+                    # Keep the line with the SHORTEST raw code - 'S6005' over
+                    # 'S6005.' - so the surviving row carries the code a buyer
+                    # would actually quote at the supplier.
+                    if ck and (ck not in keep or len(r["code"] or "")<len(keep[ck][1]["code"] or "")):
+                        keep[ck]=(i,r)
+                    elif not ck:
+                        keep[i]=(i,r)     # no code at all: cannot be a twin
+                pack_twins+=len(g)-len(keep)
+                if len(keep)>1: pack_dupe.add(k)
+                for i,r in keep.values():
+                    pack_by_np.setdefault((_pk_name(r["nm"]),)+_pk_pack(r["ps"],r["uv"]),[]).append(r)
+            # Twins that sit on DIFFERENT pack shapes are counted but NOT
+            # merged. S6005 / S6005. on one pack is the same record written
+            # twice; on 30x2 versus 60x1 it is one supplier code reused for two
+            # real pack sizes, and collapsing those would silently delete a
+            # price. Disclosed so the Kobas clean-up has the number, and left
+            # alone so the bake never invents a merge it cannot justify.
+            wide={}
+            for i,r in live.items():
+                wide.setdefault((r["sup"],r["cat"],_pk_name(r["nm"])),[]).append(r)
+            for g in wide.values():
+                c=collections.Counter(_code_key(r["code"]) for r in g if _code_key(r["code"]))
+                pack_twins_wide+=sum(n-1 for n in c.values() if n>1)
+            # Ground truth: every move a PAIR of exports proves, keyed so a
+            # report row can find it. Keyed on Ingredient Id BETWEEN the two
+            # exports, so the supplier on the row is the supplier that moved.
+            for (_d1,a),(_d2,b) in zip(pack_snaps,pack_snaps[1:]):
+                for i,rb in b.items():
+                    ra=a.get(i)
+                    if not ra: continue      # a pack line that did not exist yet
+                    o,n=ra["price"],rb["price"]
+                    if not o or not n or o==n: continue
+                    pack_truth.setdefault(
+                      (_pk_name(rb["nm"]),)+_pk_pack(rb["ps"],rb["uv"])
+                      +(round(o,4),round(n,4)),[]).append(rb)
+    pack_names={k[0] for k in pack_by_np}
+    def attribute_price(nm,ps,uv,o,n,reported=None):
+        """Who moved this price: (supplier, code, category, route, why).
+
+        route is None when nobody could be named, and `why` then says what
+        stopped it - in words a reader can act on, because that list IS the
+        roadmap for getting this measured.
+        """
+        if reported:
+            # If Kobas ever adds a Supplier column to the price report, its own
+            # answer beats anything reconstructed here.
+            return reported,None,None,"reported",None
+        key=(_pk_name(nm),)+_pk_pack(ps,uv)
+        if o is not None and n is not None:
+            t=pack_truth.get(key+(round(o,4),round(n,4))) or []
+            if len({r["sup"] for r in t})==1:
+                r=t[0]; return r["sup"],r["code"],r["cat"],"diff",None
+        c=pack_by_np.get(key) or []
+        if not c:
+            return (None,None,None,None,
+              "no pack line for this ingredient in this pack size"
+              if key[0] in pack_names else
+              "this ingredient is not in the pack-price export")
+        sups={r["sup"] for r in c}
+        if len(sups)==1:
+            r=c[0]; return r["sup"],r["code"],r["cat"],"unique",None
+        at=[r for r in c if r["price"] in (o,n)]
+        if len({r["sup"] for r in at})==1:
+            r=at[0]; return r["sup"],r["code"],r["cat"],"price",None
+        return (None,None,None,None,
+          "several suppliers sell this ingredient in this pack and none is at "
+          "either price, so naming one would be a guess")
+    def pack_is_dupe(sup,cat,nm,ps,uv):
+        return (sup,cat,_pk_name(nm))+_pk_pack(ps,uv) in pack_dupe
+
+    if has_feed(cur,PRICE_FEED):
+        # THE SUPPLIER COLUMN IS READ SPECULATIVELY, AND TODAY IT IS ALWAYS NULL.
+        # Ross, 02/09/2026, asked for each supplier's price point per product.
+        # The emailed report does not carry one: its seven columns are Parent
+        # ID, Ingredient Name, Pack Size, Unit Volume, Measurement, Old Price,
+        # New Price, and the email parser keeps EVERY column of the sheet
+        # (dict(zip(header,row)) - no whitelist), so this is Kobas not sending
+        # it rather than us dropping it. Of the reports that do name a
+        # supplier, Outstanding Stock Orders and Ops Deliveries, neither
+        # carries an ingredient or a unit price - they are order and invoice
+        # totals - so no join reconstructs it either.
+        #
+        # coalesce over the plausible spellings costs nothing (->> on a missing
+        # key is NULL in both Postgres and the DuckDB archive) and means the
+        # day somebody adds a Supplier column to the report in Kobas, the
+        # drill-down fills itself in with no code change. Until then every
+        # consumer below sees None and the card says so in as many words.
+        cur.execute(
+          "SELECT pull_date::text d, row_num, nullif(data->>'Ingredient Name','') i, "
+          " data->>'Old Price' op, data->>'New Price' np, "
+          " data->>'Parent ID' pid, data->>'Pack Size' ps, "
+          " data->>'Unit Volume' uv, data->>'Measurement' ms, "
+          " coalesce(data->>'Supplier', data->>'Supplier Name', "
+          "          data->>'Vendor', data->>'Supplier/Sending Venue') sup "
+          "FROM etl_feed_rows WHERE feed=%s ORDER BY pull_date, row_num",
+          (PRICE_FEED,))
+        by_pull={}
+        for d,rn,i,op,np,pid,ps,uv,ms,sup in cur.fetchall():
+            by_pull.setdefault(d,[]).append((rn,i,op,np,pid,ps,uv,ms,sup))
+        seen_hash={}; reports=[]
+        for d in sorted(by_pull):
+            rows=by_pull[d]
+            h=hashlib.sha1(repr(rows).encode()).hexdigest()
+            if h in seen_hash: continue      # same report, pulled again
+            seen_hash[h]=d
+            reports.append((d,rows))
+            price_reports.append({"date":d,"rows":len(rows)})
+        # One item is a specific pack of a specific ingredient. Parent ID alone
+        # is not unique - EDAMAME carries several packs under one parent - and
+        # keying on it would read two packs' prices as one item bouncing.
+        hist={}
+        # Attribution is done ONCE per change event, here, and travels with the
+        # event from now on. Every card, row and modal downstream reads the
+        # same answer, so the Supply tab and the scorecard cannot disagree
+        # about who moved a price.
+        for d,rows in reports:
+            for rn,i,op,np,pid,ps,uv,ms,sup in rows:
+                n=fb_num(np); o=fb_num(op)
+                if n is None: continue
+                sup=(sup or "").strip() or None
+                if sup: price_supplier_seen.add(sup)
+                who,code,cat,route,why=attribute_price(i,ps,uv,o,n,reported=sup)
+                att_total+=1
+                if route: att_by_route[route]+=1
+                else: att_unattributed[why]+=1
+                a={"supplier":who,"supplier_canon":canon_supplier(who) if who else None,
+                   "supplier_code":code,"category":cat,"attribution":route,
+                   "unattributed_why":why,
+                   "duplicate_line":bool(who and pack_is_dupe(who,cat,i,ps,uv))}
+                hist.setdefault((pid,ps,uv,ms),[]).append((d,o,n,i,sup,a))
+        price_items=len(hist)
+        newest=newest_report=reports[-1][0] if reports else None
+        def packlabel(pid,ps,uv,ms):
+            """'1 x 25000 Grams' - what tells two packs of one ingredient apart.
+
+            Without it the cards show 'Sweet potatoes' twice with different
+            prices and look broken, when they are in fact two different packs.
+            """
+            bits=[]
+            n=fb_num(ps); v=fb_num(uv)
+            if n and n!=1: bits.append(str(int(n) if n==int(n) else n)+" x")
+            if v: bits.append(str(int(v) if v==int(v) else v))
+            if ms: bits.append(str(ms))
+            return " ".join(bits) or None
+        def item_trail(evs):
+            """Every change event for one pack, oldest first.
+
+            The card shows a rise or a swing as one number; this is the working
+            behind it, which is what a supplier conversation actually needs -
+            when it moved, from what, to what, and how many times. Capped at 24
+            events so one pathological item cannot bloat the snapshot.
+            """
+            out=[]
+            for d,o,n,_i,sup,a in evs[-24:]:
+                out.append({"d":d,"old":o,"new":n,
+                  "supplier":a["supplier"],"supplier_canon":a["supplier_canon"],
+                  "attribution":a["attribution"],
+                  "unattributed_why":a["unattributed_why"],
+                  "pct":round(100.0*(n-o)/o,1) if (o and o>0) else None,
+                  "dir":0 if o is None else (1 if n>o else -1 if n<o else 0)})
+            return out
+
+        def supplier_view(evs):
+            """Latest price per supplier for one pack, from its change events.
+
+            TWO LIMITS, both stated on the card rather than implied away.
+            First, this report is a log of CHANGES, so it can only ever show
+            suppliers that MOVED a price - a supplier holding a steady quote
+            never appears. Second, a change is only here if it could be
+            attributed at all; the rows that could not are counted into
+            `unattributed` beside the table rather than piled into a supplier
+            called "(none)", which would sort among real companies as though
+            "we don't know" were a business.
+            """
+            by={}; unattributed=0
+            for d,o,n,_i,sup,a in evs:
+                if not a["supplier"]:
+                    unattributed+=1
+                    continue
+                e=by.setdefault(a["supplier"],{
+                  "supplier":a["supplier"],"supplier_canon":a["supplier_canon"],
+                  "supplier_code":a["supplier_code"],"category":a["category"],
+                  "duplicate_line":a["duplicate_line"],"attribution":a["attribution"],
+                  "changes":0,"price":None,"last_change":None,"dir":0})
+                e["changes"]+=1
+                # The strongest route any of this supplier's events used, so a
+                # row proved by an export diff does not read as a guess because
+                # a later event had to fall back.
+                if a["attribution"]=="diff" or e["attribution"] is None:
+                    e["attribution"]=a["attribution"]
+                if e["last_change"] is None or d>=e["last_change"]:
+                    e["last_change"]=d; e["price"]=n
+                    e["dir"]=0 if o is None else (1 if n>o else -1 if n<o else 0)
+            return (sorted(by.values(),
+                           key=lambda r:(r["price"] is None, r["price"])),
+                    unattributed)
+
+        for k,evs in hist.items():
+            name=evs[-1][3]
+            pack=packlabel(*k)
+            changes=[e for e in evs if e[1] is not None and e[1]>0]
+            if not changes: continue         # only ever priced 'New'
+            d,o,n,_name,_sup,latest_att=changes[-1]
+            pct=round(100.0*(n-o)/o,1)
+            since=datetime.date.fromisoformat(d)
+            # TWO different spans, and conflating them would be a lie either
+            # way. age_days is calendar time since the rise - what Ross means
+            # by "stayed at that price for more than 2 weeks". held_days is
+            # how much of that age the reports actually EVIDENCE: the report
+            # only lists changes, so silence means "unchanged", but only up to
+            # the newest report we hold. If that report is a fortnight stale,
+            # age keeps climbing while the evidence does not, so both are
+            # published and the card shows the gap.
+            age=(datetime.date.fromisoformat(pull)-since).days
+            held=(datetime.date.fromisoformat(newest)-since).days if newest else 0
+            # Does ANY move in this item's history look like a re-spec rather
+            # than a price? If so the item is marked wherever it appears, so a
+            # £0.01-£2.13 "swing" cannot lead the fluctuating list ahead of a
+            # real one.
+            moves=[100.0*(e[2]-e[1])/e[1] for e in changes]
+            suspect=any(m>=PRICE_SUSPECT_UP or m<=PRICE_SUSPECT_DOWN for m in moves)
+            # id: what the dashboard clicks on. The pack tuple is already the
+            # unique key here (Parent ID alone is not - EDAMAME carries several
+            # packs under one parent), so reuse it rather than inventing one.
+            sup_rows,sup_unattributed=supplier_view(changes)
+            # The row's own supplier is the one behind its LATEST change - the
+            # number the card is showing. A pack shared by several suppliers
+            # still lists them all in `suppliers`, so the headline names who
+            # moved last without pretending the pack belongs to them.
+            row={"id":"|".join(str(x) for x in k),
+                 "item":name,"pack":pack,"old_price":o,"new_price":n,
+                 "pct_change":pct,"since":d,"age_days":age,"held_days":held,
+                 "changes":len(changes),"suspect":suspect,
+                 "reports":len({e[0] for e in changes}),
+                 "supplier":latest_att["supplier"],
+                 "supplier_canon":latest_att["supplier_canon"],
+                 "supplier_code":latest_att["supplier_code"],
+                 "category":latest_att["category"],
+                 "attribution":latest_att["attribution"],
+                 "unattributed_why":latest_att["unattributed_why"],
+                 # An item is flagged if ANY of its attributed events sits on a
+                 # duplicated export line: the duplicate is a property of the
+                 # Kobas record, so it taints every number read off it.
+                 "duplicate_line":any(e[5]["duplicate_line"] for e in changes),
+                 "trail":item_trail(changes),"suppliers":sup_rows,
+                 "suppliers_unattributed":sup_unattributed}
+            # A +2298% "rise" is a re-spec or a keying slip, not a price to go
+            # and negotiate. Kept and shown, but in its own list - same rule as
+            # the refractometer's suspect readings: never silently repaired,
+            # never mixed in with the real signal.
+            if pct>=PRICE_SUSPECT_UP or pct<=PRICE_SUSPECT_DOWN:
+                price_suspect.append(row)
+            elif (pct>0 and age>=PRICE_SETTLED_DAYS
+                  and not any(e[0]>d for e in evs)):
+                # "and not any later event" is belt and braces - changes[-1] is
+                # already the last CHANGE, so a later event could only be a
+                # 'New' re-price, which still means the item moved again.
+                price_settled.append(row)
+            dirs=[1 if e[2]>e[1] else -1 for e in changes]
+            revs=sum(1 for a,b in zip(dirs,dirs[1:]) if a!=b)
+            if row["reports"]>=PRICE_FLUX_REPORTS and revs>=PRICE_FLUX_REVERSALS:
+                prices=sorted({e[2] for e in changes}|{changes[0][1]})
+                lo,hi=prices[0],prices[-1]
+                price_flux.append({**row,"reversals":revs,"low":lo,"high":hi,
+                  "swing_pct":round(100.0*(hi-lo)/lo,1) if lo else None,
+                  "distinct_prices":len(prices)})
+        price_settled.sort(key=lambda r:(-r["pct_change"],-r["age_days"]))
+        # Suspect items last: they are genuinely fluctuating, but a data-entry
+        # swing is a different job from a supplier who will not hold a price,
+        # and the commercial signal has to lead.
+        price_flux.sort(key=lambda r:(r["suspect"],-r["reversals"],
+                                      -(r["swing_pct"] or 0)))
+        price_suspect.sort(key=lambda r:-abs(r["pct_change"]))
+
+        # ---- Supply KR2: price spikes, per supplier, per month -----------
+        # A SPIKE is one supplier pack line rising by PRICE_SPIKE_PCT or more
+        # in a single report. Five exclusions, each for a reason that would
+        # otherwise send someone to a supplier over nothing:
+        #   * Old Price 'New' - a first-ever price is not a rise.
+        #   * a move in the suspect band - at +100% it is a pack or unit
+        #     re-spec or a keying slip, the same rule the settled list uses.
+        #   * duplicate_line - the export holds two live lines for that
+        #     supplier+category+ingredient+pack, so neither price can be
+        #     trusted as THE price.
+        #   * either side priced 0.00 - a placeholder Kobas never filled in.
+        #   * a line whose supplier could not be named - counted separately as
+        #     a disclosed gap, never attributed to anyone.
+        # ONE LINE COUNTS ONCE PER REPORT. The report has no per-event
+        # timestamp and can carry several events for one line, so counting
+        # events would score a line that wobbled twice in one week as two
+        # spikes against its supplier.
+        #
+        # THE ORDERED-RECENTLY FILTER IS PROBED, NOT ASSUMED. Ross's rule is
+        # "only ingredients we actually buy", which needs order lines at
+        # INGREDIENT level. 'Kobas Orders' is parsed from order-confirmation
+        # emails and today keeps only per-order totals - Line Items and Items
+        # Ordered are counts - so there is nothing to filter on and the filter
+        # is OFF, said plainly in the basis rather than silently skipped. The
+        # emails themselves do carry the lines ("2 x 70893 FRESH EGGS (1 x 180
+        # Items @ GBP68.00)"); daily_export.fetch_kobas_orders captures only
+        # the quantity. Widening that regex is what switches this on, and this
+        # block starts using it with no change here.
+        ordered_recent=None
+        if has_feed(cur,ORDER_EMAIL_FEED):
+            _since=(datetime.date.fromisoformat(pull)
+                    -datetime.timedelta(weeks=PRICE_SPIKE_ORDERED_WEEKS)).isoformat()
+            cur.execute(
+              "SELECT DISTINCT coalesce(data->>'Ingredient', data->>'Ingredient Name', "
+              "  data->>'Item', data->>'Item Name', data->>'Product') ing "
+              "FROM etl_feed_rows WHERE feed=%s "
+              "  AND coalesce(data->>'Delivery Date ISO', data->>'Order Email Date')>=%s",
+              (ORDER_EMAIL_FEED,_since))
+            _ings={_pk_name(r[0]) for r in cur.fetchall() if r[0]}
+            if _ings: ordered_recent=_ings
+        for k,evs in hist.items():
+            seen_line=set()
+            for d,o,n,i,_sup,a in evs:
+                if o is None or not o or not n: continue      # 'New', or a 0.00 side
+                pct=round(100.0*(n-o)/o,1)
+                if pct<PRICE_SPIKE_PCT: continue
+                if pct>=PRICE_SUSPECT_UP or pct<=PRICE_SUSPECT_DOWN: continue
+                if a["duplicate_line"]: spike_dupe_skipped+=1; continue
+                if not a["supplier"]: spike_unattributed+=1; continue
+                if ordered_recent is not None and _pk_name(i) not in ordered_recent:
+                    continue
+                if (d,a["supplier"]) in seen_line: continue   # once per report
+                seen_line.add((d,a["supplier"]))
+                spike_events.append({"d":d,"month":d[:7],"supplier":a["supplier"],
+                  "supplier_canon":a["supplier_canon"],"item":i,
+                  "pack":packlabel(*k),"pct":pct,"old":o,"new":n,
+                  "attribution":a["attribution"]})
+        # Every line PRICED in a month or week, per supplier - the denominator.
+        # A supplier with three lines and a supplier with three hundred cannot
+        # be compared on a raw count, so the count never travels without it.
+        _lines_m={}; _lines_w={}
+        for k,evs in hist.items():
+            for d,o,n,i,_sup,a in evs:
+                if not a["supplier"]: continue
+                _lines_m.setdefault((d[:7],a["supplier"]),set()).add(k)
+                _lines_w.setdefault(_mon(d),set()).add((k,a["supplier"]))
+        _by_month={}
+        for e in spike_events:
+            _by_month.setdefault(e["month"],{}).setdefault(e["supplier"],[]).append(e)
+        spike_months=[]
+        for m in sorted(_by_month) or sorted({d[:7] for d,_ in reports}):
+            sups=[]
+            for s,evl in sorted((_by_month.get(m) or {}).items()):
+                worst=max(evl,key=lambda e:e["pct"])
+                sups.append({"supplier":s,"supplier_canon":canon_supplier(s),
+                  "spikes":len(evl),"lines":len(_lines_m.get((m,s)) or ()),
+                  "worst_pct":worst["pct"],
+                  "worst_item":worst["item"]+(" · "+worst["pack"] if worst["pack"] else ""),
+                  "rag":"red" if len(evl)>PRICE_SPIKE_MAX_PER_SUPPLIER else "green"})
+            sups.sort(key=lambda r:(-r["spikes"],-r["worst_pct"],r["supplier"]))
+            over=[r for r in sups if r["spikes"]>PRICE_SPIKE_MAX_PER_SUPPLIER]
+            spike_months.append({"month":m,"suppliers":sups,
+              "over":len(over),"target":PRICE_SPIKE_MAX_PER_SUPPLIER,
+              "rag":"green" if not over else "red",
+              "worst":(over[0]["supplier"]+" "+str(over[0]["spikes"])) if over else None,
+              "spikes":sum(r["spikes"] for r in sups)})
+        # Weekly trend buckets: spikes that week over lines priced that week.
+        spike_weeks={}
+        for e in spike_events:
+            w=_mon(e["d"]); num_,_den,_days=spike_weeks.get(w,(0,0,0))
+            spike_weeks[w]=(num_+1,0,0)
+        for d,_rows in reports:                # a report week with no spike is 0,
+            w=_mon(d)                          # not a hole - the report DID land
+            spike_weeks.setdefault(w,(0,0,0))
+        spike_weeks={w:(n_,len(_lines_w.get(w) or ()),1) for w,(n_,_x,_y) in spike_weeks.items()}
+        # The newest report's own changes, which is what the existing card shows.
+        for rn,i,op,np,pid,ps,uv,ms,_sup in (reports[-1][1] if reports else []):
+            npf=fb_num(np)
+            if npf is None: continue
+            opf=fb_num(op)
+            pct=round(100.0*(npf-opf)/opf,1) if opf else None
+            who,code,cat,route,why=attribute_price(i,ps,uv,opf,npf,reported=_sup)
+            price_watch.append({"ingredient":i,"old_price":opf,"new_price":npf,
+              "pct_change":pct,"is_new":opf is None,
+              "pack":packlabel(pid,ps,uv,ms),
+              "supplier":who,"supplier_canon":canon_supplier(who) if who else None,
+              "supplier_code":code,"category":cat,"attribution":route,
+              "unattributed_why":why,
+              "duplicate_line":bool(who and pack_is_dupe(who,cat,i,ps,uv))})
+        price_watch.sort(key=lambda r:(r["pct_change"] is None,
+                                       -(r["pct_change"] or 0), r["ingredient"] or ""))
+        stale=(datetime.date.fromisoformat(pull)
+               -datetime.date.fromisoformat(newest)).days if newest else None
+        if stale is not None and stale>PRICE_STALE_DAYS:
+            gaps.append("The newest ingredient price report is "+str(stale)+" days old "
+                "(the report is weekly), so the settled-increase flag is counting days "
+                "nothing has confirmed: an item shows as holding its price only because "
+                "no newer report exists to say otherwise. Each row carries held_days - "
+                "how far the evidence actually reaches - beside age_days")
+        if len(reports)<2:
+            gaps.append("Only "+str(len(reports))+" distinct ingredient price report(s) "
+                "are in the archive, so 'held for "+str(PRICE_SETTLED_DAYS)+" days' and "
+                "'keeps fluctuating' have almost no history to judge against - both "
+                "lists will be thin until more reports land")
+        if price_suspect:
+            gaps.append(str(len(price_suspect))+" ingredient price change(s) move by more "
+                "than "+str(int(PRICE_SUSPECT_UP))+"% up or "+str(int(-PRICE_SUSPECT_DOWN))
+                +"% down (e.g. 2.73 to 65.48). At that size it is a pack or unit re-spec "
+                "or a keying slip rather than a price rise, so they are listed separately "
+                "and kept OUT of the settled-increase flag - putting them in would send "
+                "someone to a supplier over a data-entry error")
+    else:
+        gaps.append(f"'{PRICE_FEED}' absent from the warehouse")
+    # ---- how much of the price report could be attributed at all ---------
+    att_rate=(round(100.0*sum(att_by_route.values())/att_total,1)
+              if att_total else None)
+    price_attribution={
+      "attributed":sum(att_by_route.values()),"total":att_total,"rate":att_rate,
+      "by_route":dict(att_by_route),
+      # by_id / by_name are the two shapes a reader asks for: proved from the
+      # export's own Ingredient Id, versus inferred from the ingredient name.
+      "by_id":att_by_route.get("diff",0)+att_by_route.get("reported",0),
+      "by_name":att_by_route.get("unique",0)+att_by_route.get("price",0),
+      "unattributed":dict(att_unattributed),
+      "duplicates":len(pack_dupe),"code_twins_collapsed":pack_twins,
+      "code_twins_across_packs":pack_twins_wide,
+      "zero_priced_lines":pack_zero,
+      "source_file":PACK_FEED,"as_of":pack_newest_date,
+      "pack_lines":pack_rows,"exports_held":len(pack_snaps),
+      "min_pct":PRICE_ATTRIBUTION_MIN_PCT,
+      "meets_bar":bool(att_rate is not None and att_rate>=PRICE_ATTRIBUTION_MIN_PCT),
+      "basis":("Each price change is attributed to the supplier whose pack line moved, "
+        "by three routes in order of evidence. 'diff': two pack-price exports bracket "
+        "the change and one Ingredient Id moved by exactly that old->new, so the "
+        "supplier is read off the export row rather than inferred. 'unique': only one "
+        "supplier sells that ingredient in that pack. 'price': several do, but exactly "
+        "one is currently at the old or the new price. Scored against 'diff' as ground "
+        "truth, the other two are 195/195 and 156/156 correct with 0 disagreements - so "
+        "an unattributed row is missing coverage, never a wrong name. The report's own "
+        "Parent ID is NOT usable as a key: it names the parent ingredient, while the "
+        "export's Ingredient Id names a supplier pack line under it, and the two share "
+        "no values at all. Rows that could not be attributed are counted by reason and "
+        "excluded, never bucketed into a supplier called '(none)'.")}
+    if not pack_snaps:
+        gaps.append("'"+PACK_FEED+"' is absent, so no ingredient price change can be "
+          "attributed to a supplier: the price report names a parent ingredient, and a "
+          "parent carries one pack line per supplier. Run pull_pack_prices.py in "
+          "MakiManc/maki-hospitality-etl, or drop a fresh "
+          "KOBAS_Template_StockIngredientPackPriceImport export into the Drive folder")
+    elif len(pack_snaps)<2:
+        gaps.append("Only one pack-price export is held ("+str(pack_newest_date)+"), so "
+          "no price change can be attributed by the exact route - that needs two exports "
+          "to diff between. Attribution is running on the two inferred routes alone, at "
+          +str(att_rate)+"% of report rows")
+    else:
+        _pstale=(datetime.date.fromisoformat(pull)
+                 -datetime.date.fromisoformat(pack_newest_date)).days
+        if _pstale>PACK_STALE_DAYS:
+            gaps.append("The newest pack-price export is "+str(_pstale)+" days old ("
+              +str(pack_newest_date)+"). The price report is weekly, so every report "
+              "since then has no export after it to diff against and falls back to the "
+              "inferred routes - which is most of what keeps attribution at "
+              +str(att_rate)+"% rather than near-complete. A fresh export in Drive is "
+              "what closes it")
+    if att_rate is not None and not price_attribution["meets_bar"]:
+        gaps.append("Supplier attribution of price changes is at "+str(att_rate)+"% of "
+          "report rows, under the "+str(int(PRICE_ATTRIBUTION_MIN_PCT))+"% this system "
+          "requires before it will put supplier names on a scorecard row, so Supply KR2 "
+          "stays unmeasured. This is a COVERAGE limit, not an accuracy one: where a "
+          "route fires it agrees with the export-diff ground truth every time. Taking "
+          "the pack-price export weekly, on the price report's own schedule, is what "
+          "lifts it")
+    if pack_dupe:
+        gaps.append(str(len(pack_dupe))+" supplier+category+ingredient+pack combination(s) "
+          "carry more than one live line in the pack-price export, so their price cannot "
+          "be read off a single record. They are marked duplicate_line wherever they "
+          "appear and excluded from the spike count. "+str(pack_twins)+" line(s) were "
+          "collapsed first as punctuated Supplier Code twins (S6005 / S6005.) on an "
+          "identical pack, which is one Kobas record written twice rather than two "
+          "prices; a further "+str(pack_twins_wide)+" twin(s) sit on DIFFERENT pack "
+          "shapes and are counted but deliberately not merged, because there one code "
+          "has been reused for two real pack sizes and collapsing them would delete a "
+          "price. Fixing these in Kobas is a stock-data job, not a dashboard one")
+    # The basis is the row's audit trail: the rule, which month, how much of
+    # the report could be attributed at all, and every exclusion - because a
+    # count of spikes with no denominator and no exclusions named is exactly
+    # the kind of number this scorecard exists not to publish.
+    _spike_basis=(
+      "A spike is one supplier pack line rising by "+str(int(PRICE_SPIKE_PCT))+"% or "
+      "more in a single weekly report, counted once per line per report and attributed "
+      "to the supplier whose pack line moved. "
+      +("Month shown is "+spike_months[-1]["month"]+", by the report's first-seen date, "
+        "the same calendar-month rule as KR1. " if spike_months else "")
+      +"Excluded: a first-ever price ('New'), a move of "+str(int(PRICE_SUSPECT_UP))+"% "
+      "or more (a pack re-spec or a keying slip, not a price), either side priced 0.00, "
+      "and any line the pack-price export holds twice for one supplier+category+"
+      "ingredient+pack, whose price cannot be read off a single record"
+      +(" ("+str(spike_dupe_skipped)+" excluded on that ground). " if spike_dupe_skipped
+        else ". ")
+      +str(att_rate)+"% of report rows could be attributed to a named supplier"
+      +(" (under the "+str(int(PRICE_ATTRIBUTION_MIN_PCT))+"% bar this system requires "
+        "before naming suppliers on a scorecard row)" if att_rate is not None
+        and att_rate<PRICE_ATTRIBUTION_MIN_PCT else "")
+      +"; "+str(spike_unattributed)+" qualifying rise(s) name no supplier and are "
+      "disclosed rather than assigned. "
+      +("Restricted to the "+str(len(ordered_recent))+" ingredient(s) ordered in the "
+        "trailing "+str(PRICE_SPIKE_ORDERED_WEEKS)+" weeks."
+        if ordered_recent is not None else
+        "NOT restricted to recently-ordered ingredients: '"+ORDER_EMAIL_FEED+"' is parsed "
+        "from order-confirmation emails and keeps only per-order totals, so there is no "
+        "ingredient-level order line to filter on. Every priced ingredient is counted. "
+        "The emails do carry the lines; widening the parser in "
+        "daily_export.fetch_kobas_orders is what turns this filter on."))
+    snap["supply"]={"week_spend":week_spend,"week_start":week_start,"week_end":week_end,
+      "supplier_totals":supplier_totals,
+      "supplier_totals_basis":supplier_totals_basis,
+      "supplier_totals_all":supplier_totals_all,
+      "supplier_totals_all_basis":supplier_totals_all_basis,
+      "supplier_totals_all_meta":supplier_totals_all_meta,
+      "week_spend_source":week_spend_source,
+      "week_spend_basis":week_spend_basis,
+      "week_totals":week_totals,
+      "week_days":week_days,
+      "week_drill":week_drill,
+      "week_drill_total":week_drill_total,
+      "week_drill_truncated":week_drill_total>WEEK_DRILL_CAP,
+      "coverage":supply_coverage,
+      "otif":{"months":otif_months,"basis":otif_basis,
+        "first_month":OTIF_FIRST_MONTH,
+        "issues_history_start":ISSUES_HISTORY_START,
+        "issues_feed_landed":ISSUES_FEED_LANDED,
+        "note":"An issue-free-delivery rate, NOT a measured on-time-in-full: nothing here "
+        "observes whether a delivery arrived on time or complete, only whether an issue was "
+        "filed against that supplier in the same month. The earliest issue on record is "
+        +ISSUES_HISTORY_START+" (the answers feed landed "+ISSUES_FEED_LANDED+", but each "
+        "pull reaches back about nine days, so it arrived carrying history). The old note "
+        "here said issue counts 'only start mid-month' and that August was therefore "
+        "flattered; that was wrong by eight days in the pessimistic direction. What actually "
+        "limits August is the DELIVERY side: the Kobas order-email feed starts partway "
+        "through the month, and on a different day for each supplier, which is why no "
+        "August supplier is measurable at all. Suppliers with deliveries and no issues show "
+        "100%; a supplier-month whose emails do not span the month shows 'not measured' with "
+        "the reason, never 0%. Issues that name no supplier are excluded from the "
+        "per-supplier rows and disclosed as unattributed_issues."},
+      "price_watch":price_watch[:100],
+      "price_watch_basis":"newest DISTINCT report of the Kobas Weekly Ingredient Price "
+      "Changes email (the same report is pulled daily, so pulls are deduped by content); "
+      "pct_change = (new-old)/old*100; is_new=true when the source says 'New' rather than "
+      "a prior price",
+      "price_reports":price_reports,
+      "price_items":price_items,
+      "price_settled":price_settled[:100],
+      "price_flux":price_flux[:100],
+      "price_suspect":price_suspect[:100],
+      "price_thresholds":{"settled_days":PRICE_SETTLED_DAYS,
+        "flux_reports":PRICE_FLUX_REPORTS,"flux_reversals":PRICE_FLUX_REVERSALS,
+        "suspect_up":PRICE_SUSPECT_UP,"suspect_down":PRICE_SUSPECT_DOWN,
+        "stale_days":PRICE_STALE_DAYS},
+      "price_newest_report":newest_report,
+      # Whether the report named a supplier on ANY row of ANY archived pull.
+      # Published as a fact rather than assumed either way, so the drill-down
+      # can say "the feed does not carry one" instead of showing an empty
+      # table that reads like a bug - and so it starts working by itself if a
+      # Supplier column is ever added to the report in Kobas.
+      "price_supplier_names":sorted(price_supplier_seen)[:50],
+      "price_has_supplier":bool(price_supplier_seen),
+      "price_attribution":price_attribution,
+      "price_spikes":{"months":spike_months,
+        "current":(spike_months[-1] if spike_months else None),
+        "unattributed":spike_unattributed,"duplicate_skipped":spike_dupe_skipped,
+        "ordered_filter":(len(ordered_recent) if ordered_recent is not None else None),
+        "thresholds":{"pct":PRICE_SPIKE_PCT,
+          "max_per_supplier":PRICE_SPIKE_MAX_PER_SUPPLIER,
+          "ordered_weeks":PRICE_SPIKE_ORDERED_WEEKS},
+        "basis":_spike_basis},
+      "spikes_by_supplier":(spike_months[-1]["suppliers"] if spike_months else []),
+      "price_supplier_basis":"the Weekly Ingredient Price Changes report still carries "
+      "seven columns - Parent ID, Ingredient Name, Pack Size, Unit Volume, Measurement, "
+      "Old Price, New Price - and no supplier of its own. Since 16/09/2026 the supplier "
+      "is reconstructed from the Kobas pack-price export ('"+PACK_FEED+"'), which has one "
+      "line per SUPPLIER PACK carrying Supplier Name, Supplier Code, category and the "
+      "current price. The obvious key does not work and must not be re-added: the "
+      "report's Parent ID names the parent INGREDIENT and the export's Ingredient Id "
+      "names a pack line underneath it, and across 427 Parent IDs and 2,664 Ingredient "
+      "Ids the two sets share no value at all. Attribution instead runs three routes in "
+      "order of evidence - see price_attribution.basis - and publishes the rate it "
+      "achieves. Adding a Supplier column, or the pack line's own id, to the price "
+      "report in Kobas would make this exact and complete; the bake already prefers the "
+      "report's own answer the day one appears. Either way this only ever shows "
+      "suppliers that CHANGED a price, because the report is a log of changes - a "
+      "supplier holding a steady quote never appears in it.",
+      "price_flags_basis":"built from EVERY archived pull of the price-changes report, "
+      "deduped by content into distinct reports and dated by the first pull that carried "
+      "each - the report is emailed weekly but pulled daily, so pull_date would count one "
+      "report many times. An item is one PACK of one ingredient (Parent ID + pack size + "
+      "unit volume + measurement): Parent ID alone is not unique, so keying on it would "
+      "read two packs as one item bouncing. Each row is a change EVENT and an item can "
+      "have several in one report, which carries no per-event timestamp - within a report "
+      "the only ordering is row_num. SETTLED = the item's most recent change was a rise "
+      "and no later report has changed it again, held at least settled_days, measured to "
+      "the newest report rather than today so a stale bake cannot inflate it. FLUCTUATING "
+      "= changed in at least flux_reports distinct reports with at least flux_reversals "
+      "direction changes. SUSPECT = a move beyond suspect_up/suspect_down, which at that "
+      "size is a pack or unit re-spec rather than a price, held out of the settled list "
+      "and never repaired. Neither flag can see a price that never appears in the report, "
+      "because the report only lists changes"}
+    # ---- cross-reference: broth quality x supplier issues, by site+date ----
+    # Ross, 09/09/2026: NORMALISE THE NON-BREAKING SPACE. GetCompliant writes
+    # 'Maki\u00a0O2\u00a0Arena' - U+00A0, not a space - in every feed, and this
+    # file contains no U+00A0 anywhere, so the lookup silently missed and O2
+    # Arena has been excluded from cross-referencing since the tab was built.
+    # It looks identical in every editor and diff, which is exactly why it
+    # survived: the tab reported "no coincidences" rather than "site not
+    # matched". Normalise on BOTH sides of the join, never by editing the
+    # literal above to contain an invisible character.
+    def _site_key(s):
+        return " ".join(str(s or "").replace("\u00a0", " ").split())
+    gc_to_key={_site_key(v[0]):k for k,v in SITE_ALIASES.items()}
+    events=[]
+    for dv in broth_deviations:
+        key=gc_to_key.get(_site_key(dv["site"]))
+        if not key: continue
+        events.append({"site_key":key,"d":dv["d"],"kind":"broth_deviation",
+          "detail":f"{dv['kind']} broth deviation"+(" (open)" if dv["open"] else "")})
+    for i_ in issues:
+        key=gc_to_key.get(_site_key(i_["site"]))
+        if not key or not i_["d"]: continue
+        events.append({"site_key":key,"d":i_["d"],"kind":"supplier_issue",
+          "detail":f"{i_['supplier'] or '(no supplier answer)'} issue"+
+                   (" (open)" if i_["open"] else "")})
+    events.sort(key=lambda r:(r["site_key"],r["d"]))
+    def _pd(s):
+        try: return datetime.date.fromisoformat(s)
+        except Exception: return None
+    by_site={}
+    for e in events: by_site.setdefault(e["site_key"],[]).append(e)
+    coincidences=[]
+    for site_key,evs in by_site.items():
+        bds=[e for e in evs if e["kind"]=="broth_deviation"]
+        sis=[e for e in evs if e["kind"]=="supplier_issue"]
+        for bd in bds:
+            bdd=_pd(bd["d"])
+            if not bdd: continue
+            near=[si for si in sis if _pd(si["d"]) and abs((_pd(si["d"])-bdd).days)<=3]
+            if near:
+                coincidences.append({"site":SITE_ALIASES[site_key][2],"site_key":site_key,
+                  "broth_date":bd["d"],"broth_detail":bd["detail"],
+                  "supplier_issues":[{"d":si["d"],"detail":si["detail"]} for si in near]})
+    coincidences.sort(key=lambda r:r["broth_date"],reverse=True)
+    # Ross, 09/09/2026: this list was hand-written and is now derived, because a
+    # hand-written one goes stale the moment the map is extended - as it just
+    # did. Four of the ten sites it named were matched on Flow Branches
+    # evidence, and Meadowhall was one of them, which is why this tab produced
+    # its first coincidences in four weeks the moment the map grew.
+    _gcnames={r[0] for r in SITE_ALIASES.values()}
+    _kbnames={r[1] for r in SITE_ALIASES.values()}
+    # Both sides measured from the feeds, so this list shrinks by itself the
+    # next time the map grows and can never again name a site that IS mapped.
+    xr_gc_sites={dv["site"] for dv in broth_deviations if dv.get("site")}
+    xr_gc_sites |= {i_["site"] for i_ in issues if i_.get("site")}
+    xr_kobas_sites=set()
+    try:
+        cur.execute("SELECT DISTINCT nullif(data->>'Site','') FROM etl_feed_rows "
+                    "WHERE feed=%s", (ORDER_EMAIL_FEED,))
+        xr_kobas_sites={r[0] for r in cur.fetchall() if r and r[0]}
+    except Exception as e:
+        print(f"[bake] could not read Kobas venue names for the alias gap ({e})")
+    _gcnames={_site_key(n) for n in _gcnames}
+    _gc_un=sorted(s_ for s_ in xr_gc_sites if _site_key(s_) not in _gcnames)
+    _kb_un=sorted(s_ for s_ in xr_kobas_sites
+                  if s_ not in _kbnames and not s_.startswith("OLD: "))
+    if _gc_un or _kb_un:
+        gaps.append("Cross-reference site-alias map does not cover every site: "
+            + (", ".join(repr(s_) for s_ in _gc_un)+" appear"+("s" if len(_gc_un)==1 else "")
+               +" in GetCompliant with no confirmed Kobas venue match" if _gc_un else "")
+            + ("; " if _gc_un and _kb_un else "")
+            + (", ".join(repr(s_) for s_ in _kb_un)+" appear"+("s" if len(_kb_un)==1 else "")
+               +" in Kobas with no GetCompliant match" if _kb_un else "")
+            + " - excluded from cross-referencing until there is evidence for a pairing, "
+              "never guessed at")
+    snap["cross_ref"]={"events":events,"coincidences":coincidences,
+      "site_aliases":{k:{"gc":v[0],"kobas":v[1],"label":v[2]} for k,v in SITE_ALIASES.items()},
+      "basis":"coincidence, NOT causation: every broth deviation (GC Scheduled Task "
+      "Answers, IsDeviation=true) paired with any supplier issue (GC Form Task Answers, "
+      "delivery/supplier forms) at the SAME site within +/-3 days by event date; join key "
+      "is site+date via the hand-built SITE_ALIASES map, since site names differ across "
+      "systems (e.g. 'Maki SJQ Ltd' vs 'Maki SJQ')"}
+    # ---- maintenance tasks by site (Google Sheet, NOT the Postgres warehouse) ----
+    # Ross, 15 Aug: wants a Maintenance tab - tasks by site, outstanding/ongoing
+    # tasks, with the comments/updates on each. There is no maintenance feed in
+    # the Neon warehouse (checked all 43 feeds), no structured tracker in Asana
+    # (checked live - only ad-hoc meeting-note tasks), and no GetCompliant form
+    # for it either (checked GC Forms - no maintenance/repair/facilities form
+    # exists). The real tracker is a Google Sheet Lincoln maintains by hand:
+    # "Required Maintenance/Repair (Responses)", confirmed as the source with
+    # Ross. This block reads a committed companion file,
+    # data/ops_command/maintenance_source.json, rather than querying the
+    # warehouse, because the sheet is not an ETL feed.
+    #
+    # Ross, 11/09/2026: THE PARAGRAPH THAT USED TO BE HERE SAID "GitHub Actions
+    # has no Google credential, and adding one is a Ross-side credential step".
+    # That was true when it was written and is not true now - and believing it
+    # cost three weeks. GOOGLE_SA_JSON has existed since external_sheets.py went
+    # in, and external_sheets.py already reads this exact spreadsheet id daily;
+    # it just writes it to a tab in the KPI workbook, which this bake cannot
+    # see. So the refresh stayed manual, ran through a browser connector, and
+    # froze at 19/08 while fifteen scheduled headless runs built the data and
+    # could not commit it.
+    #
+    # It is automated now: builders/refresh_maintenance.py parses the sheet's
+    # newest "UPDATED AS OF <date>" section (ON GOING/PENDING + DONE tables)
+    # with that same service account, and ops_command_bake.yml runs it
+    # immediately before this bake, so the file rides out on the same commit as
+    # the snapshot that reads it. Site short codes (M12 / Maki 12) are mapped
+    # there, never guessed - an unrecognised label stays verbatim and is named
+    # in unresolved_site_labels.
+    MAINT_SRC=os.path.join(OUT_DIR,"maintenance_source.json")
+    if os.path.exists(MAINT_SRC):
+        msrc=json.load(open(MAINT_SRC))
+        mtasks=msrc.get("tasks",[])
+        mcell={}
+        for t in mtasks:
+            key=t.get("site")
+            if not key: continue
+            c=mcell.setdefault(key,{"ongoing":0,"done":0})
+            if t.get("status")=="ongoing": c["ongoing"]+=1
+            elif t.get("status")=="done": c["done"]+=1
+        maint_sites=[{"site":s,"ongoing":c["ongoing"],"done":c["done"]}
+          for s,c in mcell.items()]
+        maint_sites.sort(key=lambda r:(-r["ongoing"],-r["done"]))
+        maint_gaps=[]
+        if msrc.get("unresolved_site_labels"):
+            maint_gaps.append("site label(s) not resolved to a canonical dashboard "
+              "site name, shown as-is rather than guessed: "
+              +", ".join(msrc["unresolved_site_labels"]))
+        snap["maintenance"]={"tasks":mtasks,"by_site":maint_sites,
+          "source_as_of":msrc.get("source_as_of"),"pulled_at":msrc.get("pulled_at"),
+          "gaps":maint_gaps,
+          "basis":"per maintenance/repair task from "+msrc.get("source","(unlabelled source)")
+          +"; status is 'ongoing' (outstanding/in-progress, per the sheet's own "
+          "ON GOING/PENDING section) or 'done' (per its DONE section) - the sheet "
+          "does not distinguish outstanding from in-progress any further than that; "
+          "event-dated on the sheet's own Date column, so the date-range filter "
+          "slices both the per-site bars/table and the drill-down; NOT sourced from "
+          "the warehouse - see 'source_as_of' (the date Lincoln stamped on the "
+          "section) and 'pulled_at' (when the refresher last read it) for "
+          "freshness. Refreshed automatically by builders/refresh_maintenance.py "
+          "on every bake; if those two dates stop moving, that script is failing "
+          "and saying so in the bake log"}
+    else:
+        snap["maintenance"]={"tasks":[],"by_site":[],"gaps":[
+          "maintenance_source.json missing - Maintenance tab has no data this bake"],
+          "basis":"no data available this bake"}
+        gaps.append("data/ops_command/maintenance_source.json absent - Maintenance tab "
+          "empty. It is written by builders/refresh_maintenance.py from Lincoln's "
+          "Google Sheet, which runs immediately before this bake; if the file is "
+          "missing entirely, that step did not run or has never succeeded - check "
+          "the bake log for the reason it printed")
+    # ---- sites ----
+    hc=[]
+    cur.execute(
+      "WITH t AS (SELECT nullif(data->>'branch','') bid FROM etl_feed_rows WHERE feed='Flow Trainees' "
+      " AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Trainees')), "
+      "b AS (SELECT data->>'id' id, nullif(data->>'name','') name FROM etl_feed_rows WHERE feed='Flow Branches' "
+      " AND pull_date=(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='Flow Branches')) "
+      "SELECT coalesce(b.name,'Branch '||t.bid,'(no branch)'), count(*) FROM t LEFT JOIN b ON b.id=t.bid "
+      "GROUP BY 1 ORDER BY 2 DESC, 1")
+    for site,n in cur.fetchall():
+        hc.append({"site":site,"site_type":SITE_TYPES.get(site,"restaurant"),"people":n})
+    directory=[]
+    if has_feed(cur,"GC Locations"):
+        cur.execute(
+          "SELECT coalesce(nullif(data->>'LocationName',''),'(unnamed)'), "
+          " coalesce(data->>'LocationActive','-'), coalesce(data->>'LocationIsPaused','-'), "
+          " nullif(data->>'Groups',''), nullif(data->>'Categories','') "
+          "FROM etl_feed_rows WHERE feed='GC Locations' AND pull_date="
+          "(SELECT max(pull_date) FROM etl_feed_rows WHERE feed='GC Locations') ORDER BY 1")
+        directory=[{"site":r[0],"active":str(r[1]).lower() in ('true','1','yes'),
+          "paused":str(r[2]).lower() in ('true','1','yes'),"groups":r[3],"categories":r[4]}
+          for r in cur.fetchall()]
+    snap["sites"]={"headcount":hc,"directory":directory}
+    # ---- summary + standing gaps ----
+    cur.execute("SELECT count(DISTINCT data->>'id') FROM etl_feed_rows WHERE feed='Flow Trainees' AND pull_date="+L,("Flow Trainees",))
+    employees=(cur.fetchone() or [None])[0]
+    snap["summary"]={"employees":employees,
+      "feeds_ok":sum(1 for r in fh if r["verdict"]=="OK"),
+      "feeds_missing":sum(1 for r in fh if r["verdict"]=="MISSING"),
+      "feeds_stale":sum(1 for r in fh if r["verdict"] in ("STALE","EMPTY"))}
+    if has_feed(cur,"Flow Certificates"):
+        gaps.append("Flow Certificates exposes no expiry field (certificate_url, module_name, "
+                    "trainee_id only) - statutory expiries are not visible from this feed")
+    snap["gaps"]=gaps
+    # ---- OKR scorecard (Overview) -----------------------------------------
+    # Ross, 09/09/2026: the Overview is an OKR SCORECARD now, not four ranked
+    # signals. One row per KR, each with its target, its score, its RAG, a
+    # 4-week trend and the tab that drills into it.
+    #
+    # Ross, 21/09/2026: THE KR LIST IS MATTHEW'S "2026 OPERATIONS INPUT" SHEET,
+    # not the Master Operating Manual. Six objectives, thirty KRs, in the
+    # sheet's own order and its own wording - because that sheet is what Ross
+    # is actually scored on, and a scorecard that measures a different list
+    # from the one in the review is a scorecard nobody can use in the review.
+    # The Manual-only rows did not become wrong; they became a different thing,
+    # and they are rendered below as Operating KPIs.
+    #
+    # THE RULES THIS BLOCK OBEYS, because they are what stop a scorecard
+    # becoming a wall of invented numbers:
+    #
+    #  1. RAG is decided HERE, in the builder, never in the shell. The shell
+    #     maps a colour name to a chip; it does not know what "good" is.
+    #  2. CHANGED 21/09/2026. This rule used to read "green when the target is
+    #     met, red when it is not, and NO amber band, because the Manual gives
+    #     targets and no tolerances, and a tolerance nobody agreed is a number
+    #     we made up." The reason it said that has gone: Ross has now agreed
+    #     banded scoring. Every KR scores 100, 80, 50 or 0 from OKR_BANDS, and
+    #     RAG FOLLOWS THE SCORE - 100 green, 80 or 50 amber, 0 red. So there is
+    #     an amber band now, and it is not made up: it is written down, in one
+    #     table, in front of Ross. The old rule's real point survives intact -
+    #     a threshold that is not in OKR_BANDS still does not exist, and no row
+    #     may invent one. A KR whose band is still marked PROPOSED scores
+    #     exactly like an agreed one and SAYS SO on the row until Matthew
+    #     confirms it, so a reader can tell an agreed tolerance from a
+    #     suggested one without leaving the page.
+    #  3. A KR with no target gets NO RAG - grey, and the words "no target
+    #     set". Scheduled-task on-time is 96.1%, which looks like a pass, but
+    #     nobody has set the target, so colouring it green would be inventing
+    #     the target as well as the verdict.
+    #  4. A KR with no source renders grey with the BLOCKER named. That list is
+    #     the data roadmap, on the dashboard instead of in a document.
+    #  5. Trends are never 0-padded. A week with no data is null and draws no
+    #     point. Padding a dead feed to zero would have drawn the two days this
+    #     pipeline was down as a dramatic improvement in every rate on the page.
+    #  6. Denominators travel with every point, so a week of 3 task instances
+    #     cannot be averaged against a week of 3,000.
+    def _weeks_to(d):
+        """The 4 ISO weeks ending in the week containing d, oldest first."""
+        e=_mon(d[:10])
+        return [(datetime.date.fromisoformat(e)-datetime.timedelta(days=7*i)).isoformat()
+                for i in range(3,-1,-1)]
+    _end=_mon((pull or datetime.date.today().isoformat())[:10])
+    WEEKS=_weeks_to(_end)
+    # `weeks` defaults to WEEKS, the four ending at this pull. A month the
+    # reader has SELECTED needs its own four, ending in that month - otherwise
+    # August's headline would sit beside September's sparkline. Rule 6 still
+    # holds either way: the denominator travels with every point.
+    def _trend(buckets, fmt=lambda num,den: round(100.0*num/den,1) if den else None,
+               weeks=None):
+        """buckets: {monday: (numerator, denominator, days_observed)} -> 4 points."""
+        out=[]
+        for w in (weeks or WEEKS):
+            if w in buckets:
+                num,den,days=buckets[w]
+                out.append({"w":w,"v":fmt(num,den),"n":den,"days":days})
+            else:
+                out.append({"w":w,"v":None,"n":0,"days":0})
+        return out
+    def _note(buckets,what,since=None,weeks=None):
+        _w=weeks or WEEKS
+        have=sum(1 for w in _w if w in buckets)
+        if have==4: return None
+        return (f"{have} of 4 weeks"+(f" - {what} history starts {since}" if since else
+                f" - no {what} history for the missing weeks"))
+
+    # ---- month selection on the scorecard ---------------------------------
+    # Ross, 17/09/2026: let the reader pick the month the scorecard is showing.
+    #
+    # THE SHELL STILL DECIDES NOTHING. That is rule 1, and a month picker is
+    # exactly where it would be tempting to break it - recompute a percentage
+    # in JavaScript for whichever month is selected and colour it there. So the
+    # builder scores EVERY month up front and emits one pre-judged variant per
+    # month per monthly row; the picker chooses between finished answers. Every
+    # RAG on this page is still decided here.
+    #
+    # Only rows whose KR is genuinely a per-month measure carry variants. The
+    # rest - mandatory training, scheduled-task on-time, the unmeasured rows -
+    # are current-state or pull-window figures with no monthly form at all, so
+    # they carry none and the shell marks them as not following the picker
+    # rather than quietly showing today's number under an August heading.
+    _MONTHS=("January","February","March","April","May","June","July",
+             "August","September","October","November","December")
+    def _mlabel(ym):
+        """'2026-09' -> 'September 2026'."""
+        return _MONTHS[int(ym[5:7])-1]+" "+ym[:4]
+    def _mend(ym):
+        """Last day of month ym, capped at this pull - never a future week."""
+        y,m=int(ym[:4]),int(ym[5:7])
+        nxt=datetime.date(y+(m==12),1 if m==12 else m+1,1)
+        last=(nxt-datetime.timedelta(days=1)).isoformat()
+        return min(last,(pull or last)[:10])
+    def _mvar(m,**kw):
+        """One month of a monthly row, judged HERE exactly like the row itself."""
+        return {"m":m,"label":_mlabel(m),"value":None,"display":None,"rag":None,
+                "basis":None,"trend":None,"trend_unit":None,"trend_note":None,
+                "not_measured":None,**kw}
+
+    # The append-only aggregates archive is the ONLY durable history this
+    # system has: the task feed is a rolling ~9-day window, so without it a
+    # trend could never be longer than the window. It is written by the
+    # VERIFIER (verify_ops_data.archive_aggregates) after each bake and
+    # committed beside the snapshots, so it is always one bake behind - which
+    # is fine for a weekly trend and must not be "fixed" by having the bake
+    # write it too, or the two writers will fight.
+    agg=[]
+    try:
+        with open(os.path.join(OUT_DIR,"ops_daily_aggregates.jsonl")) as fh_:
+            for line in fh_:
+                if line.strip(): agg.append(json.loads(line))
+    except FileNotFoundError:
+        gaps.append("Trend history unavailable: data/ops_command/ops_daily_aggregates.jsonl "
+                    "is missing, so the scorecard can only show this pull's own window")
+
+    sc=[]
+    def row(fn,kr,target,tab,**kw):
+        # `months`, when present, is the per-month variants this row can be
+        # switched to. The top-level value/display/rag/basis stay filled with
+        # the DEFAULT month, so a reader who never touches the picker - and any
+        # consumer that does not know about months, including every snapshot
+        # already committed - sees exactly what it saw before.
+        sc.append({"function":fn,"kr":kr,"target":target,"tab":tab,
+                   "value":None,"display":None,"rag":None,"basis":None,
+                   "trend":None,"trend_unit":None,"trend_note":None,
+                   "not_measured":None,"months":None,**kw})
+
+    # --- Supply KR1: delivery issues per month (MEASURED) ---
+    _k=(snap["suppliers"].get("kr1") or {}).get("months") or []
+    if _k:
+        _cur=_k[-1]
+        _b={}
+        for i_ in issues:
+            d=i_.get("d") or ""
+            if len(d)<10: continue
+            w=_mon(d); n_,_x,dd=_b.get(w,(0,0,set())); dd=set(dd); dd.add(d)
+            _b[w]=(n_+1,0,dd)
+        _b={w:(n_,0,len(dd)) for w,(n_,_x,dd) in _b.items()}
+        # One variant per month the KR1 block already scored. Its `rag` was
+        # decided in that block against its own target, so nothing is re-judged
+        # here - this only carries each month's finished answer onto the row.
+        def _k1var(m_):
+            _w=_weeks_to(_mend(m_["month"]))
+            return _mvar(m_["month"],
+                value=m_["issues"],display=str(m_["issues"]),rag=m_["rag"],
+                basis=(snap["suppliers"]["kr1"]["basis"]
+                       +(" — "+m_["coverage_note"] if m_.get("coverage_note") else "")),
+                trend=_trend(_b,fmt=lambda num,den: num,weeks=_w),
+                trend_unit="issues raised / week",
+                trend_note=_note(_b,"issue","2026-08-05",weeks=_w))
+        row("Supply","KR1 delivery issues / month","≤10","p-supi",
+            value=_cur["issues"],display=str(_cur["issues"]),rag=_cur["rag"],
+            basis=(snap["suppliers"]["kr1"]["basis"]
+                   +(" — "+_cur["coverage_note"] if _cur.get("coverage_note") else "")),
+            trend=_trend(_b,fmt=lambda num,den: num),trend_unit="issues raised / week",
+            trend_note=_note(_b,"issue","2026-08-05"),
+            months=[_k1var(m_) for m_ in _k])
+    else:
+        row("Supply","KR1 delivery issues / month","≤10","p-supi",
+            not_measured="needs the GC Form Task Answers feed, which is absent from this bake")
+
+    # --- Supply KR2: price spikes per supplier ---
+    # GATED ON COVERAGE, ON PURPOSE (16/09/2026). The measure itself works:
+    # every spike below is attributed to the supplier whose pack line moved,
+    # and where the routes fire they agree with the export-diff ground truth
+    # every time. What is not yet true is that ENOUGH of the report can be
+    # attributed - 75.5% against the committed archive, against a bar of 90%.
+    # Publishing "6 suppliers over 3" off three quarters of the data would put
+    # a red chip and a named supplier next to a number that moves when an
+    # export lands, which is rule 4's "invented number" in a different costume.
+    # So the row stays grey and says the live rate, the per-supplier table is
+    # published for the Supply tab either way, and the row turns itself on the
+    # day the exports catch up - no code change, just a fresher Drive drop.
+    _sp=(snap.get("supply") or {}).get("price_spikes") or {}
+    _spcur=_sp.get("current")
+    _spb={w:(n_,d_,dd) for w,(n_,d_,dd) in (spike_weeks or {}).items()}
+    def _spdisp(m_):
+        return (f"{m_['over']} supplier{'' if m_['over']==1 else 's'} over "
+                f"{PRICE_SPIKE_MAX_PER_SUPPLIER}"
+                +(f" (worst: {m_['worst']})" if m_.get("worst") else ""))
+    if _spcur and price_attribution.get("meets_bar"):
+        # The coverage gate is a property of the price REPORT, not of any one
+        # month, so it opens or closes every month together. When it is shut
+        # the row carries no variants at all and the picker cannot make it
+        # publish a supplier name the attribution does not support.
+        def _spvar(m_):
+            _w=_weeks_to(_mend(m_["month"]))
+            return _mvar(m_["month"],value=m_["over"],display=_spdisp(m_),rag=m_["rag"],
+                basis=_sp.get("basis"),
+                trend=_trend(_spb,fmt=lambda num,den: num,weeks=_w),
+                trend_unit="spikes / week",
+                trend_note=_note(_spb,"price report","2026-08-13",weeks=_w))
+        row("Supply","KR2 price spikes / month","≤3","p-supp",
+            value=_spcur["over"],
+            display=_spdisp(_spcur),
+            rag=_spcur["rag"],basis=_sp.get("basis"),
+            trend=_trend(_spb,fmt=lambda num,den: num),
+            trend_unit="spikes / week",
+            trend_note=_note(_spb,"price report","2026-08-13"),
+            months=[_spvar(m_) for m_ in (_sp.get("months") or [])])
+    else:
+        row("Supply","KR2 price spikes / month","≤3","p-supp",
+            not_measured=(
+              "the spikes are counted and attributed - see Price spikes by supplier on "
+              "Supply & Fulfilment - but only "
+              +str(price_attribution.get("rate"))+"% of the price report can be tied to a "
+              "named supplier, under the "+str(int(PRICE_ATTRIBUTION_MIN_PCT))+"% needed "
+              "before this system will put a supplier on a scorecard row. The price "
+              "report names a parent ingredient and a parent carries a pack line per "
+              "supplier, so the supplier is reconstructed from the Kobas pack-price "
+              "export; that export is taken by hand, roughly monthly, while the report is "
+              "weekly, so recent reports have none after them to read the answer from. "
+              "Taking the export weekly is what clears this, and the row then measures "
+              "itself"
+              if price_attribution.get("total") else
+              "needs the Kobas Weekly Ingredient Price Changes report and the Kobas "
+              "pack-price export, neither of which is in this bake"))
+    # --- Supply KR3 / KR5: no source at all ---
+    row("Supply","KR3 menu items unavailable","0","—",
+        not_measured="no stock-out is recorded anywhere machine-readable. Needs a GC stock-out form, or Kobas 86'd items")
+    row("Supply","KR5 monthly supplier audit","100%","—",
+        not_measured="no audit is recorded. Needs a supplier audit checklist in GetCompliant or Asana")
+
+    # --- Supply KR4 -> OO3 KR4: issue-free deliveries, now the DEFINITION ---
+    # Ross, 21/09/2026: this row carried "PROXY, NOT OTIF" from the day it was
+    # built, and sat unscored because of it. He has now agreed that issue-free
+    # deliveries / orders IS what this KR means, so it is scored. The sentence
+    # about lateness stays - it is still true, and a reader deserves to know what
+    # the number cannot see - it just no longer withholds the judgement.
+    _o=(snap.get("supply") or {}).get("otif") or {}
+    _om=(_o.get("months") or [])
+    _last=_om[-1] if _om else None
+    def _otbasis(m_):
+        return ("ISSUE-FREE DELIVERY RATE, and Ross agreed on 21/09/2026 that this IS the "
+          "definition of this KR, so it is scored. It still cannot observe whether a "
+          "delivery arrived on time - only whether an issue was filed against that "
+          "supplier in the same month - so it remains a LOWER BOUND. "
+          f"{m_.get('measurable_suppliers')} of {m_.get('measurable_of')} suppliers had "
+          "order-email coverage spanning the month. Real OTIF needs Mapal Supplier Orders "
+          "or a Lynas delivery file.")
+    if _last and _last.get("otif_pct") is not None:
+        # A month whose coverage never spanned it has no defensible rate, so it
+        # gets a blocker rather than a number - the picker must not turn a
+        # month the data cannot speak for into a figure.
+        row("Supply","KR4 OTIF",">=95%","p-supp",
+            value=_last["otif_pct"],display=f"{_last['otif_pct']}%",rag=None,
+            basis=_otbasis(_last),
+            not_measured=None,
+            months=[(_mvar(m_["month"],value=m_["otif_pct"],
+                           display=f"{m_['otif_pct']}%",rag=None,basis=_otbasis(m_))
+                     if m_.get("otif_pct") is not None else
+                     _mvar(m_["month"],not_measured=(
+                       "no supplier had Kobas order-email coverage spanning "
+                       +_mlabel(m_["month"])+", so no defensible rate exists for it")))
+                    for m_ in _om])
+    else:
+        row("Supply","KR4 OTIF",">=95%","p-supp",
+            not_measured=("no supplier-month has Kobas order-email coverage spanning the whole "
+              "month, so no defensible rate exists. Real OTIF needs Mapal Supplier Orders "
+              "or a Lynas delivery file"))
+
+    # --- Maintenance: all five have no machine-readable source ---
+    # None of the five is measurable from Lincoln's sheet, which is a single
+    # hand-maintained list of reactive tickets: it records what broke, not what
+    # was scheduled, so there is nothing to score "on time" against.
+    _mt="Lincoln's maintenance sheet records reactive tickets only. Needs %s"
+    for _kr,_tg,_need in [
+        ("KR1 PPM on time",">=95%","a PPM schedule with planned vs actual dates — the Asana system Ziang owns is the natural home"),
+        ("KR2 repeat issues vs baseline","-20%","issue categorisation and an agreed baseline period"),
+        ("KR3 unplanned closures","0","a record of where closures are logged (Kobas trading hours? Slack?)"),
+        ("KR4 statutory compliance","100%","a certificate register with expiry dates — CP42, EICR, PAT, Ansul, fire alarm, grease trap"),
+        ("KR5 Contact Sheets complete","100%","the Operations Setup sheet tab, or Drive")]:
+        row("Maintenance",_kr,_tg,"p-maint",not_measured=_mt % _need)
+
+    # --- Quality: broth conformance (MEASURED, FACTORY after-ice, BY MONTH) ---
+    # Ross, 16/09/2026: "Broth conformance OKR is based on factory broth
+    # readings not site". Ross, 17/09/2026: "OKR is based of monthly". So the
+    # Quality KR is the FACTORY's own refractometer reading of the batch it made
+    # - AFTER ice, graded against FACTORY_BROTH_BANDS - scored over ONE CALENDAR
+    # MONTH, and no longer the per-site GetCompliant checks of broth AS SERVED
+    # over the whole feed. The two measurements are untouched and stay what they
+    # were: separate blocks, separate snapshot keys, separate rows, never
+    # averaged, summed or pooled into one denominator, and neither row's band
+    # text ever describing the other's readings. See ~line 921 and ~line 1004.
+    #
+    # THE SITE FIGURE STAYS, in the row directly below, because the
+    # refractometer form has NO SITE FIELD: a red factory row cannot be traced
+    # to Glasgow, Edinburgh or Shoreditch, so the site checks are the only
+    # per-site broth signal this system has and the only thing a reader can act
+    # on. But it loses its RAG. ">=95% in band" is the Quality KR's target, the
+    # Quality KR is now the factory reading, and a target belongs to the
+    # measurement it was agreed against exactly as a band does - so leaving
+    # green/red on the site row would invent a site target nobody has set
+    # (rule 3), and rule 2 forbids splitting the difference with amber.
+    #
+    # THE WINDOW IS ONE CALENDAR MONTH, the pull's own, which is the same shape
+    # as Supply KR1 ("delivery issues / month") and for the same reason: a KR is
+    # a commitment about a period, so it has to be able to move when the period
+    # does. It previously scored the feed's whole 13 months, which read 93.8%
+    # and could not move - ~3 readings a day against a 1,585 denominator - and
+    # buried the months that actually differ. By month the KR does its job:
+    # Apr 93.7, May 87.3, Jun 97.8, Jul 98.3, Aug 93.8, Sep 96.0. It also
+    # retires a problem the whole-feed window had, that 1,462 of its 1,585
+    # readings predated the band being agreed on 27/08/2026; a month from
+    # September onward contains none. FB_BAND_SET still guards the months that
+    # straddle that date, so August correctly discloses its own pre-band share.
+    #
+    # THE HEADLINE IS THE MONTH, THE SPARKLINE IS FOUR WEEKS, and they are NOT
+    # the same window - deliberately, and exactly as KR1 does it. The trend is
+    # built from every graded reading so it draws four whole ISO weeks across
+    # the month boundary; the headline counts only this month. A reader
+    # comparing them will find they disagree, so the basis states the four-week
+    # figure next to the monthly one rather than leaving that to be discovered.
+    #
+    # A MONTH IS A SMALL DENOMINATOR - ~130 readings, and ~100 by mid-month -
+    # so the row carries LAST month's figure too. One green month after a red
+    # one is a bounce or a turn, and the row should not make a reader guess
+    # which. For the same reason the partial month says so in words: on the 16th
+    # this is 101 readings, not a finished month, and "month to date" is the
+    # honest label (KR1's shell says the same thing about its own figure).
+    #
+    # THE DENOMINATOR is readings that HAVE a grade, inside the month. Four
+    # other counts sit within reach and every one is wrong, plus one judgement
+    # call about which readings stay in:
+    #  * NOT "responses" (1,643) - that counts the 58 responses predating the
+    #    form's after-ice question, which are excluded and never scored as zero.
+    #  * NOT "scored" - that is the whole feed, not this month, and it equals
+    #    the graded count only while nothing is ungraded. A product with no
+    #    agreed band ('Ikigai Chicken Broth', waiting on Ross) must never be
+    #    counted as a miss for a decision nobody has made.
+    #  * NOT sum(fb_grades.values()) - 'out_suspect' is a subset of low+high, so
+    #    that total double-counts, and it is feed-wide besides.
+    #  * NOT snap["quality"]["factory"]["readings"], which is sliced to FB_CAP
+    #    newest-first. This reads the LOCAL fb_readings, the full list, in scope
+    #    here (initialised at the top of the factory block, so it is [] even
+    #    when the feed never landed - the else branch covers that). The month
+    #    filter makes the cap harmless for this row either way: FB_CAP keeps the
+    #    NEWEST 2,000, so the current month is always inside it.
+    #  * SUSPECT readings stay IN and are graded like anything else. The
+    #    third-to-3x-median band is a typo test, not a spec test (see ~line
+    #    1102): collapsing them would send someone to the factory over a lost
+    #    decimal point, and dropping them would make this KR read better than
+    #    the sheet does. 'out_suspect' is feed-wide, so it is disclosed only as
+    #    a caution that some out-of-band readings may be mis-keys, never
+    #    subtracted from this month's count.
+    _FMONTHS=("January","February","March","April","May","June","July",
+              "August","September","October","November","December")
+    def _fmlabel(ym):
+        """'2026-09' -> 'September 2026'."""
+        return _FMONTHS[int(ym[5:7])-1]+" "+ym[:4]
+    _fbands=", ".join(
+        f"{(_p[:-6] if _p.endswith(' Broth') else _p).lower()} {_lo:g}-{_hi:g}"
+        for _p,(_lo,_hi) in FACTORY_BROTH_BANDS.items())
+    # Graded readings only. The ungraded count disclosed in the basis is this
+    # denominator's own complement rather than fb_grades["ungraded"]: the latter
+    # is feed-wide where this is one month, so they are different numbers and
+    # only the complement can be printed beside this denominator.
+    _fg=[r_ for r_ in fb_readings if r_.get("grade")]
+    _fmo=(pull or "")[:7]
+    # The weekly trend spans the month boundary on purpose (see above), so it is
+    # built from every graded reading, not from any one month's slice. A
+    # selected month gets the four weeks ending in IT, via _weeks_to below.
+    _fb={}
+    for r_ in _fg:
+        w=_mon(r_["d"]); i_,n_,dd=_fb.get(w,(0,0,set())); dd=set(dd); dd.add(r_["d"])
+        _fb[w]=(i_+(1 if r_["grade"]=="in" else 0),n_+1,dd)
+    _fb={w:(i_,n_,len(dd)) for w,(i_,n_,dd) in _fb.items()}
+    def _fprev(ym):
+        """The calendar month before ym."""
+        if len(ym)!=7: return ""
+        return (f"{int(ym[:4])-1}-12" if ym[5:7]=="01"
+                else f"{ym[:4]}-{int(ym[5:7])-1:02d}")
+    def _fvar(ym):
+        """Score ONE calendar month and return this row's kwargs for it.
+
+        Every month the picker can reach comes through here, so each one is
+        judged by the same code against the same band and the same target, and
+        each carries its own basis rather than one basis being re-pointed at a
+        number it was not written for.
+        """
+        _mg=[r_ for r_ in _fg if r_["d"][:7]==ym]
+        _pm=_fprev(ym); _pg=[r_ for r_ in _fg if r_["d"][:7]==_pm]
+        if not _mg:
+            return {"not_measured":
+              "no graded reading for "+_fmlabel(ym)+" - the KR is scored per calendar "
+              "month, and this month has not been read"
+              +(f" ({_fmlabel(_pm)} read {sum(1 for r_ in _pg if r_['grade']=='in')} of "
+                f"{len(_pg)})" if _pg else "")
+              +(". Normal for the first day or two of a month; needs a batch reading logged"
+                if ym==_fmo else "")}
+        _in=sum(1 for r_ in _mg if r_["grade"]=="in")
+        _pct=round(100.0*_in/len(_mg),1)
+        _days=len({r_["d"] for r_ in _mg})
+        # Month to date only for the month the pull lands in, and only while the
+        # pull is not on its last day. Every earlier month is finished.
+        _pd=datetime.date.fromisoformat(pull[:10])
+        _mtd=(ym==_fmo) and (_pd+datetime.timedelta(days=1)).month==_pd.month
+        # This month's own four weeks, so a selected month is never shown
+        # beside the sparkline of a different one. Summed from the trend's own
+        # buckets so the figure quoted and the figure drawn cannot disagree.
+        _w=_weeks_to(_mend(ym))
+        _wi=sum(_fb[x][0] for x in _w if x in _fb)
+        _wn=sum(_fb[x][1] for x in _w if x in _fb)
+        _pre=sum(1 for r_ in _mg if r_["d"]<FB_BAND_SET)
+        _ung=len([r_ for r_ in fb_readings if r_["d"][:7]==ym])-len(_mg)
+        # Every non-zero exclusion. These are FEED-WIDE counts, not this
+        # month's: fb_excl is accumulated over the whole pull and the rows it
+        # counts were never appended to fb_readings, so they cannot be
+        # re-filtered by month here. Said as "across the feed" so nobody
+        # subtracts them from a monthly denominator they do not belong to.
+        _ex=", ".join(f"{_n} {_t}" for _t,_n in (
+            ("with no after-ice reading",fb_excl["no_after_ice"]),
+            ("that could not be dated",fb_excl["undated"]),
+            ("whose reading was not a number",fb_excl["non_numeric"])) if _n)
+        return {
+          "value":_pct,"display":f"{_pct}%","rag":("green" if _pct>=95 else "red"),
+          "basis":(f"{_in} of {len(_mg)} graded after-ice refractometer readings inside "
+                   f"their product's factory band ({_fbands}) in {_fmlabel(ym)}"
+                   +(f", across {_days} production day(s)" if _days else "")
+                   +f", from '{FB_FEED}'"
+                   +(f" as at its own pull {fb_pull}" if fb_pull else "")
+                   +(". MONTH TO DATE - the month is not finished, so this figure is still "
+                     "moving" if _mtd else ". A complete month")
+                   +". The KR is scored per calendar month (Ross, 17/09/2026), NOT over the "
+                   "feed's whole history"
+                   +(f"; {_fmlabel(_pm)} read {sum(1 for r_ in _pg if r_['grade']=='in')} "
+                     f"of {len(_pg)} "
+                     f"({round(100.0*sum(1 for r_ in _pg if r_['grade']=='in')/len(_pg),1)}%)"
+                     if _pg else f"; {_fmlabel(_pm)} has no graded reading to compare against"
+                     if _pm else "")
+                   +(f". The sparkline is the four ISO WEEKS to {_w[-1]}, a different window "
+                     f"that crosses the month boundary - it reads {_wi} of {_wn} "
+                     f"({round(100.0*_wi/_wn,1)}%)" if _wn else "")
+                   +". The Quality tab's factory cards are sliced by that page's own date-range "
+                   "picker and default to All, so they will not match this row unless the "
+                   "picker is set to this month - this KR is always the calendar month and "
+                   "never follows that picker"
+                   +(f". {_pre} of this month's readings were taken before {FB_BAND_SET}, the "
+                     f"day the after-ice band was agreed, so they are graded against a spec "
+                     f"that did not exist when the reading was taken" if _pre else "")
+                   +". Readings for a product with no agreed band are not graded and not counted"
+                   +(f" ({_ung} this month)" if _ung>0 else "")
+                   +(f"; across the feed {_ex} are excluded, never scored as zero"
+                     if _ex else "")
+                   +(f". {fb_grades['out_suspect']} out-of-band reading(s) across the feed are "
+                     f"suspected keying slips, graded like any other - fix them at source and "
+                     f"both numbers drop" if fb_grades["out_suspect"] else "")
+                   +". The form carries no site field, so this is one group-wide figure and "
+                   "cannot name the line to visit"
+                   +(f". NOTE: this feed's newest pull is {fb_pull}, behind this bake's "
+                     f"{pull[:10]} - anything since is not in this figure"
+                     if fb_pull and pull and fb_pull[:10]<pull[:10] else "")),
+          "trend":_trend(_fb,weeks=_w),"trend_unit":"% in band / week",
+          # No `since`: this feed's history predates all four weeks, so a
+          # missing week is a week the factory produced nothing (or the sheet
+          # went unfilled), not a week before the feed began - naming a start
+          # date would be a true sentence explaining the wrong thing.
+          "trend_note":_note(_fb,"factory-reading",weeks=_w)}
+    if not fb_total:
+        # Never 0% and never green: an absent feed is an absent measurement,
+        # not a factory that missed spec on every batch. No month variants
+        # either - the picker must not offer months there is no feed for.
+        row("Quality","Broth conformance (factory, after ice)",">=95% in band","p-qual",
+            not_measured="'"+FB_FEED+"' has not landed in the warehouse, so there is no "
+              "after-ice reading to grade. Needs the daily factory export")
+    elif not _fg:
+        row("Quality","Broth conformance (factory, after ice)",">=95% in band","p-qual",
+            not_measured="'"+FB_FEED+"' landed "+str(fb_total)+" response(s) but none is "
+              "gradeable - no after-ice reading, or no agreed band for the product. Needs the "
+              "after-ice question answered at source, and a band from Ross for the products "
+              "in the form")
+    else:
+        # Every month the feed covers, newest last, plus the pull's own month
+        # even when nothing has been read in it yet - at the turn of a month
+        # that month must still be selectable, and it explains itself.
+        # FB_MONTHS_MAX bounds the snapshot: the basis strings are ~1.5KB each
+        # and the feed grows a month at a time forever.
+        _fmonths=sorted({r_["d"][:7] for r_ in _fg}|({_fmo} if len(_fmo)==7 else set()))
+        _fmonths=_fmonths[-FB_MONTHS_MAX:]
+        row("Quality","Broth conformance (factory, after ice)",">=95% in band","p-qual",
+            months=[_mvar(m_,**_fvar(m_)) for m_ in _fmonths],
+            **_fvar(_fmo))
+
+    # --- Quality: broth as served, by site (MEASURED, REPORTED, NO TARGET) ---
+    # Kept, and kept SEPARATE. A different feed, a different band, a different
+    # moment in the broth's life: 82.0% here and 93.8% above are two answers to
+    # two questions and neither is a check on the other. No target has been
+    # agreed for broth as served, so no RAG (rule 3) and no amber (rule 2).
+    # This is the row that tells a reader WHICH SITE; the row above is the KR.
+    _cells=((snap.get("quality") or {}).get("broth") or {}).get("cells") or []
+    _sbands=", ".join(f"{_k} {_lo:g}-{_hi:g}" for _k,(_lo,_hi) in SITE_BROTH_BANDS.items())
+    _g=[c for c in _cells if c.get("grade")]
+    if _g:
+        _in=sum(1 for c in _g if c["grade"]=="in")
+        _pct=round(100.0*_in/len(_g),1)
+        _b={}
+        for c in _g:
+            w=_mon(c["d"]); i_,n_,dd=_b.get(w,(0,0,set())); dd=set(dd); dd.add(c["d"])
+            _b[w]=(i_+(1 if c["grade"]=="in" else 0),n_+1,dd)
+        _b={w:(i_,n_,len(dd)) for w,(i_,n_,dd) in _b.items()}
+        row("Quality","Broth as served, by site (reported)","not set","p-qual",
+            value=_pct,display=f"{_pct}%",rag=None,
+            basis=(f"{_in} of {len(_g)} graded site readings inside the SITE band ({_sbands}); "
+                   "readings for a check type with no agreed band are not graded and not "
+                   "counted. A DIFFERENT MEASUREMENT from the row above - GetCompliant checks "
+                   "of broth as served, not the factory's after-ice reading of the batch - so "
+                   "the two are never averaged and the gap between them is not an error. NO "
+                   "TARGET HAS BEEN SET for broth as served: the Manual's >=95% belongs to the "
+                   "factory reading (Ross, 16/09/2026), so this figure is reported, not judged. "
+                   "It is kept because the refractometer form has no site field, which makes "
+                   "this the only per-site broth signal there is - use it to pick a site, the "
+                   "row above to judge the KR."),
+            trend=_trend(_b),trend_unit="% in band / week",trend_note=_note(_b,"broth-check"))
+    else:
+        row("Quality","Broth as served, by site (reported)","not set","p-qual",
+            not_measured="no graded site broth readings in this bake")
+
+    # --- Compliance: scheduled-task on-time (MEASURED, but NO TARGET SET) ---
+    _tb={}
+    for r_ in agg:
+        if r_.get("metric")!="tasks": continue
+        w=_mon(r_["metric_date"]); ot,ms,dd=_tb.get(w,(0,0,set())); dd=set(dd); dd.add(r_["metric_date"])
+        _tb[w]=(ot+(r_.get("v1") or 0),ms+(r_.get("v2") or 0),dd)
+    _tb={w:(ot,ot+ms,len(dd)) for w,(ot,ms,dd) in _tb.items()}
+    _tc=(snap.get("tasks") or {}).get("cells") or []
+    _ot=sum(c.get("on_time") or 0 for c in _tc); _ms=sum(c.get("missed") or 0 for c in _tc)
+    if _ot+_ms:
+        _pct=round(100.0*_ot/(_ot+_ms),1)
+        row("Compliance","Scheduled task on-time","not set","p-tasks",
+            value=_pct,display=f"{_pct}%",rag=None,
+            basis=(f"{_ot} on time of {_ot+_ms} scheduled task instances in this pull's window. "
+                   "NO TARGET HAS BEEN SET for this KR, so it carries no RAG - the figure is "
+                   "reported, not judged."),
+            trend=_trend(_tb),trend_unit="% on time / week",
+            trend_note=_note(_tb,"task",min((r_["metric_date"] for r_ in agg
+                                             if r_.get("metric")=="tasks"),default=None)))
+    else:
+        row("Compliance","Scheduled task on-time","not set","p-tasks",
+            not_measured="no scheduled-task answers in this bake")
+
+    # --- People: mandatory training (MEASURED, no trend source yet) ---
+    _ms_=((snap.get("training") or {}).get("mandatory") or {}).get("sites") or []
+    _as=sum(s_.get("assigned") or 0 for s_ in _ms_); _cp=sum(s_.get("complete") or 0 for s_ in _ms_)
+    if _as:
+        _pct=round(100.0*_cp/_as,1)
+        row("People","Mandatory training complete",">=90%","p-train",
+            value=_pct,display=f"{_pct}%",rag=("green" if _pct>=90 else "red"),
+            basis=f"{_cp} of {_as} mandatory module assignments complete across {len(_ms_)} sites",
+            trend_note=("no trend yet - training is read as CURRENT STATE, not as events, so "
+                        "there is nothing to bucket by week. A trend needs completion counts "
+                        "archived per day, which ops_daily_aggregates.jsonl does not yet carry"))
+    else:
+        row("People","Mandatory training complete",">=90%","p-train",
+            not_measured="no mandatory module rows in this bake")
+
+    # --- Production and Warehouse: nothing lands in this system at all ---
+    for _kr,_tg in [("Factory food cost","45%"),("Factory labour","22%"),
+                    ("Stock variance","<5%"),("Forecast accuracy","+/-15%"),
+                    ("Availability","100%")]:
+        row("Production",_kr,_tg,"—",
+            not_measured=("no factory feed reaches this system. Needs Kobas API or scheduled "
+              "report exports for the factory org, and the Demand Sheet via a service account"))
+    row("Warehouse","China stock cover (weeks)","not set","—",
+        not_measured="Mintsoft is not wired in. Needs a Mintsoft export or API, plus the known duplicate-line cleanup")
+
+    # Emitted in build order, which put KR4 after KR5 because the OTIF row needs
+    # the OTIF block above it. Sort by the KR number so the Overview reads in
+    # the order the Manual lists them; rows with no KR number keep their place.
+    import re as _re
+    _order={ "Supply":0,"Maintenance":1,"Production":2,"Quality":3,
+             "Compliance":4,"People":5,"Warehouse":6 }
+    def _krn(r_):
+        m_=_re.match(r"KR(\d+)",r_["kr"])
+        return int(m_.group(1)) if m_ else 99
+    sc.sort(key=lambda r_:(_order.get(r_["function"],9),_krn(r_)))
+
+    # ---- THE OKR SCORECARD: thirty KRs, six objectives, in sheet order -----
+    # Ross, 21/09/2026. Everything above this line still computes exactly what
+    # it computed before; this stage RE-HOMES those answers onto Matthew's KR
+    # list and scores them. Nothing is recomputed here except the two KRs whose
+    # HEADLINE changed shape (OO3 KR2 and OO5 KR1/KR2, below), because a
+    # re-homing stage that also quietly re-measures things is a stage nobody
+    # can audit.
+    #
+    # WHY A SECOND PASS RATHER THAN THIRTY NEW ROW() CALLS. The value, the
+    # basis, the trend and the month variants for the measured KRs are built by
+    # ~600 lines above, each with its own coverage rules and disclosures. Those
+    # rules ARE the measurement. Rewriting them into a new shape would fork
+    # every one of them, so instead the rows are built as they always were and
+    # mapped here, by an explicit table, with the leftovers going to Operating
+    # KPIs. If a row ever stops matching its key the KR goes grey and says so -
+    # it cannot silently pick up the wrong row's number.
+    _okr_src = {(r_["function"], r_["kr"]): r_ for r_ in sc}
+    _OKR_FROM_ROW = {
+        ("Supply", "KR1 delivery issues / month"):       ("OO3", "KR1"),
+        ("Supply", "KR2 price spikes / month"):          ("OO3", "KR2"),
+        ("Supply", "KR3 menu items unavailable"):        ("OO3", "KR3"),
+        ("Supply", "KR4 OTIF"):                          ("OO3", "KR4"),
+        ("Supply", "KR5 monthly supplier audit"):        ("OO3", "KR5"),
+        ("Maintenance", "KR1 PPM on time"):              ("OO2", "KR1"),
+        ("Maintenance", "KR2 repeat issues vs baseline"): ("OO2", "KR2"),
+        ("Maintenance", "KR3 unplanned closures"):       ("OO2", "KR3"),
+        ("Maintenance", "KR4 statutory compliance"):     ("OO2", "KR4"),
+        ("Maintenance", "KR5 Contact Sheets complete"):  ("OO2", "KR5"),
+        # The Manual's "Stock variance" and the sheet's OO5 KR3 are the same
+        # measurement under two names, and both are unmeasured today. Phase 3
+        # gives it the Weekly Report workbook.
+        ("Production", "Stock variance"):                ("OO5", "KR3"),
+    }
+    _okr_by_id = {}
+    for _key, _id in _OKR_FROM_ROW.items():
+        if _key in _okr_src:
+            _okr_by_id[_id] = _okr_src[_key]
+    # The rows that are NOT on Matthew's sheet. They keep every field they had
+    # and are rendered below the OKRs under their own heading - they are real
+    # measurements Ross uses, they are simply not what he is scored on.
+    operating_kpis = [r_ for r_ in sc
+                      if (r_["function"], r_["kr"]) not in _OKR_FROM_ROW]
+
+    def _rag_of(score):
+        """RAG follows the score. The one mapping, in the one place."""
+        return OKR_RAG.get(score) if score is not None else None
+
+    def _okr_months(src, band, value_of=None):
+        """Re-score a built row's month variants under an OKR band.
+
+        Each variant already carries a finished value and basis for its month;
+        this adds the score and replaces the RAG the old rule set, so a month
+        the picker selects is judged by exactly the same band as the default.
+        """
+        out = []
+        for v_ in (src.get("months") or []):
+            _v = (value_of(v_) if value_of else v_.get("value"))
+            _s = okr_score(band, _v)
+            out.append({**v_, "score": _s, "rag": _rag_of(_s)})
+        return out
+
+    # --- OO3 KR2: price spikes, counted ESTATE-WIDE (Ross, 21/09/2026) ------
+    # The row used to be per-supplier, and sat grey because supplier
+    # attribution ran at 75.5% against a 90% bar this system requires before it
+    # names a supplier on a scorecard row. Ross's 16/09 per-supplier row is
+    # SUPERSEDED: the KR as Matthew words it is "Price change spike (3 items)",
+    # a count of items, and a count needs no attribution at all. So the gate no
+    # longer applies to this row and it gets a number.
+    #
+    # The spike RULE is untouched - same 10% single-report rise, same five
+    # exclusions, same once-per-line-per-report dedupe. Only the grouping
+    # changed, from "per supplier" to "how many lines moved across the estate".
+    # spikes_by_supplier, the per-supplier table and the attribution-rate note
+    # all stay exactly as they are, as this row's drill-down.
+    #
+    # WORTH KNOWING BEFORE READING THE SCORE: estate-wide this runs 115 (Aug)
+    # and 50 (Sep) against a target of <=3, so it scores 0 and will keep scoring
+    # 0. Two things make that so. The ordered-in-trailing-8-weeks filter Ross
+    # asked for is INERT - 'Kobas Orders' keeps only per-order totals, so there
+    # is no ingredient-level line to filter on - and Matthew's target of 3 was
+    # written against three NAMED items (his February note lists sugar, vanilla
+    # ice cream and big soba noodles), not against an estate-wide count. Those
+    # are two different metrics sharing one target. The row reports the count it
+    # was told to report and says all of this in its basis rather than quietly
+    # choosing a number that looks better.
+    _sp2 = (snap.get("supply") or {}).get("price_spikes") or {}
+    _sp_blocks = list(_sp2.get("months") or [])
+    if _sp2.get("current"):
+        _sp_blocks = [b for b in _sp_blocks
+                      if b.get("month") != _sp2["current"].get("month")]
+        _sp_blocks.append(_sp2["current"])
+
+    def _spike_basis(blk):
+        _n = sum(x.get("spikes") or 0 for x in (blk.get("suppliers") or []))
+        _thr = (_sp2.get("thresholds") or {}).get("pct")
+        return (f"{_n} distinct supplier pack line(s) rose by {_thr or 10}% or more in a "
+                f"single weekly report during {_mlabel(blk['month'])}, counted ESTATE-WIDE "
+                f"across {len(blk.get('suppliers') or [])} named supplier(s) - one count per "
+                f"line per report, by the report's own first-seen date. "
+                f"Same rule and the same five exclusions as the per-supplier table on the "
+                f"Supply tab, which remains this row's drill-down: a first-ever price "
+                f"('New'), a move of 100% or more, either side priced 0.00, a line the "
+                f"export holds twice, and a line whose supplier cannot be named"
+                + (f" ({_sp2['unattributed']} qualifying rise(s) this pull)"
+                   if _sp2.get("unattributed") else "")
+                + ". Counting items rather than naming suppliers, so the 90% attribution bar "
+                "that greyed this row until 21/09/2026 no longer applies to it"
+                + (". NOT restricted to recently-ordered ingredients: 'Kobas Orders' keeps "
+                   "only per-order totals, so there is no ingredient-level order line to "
+                   "filter on and every priced ingredient is counted"
+                   if not _sp2.get("ordered_filter") else "")
+                + ". Matthew's target of 3 was set against three NAMED items, not against an "
+                "estate-wide count - the two are different measures and the target has not "
+                "been re-agreed for this one")
+
+    _okr_extra = {}
+    if _sp_blocks:
+        _sv = []
+        for _b in sorted(_sp_blocks, key=lambda b: b["month"]):
+            _n = sum(x.get("spikes") or 0 for x in (_b.get("suppliers") or []))
+            _s = okr_score("spikes", _n)
+            _sv.append(_mvar(_b["month"], value=_n, display=str(_n), score=_s,
+                             rag=_rag_of(_s), basis=_spike_basis(_b)))
+        _okr_extra[("OO3", "KR2")] = {"months": _sv,
+                                      "source_kind": "computed",
+                                      "tab": "p-supp"}
+
+    # --- OO5 KR1/KR2: broth density, per product, as a MONTHLY MEAN ---------
+    # Matthew's KRs are "Maintain Pork broth density within 8-9" and "within
+    # 5-6" - one KR per product, and the number is the density itself. The
+    # dashboard's existing Quality row is one POOLED "% of readings in band"
+    # across both products, which answers a different question and cannot be
+    # split after the fact. So these two are computed here from the same graded
+    # readings, with every exclusion the broth block already applies.
+    #
+    # BOTH FIGURES ARE SHOWN, and that is deliberate. The KR value is the mean,
+    # because that is what the band Ross agreed is written against, but the
+    # display carries the in-band percentage beside it - because THE MEAN ON ITS
+    # OWN CANNOT FAIL. Across every month of 2026 both products' means sit
+    # comfortably inside band (tonkotsu 8.25-8.40, chicken 5.06-5.34) and score
+    # 100, including April, when only 77.3% of chicken readings were actually in
+    # band: a symmetric spread of misses leaves the mean dead centre. A reader
+    # who sees "5.10 avg - 77.3% of 22 readings in band" can see that; a reader
+    # who sees "5.10" cannot. Flagged for Ross on 21/09/2026 - if he wants the
+    # SCORE moved onto the in-band percentage, change the band, not the display.
+    _okr_broth = {}
+    for _oid, _prod in (("KR1", "Tonkotsu Broth"), ("KR2", "Chicken Broth")):
+        _band = FACTORY_BROTH_BANDS.get(_prod)
+        _rs = [r_ for r_ in _fg if (r_.get("product") or "") == _prod]
+        if not _band or not _rs:
+            continue
+        _bym = {}
+        for r_ in _rs:
+            _bym.setdefault(r_["d"][:7], []).append(r_)
+        _vars = []
+        for _m in sorted(_bym)[-FB_MONTHS_MAX:]:
+            _rows = _bym[_m]
+            _mean = round(sum(x["score"] for x in _rows) / len(_rows), 2)
+            _in = sum(1 for x in _rows if x.get("grade") == "in")
+            _pct = round(100.0 * _in / len(_rows), 1)
+            _out = okr_density_outside(_mean, _band)
+            _s = okr_score("density", _out)
+            _days = len({x["d"] for x in _rows})
+            _mtd = (_m == (pull or "")[:7])
+            _vars.append(_mvar(
+                _m, value=_mean,
+                display=f"{_mean:g} avg - {_pct}% of {len(_rows)} readings in band",
+                score=_s, rag=_rag_of(_s),
+                basis=(f"Mean after-ice refractometer reading for {_prod} in "
+                       f"{_mlabel(_m)}: {_mean:g} against a band of "
+                       f"{_band[0]:g}-{_band[1]:g}"
+                       + (", inside band" if not _out else
+                          f", {_out:g} outside band")
+                       + f". {_in} of {len(_rows)} reading(s) were individually in band "
+                         f"({_pct}%), across {_days} production day(s), from '{FB_FEED}'"
+                       + (f" as at its own pull {fb_pull}" if fb_pull else "")
+                       + (". MONTH TO DATE - the month is not finished, so this figure is "
+                          "still moving" if _mtd else "")
+                       + ". THE SCORE IS ON THE MEAN, which is what the band was agreed "
+                         "against; the in-band percentage is shown beside it because a mean "
+                         "can sit inside band while individual batches miss it in both "
+                         "directions. Readings with no after-ice value, no usable date or a "
+                         "non-numeric value are excluded and never scored as zero, exactly "
+                         "as on the Quality tab")))
+        if _vars:
+            _okr_broth[("OO5", _oid)] = {"months": _vars, "source_kind": "computed",
+                                         "tab": "p-qual"}
+    _okr_extra.update(_okr_broth)
+
+    # --- assemble the thirty rows ------------------------------------------
+    okr = []
+    for _obj, _kr, _text, _owner, _target, _band in OKR_SPEC:
+        _id = (_obj, _kr)
+        _src = _okr_by_id.get(_id)
+        _ext = _okr_extra.get(_id)
+        _r = {
+            "objective": _obj, "kr": _kr, "text": _text, "owner": _owner,
+            "target": _target, "band": _band,
+            "band_status": OKR_BAND_STATUS.get(_band) if _band else None,
+            "value": None, "display": None, "score": None, "rag": None,
+            "basis": None, "source_kind": "not_measured", "not_measured": None,
+            "tab": "—", "trend": None, "trend_unit": None,
+            "trend_note": None, "months": None,
+        }
+        if _ext:
+            # A KR this stage computed itself (OO3 KR2, OO5 KR1/KR2). Its
+            # variants already carry finished scores.
+            _r.update({k: v for k, v in _ext.items() if k != "months"})
+            _r["months"] = _ext["months"]
+            _dm = next((v for v in _ext["months"] if v["m"] == (pull or "")[:7]),
+                       _ext["months"][-1])
+            _r.update({k: _dm.get(k) for k in
+                       ("value", "display", "score", "rag", "basis",
+                        "trend", "trend_unit", "trend_note")})
+        elif _src is not None:
+            _r["tab"] = _src.get("tab") or "—"
+            _r["not_measured"] = _src.get("not_measured")
+            _r["basis"] = _src.get("basis")
+            for _k in ("value", "display", "trend", "trend_unit", "trend_note"):
+                _r[_k] = _src.get(_k)
+            if _src.get("months"):
+                _r["months"] = _okr_months(_src, _band)
+                _dm = next((v for v in _r["months"] if v["m"] == (pull or "")[:7]),
+                           _r["months"][-1])
+                _r.update({k: _dm.get(k) for k in
+                           ("value", "display", "score", "rag", "basis",
+                            "trend", "trend_unit", "trend_note")})
+            else:
+                _r["score"] = okr_score(_band, _r["value"])
+                _r["rag"] = _rag_of(_r["score"])
+            if _r["value"] is not None or _r["months"]:
+                _r["source_kind"] = "computed"
+        else:
+            # No source at all yet. Name the phase that will give it one, so
+            # the grey rows read as a roadmap rather than as an oversight -
+            # rule 4, which has not changed.
+            _r["not_measured"] = OKR_PENDING.get(_id, "no source reaches this "
+                                                     "system yet")
+        okr.append(_r)
+
+    # --- objective roll-up (Ross, 21/09/2026) -------------------------------
+    # pct = the MEAN of the scores of that objective's KRs that have a score
+    # that month. An unscored KR is LEFT OUT of the mean; it is never counted
+    # as a zero, because "nobody measured this" and "this failed" are the two
+    # things a scorecard must never confuse. The row says "n of 5 scored" so
+    # the reader can see how much of the objective the percentage speaks for -
+    # a 100% built on one KR of five is not the same claim as one built on five.
+    #
+    # A KR WITH NO MONTHLY FORM counts towards the DEFAULT month only. Those
+    # rows (contact sheets, the unmeasured ones) hold a current-state figure,
+    # and carrying today's answer back into August would be inventing a history
+    # the measurement does not have.
+    _dflt = (pull or "")[:7]
+
+    def _score_at(r_, m_):
+        if r_.get("months"):
+            return next((v.get("score") for v in r_["months"] if v["m"] == m_), None)
+        return r_.get("score") if m_ == _dflt else None
+
+    def _rollup(rows_, m_):
+        _sc = [s for s in (_score_at(r_, m_) for r_ in rows_) if s is not None]
+        return {"pct": round(sum(_sc) / len(_sc), 1) if _sc else None,
+                "scored": len(_sc), "total": len(rows_)}
+
+    _okr_months_all = sorted({v["m"] for r_ in okr for v in (r_.get("months") or [])}
+                             | ({_dflt} if _dflt else set()), reverse=True)
+    objectives = []
+    for _obj, _label in OKR_OBJECTIVES:
+        _rows = [r_ for r_ in okr if r_["objective"] == _obj]
+        objectives.append({
+            "objective": _obj, "label": _label,
+            **_rollup(_rows, _dflt),
+            "months": [{"m": m_, **_rollup(_rows, m_)} for m_ in _okr_months_all],
+        })
+
+    def _ops_pct(m_):
+        _p = [o for o in objectives
+              if o["objective"] in OKR_OPERATIONS_OBJECTIVES]
+        _v = [next((x["pct"] for x in o["months"] if x["m"] == m_), None) for o in _p]
+        _v = [x for x in _v if x is not None]
+        return {"pct": round(sum(_v) / len(_v), 1) if _v else None,
+                "scored": len(_v), "total": len(_p)}
+    operations = {**_ops_pct(_dflt),
+                  "months": [{"m": m_, **_ops_pct(m_)} for m_ in _okr_months_all]}
+
+    # The months the picker offers: every month any monthly row can be scored
+    # for, newest first, with the pull's own month always present so the
+    # default is always selectable. A month appears here if ONE row can speak
+    # for it - the rows that cannot say so themselves, per month, rather than
+    # the month being withheld from all of them.
+    _scm=sorted({v_["m"] for r_ in sc for v_ in (r_.get("months") or [])}
+                |({pull[:7]} if pull else set()),reverse=True)
+    snap["scorecard"]={"weeks":WEEKS,"rows":okr,
+      "operating_kpis":operating_kpis,
+      "objectives":objectives,
+      "operations":operations,
+      "measured":sum(1 for r_ in okr if r_["value"] is not None),
+      "scored":sum(1 for r_ in okr if r_["score"] is not None),
+      "total":len(okr),
+      "months":_okr_months_all,"month":(pull or "")[:7],
+      "monthly":sum(1 for r_ in okr if r_.get("months")),
+      "bands":{k:{"direction":v[0],"table":[list(t) for t in v[1]],
+                  "status":OKR_BAND_STATUS.get(k)} for k,v in OKR_BANDS.items()},
+      "month_basis":("the month picker moves the rows whose KR is a per-month measure. "
+        "Every month it offers was scored HERE, in the builder, against the same band and "
+        "the same rule as the default month - the picker chooses between finished answers "
+        "and computes nothing. A KR with no monthly form does not follow it, and counts "
+        "towards the default month's objective percentage only: carrying a current-state "
+        "figure back into an earlier month would invent a history the measurement does "
+        "not have."),
+      "basis":("one row per KR on the 2026 Operations Input sheet - six objectives, thirty "
+        "KRs, in the sheet's own order and wording. Every KR scores 100, 80, 50 or 0 from "
+        "the band table in the builder (scorecard.bands), and RAG follows the score: 100 "
+        "green, 80 or 50 amber, 0 red. A band still marked PROPOSED scores exactly like an "
+        "agreed one and says so on the row until Matthew confirms it. A KR with no target "
+        "gets no score, and a KR with no source is grey with its blocker named - that list "
+        "is the remaining build. An objective's percentage is the mean of the KRs that "
+        "HAVE a score that month; an unscored KR is left out of the mean and never counted "
+        "as a zero, which is why each objective also says how many of its five scored. The "
+        "Operations percentage is the mean of OO2-OO6; OO1 is Finance's and is excluded. "
+        "The Operating KPIs below the scorecard are measurements that are not on Matthew's "
+        "sheet - they are real and Ross uses them, they are simply not what he is scored "
+        "on.")}
+
+    # ---- signals, each with basis ----
+    sig=[]
+    # Ross, 09/09/2026: this signal used to read "Supplier issue backlog is 214
+    # open (target <=10/month)", which compared a running open-form total against
+    # a PER-MONTH target - two different units, and a number you would lose an
+    # argument over. It is now KR1 as agreed: forms raised in the month, by
+    # answered supplier. See suppliers.kr1.open_note for why 214 was not even a
+    # count of forms.
+    _k=(snap["suppliers"].get("kr1") or {}).get("months") or []
+    if _k:
+        _m=_k[-1]
+        _MN=["January","February","March","April","May","June","July","August",
+             "September","October","November","December"]
+        _lbl=f"{_MN[int(_m['month'][5:7])-1]} {_m['month'][:4]}"
+        _mtd=_m["month"]==(pull or "")[:7]
+        _top=", ".join(f"{r['supplier']} {r['issues']}" for r in _m["suppliers"][:3])
+        if _m["rag"]=="red":
+            sig.append({"severity":"red",
+              "text":(f"{_m['issues']} delivery issues raised in {_lbl}"
+                      f"{' so far' if _mtd else ''} (KR1 target ≤{_m['target']}/month)"
+                      + (f" — {_top}" if _top else "")),
+              "basis":("count of delivery/supplier issue forms raised in the month by answered "
+                       "supplier, from suppliers.kr1"
+                       + (" — month to date" if _mtd else "")
+                       + (f"; {_m['coverage_note']}" if _m.get("coverage_note") else ""))})
+    missing=[r["feed"] for r in fh if r["verdict"]=="MISSING"]
+    if missing:
+        sig.append({"severity":"red","text":f"{len(missing)} expected feeds absent: "+", ".join(missing[:5])+("…" if len(missing)>5 else ""),
+          "basis":"verdict=MISSING in feed_health"})
+    mods=sum(r["modules"] for r in training); comp=sum(r["complete"] for r in training)
+    if mods and round(100*comp/mods)<90:
+        sig.append({"severity":"amber",
+          "text":f"Training completion {round(100*comp/mods)}% ({sum(r['overdue'] for r in training)} overdue, {len(training)} sites)",
+          "basis":"sum(complete)/sum(modules) over training.sites vs 90% target"})
+    ovd=[a_ for a_ in areas if a_["overdue"]>0]
+    if ovd:
+        top=max(ovd,key=lambda r:r["overdue"])
+        sig.append({"severity":"amber","text":f"{len(ovd)} checklist areas overdue; worst: {top['area']} ({top['overdue']})",
+          "basis":"overdue>0 in compliance.areas"})
+    for i,s_ in enumerate(sig): s_["rank"]=i+1
+    snap["signals"]=sig
+    snap["schema_version"]="1.0"
+    snap["generated_at"]=datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ')
+    snap["source"]=src_label
+    snap["pull_date"]=pull
+    os.makedirs(OUT_DIR,exist_ok=True)
+    out=os.path.join(OUT_DIR,f"snapshot_{pull}.json")
+    json.dump(snap,open(out,"w"),separators=(",",":"))
+    ip=os.path.join(OUT_DIR,"snapshot_index.json")
+    idx=json.load(open(ip)) if os.path.exists(ip) else {"note":"Ops Command snapshots. Newest first; the daily refresh prepends.","dates":[]}
+    if pull not in idx["dates"]: idx["dates"].insert(0,pull)
+    idx["latest"]=idx["dates"][0]; idx["generated_at"]=snap["generated_at"]
+    json.dump(idx,open(ip,"w"),indent=1)
+    conn.close()
+    print(f"baked {out}: {len(fh)} feeds, {len(training)} training sites, "
+          f"{len(forms)} forms, {len(sig)} signals, {len(gaps)} gaps")
+if __name__=="__main__":
+    main()
