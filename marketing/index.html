@@ -42,6 +42,14 @@ td.fillbar { background-repeat: no-repeat; }
 .card .value.v-GREEN { color: #15803D; }
 tr.mutedrow { opacity: .55; }
 .card .delta { font-size: 11px; color: #6B7280; margin-top: 2px; }
+.card .delta .ok { color: #15803D; font-weight: 600; } .card .delta .bad { color: #B91C1C; font-weight: 600; }
+.card .value small { font-size: 13px; font-weight: 600; color: #9CA3AF; margin-left: 2px; }
+.healthgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 6px 10px; margin-top: 8px; }
+.hfeed { display: flex; gap: 8px; align-items: flex-start; font-size: 11px; line-height: 1.3; padding: 5px 6px; border-radius: 8px; background: #FAFAF8; }
+.hfeed .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; margin-top: 3px; }
+.hfeed.g .dot { background: #16A34A; } .hfeed.a .dot { background: #D97706; } .hfeed.r .dot { background: #DC2626; }
+.hfeed.r { background: #FEF2F2; } .hfeed.a { background: #FFFBEB; }
+.hfeed b { display: block; color: #111827; } .hfeed span { color: #6B7280; }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 900px) { .grid2 { grid-template-columns: 1fr; } }
 .section { background: #fff; border-radius: 14px; border: 1px solid #EBE4DC; box-shadow: 0 1px 3px rgba(16,24,40,.06); padding: 16px; margin-bottom: 14px; }
@@ -776,6 +784,13 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
 <!-- ================================================================ -->
 <div id="tab-summary" class="tabpane active">
   <div class="cards" id="cards"><div class="loading">Pulling live data…</div></div>
+  <div class="section" id="hub-health-sec" style="padding:12px 16px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:8px">
+      <h2 style="margin:0;font-size:13px">Feeds <span class="subtle" style="font-weight:normal">· is everything running?</span></h2>
+      <span class="subtle" id="hub-health-sum"></span>
+    </div>
+    <div class="healthgrid" id="hub-health"></div>
+  </div>
 
   <div class="section">
     <h2 title="Kobas Cash Log → COVERS_SALES_DAILY · targets = Mona Lisa weekly sales ÷ £22 SPH · green ≥100% · amber ≥85%">Green Light — covers vs target <span class="subtle" style="cursor:help">ⓘ</span></h2>
@@ -1256,6 +1271,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
      All numbers come from RR (= DATA.rr merged over the 1 Sept snapshot).
      Nothing here reads any other tab's state.                            -->
 <!-- ================================================================ -->
+<!-- v6.6 (9 Oct 2026): Summary rebuilt (loyalty, Slerp, content, influencers, paid, feeds health); 18 Aug £5 batch removed from Loyalty -->
 <!-- SLERP TAB  (v6.5.1, 6 Oct 2026) · source: Slerp Orders SoT sheet    -->
 <!-- Reads DATA.slerp when HubPublish carries it, else the snapshot.   -->
 <!-- ================================================================ -->
@@ -1304,18 +1320,12 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
     <button role="tab" data-rr="sum"   aria-selected="true">Summary</button>
     <button role="tab" data-rr="day"   aria-selected="false">Daily</button>
     <button role="tab" data-rr="week"  aria-selected="false">Weekly</button>
-    <button role="tab" data-rr="clock" aria-selected="false">Voucher clock</button>
     <button role="tab" data-rr="build" aria-selected="false">Build queue</button>
     <span class="rrstamp" id="rr-stamp">Loading…</span>
   </div>
 
   <!-- ---------------- SUMMARY ---------------- -->
   <section class="rrview" id="rrv-sum" role="tabpanel">
-    <div class="alertbar" id="rr-alert" hidden>
-      <div><h3 id="rr-alert-h"></h3><p id="rr-alert-p"></p></div>
-      <div><div class="amt" id="rr-alert-v"></div><div class="amtk" id="rr-alert-k">Unredeemed offer value</div></div>
-    </div>
-
     <div class="shead"><span class="n">S1</span><h2>The programme, all time</h2><span class="r" id="rr-since">Since go-live</span></div>
     <div class="kpis" id="rr-kpis"></div>
     <p class="caveat"><b>Counts exclude the four KobasTest vouchers</b> (23 claims, 15 redemptions, 3 internal profiles) and the teddy@ 100,000,000-point seed row. Member count is unique member_id from the MEMBERS sheet; the "real people" figure strips staff and test accounts and merges duplicate-email pairs.</p>
@@ -1324,7 +1334,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
     <p class="lede" id="rr-funnel-lede"></p>
     <div class="grid2">
       <div class="card">
-        <h3>£5 welcome, issue to spend</h3>
+        <h3>Welcome £5, join to spend <span>people, since go-live</span></h3>
         <div class="fun" id="rr-f-welcome"></div>
         <p class="caveat" id="rr-f-note"></p>
       </div>
@@ -1507,89 +1517,6 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
         <table id="rr-w-vouchers"><thead><tr><th>Voucher</th><th class="num">Claimed</th><th class="num">Redeemed</th><th class="num">Rate</th><th style="width:140px"></th></tr></thead><tbody></tbody></table>
       </div>
     </div>
-  </section>
-
-  <!-- ---------------- VOUCHER CLOCK ---------------- -->
-  <section class="rrview" id="rrv-clock" role="tabpanel" hidden>
-    <div class="shead"><span class="n">V0</span><h2>Expiry day: the deadline pulled</h2><span class="r" id="rr-exp-src"></span></div>
-    <p class="lede">The 36,265-voucher batch died at 23:59 on 1 September. <b>Nobody was told it was going to.</b> The catch-up campaign was never scheduled, the automated nudge flow has still never sent a single email, and there is no SMS in the account. This is what the deadline did entirely on its own.</p>
-    <div class="kpis" id="rr-exp-kpis"></div>
-    <div class="grid2">
-      <div class="card">
-        <h3>Redeemed per day <span id="rr-exp-r-n"></span></h3>
-        <svg class="rrchart" id="rr-ch-expr" viewBox="0 0 560 180" preserveAspectRatio="none"></svg>
-        <p class="caveat">One day out of fifteen carried <b>19% of every redemption since go-live</b>.</p>
-      </div>
-      <div class="card">
-        <h3>Claimed per day <span id="rr-exp-a-n"></span></h3>
-        <svg class="rrchart" id="rr-ch-expa" viewBox="0 0 560 180" preserveAspectRatio="none"></svg>
-        <p class="caveat">Claims doubled as well, so this is people opening the app and finding the voucher — not only spending one already in hand.</p>
-      </div>
-    </div>
-    <p class="caveat"><b>Why this counts as evidence rather than noise.</b> No message went out, so there is nothing to attribute the lift to except the expiry itself. And the V2 baseline below measures the days <i>inside</i> the window and finds no end-of-window drop-off at all — so a spike on the deadline cannot be normal behaviour showing through. If an untold deadline doubles the day, a told one has room above it. <b>This is the number the mechanic in V1 has to be judged against.</b></p>
-
-    <div class="shead"><span class="n">V1</span><h2>The new expiry mechanic</h2><span class="r">Agreed 1 Sept, not yet live</span></div>
-    <p class="lede">The voucher lives 14 days and is advertised as 7. On day 7 the member who has not used it gets an extension framed as a favour. On day 12 they get one last push, two days before it actually dies. The baseline in V2 measures the days <i>inside</i> the window and finds no drop-off approaching day 14 — which is what makes V0 above readable: when the deadline itself landed on 1 September it produced the biggest day the programme has had.</p>
-
-    <div class="card" style="padding:20px 22px">
-      <div class="track">
-        <div class="rail"></div><div class="railon"></div>
-        <div class="stops">
-          <div><div class="eyebrow">Day 0</div><div class="gap"></div><div class="ttl">Welcome + £5</div><div class="txt">"Use it within 7 days"</div></div>
-          <div><div class="eyebrow">Day 5</div><div class="gap"></div><div class="ttl">Urgency</div><div class="txt">Two days left on the advertised window</div></div>
-          <div class="on"><div class="eyebrow">Day 7</div><div class="gap"></div><div class="ttl">The extension</div><div class="txt">"We got you. Another 7 days."</div></div>
-          <div class="on"><div class="eyebrow">Day 12</div><div class="gap"></div><div class="ttl">Final push</div><div class="txt">Two days before it really dies</div></div>
-          <div><div class="eyebrow">Day 14</div><div class="gap"></div><div class="ttl">Silent expiry</div><div class="txt">No event fires. Write it off by arithmetic</div></div>
-        </div>
-      </div>
-      <p class="caveat" style="margin-top:14px"><b>Half of this is already in the product.</b> The £5 coupon's own description field reads "valid for 7 days from the date it goes live on customers account" while the real window is 14 days. The advertised seven already exists. Nothing has ever acted on it, and redemptions run out to day 13 with no drop-off at day 7 at all.</p>
-    </div>
-
-    <div class="shead"><span class="n">V2</span><h2>The baseline it has to beat</h2><span class="r" id="rr-clock-r"></span></div>
-    <p class="lede">Days between a member being given the £5 and using it, measured from their own clock rather than the calendar. The two cohorts are almost exactly half each and behave like different species, so they are never pooled here.</p>
-    <div class="grid2">
-      <div class="card">
-        <h3>Migrated base, 18 Aug batch <span id="rr-clock-mig-n"></span></h3>
-        <svg class="rrchart" id="rr-ch-mig" viewBox="0 0 560 180" preserveAspectRatio="none"></svg>
-        <p class="caveat">Flat across the whole window. They redeem whenever they happen to come in, not because a deadline is approaching.</p>
-      </div>
-      <div class="card">
-        <h3>Post-launch sign-ups <span id="rr-clock-new-n"></span></h3>
-        <svg class="rrchart" id="rr-ch-new" viewBox="0 0 560 180" preserveAspectRatio="none"></svg>
-        <p class="caveat"><b>73.5% redeem on day zero</b> and 95.5% are done by day six. They are standing in a restaurant with the app open. No expiry mechanic will move these people.</p>
-      </div>
-    </div>
-
-    <div class="grid3" style="margin-top:12px">
-      <div class="card"><h3>Where redemptions land</h3>
-        <div class="tw">
-          <table id="rr-t-windows"><thead><tr><th>Window</th><th class="num">Migrated</th><th class="num">New</th></tr></thead><tbody></tbody></table>
-        </div>
-        <p class="caveat">The highlighted rows are the two the mechanic targets. On the migrated base that is 54% of all redemptions already happening in the extension window, unprompted.</p>
-      </div>
-      <div class="card"><h3>Does the deadline pull anything today?</h3>
-        <div class="tw">
-          <table id="rr-t-hazard"><thead><tr><th>Day of window</th><th class="num">Hazard rate</th></tr></thead><tbody></tbody></table>
-        </div>
-        <p class="caveat"><b>No. The end of the window is quieter than the middle.</b> Redemptions as a share of the still-unredeemed pool fall as the deadline approaches. That is the case for the mechanic in one table: there is no existing deadline effect to confuse it with.</p>
-      </div>
-      <div class="card"><h3>How to read the result</h3>
-        <ul class="notes">
-          <li><span class="pill p-hot">D7</span><span>Any spike on <b>days 7 and 8</b> is the extension nudge. Baseline is 58 and 44 redemptions.</span></li>
-          <li><span class="pill p-hot">D12</span><span>Any spike on <b>days 12 and 13</b> is the final push. Baseline is 66 and 57.</span></li>
-          <li><span class="pill p-mute">D0-6</span><span>Movement here would have happened anyway. Do not claim it.</span></li>
-        </ul>
-        <p class="caveat">Report the two cohorts separately every time. Pooling them hides the effect entirely, because new sign-ups swamp day zero.</p>
-      </div>
-    </div>
-
-    <div class="shead"><span class="n">V3</span><h2>Before it ships</h2></div>
-    <div class="grid2">
-      <div class="blocked" style="border-color:var(--rr-crit);border-style:solid;background:var(--rr-crit-soft)"><b>Check what the app wallet shows.</b> Trifft holds the real 14-day date on the coupon as <span class="mono">expiration_at</span>, and the wallet is where the member goes to claim. If it renders that date, the email's seven days is contradicted on screen and the day-7 extension reads as a lie rather than a gift. This is the one thing that can kill the mechanic, and it takes five minutes to check.</div>
-      <div class="blocked"><b>The clean version, if the wallet does show it.</b> Set the coupon to a real 7 days, and on day 7 issue a fresh 7-day coupon to anyone who has not redeemed. It is then a genuine extension, nothing on screen contradicts anything, and the re-issue fires its own <span class="mono">Coupon assigned</span> event, which hands you the tracked cohort for free with no segment maths at all. This is the recommendation.</div>
-    </div>
-    <p class="caveat" style="margin-top:12px"><b>Tracking needs no new plumbing either way.</b> Both the issue and the redemption already carry a timestamp and a profile id, so days-to-redeem is computable per person from events that exist today. One caution on the audience: use a <span class="mono">between-static</span> date window, never "in the last N days", which is the bug that pointed the catch-up campaign at 2,322 recent sign-ups instead of the cliff.</p>
-    <p class="caveat"><b>The baseline is 70% complete on day 13 and blind on day 14.</b> At the data cut the migrated cohort was 13.7 days old, so nobody had finished a full window. Re-run after 2 September to lock the numbers before the change goes live.</p>
   </section>
 
   <!-- ---------------- BUILD QUEUE ---------------- -->
@@ -3445,63 +3372,48 @@ async function loadTab(name) {
 // SUMMARY TAB
 // =====================================================================
 async function loadSummary() {
-  var [kpiData, glCsv, bbCsv] = await Promise.all([
-    loadKpiData().catch(function(e) { return {_err: e.message}; }),
-    readSheetCsv(SHEETS.GREEN_LIGHT_BOARD).catch(function(e) { return ''; }),
-    readSheetCsv(SHEETS.BUDGET_BOARD).catch(function(e) { return ''; })
-  ]);
-  renderCards(kpiData, bbCsv, glCsv);
+  var d = await loadData();
+  var glCsv = d[SHEETS.GREEN_LIGHT_BOARD] || [];
+  var bbCsv = d[SHEETS.BUDGET_BOARD] || [];
+  renderCards(d, bbCsv, glCsv);
+  renderHealth(d);
   renderGreenLight(glCsv);
   if (document.getElementById('asof').textContent === 'Loading…') hubStamp(DATA);
 }
 
-async function loadKpiData() {
-  var [meta30, gads30, ga428, klaviyoActive] = await Promise.all([
-    getWindsor('facebook', ['campaign','spend','impressions','clicks','actions_purchase','actions_lead'], {date_preset: 'last_30d'}),
-    getWindsor('google_ads', ['campaign','spend','impressions','clicks','conversions'], {date_preset: 'last_30d'}),
-    getWindsor('googleanalytics4', ['date','sessions'], {date_preset: 'last_28d'}),
-    Promise.resolve(null) // Klaviyo: not wired into the web API yet
-  ]);
-  var totMeta = 0, totMetaConv = 0;
-  meta30.forEach(function(r) {
-    totMeta += Number(r.spend) || 0;
-    totMetaConv += (Number(r.actions_purchase) || 0) + (Number(r.actions_lead) || 0);
-  });
-  var totGads = 0, totGadsConv = 0;
-  gads30.forEach(function(r) {
-    totGads += Number(r.spend) || 0;
-    totGadsConv += Number(r.conversions) || 0;
-  });
-  var totSessions = ga428.reduce(function(s, r) { return s + (Number(r.sessions) || 0); }, 0);
-  var sessionsSeries = ga428.map(function(r) { return Number(r.sessions) || 0; });
-  var active = 0;
-  try {
-    var res = klaviyoActive && klaviyoActive.data && klaviyoActive.data.attributes && klaviyoActive.data.attributes.results;
-    if (res && res.length) active = res[res.length - 1].measurements.members[res[res.length - 1].measurements.members.length - 1];
-  } catch (e) {}
-  return {totMeta: totMeta, totGads: totGads, totMetaConv: totMetaConv, totGadsConv: totGadsConv, totSessions: totSessions, sessionsSeries: sessionsSeries, active: active};
+// Dates in the payload are either UTC ISO ("...Z") or Europe/London wall clock
+// with no zone. Resolve both to a real epoch so ages are right from Dubai.
+function ukEpoch(str) {
+  if (!str) return NaN;
+  str = String(str).replace(' ', 'T');
+  if (/Z$|[+-]\d\d:?\d\d$/.test(str)) return Date.parse(str);
+  var naive = Date.parse(str + 'Z');
+  if (isNaN(naive)) return NaN;
+  var ukParts = new Intl.DateTimeFormat('en-GB', {timeZone: 'Europe/London', hour12: false, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'}).formatToParts(new Date(naive));
+  var o = {}; ukParts.forEach(function(p) { o[p.type] = p.value; });
+  var asUk = Date.parse(o.year + '-' + o.month + '-' + o.day + 'T' + (o.hour === '24' ? '00' : o.hour) + ':' + o.minute + ':00Z');
+  return naive - (asUk - naive);
+}
+function ageText(ms) {
+  if (isNaN(ms)) return 'no stamp';
+  var h = (Date.now() - ms) / 36e5;
+  if (h < 0) return 'today';
+  if (h < 1) return Math.round(h * 60) + ' min ago';
+  if (h < 48) return h.toFixed(h < 10 ? 1 : 0) + ' h ago';
+  return Math.round(h / 24) + ' days ago';
+}
+function sumSeries(arr, from, to) { var t = 0; for (var i = from; i < to; i++) t += Number(arr[i]) || 0; return t; }
+function lastN(arr, n) { return (arr || []).slice(Math.max(0, arr.length - n)); }
+function kpiCard(label, value, delta, cls, extra) {
+  return '<div class="card' + (cls ? ' ' + cls : '') + '"><div class="label">' + label + '</div><div class="value">' + value + '</div>' +
+    (delta ? '<div class="delta">' + delta + '</div>' : '') + (extra || '') + '</div>';
 }
 
 function renderCards(d, bbCsv, glCsv) {
   var el = document.getElementById('cards');
-  if (d._err) { el.innerHTML = '<div class="err">KPI load: ' + d._err + '</div>'; return; }
-  // Budget pace — goal ring
-  var budgetCard = '';
-  try {
-    var tot = csvToObjects(bbCsv || '').filter(function(r) { return r.channel === 'TOTAL'; })[0];
-    if (tot) {
-      var paceN = Number(tot.spend_pace_pct);
-      var paceRag = String(tot.rag || '').replace(/\s/g, '').toUpperCase();
-      var col = paceRag === 'RED' ? '#DC2626' : paceRag === 'AMBER' ? '#D97706' : '#16A34A';
-      var deg = Math.min(360, Math.max(0, (isNaN(paceN) ? 0 : paceN) * 3.6));
-      budgetCard = '<div class="card"><div class="label">Budget pace · MTD</div>' +
-        '<div class="ringrow"><div class="ring" style="background:conic-gradient(' + col + ' ' + deg + 'deg, #E5E7EB 0)"><div class="ringin v-' + paceRag + '">' + (isNaN(paceN) ? '—' : paceN.toFixed(0) + '%') + '</div></div>' +
-        '<div class="delta">' + fmtGbp(tot.actual_mtd_gbp) + ' of ' + fmtGbp(tot.budget_gbp) + '<br><span class="rag ' + (paceRag || 'NT') + '">' + (tot.rag || '—') + '</span></div></div></div>';
-    }
-  } catch (e) {}
-  // Covers hero card: completed week total + WoW + WTD + 12wk trend sparkline
-  var coversCard = '';
-  var heroSeries = [];
+  var cards = [], sparks = [];
+
+  // 1. Covers hero: last completed week + WoW + WTD + 12wk sparkline
   try {
     var g = glParse(glCsv || '');
     if (g.report) {
@@ -3511,31 +3423,165 @@ function renderCards(d, bbCsv, glCsv) {
       var wtd = g.current ? g.weeks[g.current].reduce(function(s, r) { return s + (Number(r.covers_actual) || 0); }, 0) : 0;
       var prevTot = g.prev ? g.weeks[g.prev].reduce(function(s, r) { return s + (Number(r.covers_actual) || 0); }, 0) : 0;
       var wow = prevTot > 0 ? repTot / prevTot - 1 : null;
-      heroSeries = (g.completed || []).slice(-12).map(function(w) {
+      var heroSeries = (g.completed || []).slice(-12).map(function(w) {
         return g.weeks[w].reduce(function(s, r) { return s + (Number(r.covers_actual) || 0); }, 0);
       });
-      coversCard = '<div class="card hero"><div class="label">Covers · wk of ' + fmtWc(g.report) + '</div><div class="value" data-count="' + repTot + '">' + fmtN(repTot) + '</div>' +
+      cards.push('<div class="card hero"><div class="label">Covers · wk of ' + fmtWc(g.report) + '</div><div class="value" data-count="' + repTot + '">' + fmtN(repTot) + '</div>' +
         (repTarget > 0 ? '<div class="delta">Target ' + fmtN(repTarget) + ' · <span class="' + (achPct >= 100 ? 'pos' : 'neg') + '">' + achPct.toFixed(0) + '% of target</span></div>' : '<div class="delta">Target — no target set this week</div>') +
         '<div class="delta">' + (wow != null ? signedPct(wow) + ' WoW · ' : '') + (wtd > 0 ? 'this wk so far ' + fmtN(wtd) : 'this wk: no data yet (covers lag)') + '</div>' +
-        (heroSeries.length > 1 ? '<div class="sparkwrap"><canvas id="covers-spark"></canvas></div>' : '') + '</div>';
+        (heroSeries.length > 1 ? '<div class="sparkwrap"><canvas id="covers-spark"></canvas></div>' : '') + '</div>');
+      if (heroSeries.length > 1) sparks.push(['covers-spark', heroSeries, '#FFC078', 'rgba(255,192,120,.18)']);
     }
-  } catch (e) {}
-  // Blended CPA card
-  var conv = (d.totMetaConv || 0) + (d.totGadsConv || 0);
-  var cpa = conv > 0 ? (d.totMeta + d.totGads) / conv : null;
-  var cpaCard = '<div class="card"><div class="label">Blended CPA · 30d</div><div class="value"' + (cpa != null ? ' data-count="' + cpa + '" data-fmt="gbp2"' : '') + '>' + (cpa != null ? fmtGbp2(cpa) : '—') + '</div>' +
-    '<div class="delta">' + fmtN(conv) + ' conv (Meta purch+leads ' + fmtN(d.totMetaConv) + ' · Google ' + fmtN(d.totGadsConv, 0) + ')</div></div>';
-  var sessCard = '<div class="card"><div class="label">Sessions · 28d</div><div class="value" data-count="' + (d.totSessions || 0) + '">' + fmtN(d.totSessions) + '</div><div class="sparkwrap"><canvas id="sess-spark"></canvas></div></div>';
-  var klaviyoCard = '<div class="card"><div class="label">Klaviyo active · email <span class="subtle">(desktop Hub only)</span></div><div class="value"' + (d.active ? ' data-count="' + d.active + '"' : '') + '>' + fmtN(d.active) + '</div></div>';
-  el.innerHTML =
-    coversCard +
-    budgetCard +
-    cpaCard +
-    sessCard +
-    klaviyoCard;
-  if (d.sessionsSeries && d.sessionsSeries.length) drawSpark('sess-spark', d.sessionsSeries);
-  if (heroSeries.length > 1) drawSpark('covers-spark', heroSeries, '#FFC078', 'rgba(255,192,120,.18)');
+  } catch (e) { console.warn('covers card', e); }
+
+  // 2-4. Ramen Royalty (payload.rr, live hourly)
+  var rr = d.rr || null;
+  try {
+    if (rr && rr.members) {
+      var su = rr.signups || [], n = su.length;
+      // last two complete days are the lag; the 7 before them are the latest settled week
+      var settled = n - 3, wk = sumSeries(su, Math.max(0, settled - 7), settled), wkPrev = sumSeries(su, Math.max(0, settled - 14), Math.max(0, settled - 7));
+      var suWow = wkPrev > 0 ? wk / wkPrev - 1 : null;
+      cards.push(kpiCard('Loyalty members', '<span data-count="' + rr.members.total + '">' + fmtN(rr.members.total) + '</span>',
+        fmtN(rr.members.joined_since) + ' joined since go-live' + (rr.members.rate_note ? ' · ' + rr.members.rate_note : '') +
+        '<br>' + fmtN(wk) + ' sign-ups, 7 days to ' + fmtWc((rr.days || [])[settled - 1]) + (suWow != null ? ' · ' + signedPct(suWow) + ' WoW' : ''),
+        '', '<div class="sparkwrap"><canvas id="signup-spark"></canvas></div>'));
+      sparks.push(['signup-spark', su.slice(Math.max(0, n - 30), settled)]);
+    }
+    if (rr && rr.second_visit) {
+      var sv = rr.second_visit, ok7 = sv.rate >= sv.target;
+      cards.push(kpiCard('Second visit · within 7 days', sv.rate.toFixed(1) + '<small>%</small>',
+        '<span class="' + (ok7 ? 'ok' : 'bad') + '">target ' + sv.target + '%</span> · prev ' + sv.prev + '% · n ' + fmtN(sv.n) +
+        (sv.d30 ? '<br>within 30 days <b>' + sv.d30.rate.toFixed(1) + '%</b> (target ' + sv.d30.target + '%)' : '')));
+    }
+    if (rr && rr.trading) {
+      var t = rr.trading, sp = rr.spend || [], bl = rr.bills || [];
+      var lastIdx = sp.length - 1; while (lastIdx >= 0 && (sp[lastIdx] == null)) lastIdx--;
+      var wkSpend = sumSeries(sp, Math.max(0, lastIdx - 6), lastIdx + 1), wkBills = sumSeries(bl, Math.max(0, lastIdx - 6), lastIdx + 1);
+      var wkSpendPrev = sumSeries(sp, Math.max(0, lastIdx - 13), Math.max(0, lastIdx - 6));
+      cards.push(kpiCard('Member sales · since go-live', '<span data-count="' + Math.round(t.spend) + '" data-fmt="gbp">' + fmtGbp(t.spend) + '</span>',
+        fmtN(t.bills) + ' member bills · ATV £' + Number(t.atv).toFixed(2) + ' · ' + t.sites + ' sites' +
+        '<br>7 days to ' + fmtWc((rr.days || [])[lastIdx]) + ': ' + fmtGbp(wkSpend) + ' / ' + fmtN(wkBills) + ' bills' + (wkSpendPrev > 0 ? ' · ' + signedPct(wkSpend / wkSpendPrev - 1) + ' WoW' : '')));
+    }
+    if (rr && rr.vouchers && rr.vouchers.length) {
+      var wv = rr.vouchers[0], rate = wv.cp ? wv.rp / wv.cp * 100 : null;
+      cards.push(kpiCard('Welcome £5 · claim to spend', (rate != null ? rate.toFixed(0) + '<small>%</small>' : '—'),
+        fmtN(wv.rp) + ' of ' + fmtN(wv.cp) + ' people have spent it' + (rr.claim_to_redeem ? '<br>all vouchers ' + rr.claim_to_redeem.rate.toFixed(0) + '% (' + fmtN(rr.claim_to_redeem.people_redeemed) + ' people)' : '')));
+    }
+  } catch (e) { console.warn('rr cards', e); }
+
+  // 5. Slerp (Slerp Orders SoT, daily)
+  try {
+    var sl = d.slerp, k = sl && sl.kpi;
+    if (k) {
+      var days = (sl.days || []).slice().sort(function(x, y) { return x[0] < y[0] ? -1 : 1; });
+      var ordSeries = lastN(days, 28).map(function(r) { return Number(r[1]) || 0; });
+      cards.push(kpiCard('Slerp · last 7 days', '<span data-count="' + (parseInt(String(k['Orders last 7 days']).replace(/,/g, ''), 10) || 0) + '">' + (k['Orders last 7 days'] || '—') + '</span> <small>orders</small>',
+        (k['Revenue last 7 days'] || '—') + ' revenue · AOV ' + (k['Avg order value'] || '—') +
+        '<br>since launch ' + (k['Orders'] || '—') + ' orders · ' + (k['Revenue (paid)'] || '—') + ' · repeat ' + (k['Repeat rate'] || '—'),
+        '', ordSeries.length > 1 ? '<div class="sparkwrap"><canvas id="slerp-spark"></canvas></div>' : ''));
+      if (ordSeries.length > 1) sparks.push(['slerp-spark', ordSeries]);
+    }
+  } catch (e) { console.warn('slerp card', e); }
+
+  // 6. Paid media 30d from PAID_MEDIA_DAILY (not the Windsor 30d call, which is down when Meta needs a login)
+  try {
+    var pd = (d.paid_daily || []).slice().sort(function(x, y) { return String(x.date) < String(y.date) ? -1 : 1; });
+    var p30 = lastN(pd, 30), pPrev = pd.slice(Math.max(0, pd.length - 60), Math.max(0, pd.length - 30));
+    function paidTot(rows, f) { return rows.reduce(function(s2, r) { return s2 + (Number(r[f]) || 0); }, 0); }
+    var spend30 = paidTot(p30, 'meta_spend') + paidTot(p30, 'google_spend') + paidTot(p30, 'tiktok_spend');
+    var spendPrev = paidTot(pPrev, 'meta_spend') + paidTot(pPrev, 'google_spend') + paidTot(pPrev, 'tiktok_spend');
+    var gConv = paidTot(p30, 'google_conversions'), gSpend = paidTot(p30, 'google_spend');
+    var metaConv = 0; (d.meta30 || []).forEach(function(r) { metaConv += (Number(r.actions_purchase) || 0) + (Number(r.actions_lead) || 0); });
+    var conv = gConv + metaConv, cpa = conv > 0 ? spend30 / conv : null;
+    cards.push(kpiCard('Paid spend · 30d', '<span data-count="' + Math.round(spend30) + '" data-fmt="gbp">' + fmtGbp(spend30) + '</span>',
+      'Meta ' + fmtGbp(paidTot(p30, 'meta_spend')) + ' · Google ' + fmtGbp(paidTot(p30, 'google_spend')) + (spendPrev > 0 ? ' · ' + signedPct(spend30 / spendPrev - 1) + ' vs prior 30d' : '') +
+      '<br>blended CPA ' + (cpa != null ? fmtGbp2(cpa) : '—') + ' · ' + fmtN(conv) + ' conv' + (d.meta30_error ? ' <span class="bad">(Google only, Meta feed down)</span>' : '')));
+  } catch (e) { console.warn('paid card', e); }
+
+  // 7. Website sessions 28d
+  try {
+    var ga = d.ga4_28 || [], tot = ga.reduce(function(s2, r) { return s2 + (Number(r.sessions) || 0); }, 0);
+    cards.push(kpiCard('Website sessions · 28d', '<span data-count="' + tot + '">' + fmtN(tot) + '</span>', '', '', '<div class="sparkwrap"><canvas id="sess-spark"></canvas></div>'));
+    sparks.push(['sess-spark', ga.map(function(r) { return Number(r.sessions) || 0; })]);
+  } catch (e) { console.warn('ga card', e); }
+
+  // 8. Organic content 30d (CONTENT_LIBRARY)
+  try {
+    var cl = d.content_library || [], cut = Date.now() - 30 * 864e5;
+    var recent = cl.filter(function(r) { return ukEpoch(r.posted_at) >= cut; });
+    var views = recent.reduce(function(s2, r) { return s2 + (Number(r.views) || 0); }, 0);
+    var ig = recent.filter(function(r) { return r.platform === 'instagram'; }).length, tt = recent.length - ig;
+    var top = recent.slice().sort(function(x, y) { return (Number(y.views) || 0) - (Number(x.views) || 0); })[0];
+    cards.push(kpiCard('Organic content · 30d', '<span data-count="' + views + '">' + fmtN(views) + '</span> <small>views</small>',
+      recent.length + ' posts (IG ' + ig + ' · TikTok ' + tt + ')' + (top ? '<br>top post ' + fmtN(top.views) + ' views · ' + (top.platform === 'instagram' ? 'IG' : 'TikTok') : '')));
+  } catch (e) { console.warn('content card', e); }
+
+  // 9. Influencers (DYI export, weekly)
+  try {
+    var da = d.dyi_agg;
+    if (da) {
+      var wkKeys = Object.keys((da.wseries && da.wseries.story) || {}).sort(), lastWk = wkKeys[wkKeys.length - 1];
+      var wkStory = lastWk ? (da.wseries.story[lastWk] || 0) : null;
+      cards.push(kpiCard('Influencers · all time', '<span data-count="' + (Number(da.story) || 0) + '">' + fmtN(da.story) + '</span> <small>story tags</small>',
+        fmtN(da.reel) + ' reels · ' + fmtN(da.post) + ' posts · ' + fmtN(da.creators) + ' creators' +
+        (lastWk ? '<br>wk of ' + fmtWc(lastWk) + ': ' + fmtN(wkStory) + ' stories' : '') + ' · data to ' + (da.asof || '—')));
+    }
+  } catch (e) { console.warn('dyi card', e); }
+
+  // 10. Budget pace ring
+  try {
+    var totB = csvToObjects(bbCsv || '').filter(function(r) { return r.channel === 'TOTAL'; })[0];
+    if (totB) {
+      var paceN = Number(totB.spend_pace_pct), hasBudget = Number(totB.budget_gbp) > 0;
+      var paceRag = hasBudget ? String(totB.rag || '').replace(/\s/g, '').toUpperCase() : 'NT';
+      var col = paceRag === 'RED' ? '#DC2626' : paceRag === 'AMBER' ? '#D97706' : paceRag === 'GREEN' ? '#16A34A' : '#9CA3AF';
+      var deg = Math.min(360, Math.max(0, (isNaN(paceN) ? 0 : paceN) * 3.6));
+      cards.push('<div class="card"><div class="label">Budget pace · MTD</div>' +
+        '<div class="ringrow"><div class="ring" style="background:conic-gradient(' + col + ' ' + deg + 'deg, #E5E7EB 0)"><div class="ringin v-' + paceRag + '">' + (hasBudget && !isNaN(paceN) ? paceN.toFixed(0) + '%' : '—') + '</div></div>' +
+        '<div class="delta">' + fmtGbp(totB.actual_mtd_gbp) + ' spent' + (hasBudget ? ' of ' + fmtGbp(totB.budget_gbp) + '<br><span class="rag ' + paceRag + '">' + (totB.rag || '—') + '</span>' : '<br><span class="bad">no budget entered this month</span>') + '</div></div></div>');
+    }
+  } catch (e) { console.warn('budget card', e); }
+
+  el.innerHTML = cards.join('');
+  sparks.forEach(function(sp2) { if (sp2[1] && sp2[1].length > 1) drawSpark(sp2[0], sp2[1], sp2[2], sp2[3]); });
   animateCounts(el);
+}
+
+// Feeds strip: one line per source, judged against its own cadence.
+function renderHealth(d) {
+  var el = document.getElementById('hub-health');
+  if (!el) return;
+  var now = Date.now(), rows = [];
+  function add(name, epoch, okH, warnH, note, forced) {
+    var h = (now - epoch) / 36e5, cls = forced || (isNaN(h) ? 'r' : h <= okH ? 'g' : h <= warnH ? 'a' : 'r');
+    rows.push({cls: cls, name: name, txt: (isNaN(epoch) ? 'no stamp' : ageText(epoch)) + (note ? ' · ' + note : '')});
+  }
+  function maxOf(arr, f) { var m = ''; (arr || []).forEach(function(r) { var v = String(r[f] || ''); if (v > m) m = v; }); return m; }
+  try {
+    add('Hub publish (data.json)', ukEpoch(d.published_at), 2.5, 6, 'hourly · ' + (d.publisher || ''));
+    add('Loyalty (Trifft + Kobas)', ukEpoch(d.rr && d.rr.generated_at), 3, 8, 'hourly' + (d.rr && d.rr.blocked && d.rr.blocked.length ? ' · ' + d.rr.blocked.length + ' blocked' : ''));
+    var gaps = 0; if (d.rr && d.rr.notes) { var nn = d.rr.notes, dn = d.rr.days; for (var i = 0; i < nn.length - 2; i++) if (nn[i] === 'no covers data') gaps++; }
+    rows.push({cls: gaps === 0 ? 'g' : gaps <= 2 ? 'a' : 'r', name: 'Kobas covers → loyalty days', txt: gaps === 0 ? 'every settled day has covers' : gaps + ' settled days with no covers data'});
+    add('Content library (IG + TikTok)', ukEpoch(maxOf(d.content_library, 'last_updated')), 30, 54, 'daily 05:00 UK');
+    add('Add / Remove matrix', ukEpoch(maxOf(d.matrix, 'updated_at')), 30, 54, 'daily');
+    var pdLast = maxOf(d.paid_daily, 'date').slice(0, 10);
+    add('Paid media daily', ukEpoch(pdLast + 'T23:59:00'), 72, 96, 'D-2 is normal · last ' + pdLast);
+    var gaLast = maxOf(d.ga4_daily, 'date').slice(0, 10);
+    add('GA4 daily', ukEpoch(gaLast + 'T23:59:00'), 72, 96, 'D-2 is normal · last ' + gaLast);
+    add('Green Light covers', ukEpoch(maxOf(d.green_light, 'computed_at')), 30, 54, 'daily');
+    add('Slerp orders', ukEpoch(String(d.slerp && d.slerp.asof) + 'T23:59:00'), 30, 54, 'daily');
+    var dyiAsof = d.dyi_agg && d.dyi_agg.hi_ms ? Number(d.dyi_agg.hi_ms) : NaN;
+    add('Influencer DYI export', dyiAsof, 24 * 9, 24 * 16, 'weekly drop · to ' + (d.dyi_agg && d.dyi_agg.asof));
+    if (d.meta30_error || d.metaAds30_error) rows.push({cls: 'r', name: 'Meta 30d (Windsor)', txt: /log in/i.test(String(d.meta30_error || d.metaAds30_error)) ? 'Facebook wants a login on the Windsor account' : String(d.meta30_error || d.metaAds30_error).slice(0, 90)});
+    else rows.push({cls: 'g', name: 'Meta 30d (Windsor)', txt: (d.meta30 || []).length + ' campaign rows'});
+    var totB = (d.budget_board || []).filter(function(r) { return r.channel === 'TOTAL'; })[0];
+    rows.push({cls: totB && Number(totB.budget_gbp) > 0 ? 'g' : 'a', name: 'Marketing budget', txt: totB && Number(totB.budget_gbp) > 0 ? 'this month set' : 'no budget entered for this month'});
+  } catch (e) { console.warn('health', e); }
+  el.innerHTML = rows.map(function(r) { return '<div class="hfeed ' + r.cls + '"><span class="dot"></span><div><b>' + r.name + '</b><span>' + r.txt + '</span></div></div>'; }).join('');
+  var red = rows.filter(function(r) { return r.cls === 'r'; }).length, amb = rows.filter(function(r) { return r.cls === 'a'; }).length;
+  var sum = document.getElementById('hub-health-sum');
+  if (sum) sum.textContent = red ? red + ' feed' + (red > 1 ? 's' : '') + ' down' + (amb ? ' · ' + amb + ' to watch' : '') : amb ? amb + ' to watch, nothing down' : 'all feeds running';
 }
 function card(label, value) { return '<div class="card"><div class="label">' + label + '</div><div class="value">' + value + '</div></div>'; }
 
@@ -3580,7 +3626,7 @@ function animateCounts(root) {
       var v = target * (1 - Math.pow(1 - p, 3));
       el.textContent = fmt === 'gbp2'
         ? '£' + v.toLocaleString('en-GB', {minimumFractionDigits: 2, maximumFractionDigits: 2})
-        : new Intl.NumberFormat('en-GB', {maximumFractionDigits: 0}).format(Math.round(v));
+        : (fmt === 'gbp' ? '£' : '') + new Intl.NumberFormat('en-GB', {maximumFractionDigits: 0}).format(Math.round(v));
       if (p < 1) requestAnimationFrame(frame);
     }
     requestAnimationFrame(frame);
@@ -8015,12 +8061,6 @@ var RR_SNAP = {
   members: {total: 40558, real: 40509, joined_since: 4189, rate_note: '~280/day, rising'},
   trading: {bills: 2069, spend: 53774.71, atv: 25.99, sites: 21, members: 1813, days: 14},
   share: {sales: 3.8, target: 25, legacy: 4.3},
-  cliff: {issued: 36265, redeemed: 902, outstanding: 35359, reissued: 4,
-    value: 176795, expires: '2026-09-15T23:59:59Z', activation: 2.5, status: 'LIVE',
-    final_label: '18 Aug batch · still LIVE · expiry extended 14 days to 15 Sept 2026, 23:59 UTC (unconfirmed with Trifft)',
-    catchup: {sent: 29412, delivered: 29234, open_pc: 39.6, click_pc: 5.8, clicks: 1707, redeemed_attr: 263, unsub: 140, sent_at: '1 Sept 09:00 UTC'},
-    headline: '35,359 £5 vouchers from the 18 Aug batch are still live: the 1 Sept expiry was extended by 14 days',
-    body: 'The batch did not lapse on 1 September. Trifft changed the coupon on 2 September and batch members are still redeeming it (verified against 6 September redemption events). To date 902 of 36,265 (2.5%) have redeemed: 673 by the morning of 1 September, 229 since. The catch-up email went out at 09:00 UTC on 1 September to 29,412 mailable people saying it was expiring: 39.6% opened, 1,707 clicked (5.8%), 263 redemptions attributed, 140 unsubscribed. Two things need doing: confirm the real expiry with Trifft (per-coupon expiry reads from the API now drift between 15 and 22 September, so there may be no single cliff at all), and schedule a second push for the new deadline, because nothing is booked against it.'},
   claim_to_redeem: {people_claimed: 2791, people_redeemed: 1480, rate: 53.0},
   tiers: [
     {name: 'Loyal',   threshold: 0,    members: 40129, ex_staff: 40110},
@@ -8213,15 +8253,10 @@ async function loadLoyalty() {
   } else {
     stamp.innerHTML = 'Snapshot · ' + RR.pulled_label + ' · payload.rr not served yet';
   }
-  // The funnel panel carries the loudest number on the tab - the unredeemed
-  // offer value - and it is fed by vouchers/cliff/claim_to_redeem. When those
-  // are stale, say so ON the panel: the stamp alone sits too far from the
-  // number for anyone reading it to connect the two.
+  // v6.6: the 18 Aug batch block is gone. Say on the panel if the voucher table is a snapshot.
   var stale5 = ['vouchers', 'claim_to_redeem'].filter(function (k) { return RR_LIVE_KEYS.indexOf(k) < 0; });
   var s2 = rrEl('rr-s2-src');
-  if (s2) s2.textContent = '£5 welcome voucher · ' + RR.cliff.final_label + (stale5.length ? ' · voucher table ' + RR.pulled_label + ' snapshot' : '');
-  var ak = rrEl('rr-alert-k');
-  if (ak) ak.textContent = 'Unredeemed offer value · still live · expiry extended to 15 Sept (unconfirmed)';
+  if (s2) s2.textContent = '£5 welcome voucher · rolling, every new sign-up' + (stale5.length ? ' · voucher table ' + RR.pulled_label + ' snapshot' : ' · live');
 
   rrEl('rr-since').textContent = 'Since go-live ' + rrDay(RR.launch_date);
 
@@ -8229,7 +8264,6 @@ async function loadLoyalty() {
   rrSummary();
   rrDailyInit();
   rrWeeklyInit();
-  rrClock();
   rrBuild();
 }
 
@@ -8251,14 +8285,8 @@ function rrSubNav() {
 
 // ---------------------------- SUMMARY --------------------------------
 function rrSummary() {
-  var c = RR.cliff, t = RR.trading, m = RR.members;
-
-  if (c && c.outstanding) {
-    rrEl('rr-alert').hidden = false;
-    rrEl('rr-alert-h').textContent = c.headline;
-    rrEl('rr-alert-p').textContent = c.body;
-    rrEl('rr-alert-v').textContent = rrMoney(c.value);
-  }
+  var t = RR.trading, m = RR.members;
+  var shareLive = RR_LIVE_KEYS.indexOf('share') >= 0 && RR.share && RR.share.sales != null;
 
   var claimedTot = 0, redeemedTot = 0;
   RR.vouchers.forEach(function(v) { claimedTot += v.c; redeemedTot += v.r; });
@@ -8271,29 +8299,30 @@ function rrSummary() {
     ['hot', rrN(claimedTot), 'Vouchers claimed', rrN(RR.claim_to_redeem.people_claimed) + ' people'],
     ['hot', rrN(redeemedTot), 'Vouchers redeemed', rrN(RR.claim_to_redeem.people_redeemed) + ' people'],
     ['', rrN(t.bills), 'Member bills', rrMoney(t.spend) + ' · ATV £' + t.atv.toFixed(2)],
-    ['', (RR.share.sales == null ? '—' : RR.share.sales + '<small>%</small>'), 'Member share of sales',
-      (RR.share.sales == null ? 'not computed this run' : 'target ' + RR.share.target + '% · legacy ' + RR.share.legacy + '%')]
+    ['', (shareLive ? RR.share.sales + '<small>%</small>' : '—'), 'Member share of sales',
+      (shareLive ? 'target ' + RR.share.target + '% · legacy ' + RR.share.legacy + '%' : 'not computed: Kobas covers missing for recent days')]
   ].map(function(k) {
     return '<div class="kpi ' + k[0] + '"><div class="v">' + k[1] + '</div><div class="k">' + k[2] + '</div><div class="d">' + k[3] + '</div></div>';
   }).join('');
 
-  rrEl('rr-funnel-lede').innerHTML = 'The programme’s whole case rests on a £5 voucher issued to <b>' + rrN(c.issued) +
-    '</b> people in one batch on 18 August. It was due to expire at 23:59 UTC on 1 September; <b>it did not</b>. Trifft extended it by 14 days and batch members are still redeeming. <b>' + rrN(c.redeemed) + '</b> (' + c.activation.toFixed(1) +
-    '%) have redeemed so far; <b>' + rrN(c.outstanding) + '</b> are still unredeemed and still live. ' +
-    'The one email that has reached them (' + c.catchup.sent_at + ', ' + rrN(c.catchup.sent) + ' mailable of ' + rrN(c.issued) + ') opened at ' + c.catchup.open_pc + '% and clicked at ' + c.catchup.click_pc +
-    '%, with ' + rrN(c.catchup.redeemed_attr) + ' redemptions attributed. The migrated base does not move much for a £5; the rolling £5 to new sign-ups redeems at roughly nine times that rate.';
+  var wv = RR.vouchers[0] || {c: 0, r: 0, cp: 0, rp: 0};
+  var joined = m.joined_since || 0;
+  rrEl('rr-funnel-lede').innerHTML = 'Every new member is given a £5 welcome voucher. Since go-live <b>' + rrN(joined) +
+    '</b> people have joined; <b>' + rrN(wv.cp) + '</b> members have claimed the welcome £5 in the app (' + rrPc(wv.cp, joined) +
+    ' of joiners, claims include members migrated in August) and <b>' + rrN(wv.rp) + '</b> have spent it (' + rrPc(wv.rp, wv.cp) + ' of claimers). ' +
+    'The gap to close is between joining and claiming: the people who redeem are the people who open the app.';
 
   var steps = [
-    ['Issued in the 18 Aug batch', c.issued, 100],
-    ['Redeemed to date', c.redeemed, c.issued ? c.redeemed / c.issued * 100 : 0],
-    ['Still unredeemed, still live', c.outstanding, c.issued ? c.outstanding / c.issued * 100 : 0]
+    ['Joined since go-live', joined, 100],
+    ['Members who claimed the welcome £5', wv.cp, joined ? wv.cp / joined * 100 : 0],
+    ['Spent it', wv.rp, joined ? wv.rp / joined * 100 : 0]
   ];
   rrEl('rr-f-welcome').innerHTML = steps.map(function(s) {
     return '<div class="fstep"><span class="ftrack"><span class="ffill" style="width:' + Math.max(s[2], 2).toFixed(1) + '%"></span>' +
       '<span class="flab">' + s[0] + '</span></span><span class="fval">' + rrN(s[1]) + '</span></div>';
   }).join('') +
-  '<div class="fstep" style="margin-top:4px"><span style="font-size:12px;color:var(--rr-ink-3)">Issue to redeem <b style="color:var(--rr-crit)">' +
-  rrPc(c.redeemed, c.issued) + '</b> &nbsp;·&nbsp; unredeemed <b style="color:var(--rr-crit)">' + rrPc(c.outstanding, c.issued) + '</b> = ' + rrMoney(c.value) + ' still live &nbsp;·&nbsp; re-issued ' + rrN(c.reissued) + '</span><span></span></div>';
+  '<div class="fstep" style="margin-top:4px"><span style="font-size:12px;color:var(--rr-ink-3)">Join to claim <b style="color:var(--rr-accent)">' +
+  rrPc(wv.cp, joined) + '</b> &nbsp;·&nbsp; claim to spend <b style="color:var(--rr-accent)">' + rrPc(wv.rp, wv.cp) + '</b> &nbsp;·&nbsp; join to spend <b style="color:var(--rr-accent)">' + rrPc(wv.rp, joined) + '</b></span><span></span></div>';
 
   rrEl('rr-f-note').innerHTML = 'Claim-to-redeem across every voucher type is <b>' + RR.claim_to_redeem.rate.toFixed(1) + '%</b> (' +
     rrN(RR.claim_to_redeem.people_redeemed) + ' of ' + rrN(RR.claim_to_redeem.people_claimed) + ' people). It barely moves by voucher. The app is where the money is lost.';
@@ -8530,53 +8559,6 @@ function rrWeek_render() {
   document.querySelector('#rr-w-vouchers tbody').innerHTML = vr.map(function(v) {
     return '<tr' + (v.r === 0 ? ' class="dim"' : '') + '><td>' + v.n + '</td><td class="num">' + v.c + '</td><td class="num">' + v.r +
       '</td><td class="num">' + rrPc(v.r, v.c) + '</td><td><span class="bar"><i style="width:' + (v.c / mv * 100).toFixed(0) + '%"></i></span></td></tr>';
-  }).join('');
-}
-
-// -------------------------- VOUCHER CLOCK -----------------------------
-function rrExpiry() {
-  var X = RR_EXPIRY;
-  if (!X || !rrEl('rr-ch-expr')) return;
-  var rd = X.redeemed, ac = X.activated, h = X.hot;
-  var totR = rd.reduce(function (a, b) { return a + b; }, 0);
-  var totA = ac.reduce(function (a, b) { return a + b; }, 0);
-  var vsPrevDay = rd[h - 1] ? rd[h] / rd[h - 1] : null;
-  var vsWeek    = X.prev7_mean_redeemed ? rd[h] / X.prev7_mean_redeemed : null;
-
-  rrEl('rr-exp-src').textContent = 'Klaviyo, pulled ' + X.pulled + ' — dated snapshot';
-  rrEl('rr-exp-r-n').textContent = rrN(totR) + ' since go-live';
-  rrEl('rr-exp-a-n').textContent = rrN(totA) + ' since go-live';
-
-  rrEl('rr-exp-kpis').innerHTML = [
-    ['hot', rrN(rd[h]), 'Redeemed on the advertised expiry day', '1 Sept · the biggest day since go-live · the batch was then extended'],
-    ['hot', (vsPrevDay ? vsPrevDay.toFixed(1) + '<small>x</small>' : '—'), 'Up on the day before',
-      'vs ' + rrN(rd[h - 1]) + (vsWeek ? ' · ' + vsWeek.toFixed(1) + 'x the prior 7-day average' : '')],
-    ['', rrN(ac[h]), 'Claimed on the advertised expiry day', 'vs ' + rrN(ac[h - 1]) + ' the day before'],
-    ['', (totR ? (rd[h] / totR * 100).toFixed(1) + '<small>%</small>' : '—'),
-      'Of all redemptions ever', 'in one day out of ' + rd.length]
-  ].map(function (k2) {
-    return '<div class="kpi ' + k2[0] + '"><div class="v">' + k2[1] + '</div><div class="k">' + k2[2] + '</div><div class="d">' + k2[3] + '</div></div>';
-  }).join('');
-
-  var foot = X.from + ' to ' + X.to + ', the advertised 1 Sept deadline highlighted (the batch was extended, not expired)';
-  rrBars('rr-ch-expr', rd, [h], X.labels, foot);
-  rrBars('rr-ch-expa', ac, [h], X.labels, foot);
-}
-
-function rrClock() {
-  rrExpiry();
-  var k = RR.clock, hot = [7, 8, 12, 13];
-  var lab = k.mig.map(function(_, i) { return i; });
-  rrEl('rr-clock-r').textContent = (k.mig_n + k.new_n).toLocaleString('en-GB') + ' redemptions, every one matched to its own issue';
-  rrEl('rr-clock-mig-n').textContent = 'n=' + rrN(k.mig_n) + ' · median ' + k.mig_median.toFixed(1) + ' days';
-  rrEl('rr-clock-new-n').textContent = 'n=' + rrN(k.new_n) + ' · median ' + k.new_median.toFixed(2) + ' days';
-  rrBars('rr-ch-mig', k.mig, hot, lab, 'day of the member’s own window');
-  rrBars('rr-ch-new', k.nw, hot, lab, 'day of the member’s own window');
-  document.querySelector('#rr-t-windows tbody').innerHTML = k.windows.map(function(x) {
-    return '<tr' + (x.hl ? ' class="hl"' : '') + '><td>' + x.w + '</td><td class="num">' + x.mig + '</td><td class="num">' + x.nw + '</td></tr>';
-  }).join('');
-  document.querySelector('#rr-t-hazard tbody').innerHTML = k.hazard.map(function(h) {
-    return '<tr><td>' + h[0] + '</td><td class="num">' + h[1] + '</td></tr>';
   }).join('');
 }
 
