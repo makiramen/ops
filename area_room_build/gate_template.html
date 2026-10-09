@@ -198,6 +198,20 @@ table.t td.rg,table.t td.ra,table.t td.rr,table.t td.rm{font-weight:700;font-var
 .wkpick{font:inherit;font-size:12.5px;font-weight:700;padding:6px 10px;border:1px solid var(--maki-orange-ring);border-radius:9px;background:var(--maki-orange-bg);color:var(--maki-orange)}
 table.t tr.band td{background:#FDEEE8;border-top:2px solid var(--band);font-weight:800;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--band);padding:8px 10px}
 table.t tr.tot td{font-weight:800}
+/* Deliveroo panel, AM Control Centre style (09/10/2026) */
+.roo-panel{padding:4px 0 14px;text-align:left}
+.roo-panel+.roo-panel{border-top:1px solid var(--line);padding-top:14px}
+.roo-panel h4{margin:0 0 8px;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--ink)}
+.roo-panel table.roo-full{border-collapse:collapse;font-size:12px;width:100%;min-width:760px;table-layout:fixed}
+.roo-panel col.c-lab{width:19%}.roo-panel col.c-m{width:8.1%}
+.roo-panel th,.roo-panel td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+.roo-panel th:first-child,.roo-panel td:first-child{text-align:left}
+.roo-panel th{font-size:10px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-3);background:transparent;font-weight:700}
+.roo-panel tr.sel td:first-child{background:#fff4ee;font-weight:700}.roo-panel tr.sel td{font-weight:700}
+.roo-panel td .sub2{display:block;font-size:10px;font-weight:600}.roo-panel .sub2.up{color:var(--green)}.roo-panel .sub2.dn{color:var(--red)}
+.roo-panel tr.roo-band td{background:transparent;font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--band,#E94E1B);padding-top:12px;border-bottom:2px solid var(--band,#E94E1B);text-align:left}
+.roo-panel tr.roo-tot td{font-weight:800;border-top:2px solid var(--line)}
+.roo-panel td.roo-wk{font-size:9.5px;font-weight:600;color:#b8bfc9;letter-spacing:.3px}
 </style>
 </head>
 <body>
@@ -579,71 +593,79 @@ function renderDeliv(){
   if($("dweek"))$("dweek").onchange=function(){DWEEK=this.value;renderDeliv()};
 }
 
-/* Daily Deliveroo ops. Day light = worst of: prep over 15.00 min (Red Light), any rejection (red), open 98 / 95%, rider wait 2 / 4% (blank = 0),
-   busy mode 0 green, up to 10% amber, missing items amber. Restaurant cancellations are left out. */
+/* Daily Deliveroo ops (09/10/2026): restyled to match the AM Control Centre Deliveroo panel. One table per site, one header:
+   weekly rows (Deliveroo weekly summary, latest two weeks) and daily rows (last 7 days) share the same 10 columns, the same
+   AM CC bands (DM) and the same tints, then the 7 day total against the 7 days before. Rating, AOV are weekly only at Deliveroo.
+   Weekly Overall: RED if any of the five is red, GREEN if all green, else AMBER. Day Overall: same over what Deliveroo reports by day. */
+function drooTint(b){return b==="g"?"background:#ecfdf5;color:var(--green)":b==="a"?"background:#fffbeb;color:var(--amber)":b==="r"?"background:#fef2f2;color:var(--red)":"color:var(--ink-3)"}
 function drooDaily(codes,showCard){
   var Q=D.droo_daily;
-  if(!Q||!Q.d||!Object.keys(Q.d).length)return '<div class="card"><h2>Daily Deliveroo ops</h2><div class="sub">The daily Deliveroo file has not landed yet.</div></div>';
+  if(!Q||!Q.d||!Object.keys(Q.d).length)return showCard?'<div class="card"><h2>Daily Deliveroo ops</h2><div class="sub">The daily Deliveroo file has not landed yet.</div></div>':'<div class="sub">The daily Deliveroo file has not landed yet.</div>';
   var keys=Object.keys(Q.d).sort(),last=Q.to&&Q.d[Q.to]?Q.to:keys[keys.length-1];
   function addD(d,n){return new Date(Date.parse(d+"T00:00:00Z")+n*864e5).toISOString().slice(0,10)}
   function dow(d){return ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][(new Date(d+"T00:00:00Z").getUTCDay()+6)%7]}
+  function sd(d){return dow(d)+" "+dd(d)}
   var days=[],prv=[];for(var i=6;i>=0;i--)days.push(addD(last,-i));for(var j=13;j>=7;j--)prv.push(addD(last,-j));
-  function row(c,d){var x=Q.d[d]&&Q.d[d][c==="O2"?"MAF3":c];return x||null}
-  function rider(q){if(!q)return null;return q[8]==null?((q[1]!=null||q[9]!=null)?0:null):q[8]}
-  var MET=[
-    ["Orders",function(q){return q[0]},function(){return null},function(v){return fmt(v)}],
-    ["Prep",function(q){return q[1]},function(v){return v<=15?"g":"r"},function(v){return v.toFixed(1)+" min"}],
-    ["Order duration",function(q){return q[2]},function(){return null},function(v){return v.toFixed(1)+" min"}],
-    ["Missing items",function(q){return q[3]},function(v){return v>0?"a":"g"},function(v){return v.toFixed(1)+"%"}],
-    ["Rejections",function(q){return q[6]},function(v){return v>0?"r":"g"},function(v){return fmt(v)}],
-    ["Rider wait",rider,function(v){return band(v,2,4,false)},function(v){return v.toFixed(1)+"%"}],
-    ["Open hours",function(q){return q[9]},function(v){return band(v,98,95,true)},function(v){return v.toFixed(1)+"%"}],
-    ["Busy mode",function(q){return q[10]},function(v){return busyBand(v)},function(v){return v.toFixed(1)+"%"}]
-  ];
-  function light(q){if(!q)return null;var b=[];MET.forEach(function(m){var v=m[1](q);if(v!=null){var r=m[2](v);if(r)b.push(r)}});if(!b.length)return null;return b.indexOf("r")>=0?"r":(b.indexOf("a")>=0?"a":"g")}
-  function agg(c,ds){
-    var o={n:0,ord:0,pw:0,pn:0,aw:0,an:0,miss:0,rej:0,rs:0,rn:0,os:0,on:0,bs:0,bn:0,L:{g:0,a:0,r:0}};
-    ds.forEach(function(d){var q=row(c,d);if(!q)return;o.n++;o.ord+=q[0]||0;var wt=q[0]||1;
-      if(q[1]!=null){o.pw+=q[1]*wt;o.pn+=wt}if(q[2]!=null){o.aw+=q[2]*wt;o.an+=wt}if(q[3])o.miss++;o.rej+=q[6]||0;
-      var rv=rider(q);if(rv!=null){o.rs+=rv;o.rn++}if(q[9]!=null){o.os+=q[9];o.on++}if(q[10]!=null){o.bs+=q[10];o.bn++}
-      var l=light(q);if(l)o.L[l]++});
-    return o;
-  }
-  function aggCell(o,i){
-    if(!o.n)return '<td class="c rm"><span class="na">n/a</span></td>';
-    var v,r;
-    switch(i){
-      case 0:return '<td class="c"><b>'+fmt(o.ord)+'</b></td>';
-      case 1:v=o.pn?o.pw/o.pn:null;r=v==null?null:(v<=15?"g":"r");return rcell(v,r,v==null?'':v.toFixed(1)+' min');
-      case 2:v=o.an?o.aw/o.an:null;return '<td class="c">'+(v==null?'<span class="na">n/a</span>':v.toFixed(1)+' min')+'</td>';
-      case 3:return rcell(o.miss,o.miss?"a":"g",o.miss+' day'+(o.miss===1?'':'s'));
-      case 4:return rcell(o.rej,o.rej?"r":"g",fmt(o.rej));
-      case 5:v=o.rn?o.rs/o.rn:null;return rcell(v,v==null?null:band(v,2,4,false),v==null?'':v.toFixed(1)+'%');
-      case 6:v=o.on?o.os/o.on:null;return rcell(v,v==null?null:band(v,98,95,true),v==null?'':v.toFixed(1)+'%');
-      case 7:v=o.bn?o.bs/o.bn:null;return rcell(v,v==null?null:busyBand(v),v==null?'':v.toFixed(1)+'%');
-    }
-  }
-  var nc=days.length+3;
-  var h='<table class="t"><tr><th>Measure</th>';
-  days.forEach(function(d){h+='<th class="c'+(d===last?' now':'')+'">'+dow(d)+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0">'+dd(d)+'</span></th>'});
-  h+='<th class="c">7 days</th><th class="c">7 days before<br><span style="font-weight:600;text-transform:none;letter-spacing:0">'+dd(prv[0])+' to '+dd(prv[6])+'</span></th></tr>';
-  codes.forEach(function(c){
+  var dot='<span class="na">·</span>',wkc='<td class="roo-wk" title="Deliveroo reports this weekly only">weekly</td>';
+  function n1(v,dp,u){return v==null?dot:Number(v).toFixed(dp)+(u||"")}
+  function gbp(v){return v==null?dot:"£"+fmt(Math.round(v))}
+  function dm(f){return DM.filter(function(x){return x[0]===f})[0]}
+  function bnd(f,v){var m=dm(f);return band(v,m[2],m[3],m[4])}
+  function cell(f,v,dp){return '<td style="'+drooTint(bnd(f,v))+'">'+n1(v,dp)+'</td>'}
+  function busy(v){return '<td style="'+drooTint(busyBand(v))+'">'+n1(v,1)+'</td>'}
+  function roll(m,skipRating){var P={r:[],a:[],g:[]};DM.forEach(function(x){if(skipRating&&x[0]==="d_rating")return;var b=bnd(x[0],m[x[0]]);if(P[b])P[b].push(x[1])});
+    var rag=P.r.length?"r":P.a.length?"a":P.g.length?"g":"m",t=[];if(P.r.length)t.push("red: "+P.r.join(" · "));if(P.a.length)t.push("amber: "+P.a.join(" · "));return {rag:rag,why:t.length?t.join("  |  "):"all green"}}
+  function ovr(r){return '<td style="'+drooTint(r.rag)+';font-weight:800" title="'+r.why+'">'+(r.rag==="m"?"·":{g:"GREEN",a:"AMBER",r:"RED"}[r.rag])+'</td>'}
+  function wow(cur,base,lab){if(cur==null||!base)return "";var p=(cur-base)/base*100;return '<span class="sub2 '+(p>=0?'up':'dn')+'">'+(p>=0?"+":"")+p.toFixed(1)+"% "+lab+"</span>"}
+  function q(c,d){var x=Q.d[d]||{};return x[c]||x[c==="O2"?"MAF3":c]||null}
+  function qw(c,wk){var x=(Q.w||{})[wk]||{};return x[c]||x[c==="O2"?"MAF3":c]||null}
+  function delv(c,d){var r=D.daily&&D.daily.sites&&D.daily.sites[c]&&D.daily.sites[c][d];return r&&r.delivery!=null?r.delivery:null}
+  function rider(x){if(!x)return null;return x[8]==null?((x[1]!=null||x[9]!=null)?0:null):x[8]}
+  var wks=(D.sites.weeks_available||[]).filter(function(w){return w<=last}).sort().reverse().slice(0,2);
+  function panel(c){
     var meta=D.sites_meta[c];
-    if(!meta.droo){h+='<tr class="band"><td colspan="'+nc+'">'+meta.name+' · not on Deliveroo</td></tr>';return}
-    var A=agg(c,days),B=agg(c,prv);
-    h+='<tr class="band"><td colspan="'+nc+'"><span class="sitecell" data-site="'+c+'">'+meta.name+'</span>'+(meta.support?' · support':'')+' <span style="float:right;text-transform:none;letter-spacing:0">'+(A.n?A.L.g+' green · '+A.L.a+' amber · '+A.L.r+' red days':'no Deliveroo rows')+'</span></td></tr>';
-    h+='<tr><td class="m">Day light</td>';
-    days.forEach(function(d){var l=light(row(c,d));h+='<td class="c'+(d===last?' now':'')+'">'+(row(c,d)?pill(l):'<span class="fut">·</span>')+'</td>'});
-    h+='<td class="c">'+(A.n?pill(A.L.r?"r":(A.L.a?"a":"g"),A.L.r?A.L.r+" red":(A.L.a?A.L.a+" amber":"Green")):'<span class="na">n/a</span>')+'</td><td class="c">'+(B.n?pill(B.L.r?"r":(B.L.a?"a":"g"),B.L.r?B.L.r+" red":(B.L.a?B.L.a+" amber":"Green")):'<span class="na">n/a</span>')+'</td></tr>';
-    MET.forEach(function(m,i){
-      h+='<tr><td class="m" style="font-weight:600;color:var(--ink-2)">'+m[0]+'</td>';
-      days.forEach(function(d){var q=row(c,d);if(!q){h+='<td class="c"><span class="fut">·</span></td>';return}var v=m[1](q);h+=rcell(v,v==null?null:m[2](v),v==null?'':m[3](v)).replace('<td class="c',d===last?'<td class="c now':'<td class="c')});
-      h+=aggCell(A,i)+aggCell(B,i)+'</tr>';
+    var h='<div class="roo-panel"><h4><span class="sitecell" data-site="'+c+'">Deliveroo · '+meta.name+'</span>'+(meta.support?' <span class="pill p-n">support</span>':'')+'</h4>';
+    if(!meta.droo)return h+'<div class="sub">Not on Deliveroo.</div></div>';
+    h+='<div class="tblwrap"><table class="roo-full"><colgroup><col class="c-lab"><col span="10" class="c-m"></colgroup><thead><tr><th></th><th>Revenue</th><th>Orders</th><th>AOV</th><th>Rating</th><th>Open %</th><th>Prep</th><th>Inacc %</th><th>Rider %</th><th>Busy %</th><th>Overall</th></tr></thead><tbody>';
+    h+='<tr class="roo-band"><td colspan="11">Weekly · Deliveroo weekly summary</td></tr>';
+    var wr=0;
+    wks.forEach(function(wk){
+      var w=(D.sites.by_week[wk]||{})[c];if(!w||!drooRoll(w))return;wr++;
+      var m={d_rating:w.d_rating,d_open:w.d_open,d_prep:w.d_prep,d_inacc:w.d_inacc,d_rider:drooVal(w,"d_rider")},bz=(qw(c,wk)||[])[2];
+      var aov=w.d_sales!=null&&w.d_orders?w.d_sales/w.d_orders:null;
+      h+='<tr><td>w/c '+sd(wk)+(wk>addD(last,-6)?' <span class="na">(partial)</span>':'')+'</td><td><b>'+gbp(w.d_sales)+'</b></td><td>'+(w.d_orders==null?dot:fmt(w.d_orders))+'</td><td>'+(aov==null?dot:"£"+aov.toFixed(2))+'</td>'
+        +cell("d_rating",m.d_rating,2)+cell("d_open",m.d_open,1)+cell("d_prep",m.d_prep,1)+cell("d_inacc",m.d_inacc,1)+cell("d_rider",m.d_rider,1)+busy(bz==null?null:bz)+ovr(roll(m,false))+'</tr>';
     });
-  });
-  h+='</table>';
-  if(!showCard)return h;
-  return '<div class="card"><h2>Daily Deliveroo ops · last 7 days to '+dow(last)+' '+dd(last)+'</h2><div class="sub">Day light is the worst of the day\'s measures. Red: prep over 15.00 min (Red Light), any rejection, open under 95%, rider wait over 4%, busy mode over 10%. Amber: open under 98%, rider wait over 2%, any busy mode or missing items. Rider wait blank means 0. Restaurant cancellations are left out.</div><div class="tblwrap">'+h+'</div><div class="legend"><span><span class="fut">·</span> no Deliveroo row that day</span><span>Source: Deliveroo Daily Master (Deliveroo\'s morning drops, ingested hourly)</span></div></div>';
+    if(!wr)h+='<tr><td colspan="11" class="na" style="text-align:left">No weekly Deliveroo figures for this site yet.</td></tr>';
+    h+='<tr class="roo-band"><td colspan="11">Daily · last 7 days to '+sd(last)+'</td></tr>';
+    days.forEach(function(d){
+      var x=q(c,d),v=delv(c,d);
+      h+='<tr'+(d===last?' class="sel"':'')+'><td>'+sd(d)+'</td><td><b>'+gbp(v)+'</b>'+wow(v,delv(c,addD(d,-7)),"vs last wk")+'</td>';
+      if(!x){h+='<td colspan="9" class="na" style="text-align:left">no Deliveroo row</td></tr>';return}
+      var m={d_open:x[9],d_prep:x[1],d_inacc:x[3],d_rider:rider(x)};
+      h+='<td>'+(x[0]==null?dot:x[0])+'</td>'+wkc+wkc+cell("d_open",m.d_open,1)+cell("d_prep",m.d_prep,1)+cell("d_inacc",m.d_inacc,1)+cell("d_rider",m.d_rider,1)+busy(x[10])+ovr(roll(m,true))+'</tr>';
+    });
+    function agg(ds){
+      var o={n:0,ord:0,pw:0,pn:0,mw:0,mn:0,dv:0,dn:0,x:[[0,0],[0,0],[0,0]]};
+      ds.forEach(function(d){var v=delv(c,d);if(v!=null){o.dv+=v;o.dn++}var x=q(c,d);if(!x)return;o.n++;o.ord+=x[0]||0;var wt=x[0]||1;
+        if(x[1]!=null){o.pw+=x[1]*wt;o.pn+=wt}if(x[3]!=null){o.mw+=x[3]*wt;o.mn+=wt}
+        [rider(x),x[9],x[10]].forEach(function(xv,e){if(xv!=null){o.x[e][0]+=xv;o.x[e][1]++}})});
+      o.prep=o.pn?o.pw/o.pn:null;o.miss=o.mn?o.mw/o.mn:null;o.rev=o.dn?o.dv:null;
+      o.rw=o.x[0][1]?o.x[0][0]/o.x[0][1]:null;o.op=o.x[1][1]?o.x[1][0]/o.x[1][1]:null;o.bz=o.x[2][1]?o.x[2][0]/o.x[2][1]:null;return o;
+    }
+    var A=agg(days),B=agg(prv);
+    function tot(lab,o,base){
+      if(!o.n&&o.rev==null)return '<tr class="roo-tot"><td>'+lab+'</td><td colspan="10" class="na" style="text-align:left">no figures</td></tr>';
+      var m={d_open:o.op,d_prep:o.prep,d_inacc:o.miss,d_rider:o.rw};
+      return '<tr class="roo-tot"><td>'+lab+'</td><td>'+gbp(o.rev)+(base?wow(o.rev,base.rev,"vs prior 7"):"")+'</td><td>'+(o.n?fmt(o.ord):dot)+'</td>'+wkc+wkc
+        +cell("d_open",o.op,1)+cell("d_prep",o.prep,1)+cell("d_inacc",o.miss,1)+cell("d_rider",o.rw,1)+busy(o.bz)+ovr(roll(m,true))+'</tr>';
+    }
+    h+=tot("7 days to "+sd(last),A,B)+tot("7 days before",B,null)+'</tbody></table></div></div>';
+    return h;
+  }
+  var body=codes.map(panel).join('');
+  if(!showCard)return body;
+  return '<div class="card"><h2>Daily Deliveroo ops · last 7 days to '+sd(last)+'</h2><div class="sub">Same layout, bands and colours as the AM Control Centre Deliveroo panel. Weekly rows from Deliveroo\'s weekly summary, daily rows from Deliveroo\'s morning drops. Overall: RED if any metric is red, GREEN if all green, otherwise AMBER (rating is weekly only). Rider wait blank means 0. Busy mode is shown, not scored. Revenue is delivery £ from the cash up (all platforms).</div>'+body+'<div class="legend"><span>Bands: rating 4.70 / 4.00 · open 98 / 95 · prep 15 / 18 min · inaccurate 2 / 3% · rider wait 2 / 4% · busy mode 0 green, up to 10% amber</span><span>Source: Deliveroo Daily Master (morning drops, ingested hourly)</span></div></div>';
 }
 
 function renderClean(){
@@ -843,7 +865,7 @@ function openDaily(c){
       '<td class="c">'+(r.wage!=null?'<span class="cell"><span class="dot '+(T.labour?(r.wage<=T.labour?'g':'r'):'n')+'"></span>'+r.wage.toFixed(1)+'%</span>':'<span class="na">n/a</span>')+'</td>'+
       '<td class="c">'+(r.hours!=null?r.hours:'')+'</td><td class="c">'+((D.signups&&D.signups.daily[c])?(D.signups.daily[c][d]||0):'<span class="na">n/a</span>')+'</td><td class="c">'+(function(){var x=vDay(c,d);return x?(x[0]+(x[0]?' <small style="color:var(--ink-3)">£5 '+x[1]+'</small>':'')):'<span class="na">n/a</span>'})()+'</td><td class="c">'+(r.rev_n!=null?r.rev_n+(r.rev_neg?' <button class="negbtn" data-neg="'+d+'">'+r.rev_neg+' neg ›</button>':''):'')+'</td></tr>'});
   h+='</table></div><div class="legend"><span>Wage dot uses the site\'s plan target ('+(T.labour||'n/a')+'%)</span><span>Vouchers: Ramen Royalty vouchers used, matched to the member bill at the till (Trifft records no site on a voucher), so a single day can be out by one or two</span></div></div>';
-  if(m.droo)h+='<div class="card"><h2>Deliveroo · last 7 days</h2><div class="sub">Day light is the worst of the day\'s measures, same rules as the Deliveroo tab.</div><div class="tblwrap">'+drooDaily([c],false)+'</div></div>';
+  if(m.droo)h+='<div class="card">'+drooDaily([c],false)+'</div>';
   h+='<div id="negbox"></div>';
   var R=(L.reviews||[]).slice().sort(function(a,b){return a.stars-b.stars||String(b.date).localeCompare(a.date)});
   var W=L.window||{};
