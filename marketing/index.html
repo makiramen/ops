@@ -82,6 +82,11 @@ td.ctr, th.ctr { text-align: center; font-variant-numeric: tabular-nums; }
 .srcbadge { display: inline-block; margin-left: 6px; font-size: 9px; text-transform: uppercase; letter-spacing: .05em; color: #64748B; }
 .srcbadge.override { color: #7C3AED; font-weight: 700; }
 .stale { color: #B91C1C; font-weight: 700; }
+/* v6.6.1: Add/Remove feed-down banner */
+.mx-feed-banner { margin: 10px 0 12px; padding: 12px 14px; border: 2px solid #B91C1C; border-radius: 8px; background: #FEF2F2; color: #7F1D1D; font-size: 14px; line-height: 1.45; }
+.mx-feed-banner b { color: #B91C1C; }
+.mx-feed-banner a { color: #B91C1C; font-weight: 700; }
+.mx-feed-banner .mx-feed-err { display: block; margin-top: 4px; font-size: 12px; color: #991B1B; word-break: break-word; }
 .fresh { color: #15803D; }
 .ragsummary { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
 .ragsummary .rag { font-size: 11px; padding: 4px 12px; }
@@ -1203,6 +1208,8 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
     <div class="src">Decides itself · <span id="matrix-asof" class="subtle">checking freshness…</span>
       <a class="sheetlink" href="https://docs.google.com/spreadsheets/d/1zpm8ixjmnCt60kUXu-SoDbXEua7obJ0XU_zt5jYSIGw/edit" target="_blank">override in sheet ↗</a>
     </div>
+    <!-- v6.6.1 (9 Oct 2026): feed-down banner. Shows only when the matrix carries an ERROR row. -->
+    <div id="mx-feed-banner" class="mx-feed-banner" style="display:none"></div>
     <details class="mxhelp" id="mx-help">
       <summary><b>Every ad is judged on the result Meta was told to buy.</b> <span>How this board decides</span></summary>
       <ul>
@@ -1271,6 +1278,7 @@ h2.fold { cursor: pointer; user-select: none; display: flex; align-items: center
      All numbers come from RR (= DATA.rr merged over the 1 Sept snapshot).
      Nothing here reads any other tab's state.                            -->
 <!-- ================================================================ -->
+<!-- v6.6.1 (9 Oct 2026): Add/Remove feed-down banner (reads the ERROR row, names the Windsor fix) -->
 <!-- v6.6 (9 Oct 2026): Summary rebuilt (loyalty, Slerp, content, influencers, paid, feeds health); 18 Aug £5 batch removed from Loyalty -->
 <!-- SLERP TAB  (v6.5.1, 6 Oct 2026) · source: Slerp Orders SoT sheet    -->
 <!-- Reads DATA.slerp when HubPublish carries it, else the snapshot.   -->
@@ -5374,6 +5382,32 @@ function renderMatrix() {
       stampEl.innerHTML = '<span class="' + (isStale ? 'stale' : 'fresh') + '">' +
         (isStale ? 'STALE — ' : 'recomputed ') + (ageH >= 0 ? ageH + 'h ago' : 'clock skew') + '</span>' +
         (errRow ? ' <span class="stale">· a source failed, see the ERROR row</span>' : '');
+    }
+  }
+
+  // v6.6.1: feed-down banner. The ERROR row is easy to miss in a 160-row
+  // table; when a source pull fails every Meta row loses CTR, LPV %, ThruPlay %
+  // and live status, so say so at the top and name the fix.
+  var bannerEl = document.getElementById('mx-feed-banner');
+  if (bannerEl) {
+    var errs = all.filter(function(r) { return r.entity_type === 'ERROR' || verdictOf(r) === 'ERROR'; });
+    if (!errs.length) {
+      bannerEl.style.display = 'none'; bannerEl.innerHTML = '';
+    } else {
+      var reason = errs.map(function(r) { return String(r.reason || r.entity_name || ''); }).join(' · ');
+      var plat = errs.map(function(r) { return String(r.platform || '').toLowerCase(); }).filter(Boolean);
+      var isMeta = plat.indexOf('meta') >= 0 || /facebook|meta/i.test(reason);
+      var isAuth = /log in to www\.facebook\.com|auth_failed|deactivated|invalid.*token|expired/i.test(reason);
+      var sinceM = reason.match(/carried from (\d{4}-\d{2}-\d{2})/);
+      var since = sinceM ? sinceM[1] : String((errs[0].updated_at || '')).slice(0, 10);
+      var feed = isMeta ? 'META FEED DOWN' : (plat[0] ? plat[0].toUpperCase() + ' FEED DOWN' : 'A SOURCE FEED IS DOWN');
+      var fix = isAuth
+        ? 'Windsor\'s Facebook login has been deactivated. Fix: <a href="https://onboard.windsor.ai/?datasource=facebook" target="_blank">reconnect Facebook in Windsor ↗</a> (Grant Facebook Ads Access, tick account 4550572425065893, Next), then <a href="https://onboard.windsor.ai/?datasource=instagram" target="_blank">Instagram ↗</a>. Numbers refill at the next 05:00 / 12:00 UK run.'
+        : 'Check the <a href="https://onboard.windsor.ai/" target="_blank">Windsor connection ↗</a> and the failure email in michael@\'s inbox. Numbers refill at the next 05:00 / 12:00 UK run.';
+      bannerEl.innerHTML = '<b>' + feed + (since ? ' since ' + since : '') + '.</b> ' +
+        (isMeta ? 'CTR, LPV %, ThruPlay % and live status are blank on every Meta row until it is fixed; verdicts are carried from the last good pull. ' : 'Rows from this source are carried from the last good pull. ') +
+        fix + '<span class="mx-feed-err">' + reason.replace(/</g, '&lt;').slice(0, 300) + '</span>';
+      bannerEl.style.display = '';
     }
   }
 
