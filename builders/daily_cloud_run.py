@@ -31,7 +31,7 @@ import argparse, csv, datetime, hashlib, io, json, os, re, subprocess, sys, coll
 from zoneinfo import ZoneInfo
 
 UK = ZoneInfo("Europe/London")
-CASHUP_EXPECTED_MIN = 20     # live sites from 21/08/2026
+# No fixed fleet count here. The live set is per day: PC.live_venues_on(iso) (dated closures). 12/10/2026
 NORI = {"MakiNori"}
 
 def log(*a): print(*a, file=sys.stderr)
