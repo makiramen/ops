@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>30% Promo Tracker</title>
+<style>
+:root{--bg:#faf8f5;--card:#ffffff;--ink:#1c1a17;--mute:#6b665e;--line:#e7e2da;--orange:#f26522;--orange-soft:#fde9df;--green:#2b8a3e;--red:#c92a2a;--amber:#c77d00}
+:root:not([data-theme="light"]){color-scheme:light dark}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#15130f;--card:#1f1c17;--ink:#f1ece4;--mute:#a39c90;--line:#332e27;--orange:#f7813f;--orange-soft:#3a2416;--green:#5bc46d;--red:#ff6b6b;--amber:#f0b429}}
+:root[data-theme="dark"]{--bg:#15130f;--card:#1f1c17;--ink:#f1ece4;--mute:#a39c90;--line:#332e27;--orange:#f7813f;--orange-soft:#3a2416;--green:#5bc46d;--red:#ff6b6b;--amber:#f0b429}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;padding:0 16px 48px}
+.wrap{max-width:1100px;margin:0 auto}
+header{padding:28px 0 12px;border-bottom:3px solid var(--orange);margin-bottom:18px}
+h1{margin:0;font-size:24px;letter-spacing:-.01em}
+h1 span{color:var(--orange)}
+.sub{color:var(--mute);font-size:13px;margin-top:6px}
+.stamp{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--orange-soft);color:var(--orange);font-weight:600;font-size:12px;margin-right:6px}
+.warn{background:var(--orange-soft);border-left:4px solid var(--orange);padding:10px 12px;border-radius:6px;font-size:13px;margin:12px 0}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:16px 0 24px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.tile .k{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.tile .v{font-size:28px;font-weight:700;margin-top:2px}
+.tile .d{font-size:12px;color:var(--mute);margin-top:4px}
+.up{color:var(--green)} .down{color:var(--red)} .flat{color:var(--amber)}
+h2{font-size:17px;margin:28px 0 8px;display:flex;align-items:baseline;gap:10px}
+h2 small{font-weight:400;color:var(--mute);font-size:13px}
+table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{padding:8px 10px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-size:12px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.03em;background:color-mix(in srgb,var(--card) 92%,var(--ink))}
+th:first-child,td:first-child{text-align:left}
+tr:last-child td{border-bottom:0}
+tr.tot td{font-weight:700;background:var(--orange-soft)}
+.bar{display:inline-block;height:8px;background:var(--orange);border-radius:4px;vertical-align:middle;margin-left:6px;opacity:.85}
+.na{color:var(--mute)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink);padding:7px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:13px}
+.tabs button.on{background:var(--orange);border-color:var(--orange);color:#fff}
+.scroll{overflow-x:auto}
+.note{font-size:12.5px;color:var(--mute);margin-top:8px}
+footer{margin-top:36px;color:var(--mute);font-size:12px;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <h1>Deliveroo + Slerp <span>30% promo</span> tracker</h1>
+  <div class="sub" id="sub"></div>
+</header>
+<div id="warn"></div>
+<div class="tiles" id="tiles"></div>
+<h2>Estate to date <small>M10 Leeds, M11 Leicester, M16 Nottingham, like for like days vs the pre-promo baseline</small></h2>
+<div class="scroll"><table id="estate"></table></div>
+<h2>Promo weeks by site</h2>
+<div class="scroll"><table id="weeks"></table></div>
+<h2>Daily detail</h2>
+<div class="tabs" id="tabs"></div>
+<div class="scroll"><table id="daily"></table></div>
+<p class="note" id="basenote"></p>
+<h2>Baseline <small>average by weekday, four weeks before the promo</small></h2>
+<div class="scroll"><table id="base"></table></div>
+<footer id="foot"></footer>
+</div>
+<script>
+const D=/*__DATA__*/null;
+const GB=n=>n==null?'<span class="na">–</span>':'£'+Math.round(n).toLocaleString('en-GB');
+const N=n=>n==null?'<span class="na">–</span>':n.toLocaleString('en-GB');
+const P=p=>p==null?'<span class="na">–</span>':`<span class="${p>5?'up':p<-5?'down':'flat'}">${p>0?'+':''}${p}%</span>`;
+const dmy=d=>d.split('-').reverse().join('/');
+const codes=Object.keys(D.sites);
+document.getElementById('sub').innerHTML=`<span class="stamp">Built ${D.built}</span> Promo from ${dmy(D.promo_start)} · Deliveroo orders to ${D.deliveroo_to?dmy(D.deliveroo_to):'–'} · delivery sales to ${D.sales_to?dmy(D.sales_to):'–'} · Slerp / scratch sheet: ${D.manual.status}`;
+if(D.manual.status!=="live")document.getElementById('warn').innerHTML=`<div class="warn"><b>Slerp and scratch-card columns are not connected.</b> Share the <a href="https://docs.google.com/spreadsheets/d/${D.manual.sheet}" target="_blank">manual sheet</a> with <code>site-cc-reader@maki-reviews.iam.gserviceaccount.com</code> as Viewer and they fill in on the next run. Deliveroo orders and delivery sales are live regardless. (${D.manual.note})</div>`;
+// tiles
+let T=codes.reduce((a,c)=>{const t=D.sites[c].to_date;a.droo+=t.droo;a.slerp+=t.slerp;a.scratch+=t.scratch;a.gbp+=t.gbp;a.bg+=t.base_gbp;a.bo+=t.base_orders;a.days=Math.max(a.days,t.days);return a},{droo:0,slerp:0,scratch:0,gbp:0,bg:0,bo:0,days:0});
+const gu=T.bg?Math.round((T.gbp/T.bg-1)*100):null, ou=T.bo?Math.round((T.droo/T.bo-1)*100):null;
+document.getElementById('tiles').innerHTML=`
+<div class="tile"><div class="k">Deliveroo orders, promo to date</div><div class="v">${N(T.droo)}</div><div class="d">${T.days} day(s) · baseline would be ~${N(T.bo)} · ${P(ou)}</div></div>
+<div class="tile"><div class="k">Delivery sales vs baseline</div><div class="v">${P(gu)}</div><div class="d">${GB(T.gbp)} vs ${GB(T.bg)} like for like · ${T.gbp-T.bg>=0?'+':''}${GB(T.gbp-T.bg)} extra</div></div>
+<div class="tile"><div class="k">Slerp orders</div><div class="v">${N(T.slerp)}</div><div class="d">${D.manual.status==='live'?'from the manual sheet':'sheet not connected'}</div></div>
+<div class="tile"><div class="k">Scratch cards claimed in store</div><div class="v">${N(T.scratch)}</div><div class="d">${D.manual.status==='live'?'from the manual sheet':'sheet not connected'}</div></div>`;
+// estate table
+let h='<tr><th>Site</th><th>Days</th><th>Deliveroo orders</th><th>Baseline orders (est)</th><th>Orders uplift</th><th>Slerp</th><th>Scratch</th><th>Delivery £</th><th>Baseline £</th><th>£ uplift</th><th>Extra £</th></tr>';
+for(const c of codes){const s=D.sites[c],t=s.to_date;h+=`<tr><td><b>${c}</b> ${s.name}</td><td>${t.days}</td><td>${N(t.droo)}</td><td>${N(t.base_orders)}</td><td>${P(t.orders_uplift_pct)}</td><td>${N(t.slerp)}</td><td>${N(t.scratch)}</td><td>${GB(t.gbp)}</td><td>${GB(t.base_gbp)}</td><td>${P(t.gbp_uplift_pct)}</td><td>${GB(t.extra_gbp)}</td></tr>`}
+h+=`<tr class="tot"><td>Estate</td><td>${T.days}</td><td>${N(T.droo)}</td><td>${N(T.bo)}</td><td>${P(ou)}</td><td>${N(T.slerp)}</td><td>${N(T.scratch)}</td><td>${GB(T.gbp)}</td><td>${GB(T.bg)}</td><td>${P(gu)}</td><td>${GB(T.gbp-T.bg)}</td></tr>`;
+document.getElementById('estate').innerHTML=h;
+// weeks
+h='<tr><th>Site</th><th>Week commencing</th><th>Days in</th><th>Deliveroo orders</th><th>Baseline (est)</th><th>Uplift</th><th>Slerp</th><th>Scratch</th><th>Delivery £</th><th>Baseline £</th><th>£ uplift</th></tr>';
+for(const c of codes)for(const w of D.sites[c].weeks)h+=`<tr><td><b>${c}</b></td><td>${dmy(w.wc)}</td><td>${w.days}</td><td>${N(w.droo)}</td><td>${N(w.base_orders)}</td><td>${P(w.orders_uplift_pct)}</td><td>${N(w.slerp)}</td><td>${N(w.scratch)}</td><td>${GB(w.gbp)}</td><td>${GB(w.base_gbp)}</td><td>${P(w.gbp_uplift_pct)}</td></tr>`;
+document.getElementById('weeks').innerHTML=h;
+// daily tabs
+const tabs=document.getElementById('tabs');let cur=codes[0];
+function daily(c){cur=c;[...tabs.children].forEach(b=>b.classList.toggle('on',b.dataset.c===c));const s=D.sites[c];
+let mx=Math.max(1,...s.days.map(x=>x.droo||0));
+let h='<tr><th>Date</th><th>Day</th><th>Deliveroo orders</th><th>Baseline (est)</th><th>Uplift</th><th>Slerp</th><th>Scratch</th><th>Delivery £</th><th>Baseline £</th><th>£ uplift</th></tr>';
+for(const x of s.days)h+=`<tr><td>${dmy(x.date)}</td><td>${x.wd}</td><td>${N(x.droo)}<span class="bar" style="width:${Math.round((x.droo||0)/mx*80)}px"></span></td><td>${N(x.base_orders)}</td><td>${P(x.orders_uplift_pct)}</td><td>${N(x.slerp)}</td><td>${N(x.scratch)}</td><td>${GB(x.gbp)}</td><td>${GB(x.base_gbp)}</td><td>${P(x.gbp_uplift_pct)}</td></tr>`;
+document.getElementById('daily').innerHTML=h;
+document.getElementById('basenote').textContent=`${c} ${s.name}: baseline week ≈ ${s.base_week_orders} Deliveroo orders / £${Math.round(s.base_week_gbp).toLocaleString('en-GB')} delivery sales. Baseline orders = baseline £ ÷ £${s.promo_gbp_per_order} (median delivery £ per Deliveroo order during the promo), so it slightly overstates pre-promo orders and keeps the uplift conservative. Delivery £ is from the cash-up, all delivery channels, net of discount. A day with no delivery £ yet means the cash-up for that day has not been filed.`}
+codes.forEach(c=>{const b=document.createElement('button');b.textContent=`${c} ${D.sites[c].name}`;b.dataset.c=c;b.onclick=()=>daily(c);tabs.appendChild(b)});daily(cur);
+// baseline
+h='<tr><th>Site</th>'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>`<th>${d}</th>`).join('')+'<th>Week</th></tr>';
+for(const c of codes){const s=D.sites[c];h+=`<tr><td><b>${c}</b> ${s.name} · orders (est)</td>${s.base_orders.map(v=>`<td>${N(v)}</td>`).join('')}<td><b>${N(s.base_week_orders)}</b></td></tr>`;
+h+=`<tr><td class="na">${c} · delivery £</td>${s.base_gbp.map(v=>`<td class="na">${GB(v)}</td>`).join('')}<td class="na">${GB(s.base_week_gbp)}</td></tr>`}
+document.getElementById('base').innerHTML=h;
+document.getElementById('foot').innerHTML=`Baseline window ${dmy(D.baseline.from)} to ${dmy(D.baseline.to)} (${D.baseline.weeks} full weeks), averaged by weekday. Sources: Deliveroo Daily Master (orders), Auto Cash Up (delivery £), Inka's promo sheet (Slerp, scratch cards). Rebuilt automatically after each morning daily-tab run. makiramen/ops · marketing/promo_tracker`;
+</script>
+</body>
+</html>

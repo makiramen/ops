@@ -1,0 +1,49 @@
+name: Promo tracker (Deliveroo / Slerp 30%, M10 M11 M16)
+
+# 12/10/2026. Rebuilds marketing/promo_tracker/index.html whenever the daily tab ships new Deliveroo orders or cash-up
+# days (push on those paths), plus a late-morning cron as backup and manual dispatch. Reads Inka's manual sheet
+# (Slerp + scratch cards) with the Site CC service account; if that read fails the page still builds from the two feeds.
+on:
+  push:
+    branches: [main]
+    paths: ['data/deliveroo_daily.json', 'data/daily/daily_2026-*.json', 'marketing/promo_tracker/build_promo_tracker.py', 'marketing/promo_tracker/template.html']
+  schedule:
+    - cron: '15 10,11 * * *'   # 11:15 UK (BST/GMT), after the 09:30 daily tab
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promo-tracker
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install
+        run: pip install --quiet google-auth google-api-python-client
+      - name: Build
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+        run: python3 marketing/promo_tracker/build_promo_tracker.py --repo . 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Commit and push if changed
+        env:
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          if [ -z "$(git status --porcelain -- marketing/promo_tracker/index.html marketing/promo_tracker/data.json)" ]; then echo "promo tracker: nothing to ship"; exit 0; fi
+          git config user.name "maki-nori"; git config user.email "michael@makiramen.com"
+          git add marketing/promo_tracker/index.html marketing/promo_tracker/data.json
+          git commit -q -m "Promo tracker: $(TZ=Europe/London date +'%Y-%m-%d %H:%M') UK"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          for i in 1 2 3; do git push "$URL" HEAD:main && exit 0; git fetch "$URL" main && git rebase FETCH_HEAD; done
+          exit 1
