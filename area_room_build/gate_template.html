@@ -447,7 +447,7 @@ function peopleScore(){
     });
     var b2b='';
     if(o.b2b&&D.b2b&&D.b2b.kpi){
-      var bk=pk&&pk!=="base"?pk:"sep",K=D.b2b.kpi[bk];
+      var bk=pk&&pk!=="base"&&pk!=="pre"?pk:"sep",K=D.b2b.kpi[bk];
       if(K){
         var BR=[["Active partnerships",K.partnerships,5],["Student stands",K.stands,4],["Paid events",K.paid_events,1],["Outreach, Lakeside",K["out_Lakeside"],10],["Outreach, Southampton",K["out_Southampton"],10],["Outreach, Soho",K["out_Soho"],10],["Outreach, Maki Nori",K["out_Maki Nori"],10],["Outreach, Shoreditch",K["out_Shoreditch"],10]];
         b2b='<tr class="band"><td colspan="'+(o.sites.length+1)+'">B2B · '+(bk==="sep"?"September":"this plan week")+'</td></tr>';
@@ -494,7 +494,7 @@ function renderScore(){
     {k:"Training tracker %",tl:function(){return '95%'},v:function(){return null},src:"Management Training Tracker, feed not wired yet"},
     {k:"Cleanliness /5",tl:function(){return '3 or above'},v:function(c,pk){return cleanScore(c,pk)},ok:function(v){return rClean(v)},dp:1,src:"Lincoln's weekly sheet"}
   ];
-  var h='<div class="card"><h2>Weekly scorecard · '+REGION+'</h2><div class="sub">Baseline is the week before the plan (w/c 28/09). Weeks 1 to 4 fill as each week closes. Green hits target, amber is close, red misses.</div>'+
+  var h='<div class="card"><h2>Weekly scorecard · '+REGION+'</h2><div class="sub">Baseline is w/c 28/09, pre-plan is w/c 05/10 (the week before Week 1). Weeks 1 to 4 fill as each week closes. Green hits target, amber is close, red misses.</div>'+
     '<label class="chk"><input type="checkbox" id="runin" '+(SHOW_RUNIN?'checked':'')+'> Show the 3 run in weeks before baseline</label>'+
     '<div class="tblwrap" style="margin-top:10px"><table class="t">'+headCols("Measure");
   rows.forEach(function(r){
@@ -674,12 +674,12 @@ function renderClean(){
   var h='';
   if(!D.clean)h+='<div class="banner"><span>🧽</span><div><b>Waiting on Lincoln\'s sheet.</b> Each site gets one score out of 5 a week, the average of five areas. Scores wire in automatically as soon as the spreadsheet lands. Kaitlin\'s own score sits next to Lincoln\'s so the two can be compared.</div></div>';
   h+='<div class="card"><h2>Cleanliness · '+REGION+'</h2><div class="sub">Minimum 3 out of 5. Any area scoring 1 is fixed within 24 hours.</div><div class="tblwrap"><table class="t"><tr><th>Site</th><th>Area</th>';
-  D.periods.filter(function(p){return p[0]!=="base"}).forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+p[1]+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">L · K</span></th>'});
+  D.periods.filter(function(p){return p[0]!=="base"&&p[0]!=="pre"}).forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+p[1]+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">L · K</span></th>'});
   h+='</tr>';
   codes.forEach(function(c){
     A.concat([["_site","Site score"]]).forEach(function(a,i){
       h+='<tr'+(a[0]==="_site"?' style="background:#fcfaf7"':'')+'><td class="m">'+(i===0?D.sites_meta[c].name:'')+'</td><td'+(a[0]==="_site"?' style="font-weight:800"':'')+'>'+a[1]+'</td>';
-      D.periods.filter(function(p){return p[0]!=="base"}).forEach(function(p){
+      D.periods.filter(function(p){return p[0]!=="base"&&p[0]!=="pre"}).forEach(function(p){
         var rec=D.clean&&D.clean[c]&&D.clean[c][p[0]];
         var L=null,K=null;
         if(rec){
@@ -818,7 +818,7 @@ function renderTeam(){
   ["Delivery","Delivery station set up and stocked. Baseline recorded.","Packing to the new layout. Mistakes and spillages falling.","All five metrics better than baseline.","All five improved for a third week running."],
   ["Events, promos, QR","Materials and QR codes on every table. Gaps fixed.","Everything up to date. Team briefed on live promos.","Checked every visit, no gaps.","Holds on the days she is not in."]];
   h+='<div class="card"><h2>Kaitlin\'s four week plan</h2><div class="sub">Each week raises the standard. Review in the week of 09/11.</div><div class="tblwrap"><table class="t"><tr><th>Focus</th>';
-  ["w1","w2","w3","w4"].forEach(function(p,i){var pp=D.periods[i+1];h+='<th'+(p===cur?' class="now"':'')+'>Week '+(i+1)+' · '+dd(pp[2])+'</th>'});
+  ["w1","w2","w3","w4"].forEach(function(p,i){var pp=D.periods.filter(function(x){return x[0]===p})[0];h+='<th'+(p===cur?' class="now"':'')+'>Week '+(i+1)+' · '+dd(pp[2])+'</th>'});
   h+='</tr>';
   F.forEach(function(r){h+='<tr><td class="m">'+r[0]+'</td>';for(var i=1;i<5;i++)h+='<td'+(("w"+i)===cur?' class="now"':'')+' style="font-size:12.5px;color:var(--ink-2)">'+r[i]+'</td>';h+='</tr>'});
   h+='</table></div></div>';

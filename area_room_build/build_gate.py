@@ -47,6 +47,7 @@ TODAY = dt.date.fromisoformat(os.environ.get("GATE_TODAY", dt.datetime.now(UK).d
 # Plan calendar (Month 1: Mon 12 Oct to Sun 8 Nov 2026)
 PERIODS = [
     ("base", "Baseline", "2026-09-28", "2026-10-04"),
+    ("pre", "Pre-plan", "2026-10-05", "2026-10-11"),   # 12/10/2026: the closed week between baseline and Week 1, so no week goes missing
     ("w1", "Week 1", "2026-10-12", "2026-10-18"),
     ("w2", "Week 2", "2026-10-19", "2026-10-25"),
     ("w3", "Week 3", "2026-10-26", "2026-11-01"),
