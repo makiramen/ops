@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
+          "actual": 30.44,
           "target": 23.0,
           "gated": false
         },
@@ -74,8 +74,8 @@
         "week_commencing": "2026-10-05"
       },
       "efficiency_score": {
-        "score": 83,
-        "rag": "amber",
+        "score": 74,
+        "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
           "wage": 30,
@@ -96,6 +96,11 @@
             "value": 84.88,
             "basis": "\u00a324.02 vs \u00a322 tgt \u2014 level 100, WoW -0.04% \u2192 mom 50"
           },
+          "food": {
+            "weight": 30,
+            "value": 56.48,
+            "basis": "30.44% vs 25% baseline, -8/pp over"
+          },
           "wage": {
             "weight": 30,
             "value": 85.0,
@@ -103,7 +108,6 @@
           }
         },
         "components_dropped": [
-          "food",
           "weekly_star",
           "food_var"
         ],
@@ -112,7 +116,8 @@
       "red_light": {
         "status": "red",
         "triggers": [
-          "sales -29.7% vs target"
+          "sales -29.7% vs target",
+          "food 30.4%"
         ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
@@ -178,7 +183,6 @@
         "busy_mode_pct": 0.0
       },
       "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
         "Stock-take \u2014 no variance entered this week"
       ]
     }

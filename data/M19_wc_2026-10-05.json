@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
+          "actual": 25.74,
           "target": 23.0,
           "gated": false
         },
@@ -74,7 +74,7 @@
         "week_commencing": "2026-10-05"
       },
       "efficiency_score": {
-        "score": 47,
+        "score": 63,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -96,6 +96,11 @@
             "value": 76.24,
             "basis": "\u00a321.20 vs \u00a322 tgt \u2014 level 87, WoW +0.19% \u2192 mom 52"
           },
+          "food": {
+            "weight": 30,
+            "value": 94.08,
+            "basis": "25.74% vs 25% baseline, -8/pp over"
+          },
           "wage": {
             "weight": 30,
             "value": 13.9,
@@ -103,7 +108,6 @@
           }
         },
         "components_dropped": [
-          "food",
           "weekly_star",
           "food_var"
         ],
@@ -112,7 +116,8 @@
       "red_light": {
         "status": "red",
         "triggers": [
-          "wage 26.7%"
+          "wage 26.7%",
+          "food 25.7%"
         ],
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
@@ -177,9 +182,8 @@
         "busy_mode_pct": 0.0
       },
       "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
-        "Stock-take \u2014 no variance entered this week",
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
+        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)",
+        "Stock-take \u2014 no variance entered this week"
       ]
     }
   }
