@@ -1,22 +1,101 @@
 {
  "day": "2026-10-11",
- "run_at": "2026-10-12T09:42:55+00:00",
+ "run_at": "2026-10-12T09:51:59+00:00",
  "warnings": [],
  "cashup": {
   "mirror_sha": "4afc3e42f27c64ab",
   "mirror_dates": 14,
-  "D_buildable": false,
-  "D_gate": "zero/blank Actual on 11/10/2026: ['Maki 21']",
+  "closures": {
+   "M21": {
+    "from": "2026-10-11",
+    "until": null,
+    "why": "Maki 21 (Birmingham) closed after a fire. Last trading day in the mirror 10/10/2026. Dated, NOT a VENUE_IGNORE entry: every day from 21/08/2026 to 10/10/2026 still counts 20 live sites. Set until to the day BEFORE it trades again; if it trades while this is open the reopen tripwire includes it and shouts."
+   }
+  },
+  "D_buildable": true,
+  "D_gate": "ok",
+  "D_fleet_avg_spend": 23.32,
   "covers_suspect": {},
   "builder_log": [
+   "[daily] WARN 2026-10-11 M9: FOH \u00a31,075.45/41.52% and BOH \u00a31,514.61/58.48% do not resolve against total labour \u00a32,364.26 - looks like projected, not actual - split rejected",
    "[daily] WARN 2026-10-10 M14: FOH \u00a31,078.64 + BOH \u00a31,100.89 exceeds total labour \u00a32,166.08 - split rejected",
    "[daily] WARN 2026-10-09 M17: FOH \u00a3502.05/40.61% and BOH \u00a3734.33/59.39% do not resolve against total labour \u00a3399.78 - looks like projected, not actual - split rejected",
    "[daily] WARN 2026-10-09 M19: FOH \u00a3453.22/43.1% and BOH \u00a3505.67/48.09% do not resolve against total labour \u00a31,097.68 - looks like projected, not actual - split rejected",
-   "[daily] WARN 2026-10-10 M19: FOH \u00a3310.65/33.65% and BOH \u00a3448.48/48.58% do not resolve against total labour \u00a31,048.53 - looks like projected, not actual - split rejected"
+   "[daily] WARN 2026-10-10 M19: FOH \u00a3310.65/33.65% and BOH \u00a3448.48/48.58% do not resolve against total labour \u00a31,048.53 - looks like projected, not actual - split rejected",
+   "[daily] WARN 2026-10-11 M19: FOH \u00a3276.46/35.56% and BOH \u00a3514.38/66.16% do not resolve against total labour \u00a3956.30 - looks like projected, not actual - split rejected"
   ],
   "built": [
    "2026-10-09",
-   "2026-10-10"
+   "2026-10-10",
+   "2026-10-11"
+  ],
+  "D_totals": {
+   "sales": 112844.93,
+   "target": 111587.5,
+   "vs_target_pct": 1.1,
+   "covers": 4838,
+   "avg_spend": 23.32,
+   "wage_pct": 21.42,
+   "sites": "19/19",
+   "splits": "16/19"
+  },
+  "D_gaps": {
+   "no_sales": [],
+   "no_foh_boh_split": [
+    "M10",
+    "M19",
+    "M9"
+   ],
+   "warnings": [
+    "2026-10-11 M9: FOH \u00a31,075.45/41.52% and BOH \u00a31,514.61/58.48% do not resolve against total labour \u00a32,364.26 - looks like projected, not actual - split rejected",
+    "2026-10-11 M19: FOH \u00a3276.46/35.56% and BOH \u00a3514.38/66.16% do not resolve against total labour \u00a3956.30 - looks like projected, not actual - split rejected"
+   ]
+  },
+  "D_worst": [
+   [
+    "M14",
+    -59.68
+   ],
+   [
+    "M11",
+    -38.66
+   ],
+   [
+    "MakiNori",
+    -36.33
+   ]
+  ],
+  "D_best": [
+   [
+    "M10",
+    56.22
+   ],
+   [
+    "M16",
+    42.23
+   ],
+   [
+    "M1",
+    41.84
+   ]
+  ],
+  "D_wage_over_25": [
+   [
+    "M14",
+    41.24
+   ],
+   [
+    "MakiNori",
+    34.54
+   ],
+   [
+    "M11",
+    31.17
+   ],
+   [
+    "M18",
+    25.92
+   ]
   ]
  },
  "reviews": {
@@ -39,6 +118,13 @@
     "neg": 8,
     "window_n": 574,
     "window_neg": 28
+   },
+   {
+    "day": "2026-10-11",
+    "n": 75,
+    "neg": 3,
+    "window_n": 582,
+    "window_neg": 24
    }
   ]
  },
@@ -67,14 +153,20 @@
   "badge_week": "2026-10-05",
   "badge_reviews": 610
  },
- "shipped": [],
+ "shipped": [
+  "data/daily/daily_2026-10-09.json",
+  "data/daily/daily_2026-10-10.json",
+  "data/daily/daily_index.json",
+  "data/daily/daily_reviews_index.json",
+  "data/daily/daily_2026-10-11.json",
+  "data/daily/daily_reviews_2026-10-11.json"
+ ],
  "commit": null,
  "pushed": false,
  "index": {
-  "cashup_latest": "2026-10-10",
-  "cashup_days": 76,
-  "reviews_latest": "2026-10-10",
-  "reviews_days": 76
- },
- "result": "nothing changed \u2014 live is current"
+  "cashup_latest": "2026-10-11",
+  "cashup_days": 77,
+  "reviews_latest": "2026-10-11",
+  "reviews_days": 77
+ }
 }
