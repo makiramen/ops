@@ -6758,6 +6758,7 @@ function renderDailySpend(){
   let view = d.sites;
   const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
   const effC = budgetEffCluster();
+  view = view.filter(r=>{ const c=(ECB_CLOSURES||{})[r.code]; return !(c && c.from && d.as_at>=c.from && (!c.until || d.as_at<=c.until)); });   // closed sites removed
   if(effC!=="all") view = view.filter(r=>codeCluster[r.code]===effC);  const filed = d.sites.filter(r=>r.hc_wtd!=null).length;
   const ydaySum = d.sites.reduce((a,r)=>a+(r.yday||0),0);
   const dot = rag => `<span class="rag-dot ${rag}"></span>`;
@@ -6980,6 +6981,7 @@ function renderBudget(){
     return `<div style="display:flex;align-items:center;gap:6px"><div style="flex:1;height:8px;background:var(--maki-soft);border-radius:4px;overflow:hidden"><div style="width:${Math.min(100,pct).toFixed(0)}%;height:100%;background:${col}"></div></div><span style="font-size:11px;font-weight:600;min-width:38px;text-align:right;color:${col}">${pct.toFixed(0)}%</span></div>`;
   };
   let view = d.sites.filter(r=>siteLiveInWeek(d,r.code,sunISO));
+  view = view.filter(r=>{ const c=(ECB_CLOSURES||{})[r.code]; return !(c && c.from && date>=c.from && (!c.until || date<=c.until)); });   // closed on the selected day: row removed (Michael, 12/10/2026)
   const effCluster = budgetEffCluster();
   if(effCluster!=="all") view = view.filter(r=>codeCluster[r.code]===effCluster);
   let gDay=0,gWtd=0,gMtd=0,gWkB=0,gCap=0;
