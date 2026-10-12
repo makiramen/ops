@@ -1,0 +1,209 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-12",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-05 \u2013 2026-10-11",
+    "commencing": "2026-10-05",
+    "ending": "2026-10-11"
+  },
+  "sites": {
+    "IKI2": {
+      "code": "IKI2",
+      "name": "Ikigai 2",
+      "gm": "IKI2 GM",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 26809.69,
+          "target": 24500.0,
+          "var_pct": 9.43,
+          "prev": 25786.0,
+          "wow_abs": 1023.69,
+          "wow_pct": 3.97
+        },
+        "covers": {
+          "actual": 1141,
+          "prev": 1107,
+          "wow_abs": 34,
+          "wow_pct": 3.07
+        },
+        "sph": {
+          "actual": 21.65,
+          "prev": 21.69,
+          "wow_abs": -0.04,
+          "wow_pct": -0.18,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 17.89,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 326.9
+        },
+        "waste": {
+          "actual": 64.32
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-05"
+      },
+      "efficiency_score": {
+        "score": 96,
+        "rag": "green",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+9.43) + 30% (\u00a3gap +2310 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 84.46,
+            "basis": "\u00a321.65 vs \u00a321 tgt \u2014 level 100, WoW -0.18% \u2192 mom 48"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "17.89% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "food",
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 3.6667,
+        "new_reviews": 9,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 3,
+          "4": 2,
+          "5": 3
+        },
+        "negatives": 4,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Shun",
+            "text": "Cute staff but the food is absolutely disgusting\nFirst time eating a bad vegan dish and by far the worst ramen I\u2019ve ever tasted",
+            "date": "2026-10-10",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Paula. MzG",
+            "text": "(Translated by Google) I had the vegan tofu ramen and was unfortunately a little disappointed, as it tasted rather bland and also looked different than in the pictures on the menu.\n\n(Original)\nIch hatte das vegane Tofu Ramen und war leider ein bisschen entt\u00e4uscht, da es recht langweilig geschmeckt hat und auch anders aussah als auf den Bildern auf der Karte.",
+            "date": "2026-10-06",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Julia-Marie",
+            "text": "(Translated by Google) All in all, it was okay since we got a table without a reservation, but we had to wait 30 minutes for our food. The broth was very tasty, as were the garnishes, although the meat was quite fatty and flabby. The service seemed unenthusiastic. The price-performance ratio wasn't really there. On top of that, I didn't think the 10% service charge was justified for the service provided.\n\n(Original)\nall in all wars schon gut, da wir ohne Reservierung einen Platz bekommen haben, aber wir mussten 30 Minuten auf unser Essen warten. Die Br\u00fche war sehr lecker, die Einlagen auch, wobei das Fleisch schon sehr viel Fett/Wabbel hatte. Die Bedienung schien lustlos. Preis-Leistung nicht wirklich gegeben. Obendrauf die 10% Servicefee fand ich nicht gerechtfertigt f\u00fcr den Service.",
+            "date": "2026-10-06",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Lisa Collins",
+            "text": "Average food at a high price. It was okay, wouldn't come here again, have had better ramen elsewhere. Also added a sneaky service charge and don't tell you which I didn't appreciate.",
+            "date": "2026-10-05",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 3,
+        "tasks": [
+          {
+            "task": "canopy above stairs leaking and needs serviced",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Oil leak from canopy on stairs, alreadt there has been incidents as it needs to clenaed more often 2 staff including me and few customers has slipped already so can we please prioritise this",
+            "priority": "\u2014",
+            "logged_week": "03/10/2026",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "3 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+      ]
+    }
+  }
+}

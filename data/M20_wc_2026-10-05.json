@@ -1,0 +1,213 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-12",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-05 \u2013 2026-10-11",
+    "commencing": "2026-10-05",
+    "ending": "2026-10-11"
+  },
+  "sites": {
+    "M20": {
+      "code": "M20",
+      "name": "Maki 20",
+      "gm": "TBC",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 39470.02,
+          "target": 40000.0,
+          "var_pct": -1.32,
+          "prev": 41212.79,
+          "wow_abs": -1742.77,
+          "wow_pct": -4.23
+        },
+        "covers": {
+          "actual": 1910,
+          "prev": 1949,
+          "wow_abs": -39,
+          "wow_pct": -2.0
+        },
+        "sph": {
+          "actual": 20.01,
+          "prev": 20.49,
+          "wow_abs": -0.48,
+          "wow_pct": -2.34,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 22.68,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 617.4
+        },
+        "waste": {
+          "actual": 229.48
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 4.3,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-05"
+      },
+      "efficiency_score": {
+        "score": 74,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 98.76,
+            "basis": "70% (100-1.32) + 30% (\u00a3gap -530 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 54.76,
+            "basis": "\u00a320.01 vs \u00a322 tgt \u2014 level 67, WoW -2.34% \u2192 mom 27"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 74.8,
+            "basis": "22.68% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "food",
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.6563,
+        "new_reviews": 64,
+        "star_breakdown": {
+          "1": 2,
+          "2": 2,
+          "3": 0,
+          "4": 8,
+          "5": 52
+        },
+        "negatives": 4,
+        "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "Hannah Allport (Raine)",
+            "text": "Went here for lunch with my friend and the wait time was incredibly long. We waited around 30 minutes for maki rolls and then, as a vegan, I was served a salmon roll and the server just left before I could say anything which was really frustrating. Then we waited even longer for the correct dish to be brought once the server came back. The food was really delicious once we got it but then we waited around 20 minutes waiting for the bill as well as being ignored multiple times. In the time, my friend was able to go to the nearby subway and back with cookies and i still hadn't been handed the bill. It was quite infuriating how a table next to us was offered a discount for a small error with a drinks order whilst the mixup with mine was treated with a brief sorry. Definitely put a damper on our day out. \ud83d\ude15",
+            "date": "2026-10-10",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Enn Xin",
+            "text": "Me and my bf went there to eat then they opened, the food wasn\u2019t that great for the price we paid, a lot of the menu was unavailable, the waiter took our order for dessert and came back after a few minutes telling us it\u2019s unavailable, we ended up having to order something else that was available. In the end we waited more than 30 minutes for 3 pieces of store bought mochi drizzled in chocolate (for \u00a37) which you could find in Lidl, paying half the price. Haven\u2019t been there since.",
+            "date": "2026-10-10",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Fatuuu M Siddiq",
+            "text": "Bro, I just wanted a fork to eat my noodles, and they walked away\ud83d\udc80",
+            "date": "2026-10-10",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Chi Kin Fong",
+            "text": "First visit but we both suffered tummy pain and got a lot of bloating at late night till now. The two bowls of ramen were not served hot enough in temperatures. The prawn tempura inside the sushi were not crispy (it would be oil temperature was too low or the batter was mixed too much)\n\nVery disappointing on the food and not happy but service was fine...",
+            "date": "2026-10-10",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-11",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": null,
+        "orders": null,
+        "aov": null,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 100.0,
+        "avg_prep_min": 12.9,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.1,
+        "rider_wait_5min_pct": 3.1,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "busy_mode_pct": 1.2
+      },
+      "gaps": [
+        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
+      ]
+    }
+  }
+}

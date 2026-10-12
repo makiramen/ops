@@ -1,0 +1,214 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-12",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-05 \u2013 2026-10-11",
+    "commencing": "2026-10-05",
+    "ending": "2026-10-11"
+  },
+  "sites": {
+    "M18": {
+      "code": "M18",
+      "name": "Maki 18",
+      "gm": "Imre Balogh",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 41751.67,
+          "target": 35500.0,
+          "var_pct": 17.61,
+          "prev": 38303.31,
+          "wow_abs": 3448.36,
+          "wow_pct": 9.0
+        },
+        "covers": {
+          "actual": 2001,
+          "prev": 1884,
+          "wow_abs": 117,
+          "wow_pct": 6.21
+        },
+        "sph": {
+          "actual": 19.63,
+          "prev": 19.14,
+          "wow_abs": 0.49,
+          "wow_pct": 2.56,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 24.29,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 679.1
+        },
+        "waste": {
+          "actual": 6.08
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 28.7,
+          "target": "\u00b15%",
+          "within_band": false
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-05"
+      },
+      "efficiency_score": {
+        "score": 64,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+17.61) + 30% (\u00a3gap +6252 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 65.03,
+            "basis": "\u00a319.63 vs \u00a322 tgt \u2014 level 60, WoW +2.56% \u2192 mom 76"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 50.65,
+            "basis": "24.29% vs 21% target, -15/pp over"
+          }
+        },
+        "components_dropped": [
+          "food",
+          "weekly_star",
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.75,
+        "new_reviews": 56,
+        "star_breakdown": {
+          "1": 2,
+          "2": 0,
+          "3": 0,
+          "4": 6,
+          "5": 48
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "D\u01b0\u01a1ng Nguy\u1ec5n",
+            "text": "The place was crowded, and the food took too long to arrive.",
+            "date": "2026-10-10",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "K K K W",
+            "text": "Terrible experience with tasteful broth. On top of that service is close to none. We waited 15 minutes to even get anyone attention.",
+            "date": "2026-10-08",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Ladies 3x Toilets blocked we need plumber to fix this issue please . We tried on daily basis but this issue is keep coming back . Thank you .",
+            "priority": "\u2014",
+            "logged_week": "21/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Corner corridor- kitchen wall lath",
+            "priority": "\u2014",
+            "logged_week": "21/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-11",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 2269.09,
+        "orders": 82,
+        "orders_estimated": true,
+        "aov": 27.67,
+        "new_customers": 49,
+        "rating": 4.4,
+        "open_hours_pct": 97.5,
+        "avg_prep_min": 13.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 4.8,
+        "rider_wait_5min_pct": 8.5,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 7.6
+      },
+      "gaps": [
+        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    }
+  }
+}
