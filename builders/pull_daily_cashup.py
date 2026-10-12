@@ -110,9 +110,72 @@ VENUE_TO_CODE = {
     #    Fri 21/08/2026 and is a LIVE SITE #20 from that date. Its LOCATION is
     #    still unconfirmed — do not write one anywhere.
     "Maki 21": "M21",
+    # ⭐ 12/10/2026: M21 CLOSED AFTER A FIRE. It stays in this map and in CLUSTERS
+    #    on purpose. The closure is DATE-SCOPED in covers_accepted.json
+    #    ("closures" -> "M21" -> from/until, same shape as offer_floor) and applied
+    #    by live_venues_on(). Do NOT move it to VENUE_IGNORE: that would drop M21
+    #    from every rebuild back to 21/08/2026 and falsify the 20-site fleet count.
     "Maki Nori": "MakiNori",
     "Ikigai 2": "IKI2",
 }
+
+# ----------------------------------------------------------------------------
+# Dated closures. covers_accepted.json carries
+#   "closures": {"M21": {"from": "YYYY-MM-DD", "until": "YYYY-MM-DD" | null, "why": ...}}
+# A site is closed on an ISO date when from <= date and (until is null or
+# date <= until). A closed site is not expected that day (not in gaps.no_sales,
+# not in sites_expected) but keeps every day before `from`.
+#
+# REOPEN TRIPWIRE: a closed site that files sales > 0 inside its window is NOT
+# dropped. It is kept as live for that day and a WARN names it, so a site that
+# starts trading again can never be silently excluded. Close the window by
+# setting `until` to the day before it reopened.
+# ----------------------------------------------------------------------------
+_CLOSURES_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "covers_accepted.json")
+
+
+def load_closures(path=_CLOSURES_PATH):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            raw = json.load(fh).get("closures") or {}
+    except FileNotFoundError:
+        return {}
+    out = {}
+    for code, c in raw.items():
+        if code not in VENUE_TO_CODE.values():
+            sys.exit(f"FATAL: covers_accepted.json closure for unknown site code {code!r}")
+        frm = c.get("from")
+        if not frm or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", frm):
+            sys.exit(f"FATAL: closure for {code} needs an ISO 'from' date, got {frm!r}")
+        until = c.get("until")
+        if until is not None and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", until):
+            sys.exit(f"FATAL: closure for {code} has a non-ISO 'until' {until!r}")
+        out[code] = {"from": frm, "until": until, "why": c.get("why", "")}
+    return out
+
+
+CLOSURES = load_closures()
+CODE_TO_VENUE = {c: v for v, c in VENUE_TO_CODE.items()}
+
+
+def closed_on(code, iso_date):
+    c = CLOSURES.get(code)
+    return bool(c) and c["from"] <= iso_date and (c["until"] is None or iso_date <= c["until"])
+
+
+def live_codes_on(iso_date):
+    """Site codes expected to trade on an ISO date (closures applied)."""
+    return {c for c in VENUE_TO_CODE.values() if not closed_on(c, iso_date)}
+
+
+def live_venues_on(iso_date):
+    """Venue labels (VENUE_TO_CODE keys) expected to trade on an ISO date."""
+    return {v for v, c in VENUE_TO_CODE.items() if not closed_on(c, iso_date)}
+
+
+def reopen_tripwire(code, iso_date, sales):
+    """True when a site inside its closure window has filed real sales."""
+    return bool(sales) and sales > 0 and closed_on(code, iso_date)
 
 # Deliberately excluded. M4 and Ikigai 1 are PHANTOM source columns, not sites
 # (Michael, 28/07/2026). AA Factory is production. Maki O2 is franchise (MAF3)
@@ -121,6 +184,8 @@ VENUE_TO_CODE = {
 # 24/08/2026 — South England, live site #20 from 21/08 — so it has moved into
 # VENUE_TO_CODE and CLUSTERS as M21 and is NO LONGER ignored. The fleet is 20
 # sites from 21/08/2026 onward; days before that legitimately carry 19.
+# 12/10/2026: M21's fire closure is NOT recorded here. A set here is undated and
+# would apply to every rebuild. Dated closures live in covers_accepted.json.
 VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2", "Maki Braehead"}  # Braehead: rows since 14/09/2026, all zero, not trading yet; ignore until a code is ruled (17/09/2026)
 
 # ---- org map ----------------------------------------------------------------
@@ -355,6 +420,7 @@ def main():
     days = {}
     warnings = []
     unknown = set()
+    reopened = {}      # date -> codes that tripped the reopen tripwire
 
     for row in rows[1:]:
         if len(row) <= IDX_WAGE_PCT:
@@ -377,6 +443,18 @@ def main():
         # zero-sales row is "not cashed up yet", not a real trading day.
         if not sales:
             continue
+
+        # REOPEN TRIPWIRE. A site inside a dated closure window that files real
+        # sales is kept, not skipped, and shouted about. Silence is the failure.
+        if reopen_tripwire(code, date_str, sales):
+            c = CLOSURES[code]
+            warnings.append(
+                f"{date_str} {code}: REOPEN TRIPWIRE - filed £{sales:,.2f} while "
+                f"closed from {c['from']} (until {c['until'] or 'open'}). Kept as "
+                f"live for this day. Set closures.{code}.until in "
+                f"covers_accepted.json to the day before it reopened."
+            )
+            reopened.setdefault(date_str, set()).add(code)
 
         total_labour = num(row[IDX_LABOUR_TOTAL])
         hours = num(row[IDX_LABOUR_HOURS])
@@ -456,7 +534,9 @@ def main():
     for date_str in sorted(days):
         sites = days[date_str]["sites"]
         split_ok = [c for c, s in sites.items() if s["labour"]["split_status"] == "ok"]
-        missing = sorted(set(VENUE_TO_CODE.values()) - set(sites))
+        expected = live_codes_on(date_str) | reopened.get(date_str, set())
+        closed = sorted(c for c in VENUE_TO_CODE.values() if c not in expected)
+        missing = sorted(expected - set(sites))
         no_split = sorted(c for c in sites if c not in split_ok)
         unalloc_total = round(sum(
             s["labour"]["unallocated"] or 0.0 for s in sites.values()), 2)
@@ -473,7 +553,14 @@ def main():
             "date": date_str,
             "day": DAY_NAMES[datetime.fromisoformat(date_str).weekday()],
             "sites_reported": len(sites),
-            "sites_expected": len(VENUE_TO_CODE),
+            "sites_expected": len(expected),
+            # Dated closures in force on this day (covers_accepted.json). These
+            # sites are not expected and are not gaps. Empty on a normal day.
+            "closed": [
+                {"code": c, "from": CLOSURES[c]["from"], "until": CLOSURES[c]["until"],
+                 "why": CLOSURES[c]["why"]} for c in closed
+            ],
+            "reopened_during_closure": sorted(reopened.get(date_str, set())),
             "foh_boh_reported": len(split_ok),
             "unallocated_labour_total": unalloc_total,
             "clusters": [
@@ -513,7 +600,9 @@ def main():
                 json.dump(payload, fh, indent=1, ensure_ascii=False)
         written.append(path)
         print(f"[daily] {date_str} {payload['day']}: {len(sites)}/"
-              f"{len(VENUE_TO_CODE)} sites, FOH/BOH {len(split_ok)}/{len(sites)}, "
+              f"{len(expected)} sites"
+              + (f" (closed: {', '.join(closed)})" if closed else "")
+              + f", FOH/BOH {len(split_ok)}/{len(sites)}, "
               f"unallocated £{unalloc_total:,.2f} -> {path}")
 
     # Rebuild the index from what is actually on disk, so a day can never be

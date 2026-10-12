@@ -92,7 +92,7 @@ def main():
     repo = os.path.abspath(a.repo); B = os.path.join(repo, "builders"); DD = os.path.join(repo, "data", "daily")
     tmp = "/tmp/daily_cloud_run"; os.makedirs(tmp, exist_ok=True)
     sys.path.insert(0, B)
-    import pull_daily_cashup as PC  # VENUE_TO_CODE, VENUE_IGNORE
+    import pull_daily_cashup as PC  # VENUE_TO_CODE, VENUE_IGNORE, live_venues_on (dated closures)
 
     today_uk = datetime.datetime.now(UK).date()
     D = datetime.date.fromisoformat(a.day) if a.day else today_uk - datetime.timedelta(days=1)
@@ -119,13 +119,32 @@ def main():
     if not by_date: log("cash-up mirror carries no rows"); raise SystemExit(11)
     counts = {d: len(v) for d, v in by_date.items()}
     R["cashup"]["mirror_sha"] = sha(cb)[:16]; R["cashup"]["mirror_dates"] = len(counts)
-    live_venues = set(PC.VENUE_TO_CODE)
+    # 12/10/2026: the live set is PER DAY. M21 closed after a fire on 11/10 and the undated
+    # `set(PC.VENUE_TO_CODE)` gate held every day since 10/10 back with "zero/blank Actual:
+    # ['Maki 21']". Dated closures live in covers_accepted.json ("closures", from/until like
+    # offer_floor) and are applied by PC.live_venues_on(iso). Days before `from` still expect 20.
+    def iso_of(dt): return datetime.datetime.strptime(dt, "%d/%m/%Y").date().isoformat()
+    def live_on(dt):
+        """Venue labels expected on a dd/mm/yyyy date, plus any closed site that filed real sales
+        that day (REOPEN TRIPWIRE: a reopened site is included and shouted about, never dropped)."""
+        iso = iso_of(dt); live = set(PC.live_venues_on(iso)); vr = by_date.get(dt, {})
+        for v, code in PC.VENUE_TO_CODE.items():
+            if v in live or v not in vr: continue
+            if PC.reopen_tripwire(code, iso, money(vr[v][iact])):
+                live.add(v)
+                msg = (f"{iso} REOPEN TRIPWIRE: {code} ({v}) filed £{money(vr[v][iact]):,.2f} inside its closure "
+                       f"window (from {PC.CLOSURES[code]['from']}, until {PC.CLOSURES[code]['until'] or 'open'}). "
+                       f"Included as live. Set closures.{code}.until in builders/covers_accepted.json.")
+                if msg not in R["warnings"]: R["warnings"].append(msg)
+        return live
+    R["cashup"]["closures"] = PC.CLOSURES
 
     # 02/10/2026: covers_accepted.json holds (a) per-day sites Michael has confirmed as genuine, keyed dd/mm/yyyy,
     # and (b) "offer_floor": a lower ramen spend-per-head floor while the app offer runs (low SPH is real).
     try: ACCEPTED_COVERS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "covers_accepted.json")))
     except FileNotFoundError: ACCEPTED_COVERS = {}
     OFFER = ACCEPTED_COVERS.pop("offer_floor", None) or {}
+    ACCEPTED_COVERS.pop("closures", None)   # dated site closures: read by pull_daily_cashup (PC.CLOSURES), not a day key
     def ramen_lo(dt):
         try:
             iso = datetime.datetime.strptime(dt, "%d/%m/%Y").date().isoformat()
@@ -135,7 +154,7 @@ def main():
         return 15
     def buildable(dt):
         """Return (ok, why, fleet_avg_spend, per_site_flags) for a dd/mm/yyyy date."""
-        vr = by_date.get(dt, {})
+        vr = by_date.get(dt, {}); live_venues = live_on(dt)
         missing = sorted(live_venues - set(vr))
         if missing: return False, f"venues missing on {dt}: {missing}", None, []
         blank = [v for v in live_venues if (money(vr[v][iact]) or 0) <= 0]
