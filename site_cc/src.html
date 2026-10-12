@@ -629,6 +629,7 @@ var COMP=__COMP__,TEAM=__TEAM__,GAPS0=__GAPS__,MAINT=__MAINT__,PPM=__PPM__;
 var TODAY='__TODAY__';
 var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
+/* 12/10/2026 (Michael): the page always opens on the latest week and month, never the week saved from the last visit */S.per="week";S.wc=CUR;S.month=CUR.slice(0,7);
 ['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
