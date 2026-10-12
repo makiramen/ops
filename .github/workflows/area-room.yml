@@ -7,6 +7,7 @@ name: Area Room daily build
 # GUARD. Never before 10:00 UK. Waits for the daily tab to carry yesterday; from 14:00 UK it builds with whatever
 # is live so the room still refreshes once a day. Skips when today's build already carries yesterday.
 # SECRETS. AREA_ROOM_CONFIG = {"users": {name: password}, "b2b_file_id": "..."} (logins never sit in the repo).
+# AREA_ROOM_CLEAN_FILE_ID = Drive id of Lincoln's Weekly Cleanliness Scorecard (kept out of the public repo).
 # SITE_CC_SERVICE_ACCOUNT_JSON = site-cc-reader, which reads RAMEN_ROYALTY (AUTO) and the Mapal tracker.
 # The Area Room log web app URL stays as built into build_gate.py.
 # PUBLISHES area_room.html ONLY. The commit step refuses anything else, index.html included.
@@ -109,6 +110,7 @@ jobs:
         env:
           AREA_ROOM_CONFIG: ${{ secrets.AREA_ROOM_CONFIG }}
           GOOGLE_SA_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+          CLEAN_FILE_ID: ${{ secrets.AREA_ROOM_CLEAN_FILE_ID }}   # 12/10/2026: Lincoln's Weekly Cleanliness Scorecard (link shared xlsx)
           OPS_DATA: ${{ github.workspace }}/data
           DAILY_DIR: ${{ github.workspace }}/data/daily
           DROO_DAILY: ${{ github.workspace }}/data/deliveroo_daily.json
@@ -119,7 +121,7 @@ jobs:
           if [ -z "$AREA_ROOM_CONFIG" ]; then echo "::error::AREA_ROOM_CONFIG secret missing, nothing published"; exit 1; fi
           python3 area_room_build/build_gate.py 2>&1 | tee /tmp/build.log
           # never publish a room with the live sheets missing (falls back to stale or empty data)
-          if grep -q "sheet read failed\|b2b download failed\|b2b download was not" /tmp/build.log; then
+          if grep -q "sheet read failed\|b2b download failed\|b2b download was not\|clean download failed\|clean download was not" /tmp/build.log; then
             echo "::error::a live source failed (see log), keeping the published room as it is"; exit 1; fi
           head -c 200 area_room.html | grep -q "area-room-built: $(date +%F)" || { echo "::error::build marker missing"; exit 1; }
           { echo "## Area Room"; head -c 200 area_room.html | grep -o "area-room-built:[^>]*"; grep "sites_weekly\|built" /tmp/build.log; } >> "$GITHUB_STEP_SUMMARY"

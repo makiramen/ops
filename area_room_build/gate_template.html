@@ -398,7 +398,7 @@ function rSales(v){return v==null?null:(v>=0?"g":(v>-10?"a":"r"))}
 function rFood(v){return v==null?null:(v<24?"g":(v<=25?"a":"r"))}
 function rStar(v){return v==null?null:(v>=4.7?"g":(v>=4.5?"a":"r"))}
 function rComp(v){return v==null?null:(v>=95?"g":(v>=90?"a":"r"))}
-function rClean(v){return v==null?null:(v>=3?"g":(v>=2.5?"a":"r"))}
+function rClean(v){return v==null?null:(v>=3?"g":"r")}
 function rEff(v){return v==null?null:(v>=90?"g":(v>=85?"a":"r"))}
 /* Deliveroo weekly: the AM CC canonical 5 metric bands. Rider wait blank = 0. RED if any red, GREEN if all green, else AMBER */
 var DM=[["d_rating","Rating",4.7,4.0,true,2,""],["d_open","Open",98,95,true,1,"%"],["d_prep","Prep",15,18,false,1," min"],["d_inacc","Inaccurate",2,3,false,1,"%"],["d_rider","Rider wait",2,4,false,1,"%"]];
@@ -517,7 +517,7 @@ function renderScore(){
       h+='</tr>';
     });
   });
-  h+='</table></div><div class="legend"><span><i class="dot g"></i>On target</span><span><i class="dot a"></i>Close (labour within 2 points, counts at 75% or more, compliance 90%, cleanliness 2.5)</span><span><i class="dot r"></i>Off target</span><span><span class="na">n/a</span> source not wired yet</span><span><span class="fut">·</span> week not closed</span></div></div>';
+  h+='</table></div><div class="legend"><span><i class="dot g"></i>On target</span><span><i class="dot a"></i>Close (labour within 2 points, counts at 75% or more, compliance 90%; cleanliness has no amber, below 3 is red)</span><span><i class="dot r"></i>Off target</span><span><span class="na">n/a</span> source not wired yet</span><span><span class="fut">·</span> week not closed</span></div></div>';
   $("p-score").innerHTML=peopleScore()+tiles+h;
   $("runin").onchange=function(){SHOW_RUNIN=this.checked;renderScore();renderDeliv()};
   $("pweek").onchange=function(){PWEEK=this.value;renderScore()};
@@ -533,9 +533,7 @@ function vCell(c,wk){
   var x=vWeek(c,wk);return '<span class="cell">'+fmt(x[0])+(x[0]?' <small style="color:var(--ink-3);font-weight:600">£5 '+x[1]+'</small>':'')+'</span>';
 }
 function cleanScore(c,pk){
-  if(!D.clean||!D.clean[c]||!D.clean[c][pk])return null;
-  var a=D.clean[c][pk].lincoln||D.clean[c][pk];var keys=["foh","toilets","office","storage","entrance"];var s=0,n=0;
-  keys.forEach(function(k){if(a[k]!=null){s+=a[k];n++}});return n?s/n:null;
+  var r=D.clean&&D.clean.sites&&D.clean.sites[c];return r&&r[pk]!=null?r[pk]:null;
 }
 
 /* ---------- Deliveroo (08/10/2026): weekly RAG, weekly trend and daily ops, AM CC bands and colours ---------- */
@@ -669,35 +667,47 @@ function drooDaily(codes,showCard){
 }
 
 function renderClean(){
-  var codes=sitesIn(REGION,false),cur=curPeriod();
-  var A=[["foh","Front of house"],["toilets","Toilets"],["office","Office"],["storage","Storage"],["entrance","Entrance and outside"]];
+  var codes=sitesIn(REGION,false),cur=curPeriod(),C=D.clean;
+  var P=D.periods.filter(function(p){return p[0]!=="base"});
   var h='';
-  if(!D.clean)h+='<div class="banner"><span>🧽</span><div><b>Waiting on Lincoln\'s sheet.</b> Each site gets one score out of 5 a week, the average of five areas. Scores wire in automatically as soon as the spreadsheet lands. Kaitlin\'s own score sits next to Lincoln\'s so the two can be compared.</div></div>';
-  h+='<div class="card"><h2>Cleanliness · '+REGION+'</h2><div class="sub">Minimum 3 out of 5. Any area scoring 1 is fixed within 24 hours.</div><div class="tblwrap"><table class="t"><tr><th>Site</th><th>Area</th>';
-  D.periods.filter(function(p){return p[0]!=="base"&&p[0]!=="pre"}).forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+p[1]+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">L · K</span></th>'});
-  h+='</tr>';
+  if(!C)h+='<div class="banner"><span>🧽</span><div><b>Lincoln\'s sheet could not be read on this build.</b> Scores come back on the next build.</div></div>';
+  h+='<div class="card"><h2>Cleanliness scorecard · '+REGION+'</h2><div class="sub">One score out of 5 per site per week: the average of front of house, toilets, office, storage, and entrance and outside. Minimum 3; below 3 is red.'+(C?' Source: Lincoln\'s Weekly Cleanliness Scorecard ('+C.src+').':'')+'</div><div class="tblwrap"><table class="t"><tr><th>Site</th><th>Scored by</th>';
+  P.forEach(function(p){h+='<th class="c'+(p[0]===cur?' now':'')+'">'+(p[0]==="pre"?"Baseline":p[1])+'<br><span style="font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink-3)">w/c '+p[2].slice(8,10)+'/'+p[2].slice(5,7)+'</span></th>'});
+  h+='<th class="c">vs baseline</th></tr>';
+  var tot={};
   codes.forEach(function(c){
-    A.concat([["_site","Site score"]]).forEach(function(a,i){
-      h+='<tr'+(a[0]==="_site"?' style="background:#fcfaf7"':'')+'><td class="m">'+(i===0?D.sites_meta[c].name:'')+'</td><td'+(a[0]==="_site"?' style="font-weight:800"':'')+'>'+a[1]+'</td>';
-      D.periods.filter(function(p){return p[0]!=="base"&&p[0]!=="pre"}).forEach(function(p){
-        var rec=D.clean&&D.clean[c]&&D.clean[c][p[0]];
-        var L=null,K=null;
-        if(rec){
-          if(a[0]==="_site"){L=avg(rec.lincoln);K=avg(rec.kaitlin)}else{L=rec.lincoln&&rec.lincoln[a[0]];K=rec.kaitlin&&rec.kaitlin[a[0]]}
-        }
-        var started=p[2]<=D.today;
-        h+='<td class="c'+(p[0]===cur?' now':'')+'">'+(!started?'<span class="fut">·</span>':(sc(L)+' <span class="muted">·</span> '+sc(K)))+'</td>';
-      });
-      h+='</tr>';
+    var r=(C&&C.sites&&C.sites[c])||{},last=null;
+    h+='<tr><td class="sitecell" data-site="'+c+'"><b>'+D.sites_meta[c].name+'</b></td><td>'+(r.by||'<span class="na">n/a</span>')+'</td>';
+    P.forEach(function(p){
+      var v=r[p[0]];if(v!=null){last=v;(tot[p[0]]=tot[p[0]]||[]).push(v)}
+      var started=p[2]<=D.today;
+      h+='<td class="c'+(p[0]===cur?' now':'')+'">'+(v!=null?sc(v):(started?'<span class="na">not scored</span>':'<span class="fut">·</span>'))+'</td>';
     });
+    var d=(last!=null&&r.pre!=null&&last!==r.pre)?last-r.pre:null;
+    h+='<td class="c">'+(d==null?'<span class="muted">·</span>':'<b style="color:'+(d>0?'var(--green)':'var(--red)')+'">'+(d>0?'+':'')+d.toFixed(1)+'</b>')+'</td></tr>';
   });
-  h+='</table></div><div class="legend"><span>L Lincoln</span><span>K Kaitlin</span><span><i class="dot g"></i>3 or above</span><span><i class="dot r"></i>below 3</span></div></div>';
+  h+='<tr style="background:#fcfaf7"><td><b>Region</b></td><td class="muted">average</td>';
+  P.forEach(function(p){var a=tot[p[0]];h+='<td class="c'+(p[0]===cur?' now':'')+'">'+(a&&a.length?sc(a.reduce(function(x,y){return x+y},0)/a.length):'<span class="muted">·</span>')+'</td>'});
+  h+='<td></td></tr></table></div><div class="legend"><span><i class="dot g"></i>3 or above</span><span><i class="dot r"></i>below 3</span><span><span class="fut">·</span> week not started</span></div></div>';
+  var U=(C&&C.urgent)||[],open=U.filter(function(u){return !u.fixed}).length;
+  h+='<div class="card"><h2>Urgent actions</h2><div class="sub">Every area scoring 1, or anything urgent on a sweep. Fixed within 24 hours.</div>';
+  if(!U.length)h+='<div class="muted" style="padding:8px 0">Nothing logged.</div>';
+  else{
+    h+='<div style="margin:6px 0 10px"><span class="pill '+(open?'p-r':'p-g')+'">'+open+' open</span> <span class="pill p-n">'+(U.length-open)+' closed</span></div><div class="tblwrap"><table class="t"><tr><th>Flagged</th><th>Site</th><th>Area</th><th>Issue</th><th>Flagged by</th><th>Owner</th><th>Fixed</th><th class="c">Within 24h</th></tr>';
+    U.forEach(function(u){
+      var nm=D.sites_meta[u.site]?D.sites_meta[u.site].name:u.site,y=String(u.in24||'').toLowerCase();
+      h+='<tr><td>'+dm(u.flagged)+'</td><td>'+esc(nm)+'</td><td>'+esc(u.area)+'</td><td>'+esc(u.issue)+'</td><td>'+esc(u.by)+'</td><td>'+esc(u.owner)+'</td><td>'+(u.fixed?dm(u.fixed):'<span class="pill p-r">open</span>')+'</td><td class="c">'+(y.indexOf('y')===0?'<i class="dot g"></i>':(y.indexOf('n')===0?'<i class="dot r"></i>':'<span class="muted">·</span>'))+'</td></tr>';
+    });
+    h+='</table></div>';
+  }
+  h+='</div>';
   h+='<div class="card"><h2>Scoring scale</h2><div class="tblwrap"><table class="t" style="min-width:0"><tr><th class="c">Score</th><th>Standard</th><th>What it looks like</th></tr>'+
    [[5,"Spotless","Nothing to fix. Deep clean areas done. Ready for an inspection at any time."],[4,"Good","Clean throughout. One or two minor points, fixed on the spot."],[3,"Acceptable (minimum)","Clean wherever guests can see. A few points in the office or storage to fix the same day."],[2,"Below standard","Visible dirt or build up, or cleaning tasks clearly missed. Needs action today."],[1,"Unacceptable","A food safety risk, or dirt a guest would notice straight away. Fixed within 24 hours."]]
    .map(function(r){return '<tr><td class="c"><b>'+r[0]+'</b></td><td>'+r[1]+'</td><td>'+r[2]+'</td></tr>'}).join('')+'</table></div></div>';
   $("p-clean").innerHTML=h;
-  function avg(o){if(!o)return null;var s=0,n=0;for(var k in o)if(o[k]!=null){s+=o[k];n++}return n?s/n:null}
-  function sc(v){if(v==null)return '<span class="na">n/a</span>';return '<span class="cell"><span class="dot '+(v>=3?'g':'r')+'"></span>'+v.toFixed(1)+'</span>'}
+  function sc(v){return '<span class="cell"><span class="dot '+(v>=3?'g':'r')+'"></span>'+v.toFixed(1)+'</span>'}
+  function dm(s){return s?s.slice(8,10)+'/'+s.slice(5,7):'<span class="muted">·</span>'}
+  function esc(x){return x==null?'':String(x).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
 }
 
 function offer(o){var n=Number(o);if(o!==''&&!isNaN(n))return (n<1?Math.round(n*100):Math.round(n))+'% off';return String(o).replace(/ACTI VE/,'ACTIVE').replace(/EVENMTS/,'EVENTS')}

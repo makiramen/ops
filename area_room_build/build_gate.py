@@ -5,7 +5,7 @@ Inputs (same folder):
   sites_weekly.json   South site weekly KPIs (from the AM CC all_sites_wc_*.json + Deliveroo rag_ops)
   b2b.xlsx            MR South England B2B Master Tracker (Lincoln), downloaded live from Drive each build; this file is the fallback copy
   vouchers.json       fallback for RR voucher redemptions per site (nightly reads the RR sheet live)
-  cleanliness.json    optional, Lincoln's weekly walk round scores (not wired yet)
+  cleanliness.xlsx    Weekly Cleanliness Scorecard (Lincoln), downloaded live from Drive each build; this file is the fallback copy
   deliveroo_daily.json  optional, Deliveroo daily ops (copy of makiramen/ops data/deliveroo_daily.json, or env DROO_DAILY=path)
   gate_template.html  page shell
 Output:
@@ -15,7 +15,8 @@ Runs every morning on GitHub (.github/workflows/area-room.yml in makiramen/ops):
 AM CC daily tab lands if that is later. No Mac needed.
 
 Logins and the B2B tracker id never sit in the public repo. They come from the AREA_ROOM_CONFIG GitHub secret,
-{"users": {name: password}, "b2b_file_id": "..."}; on the Mac from area_room_config.json (or users.json) in this
+{"users": {name: password}, "b2b_file_id": "...", "clean_file_id": "..."}
+(or the AREA_ROOM_CLEAN_FILE_ID secret); on the Mac from area_room_config.json (or users.json) in this
 folder, which is never pushed.
 """
 import base64, datetime as dt, json, os, re, sys, collections
@@ -492,6 +493,97 @@ DROO_CODES = {"M17": "M17", "M18": "M18", "M19": "M19", "M20": "M20", "O2": "MAF
 DROO_FILE = os.environ.get("DROO_DAILY", os.path.join(HERE, "deliveroo_daily.json"))
 
 
+# ------------------------------------------------------------------ Cleanliness (12/10/2026)
+CLEAN_FILE_ID = os.environ.get("CLEAN_FILE_ID") or CONFIG.get("clean_file_id", "")   # Weekly Cleanliness Scorecard.xlsx (Lincoln); id kept out of the public repo
+CLEAN_SITE = {"soho": "M18", "maki nori": "MakiNori", "nori": "MakiNori", "shoreditch": "M19", "lakeside": "M17", "southampton": "M20", "o2": "O2", "the o2": "O2"}
+CLEAN_EXAMPLE = ("Blocked sink in ladies, standing water", "Soho duty manager")   # the sheet's own example row (row 5), never shown
+
+
+def _clean_workbook():
+    import io, urllib.request
+    if CLEAN_FILE_ID:
+        try:
+            url = "https://drive.usercontent.google.com/download?id=%s&export=download&confirm=t" % CLEAN_FILE_ID
+            with urllib.request.urlopen(url, timeout=60) as r:
+                raw = r.read()
+            if raw[:2] == b"PK":
+                open(os.path.join(HERE, "cleanliness.xlsx"), "wb").write(raw)
+                return openpyxl.load_workbook(io.BytesIO(raw), data_only=True), "Drive, live"
+            print("clean download was not an xlsx, using local copy")
+        except Exception as e:
+            print("clean download failed, using local copy:", e)
+    else:
+        print("no clean_file_id set, cleanliness from local copy if any")
+    p = os.path.join(HERE, "cleanliness.xlsx")
+    if os.path.exists(p):
+        return openpyxl.load_workbook(p, data_only=True), "local copy " + dt.datetime.fromtimestamp(os.path.getmtime(p)).strftime("%d/%m/%Y %H:%M")
+    return None, None
+
+
+def _ddmm(v):
+    if isinstance(v, dt.datetime):
+        return v.date().isoformat()
+    if isinstance(v, dt.date):
+        return v.isoformat()
+    m = re.match(r"(\d{1,2})/(\d{1,2})/(\d{2,4})", str(v or "").strip())
+    if m:
+        y = int(m.group(3)); y = y + 2000 if y < 100 else y
+        return dt.date(y, int(m.group(2)), int(m.group(1))).isoformat()
+    return None
+
+
+def build_clean():
+    """{sites: {code: {by, pre, w1..w4}}, urgent: [...], src}. Baseline column = the Pre-plan week (w/c 05/10)."""
+    wb, src = _clean_workbook()
+    if not wb:
+        return None
+    out = {"sites": {}, "urgent": [], "src": src}
+    ws = wb["Summary"] if "Summary" in wb.sheetnames else None
+    if ws:
+        cols = {}
+        for i, h in enumerate(next(ws.iter_rows(min_row=1, max_row=1, values_only=True))):
+            h = str(h or "").lower()
+            if h.startswith("baseline"):
+                cols[i] = "pre"
+            m = re.match(r"week\s*(\d)", h)
+            if m:
+                cols[i] = "w" + m.group(1)
+            if h.startswith("scored"):
+                cols[i] = "by"
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            code = CLEAN_SITE.get(str(row[0] or "").strip().lower())
+            if not code:
+                continue
+            rec = {}
+            for i, k in cols.items():
+                v = row[i] if i < len(row) else None
+                if k == "by":
+                    rec["by"] = str(v).strip() if v else None
+                elif isinstance(v, (int, float)):
+                    rec[k] = round(float(v), 2)
+            out["sites"][code] = rec
+    ws = next((wb[n] for n in wb.sheetnames if n.lower().startswith("urgent")), None)
+    if ws:
+        hdr = None
+        for row in ws.iter_rows(values_only=True):
+            if hdr is None:
+                if str(row[0] or "").lower().startswith("date flagged"):
+                    hdr = True
+                continue
+            if not any(row[:4]):
+                continue
+            r = (list(row) + [None] * 8)[:8]
+            if (r[3], r[5]) == CLEAN_EXAMPLE:
+                continue
+            out["urgent"].append({"flagged": _ddmm(r[0]), "site": CLEAN_SITE.get(str(r[1] or "").strip().lower(), str(r[1] or "")),
+                                  "area": r[2], "issue": r[3], "by": r[4], "owner": r[5], "fixed": _ddmm(r[6]),
+                                  "in24": str(r[7] or "").strip() or None})
+        out["urgent"].sort(key=lambda u: u["flagged"] or "", reverse=True)
+        out["urgent"].sort(key=lambda u: u["fixed"] is not None)   # open first, newest first
+    print("cleanliness:", src, len(out["sites"]), "sites,", len(out["urgent"]), "urgent")
+    return out
+
+
 def build_droo_daily():
     if not os.path.exists(DROO_FILE):
         return None
@@ -529,7 +621,7 @@ def build():
         "signups": build_signups(),
         "vouchers": build_vouchers(),
         "compliance": build_compliance(),
-        "clean": json.load(open(os.path.join(HERE, "cleanliness.json"))) if os.path.exists(os.path.join(HERE, "cleanliness.json")) else None,
+        "clean": build_clean(),
         "droo_daily": build_droo_daily(),
     }
     raw = re.sub(r"\s*[\u2013\u2014]\s*", ", ", json.dumps(payload, separators=(",", ":"), default=str, ensure_ascii=False)).encode()
