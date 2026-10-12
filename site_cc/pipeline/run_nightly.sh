@@ -30,6 +30,7 @@ for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open
   step python3 pipeline/pull_ppm.py      --site "$CODE" --data "$D"
   step python3 pipeline/pull_mapal.py    --site "$CODE" --data "$D"
   step python3 pipeline/pull_mapal_compliance.py --site "$CODE" --data "$D"
+  step python3 pipeline/pull_compliance.py --site "$CODE" --data "$D"
   [ -f "$ROOT/keyline.html" ] && step python3 pipeline/pull_keyline.py --site "$CODE" --data "$D" --page "$ROOT/keyline.html"
   [ -f "$ROOT/builders/broth/live_matrix.txt" ] && step python3 pipeline/pull_broth.py --site "$CODE" --data "$D" --matrix "$ROOT/builders/broth/live_matrix.txt"
   # Asana actions: creates tasks for new page actions, reads the site section back (needs secret ASANA_TOKEN)
