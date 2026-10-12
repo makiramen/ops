@@ -24,6 +24,9 @@ on:
   workflow_run:
     workflows: ['Daily tab (cash-up + reviews + Reviews Intelligence + Deliveroo daily ops)']
     types: [completed]
+  push:
+    branches: [main]
+    paths: ['data/all_sites_wc_*.json', 'data/weeks_index.json']   # 12/10/2026: the Monday opener landing a new week wakes the room
   schedule:
     - cron: '5 9,10,13 * * *'   # backup only; the reliable scheduler is the real clock
 
@@ -69,6 +72,13 @@ jobs:
           except Exception: rv_latest = ''
           m2 = re.search(r'reviews:(\S+)', open('area_room.html', encoding='utf-8').read(400)) if os.path.exists('area_room.html') else None
           carries_rv = m2.group(1) if m2 else ''
+          # 12/10/2026: a new AM CC week (Monday opener) must also rebuild the room, whatever the daily state
+          import glob
+          wk_files = sorted(glob.glob('data/all_sites_wc_*.json')); wk_latest = re.search(r'(\d{4}-\d{2}-\d{2})', wk_files[-1]).group(1) if wk_files else ''
+          m3 = re.search(r'weeks:(\S+)', open('area_room.html', encoding='utf-8').read(400)) if os.path.exists('area_room.html') else None
+          carries_wk = m3.group(1) if m3 else ''
+          if wk_latest > carries_wk:
+              say(f'New AM CC week {wk_latest} (room carries {carries_wk or "none"}), rebuilding'); print('go=1'); raise SystemExit
           if built == today.isoformat() and (carries >= D or carries >= latest) and carries_rv >= rv_latest:
               say(f'Already built today carrying {carries} (reviews {carries_rv}), skipping'); print('go=0'); raise SystemExit
           if latest < D:

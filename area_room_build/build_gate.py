@@ -553,7 +553,7 @@ def build():
     logo = base64.b64encode(open(os.path.join(HERE, "maki-logo1.png"), "rb").read()).decode()
     html = tpl.replace("__PURECRYPTO__", open(os.path.join(HERE, "purecrypto.js"), encoding="utf-8").read()).replace("__PAYLOAD__", json.dumps(blob)).replace("__LOGURL__", LOG_URL).replace("__LOGO__", logo)
     # marker the scheduler and the guard read: build day (UK) and the AM CC daily day it carries
-    html = html.replace("<!doctype html>", "<!doctype html>\n<!-- area-room-built: %s daily:%s reviews:%s -->" % (TODAY.isoformat(), (payload["daily"]["dates"] or ["none"])[0], payload["daily"].get("reviews_latest", "none")), 1)
+    html = html.replace("<!doctype html>", "<!doctype html>\n<!-- area-room-built: %s daily:%s reviews:%s weeks:%s -->" % (TODAY.isoformat(), (payload["daily"]["dates"] or ["none"])[0], payload["daily"].get("reviews_latest", "none"), (payload["sites"]["weeks_available"] or ["none"])[-1]), 1)
     out = os.environ.get("AREA_ROOM_OUT", os.path.join(HERE, "area_room.html"))
     open(out, "w", encoding="utf-8").write(html)
     if "--debug" in sys.argv:
