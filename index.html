@@ -6767,12 +6767,15 @@ function renderDailySpend(){
     {label:"Data as at", value: asAtNice},
     {label:"Spend · last filed day", value: fmtGBP(ydaySum)},
     {label:"Sites filed", value: `${filed} / ${d.sites.length}`},
-    {label:"Non-filers", value: d.sites.filter(r=>r.hc_wtd==null).map(r=>r.code).join(", ")||"—"}
+    {label:"Non-filers", value: d.sites.filter(r=>{ const c=(ECB_CLOSURES||{})[r.code]; const closed=!!(c&&c.from&&d.as_at>=c.from&&(!c.until||d.as_at<=c.until)); return r.hc_wtd==null && !closed; }).map(r=>r.code).join(", ")||"—"}
   ];
   document.getElementById("dailySpendStats").innerHTML = stats.map(x=>`<div class="tile-stat"><span>${x.label}</span><strong>${x.value}</strong></div>`).join("");
   document.querySelector("#dailySpendTbl tbody").innerHTML = view.map(r=>{
     const rag = ragWk(r);
-    const status = r.hc_wtd==null
+    const _cl = (ECB_CLOSURES||{})[r.code]; const _closed = !!(_cl && _cl.from && d.as_at>=_cl.from && (!_cl.until || d.as_at<=_cl.until));
+    const status = _closed
+      ? `<span style="color:var(--maki-muted);font-weight:600">Closed since ${new Date(_cl.from+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"})}</span>`
+      : r.hc_wtd==null
       ? `<span style="color:var(--rag-red);font-weight:600">${esc(r.note||"NOT FILED")}</span>`
       : `<span style="color:var(--rag-green);font-weight:600">&#10003; Filed</span>${r.note?`<span style="color:var(--maki-muted)"> · ${esc(r.note)}</span>`:""}`;
     return `<tr${r.hc_wtd==null?' class="nodata"':''}>
@@ -6989,7 +6992,26 @@ function renderBudget(){
     const wkBud = weekBudgetFor(sunISO, r.code, d);
     return { day, wtd, mtd, wkBud };
   };
+  // 12/10/2026: dated closures (builders/covers_accepted.json "closures", same source as the daily cash up).
+  // A site closed on the selected day is not burning budget, so it shows Closed, not a red pace, and drops out of budget and cap totals.
+  const closedOn = code => { const c=(ECB_CLOSURES||{})[code]; return (c && c.from && date>=c.from && (!c.until || date<=c.until)) ? c : null; };
   const siteRow = (r,c) => {
+    const cl = closedOn(r.code);
+    if(cl){
+      const since = new Date(cl.from+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+      const chip = `<span style="display:inline-block;padding:1px 9px;border-radius:99px;font-size:11px;font-weight:700;background:#f1f5f9;color:#64748b">Closed since ${since}</span>`;
+      return `<tr style="opacity:.75">
+      <td class="site-code">${r.code}</td>
+      ${lwfCell(lwfFor(lwMon,r.code))}
+      <td class="num">${c.day==null?"—":fmtGBP(c.day)}</td>
+      <td class="num">${fmtGBP(c.wtd)}</td>
+      <td class="num">—</td>
+      <td>${chip}</td>
+      <td class="num">${fmtGBP(c.mtd)}</td>
+      <td class="num">—</td>
+      <td>${chip}</td>
+    </tr>`;
+    }
     const wkPct = c.wkBud? c.wtd/c.wkBud*100 : null;
     const paceBase = r.cap? r.cap*dayOfMonth/30 : null;
     const pacePct = paceBase? c.mtd/paceBase*100 : null;
@@ -7035,23 +7057,23 @@ function renderBudget(){
       const t={day:0,wtd:0,mtd:0,wkB:0,cap:0,lwSpend:0,lwSales:0};
       grp.forEach(r=>{
         const c=calc(r);
-        t.day+=c.day||0; t.wtd+=c.wtd; t.mtd+=c.mtd; t.wkB+=c.wkBud||0; t.cap+=r.cap||0;
+        const _cl=closedOn(r.code); t.day+=c.day||0; t.wtd+=c.wtd; t.mtd+=c.mtd; t.wkB+=_cl?0:(c.wkBud||0); t.cap+=_cl?0:(r.cap||0);
         { const lv=lwfFor(lwMon,r.code); if(lv&&lv.sales){ t.lwSpend+=lv.sales*lv.pct/100; t.lwSales+=lv.sales; } }
-        gDay+=c.day||0; gWtd+=c.wtd; gMtd+=c.mtd; gWkB+=c.wkBud||0; gCap+=r.cap||0;
+        gDay+=c.day||0; gWtd+=c.wtd; gMtd+=c.mtd; gWkB+=closedOn(r.code)?0:(c.wkBud||0); gCap+=closedOn(r.code)?0:(r.cap||0);
         rows += siteRow(r,c);
       });
       rows += subRow(cl?cl.name:ck, t);
     });
     view.filter(r=>!CLUSTER_ORDER.includes(codeCluster[r.code])).forEach(r=>{
-      const c=calc(r); gDay+=c.day||0; gWtd+=c.wtd; gMtd+=c.mtd; gWkB+=c.wkBud||0; gCap+=r.cap||0; rows += siteRow(r,c);
+      const c=calc(r); gDay+=c.day||0; gWtd+=c.wtd; gMtd+=c.mtd; gWkB+=closedOn(r.code)?0:(c.wkBud||0); gCap+=closedOn(r.code)?0:(r.cap||0); rows += siteRow(r,c);
     });
   } else {
     const t={day:0,wtd:0,mtd:0,wkB:0,cap:0,lwSpend:0,lwSales:0};
     view.forEach(r=>{
       const c=calc(r);
-      t.day+=c.day||0; t.wtd+=c.wtd; t.mtd+=c.mtd; t.wkB+=c.wkBud||0; t.cap+=r.cap||0;
+      const _cl=closedOn(r.code); t.day+=c.day||0; t.wtd+=c.wtd; t.mtd+=c.mtd; t.wkB+=_cl?0:(c.wkBud||0); t.cap+=_cl?0:(r.cap||0);
       { const lv=lwfFor(lwMon,r.code); if(lv&&lv.sales){ t.lwSpend+=lv.sales*lv.pct/100; t.lwSales+=lv.sales; } }
-      gDay+=c.day||0; gWtd+=c.wtd; gMtd+=c.mtd; gWkB+=c.wkBud||0; gCap+=r.cap||0;
+      gDay+=c.day||0; gWtd+=c.wtd; gMtd+=c.mtd; gWkB+=closedOn(r.code)?0:(c.wkBud||0); gCap+=closedOn(r.code)?0:(r.cap||0);
       rows += siteRow(r,c);
     });
     if(rows) rows += subRow(DATA.clusters[effCluster]?DATA.clusters[effCluster].name:effCluster, t);
@@ -7101,7 +7123,8 @@ function renderMissedFilings(d, dates){
   roster.forEach(code=>{ for(const dt of dates){ const v=(d.ledger[dt]||{})[code]; if(v!=null && isFinite(v)){ firstFiled[code]=dt; break; } } });
   const missCount={};
   roster.forEach(code=>{ const start=firstFiled[code]||LIVE_FROM[code]||dates[0]; missCount[code]=dates.filter(dt=>dt>=start && ((d.ledger[dt]||{})[code]==null)).length; });
-  const liveRoster = roster.filter(code=>!(LIVE_FROM[code] && latest < LIVE_FROM[code]));   // a site not yet live is not a non-filer
+  const _isClosed = code => { const c=(ECB_CLOSURES||{})[code]; return !!(c && c.from && latest>=c.from && (!c.until || latest<=c.until)); };
+  const liveRoster = roster.filter(code=>!(LIVE_FROM[code] && latest < LIVE_FROM[code]) && !_isClosed(code));   // closed sites are not non-filers   // a site not yet live is not a non-filer
   const missedLatest = liveRoster.filter(code=>((d.ledger[latest]||{})[code]==null));
   const dLabel = new Date(latest+"T12:00:00").toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"});
   if(!missedLatest.length){
@@ -7131,8 +7154,14 @@ function ecbSetLive(state, txt){
   dot.style.background = state==="live" ? "var(--rag-green, #1F8A4C)" : state==="stale" ? "#D97706" : "#9CA3AF";
   t.textContent = txt;
 }
+// Dated site closures. Read live from builders/covers_accepted.json (one source with the daily cash up); this copy is the fallback.
+let ECB_CLOSURES = {"M21":{"from":"2026-10-11","until":null,"why":"Closed after a fire"}};
+async function ecbLoadClosures(){
+  try{ const r=await fetch("./builders/covers_accepted.json?cb="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); if(j && j.closures) ECB_CLOSURES=j.closures; } }catch(_e){}
+}
 async function ecbRefresh(){
   ecbSetLive("loading","Refreshing…");
+  await ecbLoadClosures();
   let snapshotLoaded=false;
   try{
     const r=await fetch("./data/ec_budget_snapshot.json",{cache:"no-store"});
