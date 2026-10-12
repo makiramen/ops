@@ -352,7 +352,15 @@ def main():
           f"{sum(s['window']['n'] for s in payload['sites'].values())} reviews, "
           f"{sum(s['window']['neg'] for s in payload['sites'].values())} negative")
     if g["no_reviews_in_window"]:
-        print(f"  WARN no reviews in window: {', '.join(g['no_reviews_in_window'])}")
+        # 12/10/2026: a site inside a dated closure (pull_daily_cashup.CLOSURES) has no reviews for a
+        # known reason. Keep it in the gap list, drop it from the WARN so the run report is not noise.
+        try:
+            import pull_daily_cashup as _pc
+            open_sites = [c for c in g["no_reviews_in_window"] if not _pc.closed_on(c, payload["date"])]
+        except Exception:
+            open_sites = list(g["no_reviews_in_window"])
+        if open_sites:
+            print(f"  WARN no reviews in window: {', '.join(open_sites)}")
     if g["unmapped_labels"]:
         print(f"  WARN unmapped labels (dropped): {g['unmapped_labels']}")
     if g["positives_capped"]:

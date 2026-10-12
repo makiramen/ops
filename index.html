@@ -6019,6 +6019,7 @@ const MEETING_RISK = {
     return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB',
       { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).replace(',', '');
   };
+  var ukDate = function (iso) { return iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : ''; };
   var shortDate = function (iso) {
     return new Date(iso + 'T12:00:00').toLocaleDateString('en-GB',
       { weekday: 'short', day: '2-digit', month: 'short' });
@@ -6237,7 +6238,11 @@ const MEETING_RISK = {
     elTitle.textContent = 'Daily Cash-Up — ' + longDate(p.date);
     var gen = p._generated_at || '';
     var pulled = gen ? gen.slice(8, 10) + '/' + gen.slice(5, 7) + ' ' + gen.slice(11, 16) : '—';
-    elSub.textContent = p.sites_reported + ' of ' + p.sites_expected + ' sites cashed up · '
+    // 12/10/2026: dated site closures (covers_accepted.json "closures") arrive in p.closed.
+    // A closed site is not expected that day, so say so rather than letting "19 of 19" read as a shrunk fleet.
+    var closedCodes = (p.closed || []).map(function (c) { return c.code; });
+    elSub.textContent = p.sites_reported + ' of ' + p.sites_expected + ' sites cashed up'
+      + (closedCodes.length ? ' (' + closedCodes.join(', ') + ' closed)' : '') + ' · '
       + 'FOH/BOH split recorded at ' + p.foh_boh_reported + ' · pulled ' + pulled;
 
     // The FOH/BOH shares are taken over the sites that ACTUALLY recorded a
@@ -6357,8 +6362,18 @@ const MEETING_RISK = {
       blocks += '<b class="sec">No cash-up received</b><ul style="margin:4px 0 10px;padding-left:18px;"><li>'
         + g.no_sales.map(esc).join(', ') + '</li></ul>';
     }
+    // REOPEN TRIPWIRE: a closed site that filed sales. It is included above; this makes sure nobody misses it.
+    if ((p.reopened_during_closure || []).length) {
+      blocks += '<b class="sec">Closed site filed sales (reopen tripwire)</b><ul style="margin:4px 0 10px;padding-left:18px;"><li>'
+        + p.reopened_during_closure.map(esc).join(', ')
+        + ' traded while marked closed. Included in the day. Close the window in builders/covers_accepted.json.</li></ul>';
+    }
     if (!blocks) blocks = '<li style="list-style:none;font-size:12px;color:var(--ink-2);">Every site cashed up, hit target and assigned every shift to a department. Nothing outstanding.</li>';
+    var closedNote = (p.closed || []).map(function (c) {
+      return esc(c.code) + ' closed from ' + esc(ukDate(c.from)) + (c.until ? ' to ' + esc(ukDate(c.until)) : '') + (c.why ? ' (' + esc(String(c.why).split('.')[0]) + ')' : '');
+    });
     elGaps.innerHTML = '<h3>Gaps to chase</h3>' + blocks
+      + (closedNote.length ? '<p style="font-size:11.5px;color:var(--ink-3);margin:8px 0 0;">Not expected today: ' + closedNote.join('; ') + '. Not a gap.</p>' : '')
       + '<p style="font-size:11.5px;color:var(--ink-3);margin:8px 0 0;">Owner for the assignment gap: Ziang Lin — every staff member to be assigned a position in the system each shift, so labour tracks automatically between FOH and BOH.</p>';
 
     elFoot.innerHTML =
