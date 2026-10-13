@@ -46,6 +46,17 @@ for r in main:
             if o.get(k) is None and m.get(k) is not None:o[k]=m[k]
     o['d']=dict(zip(W['dk'][1:],d[1:]))
     WK.append(o)
+# 13/10/2026 (Michael): the week in progress is a week on the page too ("this week"), built week to date from the daily cash up.
+# Sales, target, covers, SPH and wage % (sales weighted) are week to date; everything weekly only (food cost, hours, waste, league, efficiency) stays
+# n/a until the week closes. The last closed week is "last week" and keeps the KPI sheet and sign off.
+_mon=TODAY-datetime.timedelta(TODAY.weekday())
+if WK and _mon.isoformat()>WK[-1]['wc']:
+    _dl=JD('daily.json',{});_days=[k for k in sorted(_dl) if k>=_mon.isoformat() and k<=TODAY.isoformat()]
+    _s=sum((_dl[k][0] or 0) for k in _days);_t=sum((_dl[k][1] or 0) for k in _days);_c=sum((_dl[k][2] or 0) for k in _days)
+    _lw=[(k,_dl[k]) for k in _days if _dl[k][6] is not None and _dl[k][0]];_wg=round(sum(v[6]*v[0] for k,v in _lw)/sum(v[0] for k,v in _lw),2) if _lw else None
+    _o={k:None for k in K};_o.update(wc=_mon.isoformat(),sales=round(_s,2) if _days else None,target=round(_t,2) if _days else None,covers=_c if _days else None,
+        sph=round(_s/_c,2) if _c else None,wage=_wg,open=True,wtd=len(_days),d=dict(zip(W['dk'][1:],[None]*(len(W['dk'])-1))))
+    WK.append(_o)
 
 # GM/HC and AM meeting notes
 N=J('notes.json');out={}

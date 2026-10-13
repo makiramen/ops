@@ -622,8 +622,12 @@ var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8}
 var SITE=__SITE__,SCODE=SITE.code;
 /* Sites with no delivery (sites.json delivery:false, e.g. M7 SJQ): no delivery sales, Deliveroo rating, prep or Deliveroo tab. */
 var NODEL=SITE.has.delivery===false;
-var CUR=WK.length?WK[WK.length-1].wc:'__TODAY__';
-var TGTW=(function(){for(var i=WK.length-1;i>=0;i--)if(WK[i].target)return WK[i].target;return 0})(),YMAX=Math.ceil(Math.max(TGTW,Math.max.apply(null,WK.map(function(w){return w.sales||0}).concat([1])))*1.1/5000)*5000;
+/* 13/10/2026 (Michael): the week in progress is on the page as "this week" (week to date from the daily cash up) and opens by default; the last closed week is "last week" and keeps the KPI sheet and sign off. */
+var OPEN=WK.length&&WK[WK.length-1].open?WK[WK.length-1].wc:null,LAST=(function(){for(var i=WK.length-1;i>=0;i--)if(!WK[i].open)return WK[i].wc;return null})();
+var CUR=OPEN||LAST||'__TODAY__';
+function isOpen(){return !!OPEN&&S.wc===OPEN}function isLast(){return S.wc===LAST}
+function wkTag(wc){return wc===OPEN?' (this week)':wc===LAST?(OPEN?' (last week)':' (latest)'):''}
+var TGTW=(function(){for(var i=WK.length-1;i>=0;i--)if(WK[i].target&&!WK[i].open)return WK[i].target;return 0})(),YMAX=Math.ceil(Math.max(TGTW,Math.max.apply(null,WK.map(function(w){return w.sales||0}).concat([1])))*1.1/5000)*5000;
 var KEY='maki_site_cc_'+SCODE.toLowerCase()+'_v4';
 var ACTS=__ACTS__.map(function(a){a.s=a.s||'open';a.ev=a.ev||'';return a});
 var COMP=__COMP__,TEAM=__TEAM__,GAPS0=__GAPS__,MAINT=__MAINT__,PPM=__PPM__;
@@ -740,7 +744,7 @@ function renderHero(){
   function item(e,ic){return '<div class="hitem"><span class="ic ic-'+ic+'">'+(ic==='g'?'✓':ic==='r'?'✕':'!')+'</span><div><b>'+e.m.lab+': '+e.m.fmt(e.v)+'</b><small>'+(e.m.tl(w)?'Target '+e.m.tl(w)+(e.m.gap?' · '+e.m.gap(e.v,w):''):'')+(e.pv!=null?' · last week '+e.m.fmt(e.pv):'')+'</small></div></div>'}
   var tot=tg.length||1;
   $('#hero').innerHTML=
-   '<div style="display:flex;flex-direction:column;gap:14px"><div><div class="eyebrow">w/c '+dmy(S.wc)+(S.wc===CUR?' · latest week':'')+'</div><h2>'+head+'</h2><div class="sub">'+hit+' of '+tg.length+' targets hit, '+miss+' Red Light. '+bet+' of '+cmp.length+' targets better than last week.</div></div>'+
+   '<div style="display:flex;flex-direction:column;gap:14px"><div><div class="eyebrow">w/c '+dmy(S.wc)+(isOpen()?' · this week, in progress ('+(wk(S.wc).wtd||0)+' of 7 days cashed up)':isLast()?' · last week':'')+'</div><h2>'+head+'</h2><div class="sub">'+hit+' of '+tg.length+' targets hit, '+miss+' Red Light. '+bet+' of '+cmp.length+' targets better than last week.</div></div>'+
    '<div class="meter"><div class="lab"><span>Targets hit</span><b>'+hit+' / '+tg.length+'</b></div><div class="track" aria-hidden="true"><i style="width:'+(hit/tot*100)+'%;background:var(--green)"></i><i style="width:'+(close/tot*100)+'%;background:var(--amber)"></i><i style="width:'+(miss/tot*100)+'%;background:var(--red)"></i></div></div>'+
    '<div class="meter"><div class="lab"><span>Better than last week</span><b>'+bet+' / '+cmp.length+'</b></div><div class="track" aria-hidden="true"><i style="width:'+(bet/(cmp.length||1)*100)+'%;background:var(--maki-orange)"></i><i style="width:'+((cmp.length-bet-wor)/(cmp.length||1)*100)+'%;background:#7a6a5e"></i></div></div></div>'+
    '<div class="hlist"><h4>Working</h4>'+(wins.length?wins.map(function(e){return item(e,'g')}).join(''):'<div class="hitem">No targets hit this week.</div>')+'</div>'+
@@ -1079,28 +1083,29 @@ function fk(){return S.wc}
 function F(){if(!S.fields[fk()])S.fields[fk()]={};return S.fields[fk()]}
 function isCur(){return S.wc===CUR}
 function locked(){return S.sheet==='signed'}
-function canEdit(own){if(!isCur()||locked())return false;if(own==='GM')return S.role==='GM'&&S.sheet!=='submitted';if(own==='AM')return S.role==='AM';return true}
+function canEdit(own){if(!isLast()||locked())return false;if(own==='GM')return S.role==='GM'&&S.sheet!=='submitted';if(own==='AM')return S.role==='AM';return true}
 function reqEls(){return $$('[data-req]').concat(overBudget()?[$('#f_rota')]:[])}
 function renderFields(){
   var f=F();$$('[data-f]').forEach(function(el){el.value=f[el.dataset.f]||'';el.disabled=!canEdit(el.dataset.own)});
-  $('#so_gm').value=S.soName.GM||'';$('#so_am').value=S.soName.AM||'';$('#so_gm').disabled=!canEdit('GM');$('#so_am').disabled=!(isCur()&&S.role==='AM'&&!locked());
+  $('#so_gm').value=S.soName.GM||'';$('#so_am').value=S.soName.AM||'';$('#so_gm').disabled=!canEdit('GM');$('#so_am').disabled=!(isLast()&&S.role==='AM'&&!locked());
   $('#btnSuggest').disabled=!canEdit('AM');
   var req=reqEls(),done=req.filter(function(e){return (f[e.dataset.f]||'').trim()}).length;
-  $('#completion').innerHTML=isCur()?'<span class="pill '+(done===req.length?'p-g':'p-o')+'">Manual fields '+done+' / '+req.length+'</span>':'<span class="pill p-n">Past week: read-only</span>';
+  $('#completion').innerHTML=isLast()?'<span class="pill '+(done===req.length?'p-g':'p-o')+'">Manual fields '+done+' / '+req.length+'</span>':(isOpen()?'<span class="pill p-o">Opens when the week closes (Monday)</span>':'<span class="pill p-n">Past week: read-only</span>');
 }
 function renderSheet(){
-  var st=isCur()?S.sheet:'past';
-  var map={draft:['p-n','Not submitted','p-n','Not signed','KPI sheet: draft'],returned:['p-r','Returned by AM','p-n','Not signed','KPI sheet: returned'],submitted:['p-g','✓ Submitted','p-o','Awaiting sign-off','KPI sheet: with AM'],signed:['p-g','✓ Submitted','p-g','✓ Signed · locked','KPI sheet: signed'],past:['p-n','Before launch','p-n','Before launch','KPI sheet: before launch']}[st];
+  var st=isLast()?S.sheet:isOpen()?'open':'past';
+  var map={draft:['p-n','Not submitted','p-n','Not signed','KPI sheet: draft'],returned:['p-r','Returned by AM','p-n','Not signed','KPI sheet: returned'],submitted:['p-g','✓ Submitted','p-o','Awaiting sign-off','KPI sheet: with AM'],signed:['p-g','✓ Submitted','p-g','✓ Signed · locked','KPI sheet: signed'],past:['p-n','Before launch','p-n','Before launch','KPI sheet: before launch'],open:['p-n','Week in progress','p-n','Week in progress','KPI sheet: opens Monday']}[st];
   $('#gmState').className='pill '+map[0];$('#gmState').textContent=map[1];$('#amState').className='pill '+map[2];$('#amState').textContent=map[3];
-  $('#btnSubmit').disabled=!(isCur()&&S.role==='GM'&&(S.sheet==='draft'||S.sheet==='returned'));
-  $('#btnSign').disabled=$('#btnReturn').disabled=!(isCur()&&S.role==='AM'&&S.sheet==='submitted');
-  $('#btnReopen').hidden=!(isCur()&&S.role==='AM'&&S.sheet==='signed');$('#btnSign').hidden=$('#btnReturn').hidden=isCur()&&S.sheet==='signed';
+  $('#btnSubmit').disabled=!(isLast()&&S.role==='GM'&&(S.sheet==='draft'||S.sheet==='returned'));
+  $('#btnSign').disabled=$('#btnReturn').disabled=!(isLast()&&S.role==='AM'&&S.sheet==='submitted');
+  $('#btnReopen').hidden=!(isLast()&&S.role==='AM'&&S.sheet==='signed');$('#btnSign').hidden=$('#btnReturn').hidden=isLast()&&S.sheet==='signed';
   return map[4];
 }
 function renderBanner(){
   var b=$('#banner');b.className='banner';
   if(S.per==='month'){b.innerHTML='<span><b>Month view.</b> Read-only roll-up of the weekly sheets. A week counts in the month its Monday falls in.</span>';return}
-  if(!isCur()){b.innerHTML='<span><b>Viewing a past week (w/c '+dmy(S.wc)+').</b> Everything is read-only. Figures are the stored weekly build.</span><button type="button" class="btn sm" id="toLatest">Back to latest week</button>';return}
+  if(isOpen()){b.innerHTML='<span><b>This week, in progress.</b> Sales, target, covers, SPH and wage % are week to date from the daily cash up ('+(wk(S.wc).wtd||0)+' of 7 days). Food cost, hours, league and efficiency close on Monday. The KPI sheet for last week is still open.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last week</button>':'');return}
+  if(!isLast()){b.innerHTML='<span><b>Viewing a past week (w/c '+dmy(S.wc)+').</b> Everything is read-only. Figures are the stored weekly build.</span><button type="button" class="btn sm" id="toLatest">Back to latest week</button>';return}
   if(locked()){b.className='banner ok';b.innerHTML='<span><b>✓ Week signed off and locked.</b> Entries are read-only.</span>'+(S.role==='AM'?'<button type="button" class="btn sm" data-go="kpi">Reopen on the KPI Sheet</button>':'');return}
   if(S.role==='GM')b.innerHTML=S.sheet==='submitted'?'<span><b>GM view.</b> Sheet submitted, waiting for AM sign-off. You can still update actions.</span>':'<span><b>GM view.</b> Numbers are locked. Fill the manual fields, update actions, then submit the KPI Sheet.</span><button type="button" class="btn sm pri" data-go="kpi">Go to KPI Sheet</button>';
   else b.innerHTML=S.sheet==='submitted'?'<span><b>AM view.</b> The GM has submitted. Add improvement areas, then sign off or return it.</span><button type="button" class="btn sm pri" data-go="kpi">Review KPI Sheet</button>':'<span><b>AM view.</b> Waiting on the GM to submit this week. You can still close actions.</span>';
@@ -1109,7 +1114,7 @@ function renderChips(label){
   var mo=S.per==='month';
   if(mo){var a=agg(S.month);$('#siteChips').innerHTML='<span class="pill p-'+(a.red===0?'g':a.red===1?'a':'r')+'">Red Light weeks: '+a.red+' of '+a.ws.length+'</span><span class="pill p-o">'+mLabel(S.month)+'</span>';return}
   var w=wk(S.wc);
-  var trips=rlTrips(w);$('#siteChips').innerHTML='<span class="pill '+(trips.length?'p-r" title="'+trips.join(', ')+'">✕ Red Light: '+trips.length+' trigger'+(trips.length>1?'s':''):'p-g">✓ Red Light: clear')+'</span><span class="pill p-'+effRag(w.eff)+'">Efficiency '+w.eff+' / 100</span><span class="pill p-'+drooRag(w.d)+'">Deliveroo '+({g:'green',a:'amber',r:'red',n:'no data'})[drooRag(w.d)]+'</span><span class="pill p-o">'+label+'</span>';
+  var trips=rlTrips(w);$('#siteChips').innerHTML=(w.open?'<span class="pill p-o">Week in progress</span><span class="pill p-n">Efficiency closes Monday</span>':'<span class="pill '+(trips.length?'p-r" title="'+trips.join(', ')+'">✕ Red Light: '+trips.length+' trigger'+(trips.length>1?'s':''):'p-g">✓ Red Light: clear')+'</span><span class="pill p-'+effRag(w.eff)+'">Efficiency '+w.eff+' / 100</span>')+'<span class="pill p-'+drooRag(w.d)+'">Deliveroo '+({g:'green',a:'amber',r:'red',n:'no data'})[drooRag(w.d)]+'</span><span class="pill p-o">'+label+'</span>';
 }
 
 /* ---------- month ---------- */
@@ -1237,7 +1242,7 @@ function renderStandingWeek(){
   var curBig=cur.weeks?posTxt(cur.me)+' <span style="font-size:15px;color:var(--ink-2)">of '+TIERSITES.length+'</span>':'0 pts';
   var curSub=cur.weeks?TIER+' tier · '+cur.me.p+' pts after '+cur.weeks+' week'+(cur.weeks>1?'s':''):'New season, every site level on 0. First week counted: w/c '+dm(open)+', scored when it closes.';
   var lastLine='<span class="small">'+qLabel(pq)+' final: <b style="color:var(--ink)">'+(last.weeks?posTxt(last.me)+' of '+TIERSITES.length+', '+last.me.p+' pts':'n/a')+'</b>'+(last.weeks&&last.me.rank>1?', '+(last.rows[0].p-last.me.p)+' behind Maki '+last.rows[0].c.slice(1):last.weeks?' 🏆':'')+(pending&&live?' · w/c '+pend.map(dm).join(', ')+' still to close':'')+'</span>';
-  h+=standCard('Efficiency · whole group · week',e&&e[0]?ord(e[0])+' <span style="font-size:15px;color:var(--ink-2)">of '+e[1]+'</span>':'n/a','w/c '+dm(wc)+' · score '+(e?e[2]:'n/a')+' / 100'+(pe?' · last week '+ord(pe[0]):''),(pe&&e?mv(pe[0],e[0])+' <span class="small">vs last week</span>':'')+effLadder(EALL[wc]));
+  h+=isOpen()?standCard('Efficiency · whole group · week','<span style="font-size:22px">Closes Monday</span>','w/c '+dm(wc)+' in progress'+(pe?' · last week '+ord(pe[0])+' of '+pe[1]+', score '+pe[2]:''),''):standCard('Efficiency · whole group · week',e&&e[0]?ord(e[0])+' <span style="font-size:15px;color:var(--ink-2)">of '+e[1]+'</span>':'n/a','w/c '+dm(wc)+' · score '+(e?e[2]:'n/a')+' / 100'+(pe?' · last week '+ord(pe[0]):''),(pe&&e?mv(pe[0],e[0])+' <span class="small">vs last week</span>':'')+effLadder(EALL[wc]));
   var ym=wc.slice(0,7),mt=effMonth(ym,wc),pm=effMonth(prevYm(ym));
   var mr=mt?mt.filter(function(r){return r[0]===SCODE})[0]:null,mrank=mr?1+mt.filter(function(x){return x[1]>mr[1]}).length:null,pmr=pm?pm.filter(function(r){return r[0]===SCODE})[0]:null,pmrank=pmr?1+pm.filter(function(x){return x[1]>pmr[1]}).length:null;
   h+=standCard('Efficiency · whole group · '+mLabel(ym),mrank?ord(mrank)+' <span style="font-size:15px;color:var(--ink-2)">of '+mt.length+'</span>':'n/a','Average weekly score '+(mr?mr[1].toFixed(1):'n/a')+' over '+(mt?mt.w:0)+' week'+((mt&&mt.w>1)?'s':'')+(pmrank?' · '+mLabel(prevYm(ym))+' '+ord(pmrank):''),(pmrank&&mrank?mv(pmrank,mrank)+' <span class="small">vs '+mLabel(prevYm(ym))+'</span>':'')+effLadder(mt,1));
@@ -1546,7 +1551,7 @@ document.addEventListener('click',function(e){
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#repOvl').hidden)repClose()});
 $('#rvQ').addEventListener('input',function(e){rvS().q=e.target.value.trim();save();renderReviews()});
 ['#rvFrom','#rvTo'].forEach(function(k){$(k).addEventListener('change',function(){var v=rvS();v.from=$('#rvFrom').value;v.to=$('#rvTo').value;save();renderReviews()})});
-$('#weekSel').innerHTML=WK.slice().reverse().map(function(w){return '<option value="'+w.wc+'">w/c '+dmy(w.wc)+(w.wc===CUR?' (latest)':'')+'</option>'}).join('');
+$('#weekSel').innerHTML=WK.slice().reverse().map(function(w){return '<option value="'+w.wc+'">w/c '+dmy(w.wc)+wkTag(w.wc)+'</option>'}).join('');
 $('#monthSel').innerHTML=MONTHS.map(function(m){var a=agg(m);return '<option value="'+m+'">'+mLabel(m)+(a.ws.length<a.ms.length?' (in progress)':'')+'</option>'}).join('');
 $('#weekSel').addEventListener('change',function(e){S.wc=e.target.value;save();renderAll()});
 $('#monthSel').addEventListener('change',function(e){S.month=e.target.value;save();renderAll()});
