@@ -67,21 +67,27 @@
         "week_commencing": "2026-06-01"
       },
       "efficiency_score": {
-        "score": 84,
+        "score": 81,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
-          "sales": 20,
+          "sph": 15,
+          "sales": 10,
           "weekly_star": 10,
-          "food_var": 10
+          "food_var": 5
         },
         "components": {
           "sales": {
-            "weight": 20,
+            "weight": 10,
             "value": 88.35,
             "basis": "70% (100-13.86) + 30% (\u00a3gap -3244 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 72.72,
+            "basis": "\u00a320.86 vs \u00a322 tgt \u2014 level 81, WoW +0.34% \u2192 mom 53"
           },
           "food": {
             "weight": 30,
@@ -99,13 +105,13 @@
             "basis": "4.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
           },
           "food_var": {
-            "weight": 10,
+            "weight": 5,
             "value": 100,
             "basis": "4.80% inside \u00b15% band"
           }
         },
         "components_dropped": [],
-        "formula_ref": "control_centre efficiencyScore() v2 \u2014 each component hard-capped at 100; Lifetime\u2605 excluded"
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
         "status": "red",

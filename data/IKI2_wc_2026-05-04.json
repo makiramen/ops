@@ -67,30 +67,40 @@
         "week_commencing": "2026-05-04"
       },
       "efficiency_score": {
-        "score": 49,
+        "score": 52,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
-          "sales": 20,
+          "sph": 15,
+          "sales": 10,
           "weekly_star": 10,
-          "food_var": 10
+          "food_var": 5
         },
         "components": {
+          "sph": {
+            "weight": 15,
+            "value": 84.84,
+            "basis": "\u00a320.85 vs \u00a321 tgt \u2014 level 98, WoW +0.53% \u2192 mom 55"
+          },
           "food": {
             "weight": 30,
             "value": 48.8,
             "basis": "31.40% vs 25% baseline, -8/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 11.9,
+            "basis": "4.08\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
           }
         },
         "components_dropped": [
           "sales",
           "wage",
-          "weekly_star",
           "food_var"
         ],
-        "formula_ref": "control_centre efficiencyScore() v2 \u2014 each component hard-capped at 100; Lifetime\u2605 excluded"
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
         "status": "red",

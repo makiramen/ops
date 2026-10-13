@@ -67,17 +67,23 @@
         "week_commencing": "2026-05-25"
       },
       "efficiency_score": {
-        "score": 87,
+        "score": 85,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
-          "sales": 20,
+          "sph": 15,
+          "sales": 10,
           "weekly_star": 10,
-          "food_var": 10
+          "food_var": 5
         },
         "components": {
+          "sph": {
+            "weight": 15,
+            "value": 86.35,
+            "basis": "\u00a322.56 vs \u00a322 tgt \u2014 level 100, WoW +0.45% \u2192 mom 54"
+          },
           "food": {
             "weight": 30,
             "value": 77.6,
@@ -89,7 +95,7 @@
             "basis": "4.83\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
           },
           "food_var": {
-            "weight": 10,
+            "weight": 5,
             "value": 100,
             "basis": "-4.60% inside \u00b15% band"
           }
@@ -98,7 +104,7 @@
           "sales",
           "wage"
         ],
-        "formula_ref": "control_centre efficiencyScore() v2 \u2014 each component hard-capped at 100; Lifetime\u2605 excluded"
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
         "status": "red",
