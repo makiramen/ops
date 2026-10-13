@@ -98,6 +98,7 @@ MCOMP=JD('mcomp.json',{'w':[],'chain':[],'to':None,'src':'Mapal compliance not p
 CUTW=(datetime.date.fromisoformat(CUT)-datetime.timedelta(datetime.date.fromisoformat(CUT).weekday())).isoformat() if CUT!='0000' else '0000'
 MCOMP['w']=[w for w in MCOMP.get('w',[]) if str(w[0])>=CUTW];MCOMP['chain']=[c for c in MCOMP.get('chain',[]) if str(c[0])>=CUTW]
 SITE['asana']={'hook':(SJ['sources'].get('asana') or {}).get('webapp'),'on':bool(AS)}
+SITE['greply']=(SJ['sources'].get('google_reply') or {}).get('webapp')  # 13/10/2026: Apps Script that posts review replies to Google
 MT=JD('maint.json',{'pulled':None,'open':[],'done':[],'recap':{'items':[]},'n':{}});PPM=JD('ppm.json',{'asof':None,'items':[]})
 dly=J('daily.json');cov=J('covers.json');dlv=J('delivery.json') if SC.get('delivery',True)!=False else {'d':{}};
 DD=JD('droo_daily.json',{'src':'Deliveroo daily not pulled yet','to':None,'d':{},'w':{}}) if SC.get('delivery',True)!=False else {'src':'Deliveroo daily: no delivery at this site','to':None,'d':{},'w':{}}  # pull_deliveroo_daily.py

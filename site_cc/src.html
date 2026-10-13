@@ -178,7 +178,7 @@ textarea:disabled,input:disabled{background:var(--surface-2);color:var(--ink-2);
 .banner.ok{border-color:var(--green-ring);background:var(--green-bg);color:var(--green-ink)}
 ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
 .review{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
-details.review>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;outline:none}details.review>summary::-webkit-details-marker{display:none}details.review>summary .ch b::before{content:"▸";display:inline-block;width:14px;color:var(--maki-orange-deep);transition:transform .15s}details.review[open]>summary .ch b::before{transform:rotate(90deg)}details.review .peek{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted,#64748b);font-size:13px}details.review[open] .peek{display:none}details.review>summary:hover{color:var(--maki-orange-deep)}.rvtools{display:flex;gap:6px;align-items:center}
+details.review>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;outline:none}details.review>summary::-webkit-details-marker{display:none}details.review>summary .ch b::before{content:"▸";display:inline-block;width:14px;color:var(--maki-orange-deep);transition:transform .15s}details.review[open]>summary .ch b::before{transform:rotate(90deg)}details.review .peek{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted,#64748b);font-size:13px}details.review[open] .peek{display:none}details.review>summary:hover{color:var(--maki-orange-deep)}.rvtools{display:flex;gap:6px;align-items:center;flex-wrap:wrap}h3[data-fold]{cursor:pointer;user-select:none}h3[data-fold]::before{content:"▾";display:inline-block;width:16px;color:var(--maki-orange-deep);transition:transform .15s}.card.folded h3[data-fold]::before{transform:rotate(-90deg)}.card.folded>*:not(.ch){display:none!important}.grep{border-top:1px dashed var(--line);padding-top:8px;display:grid;gap:6px}.grep textarea{min-height:88px}.grep .row2{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.grep .small{margin-left:auto}
 .signs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .negs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .negs div{display:flex;justify-content:space-between;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
@@ -362,9 +362,9 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
     </div>
     <div class="card" id="rooCard"><div class="ch"><h3>Deliveroo ops</h3><span class="tag t-auto">AUTO</span></div><div id="rooOps"></div></div>
     <div class="grid">
-      <div class="card s7"><div class="ch"><h3 id="rvHead">Google reviews this week</h3><div class="rvtools"><button type="button" class="btn sm" data-rvall="1" data-rvbox="rvList">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rvList">Collapse all</button><span class="tag t-auto">AUTO</span></div></div><div id="rvList" style="display:flex;flex-direction:column;gap:8px"></div><div class="small" id="rvFoot"></div></div>
-      <div class="card s5"><div class="ch"><h3 id="rpHead">Needs a reply</h3><div class="rvtools"><button type="button" class="btn sm" data-rvall="1" data-rvbox="rpList">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rpList">Collapse all</button><span class="tag t-man">MANUAL · GM</span></div></div><div id="rpList" style="display:flex;flex-direction:column;gap:8px"></div>
-        <div class="small">Every review with a complaint (3★ or below, or a complaint inside a 4 to 5★) until marked replied. Last 4 weeks. Google has no reply column in the source yet, so the GM marks it here and it syncs through the outbox.</div></div>
+      <div class="card s7"><div class="ch"><h3 id="rvHead" data-fold="rv">Google reviews this week</h3><div class="rvtools"><button type="button" class="btn sm" data-rvall="1" data-rvbox="rvList">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rvList">Collapse all</button><span class="tag t-auto">AUTO</span></div></div><div id="rvList" style="display:flex;flex-direction:column;gap:8px"></div><div class="small" id="rvFoot"></div></div>
+      <div class="card s5"><div class="ch"><h3 id="rpHead" data-fold="rp">Needs a reply</h3><div class="rvtools"><button type="button" class="btn sm" data-rvall="1" data-rvbox="rpList">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rpList">Collapse all</button><span class="tag t-man">MANUAL · GM</span></div></div><div id="rpList" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div class="small">Every review with a complaint (3★ or below, or a complaint inside a 4 to 5★) until marked replied. Last 4 weeks. Reply on Google posts the reply publicly through the restaurant's Google Business Profile and marks it replied; Mark replied is for replies made elsewhere.</div></div>
     </div>
     <div class="card">
       <div class="ch"><h3>Broth quality · daily check</h3><span class="tag t-auto">MAPAL</span></div>
@@ -631,7 +631,7 @@ var TODAY='__TODAY__';
 var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
 /* 12/10/2026 (Michael): the page always opens on the latest week and month, never the week saved from the last visit */S.per="week";S.wc=CUR;S.month=CUR.slice(0,7);
-['repl','broth','eotm','soName','rvOpen'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
+['repl','broth','eotm','soName','rvOpen','fold'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});if(S.fold.rv==null)S.fold.rv=true;  /* 13/10/2026: first visit, Google reviews panel folded, Needs a reply open; click the heading to toggle */S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
 var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
@@ -912,7 +912,17 @@ function revCard(r,reply){var iss=issueSet(r),rp=S.repl[r.id];
   return '<details class="review"'+(S.rvOpen&&S.rvOpen[r.id]?' open':'')+' data-rvid="'+r.id+'"><summary><div class="ch"><b>'+stars(r.s)+' · '+dayName(r.d)+' '+dm(r.d)+'</b><span class="small">'+esc(r.a)+'</span></div><div class="peek">'+(r.t?esc(r.t):'Star rating only, no comment')+'</div></summary>'+
     '<div>'+(r.t?esc(r.t):'<span class="ph">Star rating only, no comment</span>')+'</div>'+
     ((iss.length||reply)?'<div class="chips">'+iss.map(function(l){return '<span class="pill p-n">'+esc(l)+'</span>'}).join('')+
-    (reply?(rp?'<span class="pill p-g">✓ Replied '+dm(rp)+'</span>':'<span class="pill p-o">Reply: not yet</span><button type="button" class="btn sm" data-rep="'+r.id+'">Mark replied</button>'):'')+'</div>':'')+'</details>'}
+    (reply?(rp?'<span class="pill p-g">✓ Replied '+dm(rp)+(S.gdone&&S.gdone[r.id]?' on Google':'')+'</span>':'<span class="pill p-o">Reply: not yet</span>'+(GRH&&r.g?'<button type="button" class="btn sm pri" data-grep="'+r.id+'">Reply on Google</button>':'')+'<button type="button" class="btn sm" data-rep="'+r.id+'">Mark replied</button>'):'')+'</div>':'')+
+    (reply&&!rp&&GRH&&r.g&&S.gopen===r.id?grepForm(r):'')+'</details>'}
+/* 13/10/2026 (Michael): reply to a Google review from the page. The GoogleReply Apps Script (Michael's Google account, Business Profile API) posts it; the page then marks the review replied. */
+var GRH=SITE.greply||null;
+function grepDraft(r){var nm=r.a&&r.a!=='Anonymous'?r.a.split(' ')[0]:'there';return r.s>=4?'Hi '+nm+', thank you for taking the time to leave us a review. We are glad you enjoyed your visit and we hope to welcome you back to Maki & Ramen '+SITE.name+' soon.':'Hi '+nm+', thank you for your feedback and we are sorry your visit did not meet the standard we aim for. We have shared this with the team at '+SITE.name+' and would like to put it right. Please email us at '+(SITE.email||'hello@makiramen.com')+' so we can look into it properly.'}
+function grepForm(r){var d=S.gdraft&&S.gdraft[r.id]!=null?S.gdraft[r.id]:grepDraft(r);return '<div class="grep" data-grepbox="'+r.id+'"><textarea id="gr_'+r.id+'" aria-label="Reply" maxlength="4000">'+esc(d)+'</textarea><div class="row2"><button type="button" class="btn sm pri" data-gsend="'+r.id+'">Post to Google</button><button type="button" class="btn sm" data-gcancel="'+r.id+'">Cancel</button><span class="small">Posts publicly under the restaurant\'s name</span></div></div>'}
+function grepSend(r,text){var btn=document.querySelector('[data-gsend="'+r.id+'"]');if(btn){btn.disabled=true;btn.textContent='Posting...'}
+  fetch(GRH,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({op:'reply',site:SCODE,rid:r.g[0],loc:r.g[1],text:text,by:S.soName.GM||'GM'})}).then(function(x){return x.json()}).then(function(x){
+    if(!x||!x.ok){if(btn){btn.disabled=false;btn.textContent='Post to Google'}return toast('Google said no: '+((x&&x.error)||'error'))}
+    S.repl[r.id]=nowIso();S.gdone=S.gdone||{};S.gdone[r.id]=1;S.gopen=null;if(S.gdraft)delete S.gdraft[r.id];queue('replied',{id:r.id,google:1});save();renderDaily();renderOb();toast('Reply posted to Google')
+  }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Post to Google'}toast('No signal, reply not posted. Try again')})}
 function brothSt(dt){if(!BROTH.from||dt<BROTH.from||dt>BROTH.to)return 'n';var b=BROTH.d[dt];if(!b||b[0]==null||b[1]==null)return 'm';var t=BROTH.spec.tk,p=BROTH.spec.tp;return b[0]>=t[0]&&b[0]<=t[1]&&b[1]>=p[0]&&b[1]<=p[1]?'g':'r'}
 var BST={g:['p-g','✓ In spec'],r:['p-r','✕ Out of spec'],m:['p-r','✕ Missed'],n:['p-n','n/a']};
 function rooCells(dt){var q=DD[dt];if(!q)return '<td class="r ph">·</td><td class="r ph">·</td><td class="ph">·</td>';
@@ -932,7 +942,7 @@ function renderRooOps(anchor){var el=$('#rooOps');if(!el)return;var days=[anchor
   h+='<tr class="sechd"><td colspan="4">Weekly, as Deliveroo reports it</td></tr>'+wrow('Week to date · w/c '+dm(wc),cur)+wrow('Last week · w/c '+dm(pw),prv);
   h+='</tbody></table></div><div class="small" style="margin-top:6px">Source: '+esc(DROO.src||'')+(DROO.to?', latest day '+dmy(DROO.to):'')+'. Each morning drop\'s figures sit on that day; a blank rider wait is 0. Days before the feed started show a dot. The weekly figures are on the weekly tab too.</div>';
   el.innerHTML=h}
-function renderDaily(){
+function renderDaily(){renderFold();
   var lastDay=Object.keys(DAY).sort().pop(),anchor=isCur()?(lastDay>addD(S.wc,6)?lastDay:addD(S.wc,6)):addD(S.wc,6);
   var cur=[anchor],prv=[];for(var j=7;j>=1;j--)prv.push(addD(anchor,-j));
   var f=function(n){return n==null?'<span class="ph">·</span>':'£'+Math.round(n).toLocaleString('en-GB')},pc=function(n,s){return n==null||!s?'<span class="ph">·</span>':(n/s*100).toFixed(1)+'%'},sp=function(a,b){return a==null||b==null?null:a+b};
@@ -1530,6 +1540,7 @@ document.addEventListener('click',function(e){
   if(e.target.closest('[data-repx]')||e.target.id==='repOvl'){repClose();e.stopImmediatePropagation();return}
   var z=e.target.closest('[data-zoom]');if(z){z.classList.toggle('big');e.stopImmediatePropagation();return}
   var m=e.target.closest('[data-mrep]');if(m){var q=m.dataset.mrep.split('|');repOpen(+q[0],q.slice(1).join('|'));e.stopImmediatePropagation();return}
+  var fh=e.target.closest('h3[data-fold]');if(fh){S.fold[fh.dataset.fold]=!S.fold[fh.dataset.fold];save();renderFold();e.stopImmediatePropagation();return}
   var ra=e.target.closest('[data-rvall]');if(ra){var box=document.getElementById(ra.dataset.rvbox);if(box)box.querySelectorAll('details.review').forEach(function(d){d.open=ra.dataset.rvall==='1'});e.stopImmediatePropagation();return}
   if(rvClick(e))e.stopImmediatePropagation()});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#repOvl').hidden)repClose()});
@@ -1553,6 +1564,9 @@ document.addEventListener('click',function(e){
   if(el.id==='mPrev'){S.month=MONTHS[MONTHS.indexOf(S.month)+1];save();return renderAll()}
   if(el.id==='mNext'){S.month=MONTHS[MONTHS.indexOf(S.month)-1];save();return renderAll()}
   if(ds.fl){S.filter=ds.fl;save();return renderActs()}
+  if(ds.grep){S.gopen=S.gopen===ds.grep?null:ds.grep;S.rvOpen=S.rvOpen||{};S.rvOpen[ds.grep]=1;save();renderDaily();var ta=document.getElementById('gr_'+ds.grep);if(ta)ta.focus();return}
+  if(ds.gcancel){S.gopen=null;save();return renderDaily()}
+  if(ds.gsend){var gr=REV.r.filter(function(x){return x.id===ds.gsend})[0],gt=(document.getElementById('gr_'+ds.gsend)||{}).value||'';gt=gt.replace(/[\u2013\u2014]/g,', ').trim();if(!gr||!gt)return toast('Write the reply first');S.gdraft=S.gdraft||{};S.gdraft[gr.id]=gt;save();return grepSend(gr,gt)}
   if(ds.rep){S.repl[ds.rep]=nowIso();queue('replied',{id:ds.rep});save();renderDaily();renderOb();return toast('Marked replied')}
   if(ds.gcov){var gx=S.gaps.filter(function(x){return x.id==ds.gcov})[0];gx.cov=gx.cov==='full'?'none':gx.cov==='part'?'full':'part';queue('gapcover',{id:gx.id,cov:gx.cov});save();renderGaps();renderOb();return}
   if(ds.done){var a=S.acts.filter(function(x){return x.id==ds.done})[0],inp=document.getElementById('ev'+a.id),ev=inp.value.trim();if(!ev){inp.focus();return toast('Add evidence before marking done')}a.ev=ev;a.s='done';if(a.gid&&ASH){asanaSend({op:'done',site:SCODE,gid:a.gid,id:a.id,ev:ev,by:S.role});renderActs();renderOb();return toast('Completing in Asana')}queue('done',{id:a.id,t:a.t,ev:ev});save();renderActs();renderOb();return toast('Sent to the AM to close')}
@@ -1569,6 +1583,7 @@ $('#btnSuggest').onclick=function(){var w=wk(S.wc),ev=evaluate(w,prevW(S.wc)).fi
   var t=ev.slice(0,3).map(function(e,i){return (i+1)+'. '+e.m.lab+' '+e.m.fmt(e.v).replace(/<[^>]+>/g,'')+' vs target '+e.m.tl(w).replace(/<[^>]+>/g,'')+': [action, owner, date]'}).join('\n');
   $('#f_improve').value=t;F().improve=t;save();renderFields();toast('Pre-filled. Add the actions')};
 $('#btnAsana').onclick=function(){var c=$('#obCard');c.hidden=!c.hidden;renderOb()};
+function renderFold(){$$('h3[data-fold]').forEach(function(h){var c=h.closest('.card');if(c)c.classList.toggle('folded',!!S.fold[h.dataset.fold])})}
 function renderOb(){var n=S.ob.length+(S.pend||[]).length;$('#btnAsana').textContent='Sync outbox'+(n?' ('+n+')':'');$('#obMeta').textContent=S.ob.length+' change'+(S.ob.length===1?'':'s')+' waiting';$('#obTxt').value=S.ob.length?JSON.stringify({site:SCODE,ob:S.ob}):'Nothing waiting.'}
 $('#obCopy').onclick=function(){var t=$('#obTxt');t.select();try{navigator.clipboard.writeText(t.value).then(function(){toast('Copied')},function(){document.execCommand('copy');toast('Copied')})}catch(e){document.execCommand('copy');toast('Copied')}};
 $('#obClear').onclick=function(){if(!S.ob.length)return;S.ob=[];save();renderOb();toast('Outbox cleared')};

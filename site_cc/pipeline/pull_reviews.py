@@ -3,7 +3,7 @@ The sheet is filled nightly by MakiManc/google-reviews (03:00 UTC). Columns: A r
 G createTime, K Site (label), L Date (dd/mm/yyyy text, the local day; falls back to createTime).
 Merge rule: reviews already in reviews.json keep their labels (AM CC Reviews Intelligence, Claude checked); only the star rating is refreshed.
 New reviews are labelled by the same keyword rules (reviews_rules.py, reviews_taxonomy.json). Dedupe on reviewId.
-No reply column exists in the sheet, so "Needs a reply" still clears from the page outbox only.
+No reply column exists in the sheet. Each review carries g=[reviewId, locationId] (13/10/2026) so the page can post a reply to Google through the GoogleReply Apps Script.
 Keeps the last good file on any failure. --check reports and writes nothing.
 Usage: pull_reviews.py --site M14 --data DIR [--check] [--csv raw_data_export.csv]"""
 import argparse,csv,datetime,json,os,re,sys
@@ -49,11 +49,12 @@ for row in raw[1:]:
     hit=have.get(rid) or byk.get((d,nm(row[3])))
     if hit:
         if hit['s']!=s:hit['s']=s;restar+=1
+        if row[1]:hit['g']=[row[0],row[1]]  # 13/10/2026: full Google reviewId + locationId, so the page can reply through the GoogleReply web app
         continue
     text,_,_=RR.norm_text(row[5]);cl=RR.classify({'t':row[5],'s':s},TAX)
     wc=(datetime.date.fromisoformat(d)-datetime.timedelta(datetime.date.fromisoformat(d).weekday())).isoformat()
     new.append({'id':rid,'d':d,'wc':wc,'s':s,'a':nm(row[3]),'t':clean(text),'i':[[x['cat'],x['sub']] for x in cl.get('issues',[])],
-                'ds':cl.get('dishes',[]),'lab':'rules'})
+                'ds':cl.get('dishes',[]),'lab':'rules','g':[row[0],row[1]] if row[1] else None})
 if latest is None:sys.exit(f'no rows for site label {LABEL!r}; last good file kept')
 allr=sorted(list(have.values())+new,key=lambda x:(x['d'],x['id']))
 print(f'reviews {A.site}: {len(seen)} source rows, {len(new)} new, {restar} star changes, latest {latest}')

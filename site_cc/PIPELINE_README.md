@@ -37,6 +37,8 @@ Meeting notes (AM: Gmail task; GM/HC: folder), Mapal hygiene, intangibles and fo
 ## 13/10/2026 (Michael)
 - Daily tab FOH % and BOH % are now the split of the day's labour cost between the two departments (FOH + BOH = 100%), not each department's wages as a % of sales. Labour % unchanged. The vs last week row shows the share shift as a neutral change.
 - Review cards (Daily tab and Reviews tab) are collapsible: click a card to expand or collapse it, Expand all / Collapse all per panel, open state remembered per review in the page cache.
+- Daily tab panels "Google reviews" and "Needs a reply" fold on a click of the heading (first visit: reviews folded, Needs a reply open; remembered).
+- Reply to Google from the page: GoogleReply.gs (Apps Script in Michael's account, GCP project maki-reviews, scope business.manage). pull_reviews.py now stores g=[reviewId, locationId] per review; the page shows "Reply on Google" on Needs a reply cards once sources.google_reply.webapp is set in sites.json and the feed has refreshed. A drafted reply is prefilled (thank you for 4 to 5 star, apology plus email for 3 star or below), editable before posting. On success the review is marked replied "on Google".
 
 ## Usage beacon (13/10/2026)
 Every published page carries `builders/usage_beacon.py`'s snippet: each open posts a "viewed" row (Who = page name, e.g. "Site CC M14") to the Area Room log sheet through the gate's Apps Script web app. One row per browser per page per 30 minutes; local copies and embedded frames never log. `build.py`, `build_index.py` and `keyline_cloud_run.py` inject it themselves; any page written outside a builder gets `python3 builders/add_beacon.py <file> "<Page name>"` once. Standing rule: a new page is not live until it carries the beacon.
