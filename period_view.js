@@ -404,7 +404,9 @@
     var lines = Object.keys(t.cats).sort(function (a, b2) { return t.cats[b2] - t.cats[a]; })
       .map(function (k) { return '<div><span>' + esc(THEME_LABEL[k] || k) + '</span><b>' + t.cats[k] + '</b></div>'; }).join('');
     if (t.hyg) lines += '<div><span class="pv-r">Hygiene</span><b class="pv-r">' + t.hyg + '</b></div>';
-    return '<td class="txt' + cls + ' pv-x"><span class="pv-sum">' + t.n + '</span><span class="pv-wow ' + (t.hyg ? 'down' : 'na') + '">' + (nReviews ? 'of ' + int(nReviews) + ' reviews' : '') + (t.hyg ? ' · ' + t.hyg + ' hygiene' : '') + '</span><div class="pv-detail">' + lines + '</div></td>';
+    var topK = Object.keys(t.cats).sort(function (a, b2) { return t.cats[b2] - t.cats[a]; })[0];
+    var topTxt = topK ? esc(THEME_LABEL[topK] || topK) + ' ' + t.cats[topK] : '';
+    return '<td class="txt' + cls + ' pv-x"><span class="pv-sum">' + t.n + '</span><span class="pv-wow ' + (b === 'red' || t.hyg ? 'down' : 'na') + '">' + (nReviews ? 'of ' + int(nReviews) + ' · ' : '') + topTxt + (t.hyg ? ' · ' + t.hyg + ' hygiene' : '') + '</span><div class="pv-detail">' + lines + '</div></td>';
   }
 
   var ALL_LOADED = false, DRAW_TOKEN = 0;
