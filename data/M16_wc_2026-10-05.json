@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-12",
+  "generated_at": "2026-10-13",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-10-05 \u2013 2026-10-11",
@@ -67,14 +67,14 @@
           "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": 3.0,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-10-05"
       },
       "efficiency_score": {
-        "score": 48,
+        "score": 52,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -108,13 +108,16 @@
           },
           "weekly_star": {
             "weight": 10,
-            "value": 67.67,
-            "basis": "4.47\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "value": 74.53,
+            "basis": "4.52\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "3.00% inside \u00b15% band"
           }
         },
-        "components_dropped": [
-          "food_var"
-        ],
+        "components_dropped": [],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
@@ -125,14 +128,14 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.4737,
-        "new_reviews": 19,
+        "week_avg_rating": 4.5217,
+        "new_reviews": 23,
         "star_breakdown": {
           "1": 1,
           "2": 1,
           "3": 1,
-          "4": 1,
-          "5": 15
+          "4": 2,
+          "5": 18
         },
         "negatives": 3,
         "negative_reviews": [
@@ -162,7 +165,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
@@ -186,7 +189,6 @@
         "partial": false,
         "sales": 5662.92,
         "orders": 230,
-        "orders_estimated": true,
         "aov": 24.62,
         "new_customers": 106,
         "rating": 4.82,
@@ -195,7 +197,7 @@
         "rejection_pct": 0.0,
         "inaccuracy_pct": 2.1,
         "rider_wait_5min_pct": 4.8,
-        "conversion_pct": null,
+        "conversion_pct": 9.3,
         "wow": {
           "gmv_pct": null,
           "orders_abs": null,
@@ -204,12 +206,18 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
         "busy_mode_pct": 32.0
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week"
-      ]
+      "gaps": [],
+      "notes": {
+        "issues": [],
+        "actions": [],
+        "carryover": [],
+        "empty": true,
+        "docId": "",
+        "source": "No KPI meeting notes received for this site yet for w/c 05/10 (Inka / Lincoln clusters: Tuesday meetings, notes land via the AM CC notes inbox). Declared, not missing."
+      }
     }
   }
 }

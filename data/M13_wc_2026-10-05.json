@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-12",
+  "generated_at": "2026-10-13",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-10-05 \u2013 2026-10-11",
@@ -74,8 +74,8 @@
         "week_commencing": "2026-10-05"
       },
       "efficiency_score": {
-        "score": 95,
-        "rag": "green",
+        "score": 90,
+        "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
           "wage": 30,
@@ -108,8 +108,8 @@
           },
           "weekly_star": {
             "weight": 10,
-            "value": 100.0,
-            "basis": "5.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "value": 53.57,
+            "basis": "4.38\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
           },
           "food_var": {
             "weight": 5,
@@ -126,22 +126,37 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 5,
-        "new_reviews": 6,
+        "week_avg_rating": 4.375,
+        "new_reviews": 8,
         "star_breakdown": {
           "1": 0,
-          "2": 0,
-          "3": 0,
+          "2": 1,
+          "3": 1,
           "4": 0,
           "5": 6
         },
-        "negatives": 0,
-        "negative_reviews": [],
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "kristina barkauskyte",
+            "text": "Lovely Food, but Disappointing Customer Service\n\nToday, we visited Maki & Ramen with friends. This wasn\u2019t our first visit, and there\u2019s a reason we decided to come back! The food was absolutely lovely, as always, and the atmosphere was really nice too. Unfortunately, our experience took a disappointing turn when it came time to pay.\n\nWhen we approached the till and asked about our bill, the gentleman serving us already seemed visibly unhappy and irritated. However, things got even worse when we politely asked if we could pay separately. His reaction was completely unnecessary. He threw the card machine aside and looked at us as though we had asked for our food for free!\n\nWe were honestly shocked by his attitude. Asking to split a bill is a perfectly normal request, and no customer should be made to feel uncomfortable or unwelcome for simply asking.\n\nThankfully, another gentleman came over, and he was the complete opposite \u2014 very friendly, polite and happy to help us with exactly what we had asked for. We really appreciated his kindness and professionalism.\n\nUnfortunately, despite the delicious food and lovely atmosphere, the behaviour of the first staff member left a very unpleasant feeling and spoiled what had otherwise been a great visit.\n\nWe genuinely enjoy coming to Maki & Ramen, which makes this experience even more disappointing. Good food brings customers in, but good customer service is what makes them want to return.\n\nHopefully, this is something management will take seriously, as no customer deserves to be treated that way.",
+            "date": "2026-10-11",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "James Callander",
+            "text": "More like a chain than a premium restaurant.Noodles had a weird consistency and only a few pieces of chicken with a bucketful of noodles. Received meals at different times. Staff were attentive even though busy. The flavours of my broth were alright but too many noodles. Underwhelming.",
+            "date": "2026-10-11",
+            "url": null
+          }
+        ],
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
@@ -180,7 +195,6 @@
         "partial": false,
         "sales": 7787.18,
         "orders": 252,
-        "orders_estimated": true,
         "aov": 30.9,
         "new_customers": 75,
         "rating": 4.15,
@@ -189,7 +203,7 @@
         "rejection_pct": 0.0,
         "inaccuracy_pct": 2.4,
         "rider_wait_5min_pct": 1.6,
-        "conversion_pct": null,
+        "conversion_pct": 10.7,
         "wow": {
           "gmv_pct": null,
           "orders_abs": null,
@@ -198,10 +212,33 @@
         },
         "gmv_vs_4wk_pct": null,
         "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
         "busy_mode_pct": 0.0
       },
-      "gaps": []
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Sales and covers down year on year, but target beaten by roughly 1,500 to 3,000 GBP with 5,500 GBP of discounts.",
+          "Deliveroo orders down; inaccurate orders up to 93 because chicken katsu cutlets were packed in the smaller yellow boxes.",
+          "Duplicate numbers for sushi, sides and drinks for consecutive weeks.",
+          "Food variance 1.2%, drinks 1.0%.",
+          "A 2 star and a 1 star review, the latter suspected AI generated after a bill splitting dispute.",
+          "Roit hired FOH with a view to supervisor; Rahit onboarding; Elliot getting FOH training.",
+          "Compliance 95%; a van is needed to clear the back room clutter.",
+          "Region: food spend target temporarily raised to 26% until current promotions end (Matthew Jenner).",
+          "Region: hats or hairnets mandatory for all staff to prevent food contamination.",
+          "Region: menu to be redesigned with spice levels built into all ramen dishes and free chillies removed.",
+          "Region: GM and HC meeting notes must run through Google Meet so Gemini takes the notes; budget router templates updated, Monday dates must be entered correctly."
+        ],
+        "actions": [
+          "Stop packing chicken katsu cutlets in the small yellow boxes to cut inaccurate orders - Owner: Joe Herrera (20/10/2026)",
+          "Arrange a van to clear the back room - Owner: Joe Herrera (20/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "gmail:1a1353aa80bbf357",
+        "source": "EDI/NEW Weekly KPI Meeting Gemini notes of 13/10/2026 (emailed by Oisin Darragh), reviewing w/c 05/10. Section 'Maki Ramen Aberdeen' mapped to M13 (food variance 1.2%, drinks 1.0% match)."
+      }
     }
   }
 }

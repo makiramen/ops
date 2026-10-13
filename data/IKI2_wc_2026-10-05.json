@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-12",
+  "generated_at": "2026-10-13",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-10-05 \u2013 2026-10-11",
@@ -109,7 +109,7 @@
           "weekly_star": {
             "weight": 10,
             "value": 0.0,
-            "basis": "3.67\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "basis": "3.80\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
           },
           "food_var": {
             "weight": 5,
@@ -126,14 +126,14 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 3.6667,
-        "new_reviews": 9,
+        "week_avg_rating": 3.8,
+        "new_reviews": 10,
         "star_breakdown": {
           "1": 1,
           "2": 0,
           "3": 3,
           "4": 2,
-          "5": 3
+          "5": 4
         },
         "negatives": 4,
         "negative_reviews": [
@@ -170,7 +170,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
@@ -209,10 +209,55 @@
         "items": [],
         "note": "Separate stream; needs the GM-notes email pull wired in."
       },
-      "deliveroo": null,
-      "gaps": [
-        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
-      ]
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-11",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1766.81,
+        "orders": 68,
+        "aov": 25.98,
+        "new_customers": 36,
+        "rating": 4.57,
+        "open_hours_pct": 64.8,
+        "avg_prep_min": 10.6,
+        "rejection_pct": 4.2,
+        "inaccuracy_pct": null,
+        "rider_wait_5min_pct": 2.9,
+        "conversion_pct": 12.2,
+        "wow": {
+          "gmv_pct": 8,
+          "orders_abs": 13,
+          "prev_gmv": 1636.31,
+          "prev_orders": 55
+        },
+        "gmv_vs_4wk_pct": -8.8,
+        "gmv_vs_ly_pct": -0.6,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary."
+      },
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Steady weekday numbers, 34 more customers than last week; sales nearly 27,000 GBP, 9% above target.",
+          "Deliveroo login issue prevented data retrieval; Oisin advised contacting Junna.",
+          "Labour up slightly to 17.89% (tired team, extra weekend prep staff); food variance -4.2%, drinks 3.8%.",
+          "One star Google review from a first time customer who ordered the vegan tonkotsu.",
+          "Plan to hire part time FOH and BOH student workers for flexibility over the festival period.",
+          "Compliance 99%; extractor fan leak being fixed Saturday morning after quote approval.",
+          "Abby proposed redesigning the menu with spice levels in house specials instead of free chillies, estimated 4,000 to 5,000 GBP a year.",
+          "Region: food spend target temporarily raised to 26% until current promotions end (Matthew Jenner).",
+          "Region: hats or hairnets mandatory for all staff to prevent food contamination.",
+          "Region: GM and HC meeting notes must run through Google Meet so Gemini takes the notes; budget router templates updated, Monday dates must be entered correctly."
+        ],
+        "actions": [
+          "Update the Deliveroo login credentials so delivery data can be pulled - Owner: Abby (20/10/2026)",
+          "Schedule a meeting with Marketing to redesign the menu with spice levels in house specials - Owner: The group (20/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "gmail:1a1353aa80bbf357",
+        "source": "EDI/NEW Weekly KPI Meeting Gemini notes of 13/10/2026 (emailed by Oisin Darragh), reviewing w/c 05/10. Section 'Ikigai Ramen' (Abby) mapped to IKI2 by speaker and figures (labour 17.89%, food variance -4.2%)."
+      }
     }
   }
 }

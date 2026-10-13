@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-12",
+  "generated_at": "2026-10-13",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-10-05 \u2013 2026-10-11",
@@ -109,7 +109,7 @@
           "weekly_star": {
             "weight": 10,
             "value": 100.0,
-            "basis": "4.75\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "basis": "4.79\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
           },
           "food_var": {
             "weight": 5,
@@ -128,14 +128,14 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.75,
-        "new_reviews": 12,
+        "week_avg_rating": 4.7857,
+        "new_reviews": 14,
         "star_breakdown": {
           "1": 0,
           "2": 0,
           "3": 1,
           "4": 1,
-          "5": 10
+          "5": 12
         },
         "negatives": 1,
         "negative_reviews": [],
@@ -143,7 +143,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
@@ -194,31 +194,55 @@
         "week_ending": "2026-10-11",
         "resolution": "weekly",
         "partial": false,
-        "sales": null,
-        "orders": null,
-        "aov": null,
-        "new_customers": null,
+        "sales": 10671.63,
+        "orders": 343,
+        "aov": 31.11,
+        "new_customers": 99,
         "rating": 4.69,
         "open_hours_pct": 87.9,
         "avg_prep_min": 20.2,
         "rejection_pct": 0.0,
         "inaccuracy_pct": 0.6,
         "rider_wait_5min_pct": 2.6,
-        "conversion_pct": null,
+        "conversion_pct": 14.9,
         "wow": {
-          "gmv_pct": null,
-          "orders_abs": null,
-          "prev_gmv": null,
-          "prev_orders": null
+          "gmv_pct": -14.4,
+          "orders_abs": -42,
+          "prev_gmv": 12467.66,
+          "prev_orders": 385
         },
-        "gmv_vs_4wk_pct": null,
-        "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Summary sheet (ops table) \u2014 no sales row this week + ops from Weekly Summary sheet",
+        "gmv_vs_4wk_pct": 9.1,
+        "gmv_vs_ly_pct": -19.7,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
         "busy_mode_pct": 4.3
       },
-      "gaps": [
-        "Deliveroo \u2014 ops only: rating/prep/open-hours present, but NO sales row this week (no Tax Invoice PDF filed and no Weekly Summary row)"
-      ]
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Covers up 31 week on week, down 17 year on year; spend per head up slightly despite heavy ramen promotions.",
+          "Sales down 740 GBP week on week and nearly 4,000 GBP year on year, but over 4,500 GBP ahead of target with over 4,500 GBP of discounts.",
+          "Delivery machine blip Friday 16:00 to 17:00; prep time flagged as a major red priority to bring down permanently.",
+          "Refunds from a missing takoyaki and a rider delivering to the wrong customer.",
+          "Food cost up on frozen ramen ordering; Haru to cut LWBC ordering from twice to once a week.",
+          "Google reviews: David won the cash incentive for named reviews.",
+          "Onboarding: Bishall starts tomorrow (from Manchester or London).",
+          "Compliance 99%; maintenance: unauthorised light fixture, doors awaiting repaint (paint selection), toilet tops awaiting repair.",
+          "Upcoming: book launch, student frozen ramen promo, large local business pre order launch expected over 2,000 GBP.",
+          "Region: food spend target temporarily raised to 26% until current promotions end (Matthew Jenner).",
+          "Region: hats or hairnets mandatory for all staff to prevent food contamination.",
+          "Region: menu to be redesigned with spice levels built into all ramen dishes and free chillies removed.",
+          "Region: GM and HC meeting notes must run through Google Meet so Gemini takes the notes; budget router templates updated, Monday dates must be entered correctly."
+        ],
+        "actions": [
+          "Reduce LWBC frozen ramen ordering from twice to once a week - Owner: Haru (20/10/2026)",
+          "Bring delivery prep time down permanently - Owner: Marcus Evans (20/10/2026)",
+          "Confirm paint brand and type for the door repaint - Owner: Marcus Evans (20/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "gmail:1a1353aa80bbf357",
+        "source": "EDI/NEW Weekly KPI Meeting Gemini notes of 13/10/2026 (emailed by Oisin Darragh), reviewing w/c 05/10. Section 'Maki Ramen Fountainbridge' (Marcus Evans) mapped to M3."
+      }
     }
   }
 }
