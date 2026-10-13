@@ -18,6 +18,7 @@ for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open
   # a new site (empty daily.json) backfills the cash up from May; after that the rolling 21 days
   if [ "$(cat "$D/daily.json")" = "{}" ]; then CU="--from 2026-05-04"; else CU="--days 21"; fi
   step python3 pipeline/pull_cashup.py   --site "$CODE" --data "$D" $CU
+  step python3 pipeline/pull_cashup_ly.py --site "$CODE" --data "$D"   # last year's days for the year on year comparison (13/10/2026)
   step python3 pipeline/pull_deliveroo_daily.py --site "$CODE" --data "$D"
   step python3 pipeline/pull_monalisa.py --site "$CODE" --data "$D"
   step python3 pipeline/pull_amcc.py     --site "$CODE" --data "$D" --amcc "$ROOT/data"
