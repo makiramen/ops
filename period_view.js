@@ -124,18 +124,21 @@
     var up = dl > 0, good = m.upGood ? up : !up; return good ? 'pv-tint-green' : 'pv-tint-red';
   }
   // Deliveroo: canonical thresholds from index.html where present.
-  var DELIV = (typeof DELIV_METRIC_DEFS !== 'undefined' && DELIV_METRIC_DEFS) ? DELIV_METRIC_DEFS.filter(function (m) { return m[0] !== 'open_hours_pct'; }) :
-    [['rating', 'rating', 4.7, 4.0, true], ['avg_prep_min', 'prep', 15, 18, false], ['inaccuracy_pct', 'inacc', 2, 3, false], ['rider_wait_5min_pct', 'rider', 2, 4, false]];
+  var DELIV = (typeof DELIV_METRIC_DEFS !== 'undefined' && DELIV_METRIC_DEFS) ? DELIV_METRIC_DEFS :
+    [['rating', 'rating', 4.7, 4.0, true], ['open_hours_pct', 'open', 98, 95, true], ['avg_prep_min', 'prep', 15, 18, false], ['inaccuracy_pct', 'inacc', 2, 3, false], ['rider_wait_5min_pct', 'rider', 2, 4, false]];
   function delivBand1(v, g, a, hb){ if (v == null) return ''; if (hb) return v >= g ? 'green' : v >= a ? 'amber' : 'red'; return v <= g ? 'green' : v <= a ? 'amber' : 'red'; }
+  // Same rollup as the weekly Deliveroo RAG: any red = red, all five green = green, otherwise amber (a missing metric blocks green).
   function delivBand(dv){
-    if (!dv) return ''; var worst = '';
-    DELIV.forEach(function (m) { var b = delivBand1(dv[m[0]], m[2], m[3], m[4]); if (b === 'red') worst = 'red'; else if (b === 'amber' && worst !== 'red') worst = 'amber'; else if (b === 'green' && !worst) worst = 'green'; });
-    return worst;
+    if (!dv || !dv.n) return '';
+    var bands = DELIV.map(function (m) { return delivBand1(dv[m[0]], m[2], m[3], m[4]) || 'missing'; });
+    if (bands.indexOf('red') >= 0) return 'red';
+    return bands.every(function (b) { return b === 'green'; }) ? 'green' : 'amber';
   }
   function delivText(dv){
     if (!dv || dv.n === 0) return '<span class="pv-wow na">no storefront</span>';
     var p = [];
     if (dv.rating != null) p.push(dv.rating.toFixed(2) + '★');
+    if (dv.open_hours_pct != null && dv.open_hours_pct < 98) p.unshift(dv.open_hours_pct.toFixed(0) + '% open');
     if (dv.avg_prep_min != null) p.push(dv.avg_prep_min.toFixed(1) + ' min prep');
     if (dv.inaccuracy_pct != null) p.push(dv.inaccuracy_pct.toFixed(1) + '% inaccurate');
     if (dv.rider_wait_5min_pct != null) p.push(dv.rider_wait_5min_pct.toFixed(1) + '% rider wait');
@@ -185,7 +188,7 @@
     var k = s.kpis || {}, dv = s.deliveroo || null;
     var sales = k.sales && k.sales.actual, covers = k.covers && k.covers.actual;
     var sph = (k.sph && k.sph.actual != null) ? k.sph.actual : (sales != null && covers ? sales / covers : null);
-    var hasDv = dv && (dv.rating != null || dv.avg_prep_min != null || dv.inaccuracy_pct != null || dv.rider_wait_5min_pct != null);
+    var hasDv = dv && (dv.rating != null || dv.open_hours_pct != null || dv.avg_prep_min != null || dv.inaccuracy_pct != null || dv.rider_wait_5min_pct != null);
     return {
       sales: sales, target: k.sales && k.sales.target, covers: covers, sph: sph,
       wage: k.wage_pct && k.wage_pct.actual, food: k.food_pct && k.food_pct.actual,
@@ -196,14 +199,14 @@
       varPct: k.sales && k.sales.var_pct,
       rating: s.reviews && s.reviews.week_avg_rating, nReviews: s.reviews && s.reviews.new_reviews,
       prep: dv && dv.avg_prep_min,
-      dv: hasDv ? { rating: dv.rating, avg_prep_min: dv.avg_prep_min, inaccuracy_pct: dv.inaccuracy_pct, rider_wait_5min_pct: dv.rider_wait_5min_pct, n: 1 } : null,
+      dv: hasDv ? { rating: dv.rating, open_hours_pct: dv.open_hours_pct, avg_prep_min: dv.avg_prep_min, inaccuracy_pct: dv.inaccuracy_pct, rider_wait_5min_pct: dv.rider_wait_5min_pct, n: 1 } : null,
       sphT: sphTargetFor(code != null ? ((typeof jsonToDisplay === 'function') ? jsonToDisplay(code) : code) : null)
     };
   }
   // Aggregate a list of site records (one or many sites, one or many weeks).
   function aggregate(recs){
     var a = { sales: 0, target: 0, nTarget: 0, covers: 0, wageNum: 0, wageDen: 0, foodNum: 0, foodDen: 0, scoreSum: 0, scoreN: 0, red: 0, amber: 0, green: 0, n: 0, redSites: [], sphTNum: 0, sphTDen: 0, ratNum: 0, ratDen: 0, nRev: 0, revKnown: false,
-      dv: { rating: 0, nR: 0, avg_prep_min: 0, nP: 0, inaccuracy_pct: 0, nI: 0, rider_wait_5min_pct: 0, nW: 0, n: 0 }, nRed: 0, trig: {}, nSales: 0, nCovers: 0 };
+      dv: { rating: 0, nR: 0, open_hours_pct: 0, nO: 0, avg_prep_min: 0, nP: 0, inaccuracy_pct: 0, nI: 0, rider_wait_5min_pct: 0, nW: 0, n: 0 }, nRed: 0, trig: {}, nSales: 0, nCovers: 0 };
     recs.forEach(function (r) {
       a.n++;
       if (r.sales != null){ a.sales += r.sales; a.nSales++; if (r.target != null){ a.target += r.target; a.nTarget++; } }
@@ -216,10 +219,10 @@
       if (r.rag === 'red') a.red++; else if (r.rag === 'amber') a.amber++; else if (r.rag === 'green') a.green++;
       if (r.red){ a.nRed++; if (a.redSites.indexOf(r.label) < 0) a.redSites.push(r.label); r.triggers.forEach(function (t) { a.trig[t.split(' ')[0]] = t; }); }
       if (r.dv){ var v = r.dv; a.dv.n++;
-        if (v.rating != null){ a.dv.rating += v.rating; a.dv.nR++; } if (v.avg_prep_min != null){ a.dv.avg_prep_min += v.avg_prep_min; a.dv.nP++; }
+        if (v.rating != null){ a.dv.rating += v.rating; a.dv.nR++; } if (v.open_hours_pct != null){ a.dv.open_hours_pct += v.open_hours_pct; a.dv.nO++; } if (v.avg_prep_min != null){ a.dv.avg_prep_min += v.avg_prep_min; a.dv.nP++; }
         if (v.inaccuracy_pct != null){ a.dv.inaccuracy_pct += v.inaccuracy_pct; a.dv.nI++; } if (v.rider_wait_5min_pct != null){ a.dv.rider_wait_5min_pct += v.rider_wait_5min_pct; a.dv.nW++; } }
     });
-    var dv = a.dv.n ? { n: a.dv.n, rating: a.dv.nR ? a.dv.rating / a.dv.nR : null, avg_prep_min: a.dv.nP ? a.dv.avg_prep_min / a.dv.nP : null, inaccuracy_pct: a.dv.nI ? a.dv.inaccuracy_pct / a.dv.nI : null, rider_wait_5min_pct: a.dv.nW ? a.dv.rider_wait_5min_pct / a.dv.nW : null } : { n: 0 };
+    var dv = a.dv.n ? { n: a.dv.n, rating: a.dv.nR ? a.dv.rating / a.dv.nR : null, open_hours_pct: a.dv.nO ? a.dv.open_hours_pct / a.dv.nO : null, avg_prep_min: a.dv.nP ? a.dv.avg_prep_min / a.dv.nP : null, inaccuracy_pct: a.dv.nI ? a.dv.inaccuracy_pct / a.dv.nI : null, rider_wait_5min_pct: a.dv.nW ? a.dv.rider_wait_5min_pct / a.dv.nW : null } : { n: 0 };
     var out = {
       sales: a.nSales ? a.sales : null, target: a.nTarget ? a.target : null,
       covers: a.nCovers ? a.covers : null, sph: a.covers && a.nSales ? a.sales / a.covers : null,
@@ -346,7 +349,7 @@
     { id: 'wage',   label: 'Wage %',          band: function (r) { return r.triggers.some(function (t) { return /^wage/.test(t); }) ? 'red' : band('wage', r.wage); }, rule: 'red above 26% (red light) or 23%, amber above 21%' },
     { id: 'food',   label: 'Food %',          band: function (r) { return r.triggers.some(function (t) { return /^food/.test(t); }) ? 'red' : band('food', r.food); }, rule: 'red above 28% (band) or 25% (red light), amber above 25%' },
     { id: 'rating', label: 'Google rating',   band: function (r) { if (r.nReviews === 0) return 'red'; return band('rating', r.rating); }, rule: 'red below 4.5 or no reviews, amber below 4.7' },
-    { id: 'prep',   label: 'Deliveroo prep',  band: function (r) { return band('prep', r.prep); }, rule: 'red above 18 min, amber above 15' },
+    { id: 'deliveroo', label: 'Deliveroo', band: function (r) { return delivBand(r.dv); }, rule: 'five-metric rollup, same as the Deliveroo RAG tab: any metric red = red, all green = green, otherwise amber' },
     { id: 'score',  label: 'Efficiency score', band: function (r) { return r.rag || band('score', r.score); }, rule: 'red below 80, amber below 95' }
   ];
   function rlState(kpi, r){ if (!r) return 'na'; var b = kpi.band(r); return b || 'na'; }
@@ -612,7 +615,7 @@
       h += rowFor(scope === 'all' ? 'Estate' : esc(scope) + ' total', perE, allPrev, 'total');
       h += '</tbody></table></div>';
     }
-    h += '<div class="pv-foot">Every cell is banded red, amber or green on the same bands as the weekly view. Sales vs target: green at or above target, amber to -10%, red below -10%. Covers: ' + rowWord + ', green up, amber to -5%, red below -5%. SPH vs the site target (£22; Maki Nori £35; Ikigai £21): green at target, amber within £2, red below. Wage %: green 21% and under, amber to 23%, red above 23%. Food %: green 25% and under, amber to 28%, red above 28%. Score: green 95 and above, amber 80 to 94, red below 80. Rating: green 4.7 and above, amber 4.5 to 4.69, red below 4.5. Deliveroo: rating 4.7 / 4.0, prep 15 / 18 min, inaccuracy 2% / 3%, rider wait 2% / 4% (green / amber thresholds, worst metric colours the cell; figures are plain averages of the storefronts in scope). Complaints: Google reviews of any star rating carrying at least one classified issue (Reviews intelligence file), green at 2% of reviews or under, amber to 6%, red above; hygiene = dirty premises or a foreign body / food safety mention. "vs prior" cells: green if the move is good, red if bad. A week sits in the month, quarter or year its Monday falls in' + (mode === 'year' ? '; the year view rolls weeks up into calendar months' : '') + '. Sales and covers are summed; SPH is period sales over period covers; wage % and food % are sales-weighted; score is the average of the site scores. Red light board per KPI: ' + RL_KPIS.map(function (k) { return k.label + ' (' + k.rule + ')'; }).join('; ') + '. Sources: the same weekly site JSON files the This Week view reads.</div>';
+    h += '<div class="pv-foot">Every cell is banded red, amber or green on the same bands as the weekly view. Sales vs target: green at or above target, amber to -10%, red below -10%. Covers: ' + rowWord + ', green up, amber to -5%, red below -5%. SPH vs the site target (£22; Maki Nori £35; Ikigai £21): green at target, amber within £2, red below. Wage %: green 21% and under, amber to 23%, red above 23%. Food %: green 25% and under, amber to 28%, red above 28%. Score: green 95 and above, amber 80 to 94, red below 80. Rating: green 4.7 and above, amber 4.5 to 4.69, red below 4.5. Deliveroo: the five-metric rollup the Deliveroo RAG tab uses (rating 4.7 / 4.0, open hours 98% / 95%, prep 15 / 18 min, inaccuracy 2% / 3%, rider wait 2% / 4% green / amber thresholds): any metric red = red, all five green = green, otherwise amber; figures are plain averages of the storefronts in scope. Complaints: Google reviews of any star rating carrying at least one classified issue (Reviews intelligence file), green at 2% of reviews or under, amber to 6%, red above; hygiene = dirty premises or a foreign body / food safety mention. "vs prior" cells: green if the move is good, red if bad. A week sits in the month, quarter or year its Monday falls in' + (mode === 'year' ? '; the year view rolls weeks up into calendar months' : '') + '. Sales and covers are summed; SPH is period sales over period covers; wage % and food % are sales-weighted; score is the average of the site scores. Red light board per KPI: ' + RL_KPIS.map(function (k) { return k.label + ' (' + k.rule + ')'; }).join('; ') + '. Sources: the same weekly site JSON files the This Week view reads.</div>';
 
     view.innerHTML = h;
     view.querySelectorAll('[data-metric]').forEach(function (b) { b.addEventListener('click', function () { metric = b.getAttribute('data-metric'); draw(cur, prev, prevK); }); });
