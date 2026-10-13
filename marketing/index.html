@@ -948,7 +948,7 @@ td.sitecell { white-space: nowrap; }
   <div class="section">
     <h2>By site <span class="subtle" style="font-weight:normal" id="mo-table-sub"></span></h2>
     <table>
-      <thead><tr><th>Site</th><th class="num">Covers</th><th class="num">Prev month</th><th class="num">Δ covers</th><th class="num">Sales</th><th class="num">Prev month</th><th class="num">Δ sales</th><th class="num">SPH</th><th>Trend · by month</th></tr></thead>
+      <thead><tr><th>Site</th><th class="num">Covers</th><th class="num" id="mo-th-cmp1">Compared with</th><th class="num">Δ covers</th><th class="num">Sales</th><th class="num" id="mo-th-cmp2">Compared with</th><th class="num">Δ sales</th><th class="num">SPH</th><th>Trend · by month</th></tr></thead>
       <tbody id="mo-table"><tr><td colspan="9" class="loading">Loading…</td></tr></tbody>
     </table>
   </div>
@@ -1419,6 +1419,7 @@ td.sitecell { white-space: nowrap; }
 <!-- ================================================================ -->
 <!-- v6.6.2 (9 Oct 2026): STATIC_MAX_AGE_H 6 -> 30 for the once-a-day publish -->
 <!-- v6.8 (13 Oct 2026): Summary story and marketing return tightened; assumptions and actions via the manual feeds sheet -->
+<!-- v6.8.1 (13 Oct 2026): hero covers from the weekly cash-up feed; Monthly compares the same weekdays 4 weeks earlier -->
 <!-- v6.6.1 (9 Oct 2026): Add/Remove feed-down banner (reads the ERROR row, names the Windsor fix) -->
 <!-- v6.6 (9 Oct 2026): Summary rebuilt (loyalty, Slerp, content, influencers, paid, feeds health); 18 Aug £5 batch removed from Loyalty -->
 <!-- SLERP TAB  (v6.5.1, 6 Oct 2026) · source: Slerp Orders SoT sheet    -->
@@ -3529,7 +3530,7 @@ async function loadSummary() {
   renderHealth(d);
   renderGreenLight(glCsv);
   try { renderRoi(d); } catch (e) { console.warn('roi', e); }
-  loadMonthlyData().then(function(m) { try { renderStory(d, m); } catch (e) { console.warn('story', e); } })
+  loadMonthlyData().then(function(m) { try { renderCoversHero(d, m); } catch (e) { console.warn('hero', e); } try { renderStory(d, m); } catch (e) { console.warn('story', e); } })
     .catch(function(e) { var el = document.getElementById('story-moved'); if (el) el.innerHTML = '<div class="err">Monthly feed unavailable: ' + (e.message || e) + '</div>'; });
   if (document.getElementById('asof').textContent === 'Loading…') hubStamp(DATA);
 }
@@ -3579,7 +3580,7 @@ function renderCards(d, bbCsv, glCsv) {
       var heroSeries = (g.completed || []).slice(-12).map(function(w) {
         return g.weeks[w].reduce(function(s, r) { return s + (Number(r.covers_actual) || 0); }, 0);
       });
-      cards.push('<div class="card hero"><div class="label">Covers · wk of ' + fmtWc(g.report) + '</div><div class="value" data-count="' + repTot + '">' + fmtN(repTot) + '</div>' +
+      cards.push('<div class="card hero" id="covers-hero"><div class="label">Covers · wk of ' + fmtWc(g.report) + '</div><div class="value" data-count="' + repTot + '">' + fmtN(repTot) + '</div>' +
         (repTarget > 0 ? '<div class="delta">Target ' + fmtN(repTarget) + ' · <span class="' + (achPct >= 100 ? 'pos' : 'neg') + '">' + achPct.toFixed(0) + '% of target</span></div>' : '<div class="delta">Target — no target set this week</div>') +
         '<div class="delta">' + (wow != null ? signedPct(wow) + ' WoW · ' : '') + (wtd > 0 ? 'this wk so far ' + fmtN(wtd) : 'this wk: no data yet (covers lag)') + '</div>' +
         (heroSeries.length > 1 ? '<div class="sparkwrap"><canvas id="covers-spark"></canvas></div>' : '') + '</div>');
@@ -3730,6 +3731,25 @@ function mondayOf(iso) { var s = String(iso || ''); var mm = /^(\d{4})-(\d\d)-(\
 function fmtMonth(m) { var d = new Date(m + '-01T00:00:00Z'); return d.toLocaleDateString('en-GB', {month: 'short', year: 'numeric', timeZone: 'UTC'}); }
 function fmtDay(iso) { var d = new Date(String(iso).slice(0, 10) + 'T00:00:00Z'); return d.toLocaleDateString('en-GB', {day: 'numeric', month: 'short', timeZone: 'UTC'}); }
 
+
+// v6.8.1 — hero covers card from the cash-up weekly feed (same numbers as the footfall story)
+function renderCoversHero(d, m) {
+  var weeks = ((m && m.weekly) || []).filter(function(w) { return !w.partial && w.covers; });
+  if (!weeks.length) return;
+  var card = document.getElementById('covers-hero'); if (!card) return;
+  var last = weeks[weeks.length - 1], prev = weeks[weeks.length - 2], partial = storyPartial(m);
+  var wow = prev && prev.covers ? last.covers / prev.covers - 1 : null;
+  var series = weeks.slice(-12).map(function(w) { return w.covers; });
+  var g = null; try { g = glParse(d[SHEETS.GREEN_LIGHT_BOARD] || []); } catch (e) {}
+  var target = null;
+  if (g && g.weeks && g.weeks[last.wc] && g.weeks[last.wc].length === last.sites) target = g.weeks[last.wc].reduce(function(s, r) { return s + (Number(r.covers_target_week) || 0); }, 0);   // only when the board covers the same sites
+  card.innerHTML = '<div class="label">Covers · w/c ' + fmtWc(last.wc) + ' · Mon to Sun</div><div class="value">' + fmtN(last.covers) + '</div>' +
+    '<div class="delta">' + (wow != null ? signedPct(wow) + ' WoW (' + fmtN(prev.covers) + ')' : '') + (target ? ' · target ' + fmtN(target) + ' · <span class="' + (last.covers >= target ? 'pos' : 'neg') + '">' + Math.round(last.covers / target * 100) + '%</span>' : '') + '</div>' +
+    '<div class="delta">' + (partial ? 'this wk so far ' + fmtN(partial.covers) + ' · ' + partial.days + ' day' + (partial.days === 1 ? '' : 's') : 'this wk: Monday lands at the 09:30 UK build') + ' · ' + last.sites + ' sites</div>' +
+    (series.length > 1 ? '<div class="sparkwrap"><canvas id="covers-spark"></canvas></div>' : '');
+  if (series.length > 1) { try { drawSpark('covers-spark', series, '#FFC078', 'rgba(255,192,120,.18)'); } catch (e) {} }
+}
+
 // =====================================================================
 // v6.7 — MONTHLY TAB
 // =====================================================================
@@ -3760,6 +3780,19 @@ function moSameDays(m, monthKey, nDays) {
     out.covers += r.covers; out.sales += r.sales;
     Object.keys(r.sites || {}).forEach(function(c) { var s = out.sites[c] = out.sites[c] || {covers: 0, sales: 0, days: 0}; s.covers += r.sites[c][0]; s.sales += r.sites[c][1]; s.days++; });
   });
+  return out;
+}
+function moSameWeekdays(m, monthKey, nDays) {
+  // the nDays dates of this month, each matched to the same weekday 4 weeks earlier; null unless every day matches
+  var byD = {}; (m.daily || []).forEach(function(r) { byD[r.d] = r; });
+  var out = {covers: 0, sales: 0, days: 0, sites: {}, aligned: true, from: null, to: null};
+  for (var dd = 1; dd <= nDays; dd++) {
+    var iso = monthKey + '-' + (dd < 10 ? '0' : '') + dd, pr = byD[isoAdd(iso, -28)];
+    if (!byD[iso] || !pr) return null;
+    if (!out.from) out.from = isoAdd(iso, -28); out.to = isoAdd(iso, -28);
+    out.covers += pr.covers; out.sales += pr.sales; out.days++;
+    Object.keys(pr.sites || {}).forEach(function(c) { var s = out.sites[c] = out.sites[c] || {covers: 0, sales: 0, days: 0}; s.covers += pr.sites[c][0]; s.sales += pr.sites[c][1]; s.days++; });
+  }
   return out;
 }
 // month-end projection: MTD + for each remaining date the average of the last 4 same weekdays
@@ -3793,12 +3826,16 @@ function renderMonthly() {
   var hero = document.getElementById('mo-hero'), sub = document.getElementById('mo-sub'), basisEl = document.getElementById('mo-basis');
   var partial = !cur.complete, nDays = Number(cur.through.slice(8, 10));
   // like-for-like comparator: same first N days of the previous month when this month is partial (daily data only)
-  var cmp = null, cmpLabel = '';
+  var cmp = null, cmpLabel = '', cal = null, calLabel = '';
   if (prev) {
     if (partial) {
-      cmp = moSameDays(m, prev.m, nDays);
-      if (cmp) cmpLabel = 'first ' + nDays + ' days of ' + prev.label;
-      else { cmp = {covers: prev.covers * nDays / prev.days_in_month, sales: prev.sales != null ? prev.sales * nDays / prev.days_in_month : null, sites: null, pro: true}; cmpLabel = prev.label + ' pro-rata to ' + nDays + ' days'; }
+      // v6.8.1: primary comparator = the same weekdays 4 weeks earlier (fair on weekends); calendar is the second line
+      cmp = moSameWeekdays(m, cur.m, nDays);
+      if (cmp) cmpLabel = 'same weekdays 4 wks earlier (' + fmtDay(cmp.from) + ' to ' + fmtDay(cmp.to) + ')';
+      cal = moSameDays(m, prev.m, nDays);
+      if (cal) calLabel = 'first ' + nDays + ' days of ' + prev.label;
+      else { cal = {covers: prev.covers * nDays / prev.days_in_month, sales: prev.sales != null ? prev.sales * nDays / prev.days_in_month : null, sites: null, pro: true}; calLabel = prev.label + ' pro-rata to ' + nDays + ' days'; }
+      if (!cmp) { cmp = cal; cmpLabel = calLabel; cal = null; }
     } else { cmp = {covers: prev.covers, sales: prev.sales, sites: prev.sites}; cmpLabel = prev.label + (prev.complete ? '' : ' (partial)'); }
   }
   var proj = moProject(m, cur);
@@ -3821,10 +3858,10 @@ function renderMonthly() {
   hero.innerHTML =
     '<div class="card hero"><div class="label">Covers · ' + cur.label + (partial ? ' MTD' : '') + '</div><div class="value" data-count="' + cur.covers + '">' + fmtN(cur.covers) + '</div>' +
       '<div class="delta">' + cmpLine(cur.covers, cmp && cmp.covers) + '</div>' +
-      (wk4 ? '<div class="delta">same weekdays 4 wks earlier ' + fmtN(wk4.covers) + ' · ' + signedPct(cur.covers / wk4.covers - 1) + '</div>' : '') +
+      (cal ? '<div class="delta">calendar: ' + fmtN(cal.covers) + ' ' + calLabel + ' · ' + signedPct(cur.covers / cal.covers - 1) + '</div>' : '') +
       (proj ? '<div class="delta">projected month end <b>' + fmtN(proj.covers) + '</b>' + (prev && prev.complete ? ' · ' + signedPct(proj.covers / prev.covers - 1) + ' vs ' + prev.label + ' full month' : '') + '</div>' : '') + '</div>' +
     '<div class="card"><div class="label">Sales · ' + cur.label + (partial ? ' MTD' : '') + '</div><div class="value">' + (cur.sales != null ? '<span data-count="' + Math.round(cur.sales) + '" data-fmt="gbp">' + fmtGbp(cur.sales) + '</span>' : '—') + '</div>' +
-      '<div class="cmp">' + (cur.sales != null ? cmpLine(cur.sales, cmp && cmp.sales, true) : 'sales not in the weekly feed before June') + (wk4 && cur.sales != null ? '<br>same weekdays 4 wks earlier ' + fmtGbp(wk4.sales) + ' · ' + signedPct(cur.sales / wk4.sales - 1) : '') +
+      '<div class="cmp">' + (cur.sales != null ? cmpLine(cur.sales, cmp && cmp.sales, true) : 'sales not in the weekly feed before June') + (cal && cur.sales != null && cal.sales != null ? '<br>calendar: ' + fmtGbp(cal.sales) + ' ' + calLabel + ' · ' + signedPct(cur.sales / cal.sales - 1) : '') +
       (proj && cur.sales != null ? '<br>projected month end <b>' + fmtGbp(proj.sales) + '</b>' + (prev && prev.complete && prev.sales ? ' · ' + signedPct(proj.sales / prev.sales - 1) + ' vs ' + prev.label : '') : '') + '</div></div>' +
     '<div class="card"><div class="label">Spend per head</div><div class="value">' + (sph != null ? '£' + sph.toFixed(2) : '—') + '</div>' +
       '<div class="cmp">' + (sphPrev != null ? '£' + sphPrev.toFixed(2) + ' ' + cmpLabel + ' · ' + signedPct(sph / sphPrev - 1) : '<span class="subtle">no comparator</span>') + '</div></div>' +
@@ -3861,6 +3898,7 @@ function renderMonthly() {
   // per-site table, grouped by cluster, like-for-like against the comparator
   var tbody = document.getElementById('mo-table'), tsub = document.getElementById('mo-table-sub');
   tsub.textContent = '· ' + cur.label + (partial ? ' MTD' : '') + (cmp ? ' vs ' + cmpLabel : '');
+  var thc = partial && cmp && cmp.aligned ? '4 wks earlier' : 'Prev month'; ['mo-th-cmp1', 'mo-th-cmp2'].forEach(function(id) { var th = document.getElementById(id); if (th) th.textContent = thc; });
   var codes = Object.keys(cur.sites || {});
   var groups = {};
   codes.forEach(function(c) { var k = moSiteCluster(c); (groups[k] = groups[k] || []).push(c); });
@@ -3875,6 +3913,7 @@ function renderMonthly() {
     list.forEach(function(c) {
       var s = cur.sites[c], p = cmp && cmp.sites ? cmp.sites[c] : null;
       var pc = p ? p.covers : (cmp && cmp.pro && prev.sites[c] ? prev.sites[c].covers * nDays / prev.days_in_month : null);
+      if (p && cmp.aligned && p.days < nDays) p = null, pc = null;   // site missing days in the comparator window: no delta rather than a wrong one
       var ps = p ? p.sales : (cmp && cmp.pro && prev.sites[c] && prev.sites[c].sales != null ? prev.sites[c].sales * nDays / prev.days_in_month : null);
       var newSite = p ? p.days < (cmp.days || prev.days_data) * 0.9 : false;
       var trend = months.map(function(x) { return x.sites[c] ? x.sites[c].covers * (x.complete ? 1 : x.days_in_month / x.days_data) : null; });
