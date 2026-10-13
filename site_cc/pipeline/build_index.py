@@ -45,5 +45,8 @@ p.f{{color:var(--ink2);font-size:12px;margin-top:24px}}
 <p class="f">Rebuilt by the Site Control Centre nightly job, {now}. Each page runs offline once opened.</p></main></body></html>'''
 if '—' in page or '–' in page:sys.exit('index has a dash, not written')
 os.makedirs(os.path.join(A.root,'site'),exist_ok=True)
+import sys as _s;_s.path.insert(0,os.path.join(A.root,'builders'))
+from usage_beacon import inject as _beacon
+page=_beacon(page,'Site CC directory')
 open(os.path.join(A.root,'site','index.html'),'w').write(page)
 print('site index:',sum(len(v) for v in groups.values()),'sites')

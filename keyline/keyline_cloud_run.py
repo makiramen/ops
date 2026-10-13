@@ -59,7 +59,8 @@ def wrap():
     s = open(os.path.join(HERE, 'keyline-control.html')).read()
     head = '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n'
     s = s.replace('<title>Keyline Control</title>\n', '<title>Keyline Control</title></head><body>\n', 1)
-    open(os.path.join(REPO, 'keyline.html'), 'w').write(head + s + '\n</body></html>\n')
+    sys.path.insert(0, os.path.join(REPO, 'builders')); from usage_beacon import inject as beacon
+    open(os.path.join(REPO, 'keyline.html'), 'w').write(beacon(head + s + '\n</body></html>\n', 'Keyline Control'))
 
 def send_mail(subject, html, pdf_path, plain_fallback):
     import smtplib, ssl

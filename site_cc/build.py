@@ -150,6 +150,9 @@ def wr(f,t):
 wr('site_control_centre.html',s)
 wr('t.js',s.split('<script>')[1].split('</script>')[0])
 full='<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n'+s.split('</style>')[0]+'</style>\n</head>\n<body>\n'+s.split('</style>',1)[1]+'\n</body>\n</html>\n'
+import sys as _s;_s.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','builders'))
+from usage_beacon import inject as _beacon  # every page open logs a 'viewed' row to the Area Room log sheet (13/10/2026)
+full=_beacon(full,'Site CC '+CODE)
 wr('Site_Control_Centre_full.html',full)
 wr('build_log.json',json.dumps({'site':CODE,'name':SITE['name'],'built':datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%dT%H:%MZ'),'today':TODAY.isoformat(),'feeds':LOG,'stale':len(STALE)},indent=1))
 print('built',len(s),'stale feeds:',len(STALE),[x[0] for x in STALE])
