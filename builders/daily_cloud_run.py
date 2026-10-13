@@ -279,6 +279,18 @@ def main():
             summ = json.load(open(os.path.join(repo, "data", "reviews_summary.json")))
             R["intel"]["badge_week"] = summ["week"]; R["intel"]["badge_reviews"] = summ["reviews"]
 
+    # ---------------- MARKETING HUB MONTHLY (13/10/2026) ----------------
+    # data/marketing_monthly.json for the Hub's Monthly tab + footfall story. Derived from the
+    # daily files just built plus the weekly all_sites files; ships with this commit via the
+    # data/ status scan below. Failure-tolerant: a broken build must never block the cash-up.
+    try:
+        mm = subprocess.run([sys.executable, os.path.join(repo, "builders", "build_marketing_monthly.py"), "--repo", repo],
+                            capture_output=True, text=True, timeout=120)
+        R["marketing_monthly"] = (mm.stderr or "").strip()[-300:]
+        if mm.returncode != 0: R["warnings"].append("marketing_monthly builder rc=%s" % mm.returncode)
+    except Exception as e:
+        R["warnings"].append("marketing_monthly builder failed: %s" % e)
+
     # ---------------- INDEX + CONTENT CHECKS ----------------
     new_index = json.load(open(os.path.join(DD, "daily_index.json"))); new_ridx = json.load(open(os.path.join(DD, "daily_reviews_index.json")))
     if not set(live_index[ik]) <= set(new_index[ik]) or not set(live_ridx["days"]) <= set(new_ridx["days"]):
