@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-12",
+  "generated_at": "2026-10-13",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-10-05 \u2013 2026-10-11",
@@ -74,7 +74,7 @@
         "week_commencing": "2026-10-05"
       },
       "efficiency_score": {
-        "score": 79,
+        "score": 78,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -108,8 +108,8 @@
           },
           "weekly_star": {
             "weight": 10,
-            "value": 71.43,
-            "basis": "4.50\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "value": 57.14,
+            "basis": "4.40\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
           },
           "food_var": {
             "weight": 5,
@@ -128,13 +128,13 @@
         "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
-        "week_avg_rating": 4.5,
-        "new_reviews": 8,
+        "week_avg_rating": 4.4,
+        "new_reviews": 10,
         "star_breakdown": {
           "1": 1,
           "2": 0,
           "3": 0,
-          "4": 0,
+          "4": 2,
           "5": 7
         },
         "negatives": 1,
@@ -151,7 +151,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-12."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
@@ -197,7 +197,6 @@
         "partial": false,
         "sales": 4080.4,
         "orders": 139,
-        "orders_estimated": true,
         "aov": 29.36,
         "new_customers": 37,
         "rating": 4.78,
@@ -206,19 +205,44 @@
         "rejection_pct": 0.0,
         "inaccuracy_pct": 0.0,
         "rider_wait_5min_pct": 0.7,
-        "conversion_pct": null,
+        "conversion_pct": 8.3,
         "wow": {
-          "gmv_pct": null,
-          "orders_abs": null,
-          "prev_gmv": null,
-          "prev_orders": null
+          "gmv_pct": -18.3,
+          "orders_abs": -23,
+          "prev_gmv": 4996.31,
+          "prev_orders": 162
         },
-        "gmv_vs_4wk_pct": null,
-        "gmv_vs_ly_pct": null,
-        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
+        "gmv_vs_4wk_pct": -16.2,
+        "gmv_vs_ly_pct": -31.2,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
         "busy_mode_pct": 1.8
       },
-      "gaps": []
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Sales target missed by 357 GBP per the meeting; spend per head and covers both down on voucher usage.",
+          "Delivery solid; prep times and order accuracy improved with extra sushi bar support.",
+          "Labour over target: supervisor training hours plus Penny's hours logged to the wrong site.",
+          "Food variance 9.6% per the meeting, partly recipe changes and matcha showing under both food and drink.",
+          "Baffling one star review claiming staff were throwing chairs (likely chairs being moved).",
+          "Staff: EA and Genua completed open and close training; Renry leaving hospitality on the 24th; Matt back from holiday on the 14th; BOH hiring started with Hanna Awang ahead of a chef holiday.",
+          "Compliance 95%; maintenance logs clear.",
+          "Upcoming: book launch (30 tickets sold), frozen ramen promo moved to the 19th; AGM hire approved by Ka Ho.",
+          "Region: food spend target temporarily raised to 26% until current promotions end (Matthew Jenner).",
+          "Region: hats or hairnets mandatory for all staff to prevent food contamination.",
+          "Region: menu to be redesigned with spice levels built into all ramen dishes and free chillies removed.",
+          "Region: GM and HC meeting notes must run through Google Meet so Gemini takes the notes; budget router templates updated, Monday dates must be entered correctly."
+        ],
+        "actions": [
+          "Correct the matcha category so it does not count under both food and drink - Owner: Scott Renwick (20/10/2026)",
+          "Recruit BOH cover ahead of the chef holiday - Owner: Scott Renwick (20/10/2026)",
+          "Progress the AGM hire - Owner: Scott Renwick (20/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "gmail:1a1353aa80bbf357",
+        "source": "EDI/NEW Weekly KPI Meeting Gemini notes of 13/10/2026 (emailed by Oisin Darragh), reviewing w/c 05/10. Section 'Maki Ramen (Scott)' mapped to M8 Renfield by speaker (Scott Renwick, GM)."
+      }
     }
   }
 }
