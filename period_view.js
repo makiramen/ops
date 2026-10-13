@@ -52,6 +52,7 @@
   table.pv td.ann{white-space:normal;text-align:left;min-width:280px;color:var(--ink-2);line-height:1.45;font-size:12px}\
   table.pv tr.cluster td{background:var(--maki-orange-bg);color:var(--maki-ink);font-weight:800;font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:7px 10px}\
   table.pv tr.sub td{background:var(--surface-2);font-weight:700}\
+  table.pv td.pv-tint-green{background:var(--green-bg)} table.pv td.pv-tint-amber{background:var(--amber-bg)} table.pv td.pv-tint-red{background:var(--red-bg)}\
   table.pv tr.total td{background:var(--maki-ink);color:#fff;font-weight:800;border-bottom:0}\
   table.pv tr.total td:first-child{background:var(--maki-ink)}\
   table.pv tr.total .pv-wow{color:#fff;opacity:.9}\
@@ -105,12 +106,29 @@
     food:   { label: 'Food %',  fmt: pct1, upGood: false, how: 'wavg', wowAbs: true },
     score:  { label: 'Score',   fmt: int,  upGood: true,  how: 'avg',  wowAbs: true }
   };
-  function tint(metric, v){
-    if (v == null) return '';
-    if (metric === 'wage')  return v <= 22 ? 'pv-tint-green' : v <= 24 ? 'pv-tint-amber' : 'pv-tint-red';
-    if (metric === 'food')  return v <= 25 ? 'pv-tint-green' : 'pv-tint-red';
-    if (metric === 'score') return v >= 95 ? 'pv-tint-green' : v >= 80 ? 'pv-tint-amber' : 'pv-tint-red';
+  // One RAG band set for every cell, the same bands the weekly view uses
+  // (wageRag / foodRag / sphRag / efficiencyRag / weeklyRatingRag in index.html).
+  function sphTargetFor(code){ if (typeof sphTarget === 'function') return sphTarget(code); return 22; }
+  function band(metric, v, ctx){
+    ctx = ctx || {};
+    if (v == null || isNaN(v)) return '';
+    if (metric === 'sales'){ var t = ctx.target; if (!t) return ''; var vt = pctChange(v, t); return vt >= 0 ? 'green' : vt >= -10 ? 'amber' : 'red'; }
+    if (metric === 'vst')   return v >= 0 ? 'green' : v >= -10 ? 'amber' : 'red';
+    if (metric === 'covers'){ if (ctx.prev == null) return ''; var cw = pctChange(v, ctx.prev); return cw == null ? '' : cw >= 0 ? 'green' : cw >= -5 ? 'amber' : 'red'; }
+    if (metric === 'sph'){ var st = ctx.sphT != null ? ctx.sphT : 22; return v >= st ? 'green' : v >= st - 2 ? 'amber' : 'red'; }
+    if (metric === 'wage')   return (typeof wageRag === 'function') ? wageRag(v) : (v <= 21 ? 'green' : v <= 23 ? 'amber' : 'red');
+    if (metric === 'food')   return (typeof foodRag === 'function') ? foodRag(v) : (v <= 25 ? 'green' : v <= 28 ? 'amber' : 'red');
+    if (metric === 'score')  return v >= 95 ? 'green' : v >= 80 ? 'amber' : 'red';
+    if (metric === 'rating') return v >= 4.7 ? 'green' : v >= 4.5 ? 'amber' : 'red';
     return '';
+  }
+  function tint(metric, v, ctx){ var b = band(metric, v, ctx); return b ? 'pv-tint-' + b : ''; }
+  // Tint for a "vs prior" cell: by whether the move is good or bad.
+  function tintDelta(cur, prv, metric){
+    var m = METRICS[metric]; if (cur == null || prv == null) return '';
+    var dl = m.wowAbs ? cur - prv : pctChange(cur, prv); if (dl == null) return '';
+    if (Math.abs(dl) < 0.05) return 'pv-tint-amber';
+    var up = dl > 0, good = m.upGood ? up : !up; return good ? 'pv-tint-green' : 'pv-tint-red';
   }
   // WoW chip. Percent change for £ / counts, absolute points for % and score.
   function wow(cur, prev, metric){
@@ -144,7 +162,7 @@
       .then(function (j) { cache[monday] = j; return j; });
   }
   // One flat record per site per week.
-  function siteRec(s){
+  function siteRec(s, code){
     var k = s.kpis || {};
     var sales = k.sales && k.sales.actual, covers = k.covers && k.covers.actual;
     var sph = (k.sph && k.sph.actual != null) ? k.sph.actual : (sales != null && covers ? sales / covers : null);
@@ -157,16 +175,18 @@
       triggers: (s.red_light && s.red_light.triggers) || [],
       varPct: k.sales && k.sales.var_pct,
       rating: s.reviews && s.reviews.week_avg_rating, nReviews: s.reviews && s.reviews.new_reviews,
-      prep: s.deliveroo && s.deliveroo.avg_prep_min
+      prep: s.deliveroo && s.deliveroo.avg_prep_min,
+      sphT: sphTargetFor(code != null ? ((typeof jsonToDisplay === 'function') ? jsonToDisplay(code) : code) : null)
     };
   }
   // Aggregate a list of site records.
   function aggregate(recs){
-    var a = { sales: 0, target: 0, nTarget: 0, covers: 0, wageNum: 0, wageDen: 0, foodNum: 0, foodDen: 0, scoreSum: 0, scoreN: 0, red: 0, amber: 0, green: 0, n: 0, redSites: [] };
+    var a = { sales: 0, target: 0, nTarget: 0, covers: 0, wageNum: 0, wageDen: 0, foodNum: 0, foodDen: 0, scoreSum: 0, scoreN: 0, red: 0, amber: 0, green: 0, n: 0, redSites: [], sphTNum: 0, sphTDen: 0, ratNum: 0, ratDen: 0 };
     recs.forEach(function (r) {
       a.n++;
       if (r.sales != null){ a.sales += r.sales; if (r.target != null){ a.target += r.target; a.nTarget++; } }
-      if (r.covers != null) a.covers += r.covers;
+      if (r.covers != null){ a.covers += r.covers; if (r.sphT != null){ a.sphTNum += r.sphT * r.covers; a.sphTDen += r.covers; } }
+      if (r.rating != null && r.nReviews){ a.ratNum += r.rating * r.nReviews; a.ratDen += r.nReviews; }
       if (r.wage != null && r.sales != null){ a.wageNum += r.wage * r.sales; a.wageDen += r.sales; }
       if (r.food != null && r.sales != null){ a.foodNum += r.food * r.sales; a.foodDen += r.sales; }
       if (r.score != null){ a.scoreSum += r.score; a.scoreN++; }
@@ -178,7 +198,8 @@
       covers: a.n ? a.covers : null, sph: a.covers ? a.sales / a.covers : null,
       wage: a.wageDen ? a.wageNum / a.wageDen : null, food: a.foodDen ? a.foodNum / a.foodDen : null,
       score: a.scoreN ? a.scoreSum / a.scoreN : null,
-      red: a.red, amber: a.amber, green: a.green, redSites: a.redSites, n: a.n
+      red: a.red, amber: a.amber, green: a.green, redSites: a.redSites, n: a.n,
+      sphT: a.sphTDen ? a.sphTNum / a.sphTDen : 22, rating: a.ratDen ? a.ratNum / a.ratDen : null, nReviews: a.ratDen
     };
   }
 
@@ -284,7 +305,54 @@
   ];
   function rlState(kpi, r){ if (!r) return 'na'; if (kpi.na && kpi.na(r)) return 'na'; return kpi.test(r) ? 'red' : 'ok'; }
 
-  var ALL_LOADED = false;
+  /* ---------- complaint themes (Google reviews, from reviews_intel.json) ---------- */
+  var THEME_LABEL = { food: 'food quality', service: 'service', speed: 'speed', value: 'value', cleanliness_ambience: 'cleanliness', accuracy: 'order accuracy', hours_access: 'hours', availability: 'availability', digital_payment: 'payment tech' };
+  var THEMES = null;        // site -> week monday -> { n, cats:{cat:n}, hyg }
+  var THEMES_P = null;
+  function loadThemes(){
+    if (THEMES_P) return THEMES_P;
+    THEMES_P = fetch(DATA + 'reviews_intel.json', { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        var t = {};
+        ((j && j.reviews) || []).forEach(function (r) {
+          if (!r.issues || !r.issues.length) return;
+          var w = r.week; if (!w) return;
+          var site = t[r.site] || (t[r.site] = {}); var x = site[w] || (site[w] = { n: 0, cats: {}, hyg: 0 });
+          x.n++;
+          var seen = {}, hyg = false;
+          r.issues.forEach(function (i) { var c = i && i.cat; if (!c || seen[c]) return; seen[c] = 1; x.cats[c] = (x.cats[c] || 0) + 1; });
+          r.issues.forEach(function (i) { if (i && ((i.cat === 'food' && i.sub === 'hygiene_foreign') || (i.cat === 'cleanliness_ambience' && i.sub === 'dirty'))) hyg = true; });
+          if (hyg) x.hyg++;
+        });
+        THEMES = t; return t;
+      })
+      .catch(function () { THEMES = {}; return THEMES; });
+    return THEMES_P;
+  }
+  // Sum complaint themes for a list of json site codes in one week.
+  function themesFor(codes, monday){
+    if (!THEMES) return null;
+    var out = { n: 0, cats: {}, hyg: 0, bySite: [] };
+    codes.forEach(function (c) {
+      var x = THEMES[c] && THEMES[c][monday]; if (!x) return;
+      out.n += x.n; out.hyg += x.hyg; out.bySite.push({ code: c, n: x.n });
+      Object.keys(x.cats).forEach(function (k) { out.cats[k] = (out.cats[k] || 0) + x.cats[k]; });
+    });
+    return out;
+  }
+  function complaintsText(t, siteLabels){
+    if (t == null) return 'Complaints: loading.';
+    if (!t.n) return 'No complaints.';
+    var top = Object.keys(t.cats).sort(function (a, b) { return t.cats[b] - t.cats[a]; }).slice(0, 3)
+      .map(function (k) { return (THEME_LABEL[k] || k) + ' ' + t.cats[k]; }).join(', ');
+    var s = 'Complaints ' + t.n + ': ' + top;
+    if (t.hyg) s += ' (' + t.hyg + ' hygiene)';
+    if (siteLabels && t.bySite.length > 1){ var m = t.bySite.slice().sort(function (a, b) { return b.n - a.n; })[0]; s += '; most at ' + (siteLabels[m.code] || m.code) + ' (' + m.n + ')'; }
+    return s + '.';
+  }
+
+  var ALL_LOADED = false, DRAW_TOKEN = 0;
   function loadAllWeeks(){ if (ALL_LOADED) return Promise.resolve(); return Promise.all(weeksIndex.map(function (w) { return fetchWeek(w.monday); })).then(function () { ALL_LOADED = true; }); }
 
   function draw(cur, prev, prevK){
@@ -296,7 +364,7 @@
       var j = cache[w.monday]; if (!j || !j.sites) return null;
       var recs = [], bySite = {};
       Object.keys(j.sites).forEach(function (code) {
-        var r = siteRec(j.sites[code]); var nm = siteName(code, j.sites[code].name);
+        var r = siteRec(j.sites[code], code); var nm = siteName(code, j.sites[code].name);
         r.label = nm.code; r.name = nm.name; r.jsonCode = code; r.cluster = j.sites[code].cluster || '';
         recs.push(r); bySite[code] = r;
       });
@@ -376,21 +444,21 @@
       var vt = e.target ? pctChange(e.sales, e.target) : null;
       var sr = siteOnly ? w.bySite[siteOnly] : null;
       h += '<tr><td class="name">' + wcLabel(w.monday) + '<span>' + rangeLabel(w.monday) + '</span></td>' +
-        '<td>' + gbp(e.sales) + wow(e.sales, pe && pe.sales, 'sales') + '</td>' +
-        '<td>' + (vt == null ? 'n/a' : '<span class="pv-chip ' + (vt >= 0 ? 'green' : vt >= -10 ? 'amber' : 'red') + '">' + (vt > 0 ? '+' : '') + vt.toFixed(1) + '%</span>') + '</td>' +
-        '<td>' + int(e.covers) + wow(e.covers, pe && pe.covers, 'covers') + '</td>' +
-        '<td>' + gbp2(e.sph) + wow(e.sph, pe && pe.sph, 'sph') + '</td>' +
+        '<td class="' + tint('sales', e.sales, { target: e.target }) + '">' + gbp(e.sales) + wow(e.sales, pe && pe.sales, 'sales') + '</td>' +
+        '<td class="' + tint('vst', vt) + '">' + (vt == null ? 'n/a' : '<span class="pv-chip ' + band('vst', vt) + '">' + (vt > 0 ? '+' : '') + vt.toFixed(1) + '%</span>') + '</td>' +
+        '<td class="' + tint('covers', e.covers, { prev: pe && pe.covers }) + '">' + int(e.covers) + wow(e.covers, pe && pe.covers, 'covers') + '</td>' +
+        '<td class="' + tint('sph', e.sph, { sphT: e.sphT }) + '">' + gbp2(e.sph) + wow(e.sph, pe && pe.sph, 'sph') + '</td>' +
         '<td class="' + tint('wage', e.wage) + '">' + pct1(e.wage) + wow(e.wage, pe && pe.wage, 'wage') + '</td>' +
         '<td class="' + tint('food', e.food) + '">' + pct1(e.food) + wow(e.food, pe && pe.food, 'food') + '</td>' +
         '<td class="' + tint('score', e.score) + '">' + (e.score == null ? 'n/a' : e.score.toFixed(0)) + wow(e.score, pe && pe.score, 'score') + '</td>';
       if (siteOnly){
-        h += '<td>' + (sr && sr.rating != null ? sr.rating.toFixed(2) + '★' + (sr.nReviews != null ? '<span class="pv-wow na">' + sr.nReviews + ' reviews</span>' : '') : 'n/a') + '</td>' +
-          '<td style="white-space:normal;max-width:170px;text-align:left">' + (sr && sr.red ? sr.triggers.map(function (t) { return '<span class="pv-chip red">' + esc(t) + '</span>'; }).join(' ') : '<span class="pv-chip green">clear</span>') + '</td>';
+        h += '<td class="' + tint('rating', sr && sr.rating) + '">' + (sr && sr.rating != null ? sr.rating.toFixed(2) + '★' + (sr.nReviews != null ? '<span class="pv-wow na">' + sr.nReviews + ' reviews</span>' : '') : 'n/a') + '</td>' +
+          '<td class="' + (sr && sr.red ? 'pv-tint-red' : 'pv-tint-green') + '" style="white-space:normal;max-width:170px;text-align:left">' + (sr && sr.red ? sr.triggers.map(function (t) { return '<span class="pv-chip red">' + esc(t) + '</span>'; }).join(' ') : '<span class="pv-chip green">clear</span>') + '</td>';
       } else {
-        h += '<td><span class="pv-dot red"></span>' + e.red + ' <span class="pv-dot amber"></span>' + e.amber + ' <span class="pv-dot green"></span>' + e.green + '</td>' +
-          '<td>' + (e.redSites.length ? '<span class="pv-chip red">' + e.redSites.length + '</span>' : '<span class="pv-chip green">0</span>') + '</td>';
+        h += '<td class="' + (e.red ? 'pv-tint-red' : e.amber ? 'pv-tint-amber' : 'pv-tint-green') + '"><span class="pv-dot red"></span>' + e.red + ' <span class="pv-dot amber"></span>' + e.amber + ' <span class="pv-dot green"></span>' + e.green + '</td>' +
+          '<td class="' + (e.redSites.length ? 'pv-tint-red' : 'pv-tint-green') + '">' + (e.redSites.length ? '<span class="pv-chip red">' + e.redSites.length + '</span>' : '<span class="pv-chip green">0</span>') + '</td>';
       }
-      h += '<td class="ann">' + (siteOnly ? annotateSite(sr, b && b.bySite[siteOnly]) : annotate(w, b, inScope)) + '</td></tr>';
+      h += '<td class="ann">' + (siteOnly ? annotateSite(sr, b && b.bySite[siteOnly], themesFor([siteOnly], w.monday)) : annotate(w, b, inScope, themesFor(scopeCodes, w.monday), seen)) + '</td></tr>';
     });
     h += '<tr class="total"><td class="name">' + esc(label) + ' total</td><td>' + gbp(totCur.sales) + (totPrev ? wow(totCur.sales, totPrev.sales, 'sales') : '') + '</td>' +
       '<td>' + (vsT == null ? 'n/a' : (vsT > 0 ? '+' : '') + vsT.toFixed(1) + '%') + '</td>' +
@@ -407,7 +475,8 @@
 
     /* ----- Site by site grid (or single site, all measures) ----- */
     var m = METRICS[metric];
-    function periodVal(recs){ var a = aggregate(recs); return a[metric]; }
+    function periodAgg(recs){ return aggregate(recs); }
+    function periodVal(recs){ return periodAgg(recs)[metric]; }
     if (siteOnly){
       var sc = siteOnly;
       h += '<div class="pv-card"><h2>' + esc(scopeLabel) + ', every measure week by week</h2><div class="hint">Period column: sales and covers summed, SPH from the totals, wage % and food % sales-weighted, score averaged' + (totPrev ? '; compared like for like with ' + prevLabel : '') + '.</div><div class="pv-scroll"><table class="pv"><thead><tr><th>Measure</th>' + curW.map(function (w) { return '<th>' + wcLabel(w.monday) + '</th>'; }).join('') + '<th>' + esc(label) + '</th>' + (totPrev ? '<th>vs prior</th>' : '') + '</tr></thead><tbody>';
@@ -416,15 +485,15 @@
         curW.forEach(function (w, i) {
           var r = w.bySite[sc], v = r ? r[mk] : null;
           var b = i > 0 ? curW[i - 1].bySite[sc] : (before0 && before0.bySite[sc]);
-          cells += '<td class="' + tint(mk, v) + '">' + mm.fmt(v) + wow(v, b ? b[mk] : null, mk) + '</td>';
+          cells += '<td class="' + tint(mk, v, { target: r && r.target, prev: b && b[mk], sphT: r && r.sphT }) + '">' + mm.fmt(v) + wow(v, b ? b[mk] : null, mk) + '</td>';
         });
         var pv = totCur[mk], pp = totPrev ? totPrev[mk] : null;
-        h += '<tr><td class="name">' + mm.label + '</td>' + cells + '<td class="' + tint(mk, pv) + '"><strong>' + mm.fmt(pv) + '</strong></td>' + (totPrev ? '<td>' + mm.fmt(pp) + wow(pv, pp, mk) + '</td>' : '') + '</tr>';
+        h += '<tr><td class="name">' + mm.label + '</td>' + cells + '<td class="' + tint(mk, pv, { target: totCur.target, prev: pp, sphT: totCur.sphT }) + '"><strong>' + mm.fmt(pv) + '</strong></td>' + (totPrev ? '<td class="' + tintDelta(pv, pp, mk) + '">' + mm.fmt(pp) + wow(pv, pp, mk) + '</td>' : '') + '</tr>';
       });
       // extra rows: vs target, rating, red light
-      h += '<tr><td class="name">vs target</td>' + curW.map(function (w) { var r = w.bySite[sc]; var v = r && r.varPct; return '<td>' + (v == null ? 'n/a' : '<span class="pv-chip ' + (v >= 0 ? 'green' : v >= -10 ? 'amber' : 'red') + '">' + (v > 0 ? '+' : '') + v.toFixed(1) + '%</span>') + '</td>'; }).join('') + '<td>' + (vsT == null ? 'n/a' : '<strong>' + (vsT > 0 ? '+' : '') + vsT.toFixed(1) + '%</strong>') + '</td>' + (totPrev ? '<td></td>' : '') + '</tr>';
-      h += '<tr><td class="name">Google rating</td>' + curW.map(function (w) { var r = w.bySite[sc]; return '<td class="' + (r && r.rating != null ? (r.rating < 4.7 ? 'pv-tint-red' : 'pv-tint-green') : '') + '">' + (r && r.rating != null ? r.rating.toFixed(2) + '★' : 'n/a') + (r && r.nReviews != null ? '<span class="pv-wow na">' + r.nReviews + ' reviews</span>' : '') + '</td>'; }).join('') + '<td></td>' + (totPrev ? '<td></td>' : '') + '</tr>';
-      h += '<tr><td class="name">Red light</td>' + curW.map(function (w) { var r = w.bySite[sc]; return '<td style="white-space:normal;max-width:180px">' + (r && r.red ? r.triggers.map(function (t) { return '<span class="pv-chip red">' + esc(t) + '</span>'; }).join(' ') : '<span class="pv-chip green">clear</span>') + '</td>'; }).join('') + '<td>' + curW.filter(function (w) { return w.bySite[sc] && w.bySite[sc].red; }).length + ' of ' + nWeeks + ' weeks red</td>' + (totPrev ? '<td></td>' : '') + '</tr>';
+      h += '<tr><td class="name">vs target</td>' + curW.map(function (w) { var r = w.bySite[sc]; var v = r && r.varPct; return '<td class="' + tint('vst', v) + '">' + (v == null ? 'n/a' : '<span class="pv-chip ' + band('vst', v) + '">' + (v > 0 ? '+' : '') + v.toFixed(1) + '%</span>') + '</td>'; }).join('') + '<td class="' + tint('vst', vsT) + '">' + (vsT == null ? 'n/a' : '<strong>' + (vsT > 0 ? '+' : '') + vsT.toFixed(1) + '%</strong>') + '</td>' + (totPrev ? '<td></td>' : '') + '</tr>';
+      h += '<tr><td class="name">Google rating</td>' + curW.map(function (w) { var r = w.bySite[sc]; return '<td class="' + tint('rating', r && r.rating) + '">' + (r && r.rating != null ? r.rating.toFixed(2) + '★' : 'n/a') + (r && r.nReviews != null ? '<span class="pv-wow na">' + r.nReviews + ' reviews</span>' : '') + '</td>'; }).join('') + '<td class="' + tint('rating', totCur.rating) + '">' + (totCur.rating != null ? '<strong>' + totCur.rating.toFixed(2) + '★</strong><span class="pv-wow na">' + totCur.nReviews + ' reviews</span>' : '') + '</td>' + (totPrev ? '<td class="' + (totCur.rating != null && totPrev.rating != null ? (totCur.rating > totPrev.rating + 0.005 ? 'pv-tint-green' : totCur.rating < totPrev.rating - 0.005 ? 'pv-tint-red' : 'pv-tint-amber') : '') + '">' + (totPrev.rating != null ? totPrev.rating.toFixed(2) + '★' : '') + '</td>' : '') + '</tr>';
+      h += '<tr><td class="name">Red light</td>' + curW.map(function (w) { var r = w.bySite[sc]; return '<td class="' + (r && r.red ? 'pv-tint-red' : 'pv-tint-green') + '" style="white-space:normal;max-width:180px">' + (r && r.red ? r.triggers.map(function (t) { return '<span class="pv-chip red">' + esc(t) + '</span>'; }).join(' ') : '<span class="pv-chip green">clear</span>') + '</td>'; }).join('') + '<td class="' + (curW.some(function (w) { return w.bySite[sc] && w.bySite[sc].red; }) ? 'pv-tint-red' : 'pv-tint-green') + '">' + curW.filter(function (w) { return w.bySite[sc] && w.bySite[sc].red; }).length + ' of ' + nWeeks + ' weeks red</td>' + (totPrev ? '<td></td>' : '') + '</tr>';
       h += '</tbody></table></div></div>';
     } else {
       h += '<div class="pv-card"><h2>Site by site, week by week' + (scope !== 'all' ? ' · ' + esc(scopeLabel) : '') + '</h2><div class="hint">Pick a measure. Each cell shows the week’s value with its WoW move underneath. Click a site to open it on its own. The period column is the ' +
@@ -434,15 +503,15 @@
       function rowFor(nameHtml, recsPerWeek, prevRecsAll, cls, attr){
         var cells = '', valsAll = [];
         curW.forEach(function (w, i) {
-          var recs = recsPerWeek[i]; var v = recs.length ? periodVal(recs) : null;
+          var recs = recsPerWeek[i]; var ag = recs.length ? periodAgg(recs) : null; var v = ag ? ag[metric] : null;
           var b = i > 0 ? recsPerWeek[i - 1] : recsPerWeek.before;
           var pv = b && b.length ? periodVal(b) : null;
           valsAll = valsAll.concat(recs);
-          cells += '<td class="' + (cls ? '' : tint(metric, v)) + '">' + m.fmt(v) + wow(v, pv, metric) + '</td>';
+          cells += '<td class="' + (cls === 'total' ? '' : tint(metric, v, { target: ag && ag.target, prev: pv, sphT: ag && ag.sphT })) + '">' + m.fmt(v) + wow(v, pv, metric) + '</td>';
         });
-        var pval = valsAll.length ? periodVal(valsAll) : null;
+        var pag = valsAll.length ? periodAgg(valsAll) : null, pval = pag ? pag[metric] : null;
         var ppval = prevRecsAll && prevRecsAll.length ? periodVal(prevRecsAll) : null;
-        return '<tr' + (cls ? ' class="' + cls + '"' : '') + (attr || '') + '><td class="name">' + nameHtml + '</td>' + cells + '<td class="' + (cls ? '' : tint(metric, pval)) + '"><strong>' + m.fmt(pval) + '</strong></td>' + (totPrev ? '<td>' + m.fmt(ppval) + wow(pval, ppval, metric) + '</td>' : '') + '</tr>';
+        return '<tr' + (cls ? ' class="' + cls + '"' : '') + (attr || '') + '><td class="name">' + nameHtml + '</td>' + cells + '<td class="' + (cls === 'total' ? '' : tint(metric, pval, { target: pag && pag.target, prev: ppval, sphT: pag && pag.sphT })) + '"><strong>' + m.fmt(pval) + '</strong></td>' + (totPrev ? '<td class="' + (cls === 'total' ? '' : tintDelta(pval, ppval, metric)) + '">' + m.fmt(ppval) + wow(pval, ppval, metric) + '</td>' : '') + '</tr>';
       }
       var cols = curW.length + 2 + (totPrev ? 1 : 0);
       clusters.filter(function (cl) { return scope === 'all' || scope === cl; }).forEach(function (cl) {
@@ -462,7 +531,7 @@
       h += rowFor(scope === 'all' ? 'Estate' : esc(scope) + ' total', perE, allPrev, 'total');
       h += '</tbody></table></div></div>';
     }
-    h += '<div class="pv-foot">Wage % bands: green 22.0% and under, amber 22.01 to 24%, red above 24%. Food % red above 25%. Score: green 95 and above, amber 80 to 94, red below 80. A week sits in the month or quarter its Monday falls in. Sales and covers are summed; SPH is period sales over period covers; wage % and food % are sales-weighted; score is the average of the site scores. Red light basis per KPI: ' + RL_KPIS.map(function (k) { return k.label + ' (' + k.rule + ')'; }).join('; ') + '. Sources: the same weekly site JSON files the This Week view reads.</div>';
+    h += '<div class="pv-foot">Every cell is banded red, amber or green on the same bands as the weekly view. Sales vs target: green at or above target, amber to -10%, red below -10%. Covers: WoW, green up, amber to -5%, red below -5%. SPH vs the site target (£22; Maki Nori £35; Ikigai £21): green at target, amber within £2, red below. Wage %: green 21% and under, amber to 23%, red above 23%. Food %: green 25% and under, amber to 28%, red above 28%. Score: green 95 and above, amber 80 to 94, red below 80. Rating: green 4.7 and above, amber 4.5 to 4.69, red below 4.5. "vs prior" cells: green if the move is good, red if bad. Complaints in the annotation are Google reviews of any star rating carrying at least one classified issue (from the Reviews intelligence file), counted once per theme; hygiene = dirty premises or a foreign body / food safety mention. A week sits in the month or quarter its Monday falls in. Sales and covers are summed; SPH is period sales over period covers; wage % and food % are sales-weighted; score is the average of the site scores. Red light basis per KPI: ' + RL_KPIS.map(function (k) { return k.label + ' (' + k.rule + ')'; }).join('; ') + '. Sources: the same weekly site JSON files the This Week view reads.</div>';
 
     view.innerHTML = h;
     view.querySelectorAll('[data-metric]').forEach(function (b) { b.addEventListener('click', function () { metric = b.getAttribute('data-metric'); draw(cur, prev, prevK); }); });
@@ -472,6 +541,8 @@
 
     // Red light board needs the full history for streaks.
     loadAllWeeks().then(function () { drawRedLights(curW, scopeCodes, seen, clusterOf); });
+    // Complaint themes land once, then the annotations are redrawn.
+    if (!THEMES){ var token = ++DRAW_TOKEN; loadThemes().then(function () { if (token === DRAW_TOKEN) draw(cur, prev, prevK); }); }
   }
 
   function drawRedLights(curW, codes, seen, clusterOf){
@@ -517,53 +588,65 @@
     host.querySelectorAll('.pv-site-row').forEach(function (tr) { tr.addEventListener('click', function () { var sel = document.getElementById('pv-site'); scope = 'site:' + tr.getAttribute('data-site'); if (sel){ sel.value = scope; sel.dispatchEvent(new Event('change')); } window.scrollTo({ top: 0, behavior: 'smooth' }); }); });
   }
 
-  // Plain English note for one site week.
-  function annotateSite(r, b){
+  function pp(v){ return (v > 0 ? '+' : '') + v.toFixed(1) + 'pp'; }
+  function pc(v){ return (v > 0 ? '+' : '') + v.toFixed(1) + '%'; }
+  function trig(t){ return t.split(' ')[0]; }
+
+  // Short note for one site week.
+  function annotateSite(r, b, th){
     if (!r) return 'No file for this site this week.';
     var p = [];
-    if (r.varPct != null) p.push('Sales ' + (r.varPct >= 0 ? '+' : '') + r.varPct.toFixed(1) + '% vs target');
-    if (b && b.sales != null && r.sales != null){ var sw = pctChange(r.sales, b.sales); if (sw != null) p.push((sw >= 0 ? 'up ' : 'down ') + Math.abs(sw).toFixed(1) + '% WoW (' + gbp(r.sales - b.sales) + ')'); }
-    if (b && b.covers != null && r.covers != null){ var cw = pctChange(r.covers, b.covers); if (cw != null) p.push('covers ' + (cw > 0 ? '+' : '') + cw.toFixed(1) + '%'); }
-    var s = p.join(', ') + '.';
-    if (b && r.wage != null && b.wage != null && Math.abs(r.wage - b.wage) >= 0.5) s += ' Wage ' + (r.wage > b.wage ? 'worse' : 'better') + ' by ' + Math.abs(r.wage - b.wage).toFixed(1) + ' pp.';
-    if (b && r.food != null && b.food != null && Math.abs(r.food - b.food) >= 0.5) s += ' Food ' + (r.food > b.food ? 'worse' : 'better') + ' by ' + Math.abs(r.food - b.food).toFixed(1) + ' pp.';
-    if (r.rating != null) s += ' Rating ' + r.rating.toFixed(2) + (r.rating < 4.7 ? ' (below 4.7).' : '.');
-    if (r.prep != null && r.prep > 15) s += ' Deliveroo prep ' + r.prep.toFixed(1) + ' min (over 15).';
-    s += r.red ? ' Red light: ' + r.triggers.join(', ') + '.' : ' No red light.';
-    if (b){ var nw = r.triggers.filter(function (t) { return !b.triggers.some(function (u) { return u.split(' ')[0] === t.split(' ')[0]; }); }); var cl = b.triggers.filter(function (t) { return !r.triggers.some(function (u) { return u.split(' ')[0] === t.split(' ')[0]; }); }); if (nw.length) s += ' New: ' + nw.map(function (t) { return t.split(' ')[0]; }).join(', ') + '.'; if (cl.length) s += ' Cleared: ' + cl.map(function (t) { return t.split(' ')[0]; }).join(', ') + '.'; }
-    return esc(s);
+    if (r.varPct != null) p.push('Sales ' + pc(r.varPct) + ' vs target');
+    var sw = b && b.sales != null && r.sales != null ? pctChange(r.sales, b.sales) : null;
+    if (sw != null) p.push(pc(sw) + ' WoW (' + (r.sales - b.sales < 0 ? '-' : '+') + gbp(Math.abs(r.sales - b.sales)) + ')');
+    var s = p.length ? p.join(', ') + '.' : '';
+    var c = [];
+    if (b && r.wage != null && b.wage != null && Math.abs(r.wage - b.wage) >= 0.5) c.push('wage ' + pp(r.wage - b.wage));
+    if (b && r.food != null && b.food != null && Math.abs(r.food - b.food) >= 0.5) c.push('food ' + pp(r.food - b.food));
+    if (c.length) s += ' ' + c.join(', ').replace(/^./, function (x) { return x.toUpperCase(); }) + '.';
+    if (r.rating != null) s += ' Rating ' + r.rating.toFixed(2) + (r.nReviews != null ? ' on ' + r.nReviews : '') + (r.rating < 4.7 ? ' (under 4.7).' : '.');
+    s += ' ' + complaintsText(th);
+    if (r.prep != null && r.prep > 15) s += ' Deliveroo prep ' + r.prep.toFixed(1) + ' min.';
+    var rl = r.red ? 'Red light: ' + r.triggers.map(trig).join(', ') : 'No red light';
+    if (b){
+      var nw = r.triggers.filter(function (t) { return !b.triggers.some(function (u) { return trig(u) === trig(t); }); }).map(trig);
+      var cl = b.triggers.filter(function (t) { return !r.triggers.some(function (u) { return trig(u) === trig(t); }); }).map(trig);
+      var x = []; if (nw.length) x.push('new ' + nw.join(', ')); if (cl.length) x.push('cleared ' + cl.join(', '));
+      if (x.length) rl += ' (' + x.join('; ') + ')';
+    }
+    return esc(s.trim() + ' ' + rl + '.');
   }
 
-  // Plain English note for one estate week.
-  function annotate(w, before, inScope){
+  // Short note for one estate / cluster week.
+  function annotate(w, before, inScope, th, seen){
     inScope = inScope || function(){ return true; };
     var e = w.est;
-    if (!before) return 'First week in the data set, so no WoW comparison.';
+    var labels = {}; Object.keys(seen || {}).forEach(function (c) { labels[c] = seen[c].label; });
+    if (!before) return esc('First week in the data set, no WoW. ' + complaintsText(th, labels));
     var pe = before.est, parts = [];
     var sw = pctChange(e.sales, pe.sales);
-    if (sw != null) parts.push('Sales ' + (sw > 0 ? 'up ' : sw < 0 ? 'down ' : 'flat ') + (sw ? Math.abs(sw).toFixed(1) + '%' : '') + ' WoW (' + gbp(e.sales - pe.sales) + ')');
+    if (sw != null) parts.push('Sales ' + pc(sw) + ' WoW (' + (e.sales - pe.sales < 0 ? '-' : '+') + gbp(Math.abs(e.sales - pe.sales)) + ')');
     var cw = pctChange(e.covers, pe.covers);
-    if (cw != null) parts.push('covers ' + (cw > 0 ? '+' : '') + cw.toFixed(1) + '%');
-    if (e.sph != null && pe.sph != null) parts.push('SPH ' + (e.sph - pe.sph >= 0 ? '+' : '-') + '£' + Math.abs(e.sph - pe.sph).toFixed(2));
-    var s1 = parts.join(', ') + '.';
-    // movers
+    if (cw != null) parts.push('covers ' + pc(cw));
+    var s = parts.join(', ') + '.';
     var moves = [];
     w.recs.filter(inScope).forEach(function (r) { var b = before.bySite[r.jsonCode]; if (!b) return; var p = pctChange(r.sales, b.sales); if (p != null) moves.push({ l: r.label, p: p }); });
     moves.sort(function (a, b) { return b.p - a.p; });
-    var ups = moves.filter(function (x) { return x.p >= 5; }).slice(0, 3), downs = moves.filter(function (x) { return x.p <= -5; }).slice(-3).reverse();
-    var s2 = '';
-    if (ups.length) s2 += ' Up most: ' + ups.map(function (x) { return x.l + ' +' + x.p.toFixed(1) + '%'; }).join(', ') + '.';
-    if (downs.length) s2 += ' Down most: ' + downs.map(function (x) { return x.l + ' ' + x.p.toFixed(1) + '%'; }).join(', ') + '.';
-    // cost lines
-    var s3 = '';
-    if (e.wage != null && pe.wage != null && Math.abs(e.wage - pe.wage) >= 0.5) s3 += ' Wage ' + (e.wage > pe.wage ? 'worse' : 'better') + ' by ' + Math.abs(e.wage - pe.wage).toFixed(1) + ' pp.';
-    if (e.food != null && pe.food != null && Math.abs(e.food - pe.food) >= 0.5) s3 += ' Food ' + (e.food > pe.food ? 'worse' : 'better') + ' by ' + Math.abs(e.food - pe.food).toFixed(1) + ' pp.';
+    var ups = moves.filter(function (x) { return x.p >= 5; }).slice(0, 2), downs = moves.filter(function (x) { return x.p <= -5; }).slice(-2).reverse();
+    if (ups.length) s += ' Up: ' + ups.map(function (x) { return x.l + ' ' + pc(x.p); }).join(', ') + '.';
+    if (downs.length) s += ' Down: ' + downs.map(function (x) { return x.l + ' ' + pc(x.p); }).join(', ') + '.';
+    var c = [];
+    if (e.wage != null && pe.wage != null && Math.abs(e.wage - pe.wage) >= 0.5) c.push('wage ' + pp(e.wage - pe.wage));
+    if (e.food != null && pe.food != null && Math.abs(e.food - pe.food) >= 0.5) c.push('food ' + pp(e.food - pe.food));
+    if (c.length) s += ' ' + c.join(', ').replace(/^./, function (x) { return x.toUpperCase(); }) + '.';
+    s += ' ' + complaintsText(th, labels);
     var newRed = e.redSites.filter(function (x) { return pe.redSites.indexOf(x) < 0; });
     var cleared = pe.redSites.filter(function (x) { return e.redSites.indexOf(x) < 0; });
-    var s4 = e.redSites.length ? ' Red lights (' + e.redSites.length + '): ' + e.redSites.join(', ') + '.' : ' No red lights.';
-    if (newRed.length) s4 += ' New: ' + newRed.join(', ') + '.';
-    if (cleared.length) s4 += ' Cleared: ' + cleared.join(', ') + '.';
-    return esc(s1 + s2 + s3 + s4);
+    var rl = e.redSites.length ? 'Red lights ' + e.redSites.length : 'No red lights';
+    function few(a){ return a.length > 4 ? a.slice(0, 4).join(', ') + ' +' + (a.length - 4) + ' more' : a.join(', '); }
+    var x = []; if (newRed.length) x.push('new ' + few(newRed)); if (cleared.length) x.push('cleared ' + few(cleared));
+    if (x.length) rl += ' (' + x.join('; ') + ')';
+    return esc(s + ' ' + rl + '.');
   }
 
   /* ---------- boot ---------- */
