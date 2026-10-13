@@ -178,6 +178,7 @@ textarea:disabled,input:disabled{background:var(--surface-2);color:var(--ink-2);
 .banner.ok{border-color:var(--green-ring);background:var(--green-bg);color:var(--green-ink)}
 ul.pts{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
 .review{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px}
+details.review>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:4px;outline:none}details.review>summary::-webkit-details-marker{display:none}details.review>summary .ch b::before{content:"▸";display:inline-block;width:14px;color:var(--maki-orange-deep);transition:transform .15s}details.review[open]>summary .ch b::before{transform:rotate(90deg)}details.review .peek{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--muted,#64748b);font-size:13px}details.review[open] .peek{display:none}details.review>summary:hover{color:var(--maki-orange-deep)}.rvtools{display:flex;gap:6px;align-items:center}
 .signs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .negs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .negs div{display:flex;justify-content:space-between;padding:8px 12px;border:1px solid var(--line);border-radius:8px}
@@ -350,19 +351,19 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
 
   <!-- WEEK: DAILY -->
   <section class="pane" data-p="daily" hidden>
-    <div class="row"><div><div class="eyebrow">Daily</div><h2>Daily cash-up, reviews &amp; quality</h2><div class="sub">Same Auto Cash Up feed as the Control Centre Daily tab, filtered to this site, with the day's Google reviews and broth checks alongside. FOH and BOH show each department's wages as a % of sales (they add up to Labour %). A blank FOH / BOH means the split failed validation that day.</div><div class="small" id="dailyWin" style="margin-top:4px;font-weight:700;color:var(--maki-orange-deep)"></div></div>
+    <div class="row"><div><div class="eyebrow">Daily</div><h2>Daily cash-up, reviews &amp; quality</h2><div class="sub">Same Auto Cash Up feed as the Control Centre Daily tab, filtered to this site, with the day's Google reviews and broth checks alongside. FOH % and BOH % show how the day's labour cost splits between the two departments (they add up to 100%). Labour % is total wages as a % of sales. A blank FOH / BOH means the split failed validation that day.</div><div class="small" id="dailyWin" style="margin-top:4px;font-weight:700;color:var(--maki-orange-deep)"></div></div>
       <div class="chips"><span class="tag t-auto">AUTO</span><span class="pill p-g">✓ Kobas guard passed</span></div></div>
     <div class="card">
       <div class="tscroll"><table id="dailyTable">
-        <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Target</th><th class="r">Var</th><th class="r">Delivery</th><th class="r" title="Deliveroo orders delivered that day">Roo orders</th><th class="r" title="Deliveroo estimated prep time, red above 15.00 min">Roo prep</th><th title="Missing items %, restaurant error cancellations and rejections that day">Roo issues</th><th class="r">Covers</th><th class="r">SPH</th><th class="r" title="FOH wages as a % of sales">FOH %</th><th class="r" title="BOH wages as a % of sales">BOH %</th><th class="r">Labour %</th><th class="r">Google</th><th>Broth</th></tr></thead>
+        <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Target</th><th class="r">Var</th><th class="r">Delivery</th><th class="r" title="Deliveroo orders delivered that day">Roo orders</th><th class="r" title="Deliveroo estimated prep time, red above 15.00 min">Roo prep</th><th title="Missing items %, restaurant error cancellations and rejections that day">Roo issues</th><th class="r">Covers</th><th class="r">SPH</th><th class="r" title="FOH share of total labour cost (FOH + BOH = 100%)">FOH %</th><th class="r" title="BOH share of total labour cost (FOH + BOH = 100%)">BOH %</th><th class="r">Labour %</th><th class="r">Google</th><th>Broth</th></tr></thead>
         <tbody id="dailyRows"></tbody>
       </table></div>
       <div class="small" style="margin-top:8px">Delivery is every platform as cashed up. Roo orders, prep and issues come from the Deliveroo daily ops feed (Deliveroo Daily Master, from the morning CSV drops); prep is red above 15.00 min; issues are missing items %, restaurant error cancellations and rejections. The 7 day total shows the weekly Tax Invoice sales when the 7 days are a full Monday to Sunday week. Google: reviews received that day and their average; red below 4.7★.</div>
     </div>
     <div class="card" id="rooCard"><div class="ch"><h3>Deliveroo ops</h3><span class="tag t-auto">AUTO</span></div><div id="rooOps"></div></div>
     <div class="grid">
-      <div class="card s7"><div class="ch"><h3 id="rvHead">Google reviews this week</h3><span class="tag t-auto">AUTO</span></div><div id="rvList" style="display:flex;flex-direction:column;gap:8px"></div><div class="small" id="rvFoot"></div></div>
-      <div class="card s5"><div class="ch"><h3 id="rpHead">Needs a reply</h3><span class="tag t-man">MANUAL · GM</span></div><div id="rpList" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="card s7"><div class="ch"><h3 id="rvHead">Google reviews this week</h3><div class="rvtools"><button type="button" class="btn sm" data-rvall="1" data-rvbox="rvList">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rvList">Collapse all</button><span class="tag t-auto">AUTO</span></div></div><div id="rvList" style="display:flex;flex-direction:column;gap:8px"></div><div class="small" id="rvFoot"></div></div>
+      <div class="card s5"><div class="ch"><h3 id="rpHead">Needs a reply</h3><div class="rvtools"><button type="button" class="btn sm" data-rvall="1" data-rvbox="rpList">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rpList">Collapse all</button><span class="tag t-man">MANUAL · GM</span></div></div><div id="rpList" style="display:flex;flex-direction:column;gap:8px"></div>
         <div class="small">Every review with a complaint (3★ or below, or a complaint inside a 4 to 5★) until marked replied. Last 4 weeks. Google has no reply column in the source yet, so the GM marks it here and it syncs through the outbox.</div></div>
     </div>
     <div class="card">
@@ -427,7 +428,7 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
       <div class="anote" id="rvNote"></div>
     </div>
     <div class="card">
-      <div class="ch"><h3 id="rvFeedHead">Reviews</h3><div class="seg" role="group" aria-label="Sort"><button type="button" data-ro="new">Newest</button><button type="button" data-ro="low">Lowest stars</button></div></div>
+      <div class="ch"><h3 id="rvFeedHead">Reviews</h3><div class="rvtools"><div class="seg" role="group" aria-label="Sort"><button type="button" data-ro="new">Newest</button><button type="button" data-ro="low">Lowest stars</button></div><button type="button" class="btn sm" data-rvall="1" data-rvbox="rvFeed">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rvFeed">Collapse all</button></div></div>
       <div class="rvfeed" id="rvFeed"></div>
     </div>
   </section>
@@ -630,7 +631,7 @@ var TODAY='__TODAY__';
 var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
 /* 12/10/2026 (Michael): the page always opens on the latest week and month, never the week saved from the last visit */S.per="week";S.wc=CUR;S.month=CUR.slice(0,7);
-['repl','broth','eotm','soName'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
+['repl','broth','eotm','soName','rvOpen'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
 var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
@@ -908,10 +909,10 @@ function issueLab(x){var c=REV.tax[x[0]];if(!c)return x[0];return x[0]==='food'?
 function issueSet(r){var o=[];r.i.forEach(function(x){var l=issueLab(x);if(o.indexOf(l)<0)o.push(l)});return o}
 function dayName(d){return DAYS[(new Date(d+'T00:00:00Z').getUTCDay()+6)%7]}
 function revCard(r,reply){var iss=issueSet(r),rp=S.repl[r.id];
-  return '<div class="review"><div class="ch"><b>'+stars(r.s)+' · '+dayName(r.d)+' '+dm(r.d)+'</b><span class="small">'+esc(r.a)+'</span></div>'+
+  return '<details class="review"'+(S.rvOpen&&S.rvOpen[r.id]?' open':'')+' data-rvid="'+r.id+'"><summary><div class="ch"><b>'+stars(r.s)+' · '+dayName(r.d)+' '+dm(r.d)+'</b><span class="small">'+esc(r.a)+'</span></div><div class="peek">'+(r.t?esc(r.t):'Star rating only, no comment')+'</div></summary>'+
     '<div>'+(r.t?esc(r.t):'<span class="ph">Star rating only, no comment</span>')+'</div>'+
     ((iss.length||reply)?'<div class="chips">'+iss.map(function(l){return '<span class="pill p-n">'+esc(l)+'</span>'}).join('')+
-    (reply?(rp?'<span class="pill p-g">✓ Replied '+dm(rp)+'</span>':'<span class="pill p-o">Reply: not yet</span><button type="button" class="btn sm" data-rep="'+r.id+'">Mark replied</button>'):'')+'</div>':'')+'</div>'}
+    (reply?(rp?'<span class="pill p-g">✓ Replied '+dm(rp)+'</span>':'<span class="pill p-o">Reply: not yet</span><button type="button" class="btn sm" data-rep="'+r.id+'">Mark replied</button>'):'')+'</div>':'')+'</details>'}
 function brothSt(dt){if(!BROTH.from||dt<BROTH.from||dt>BROTH.to)return 'n';var b=BROTH.d[dt];if(!b||b[0]==null||b[1]==null)return 'm';var t=BROTH.spec.tk,p=BROTH.spec.tp;return b[0]>=t[0]&&b[0]<=t[1]&&b[1]>=p[0]&&b[1]<=p[1]?'g':'r'}
 var BST={g:['p-g','✓ In spec'],r:['p-r','✕ Out of spec'],m:['p-r','✕ Missed'],n:['p-n','n/a']};
 function rooCells(dt){var q=DD[dt];if(!q)return '<td class="r ph">·</td><td class="r ph">·</td><td class="ph">·</td>';
@@ -934,19 +935,19 @@ function renderRooOps(anchor){var el=$('#rooOps');if(!el)return;var days=[anchor
 function renderDaily(){
   var lastDay=Object.keys(DAY).sort().pop(),anchor=isCur()?(lastDay>addD(S.wc,6)?lastDay:addD(S.wc,6)):addD(S.wc,6);
   var cur=[anchor],prv=[];for(var j=7;j>=1;j--)prv.push(addD(anchor,-j));
-  var f=function(n){return n==null?'<span class="ph">·</span>':'£'+Math.round(n).toLocaleString('en-GB')},pc=function(n,s){return n==null||!s?'<span class="ph">·</span>':(n/s*100).toFixed(1)+'%'};
+  var f=function(n){return n==null?'<span class="ph">·</span>':'£'+Math.round(n).toLocaleString('en-GB')},pc=function(n,s){return n==null||!s?'<span class="ph">·</span>':(n/s*100).toFixed(1)+'%'},sp=function(a,b){return a==null||b==null?null:a+b};
   function gcell(rv){if(!rv.length)return '<td class="r ph">0</td>';var av=rv.reduce(function(t,y){return t+y.s},0)/rv.length;return '<td class="r c-'+(av>=4.7?'g':'r')+'" title="'+rv.map(function(y){return y.s+'★ '+esc(y.a)}).join(', ')+'">'+rv.length+' · '+av.toFixed(1)+'★</td>'}
   function row(dt){var r=DAY[dt],bs=BST[brothSt(dt)],gc=gcell(revIn(dt,dt)),bc='<td><span class="pill '+bs[0]+'">'+bs[1]+'</span></td>',lab='<td><b>'+dayName(dt)+'</b> '+dm(dt)+'</td>';
     if(!r)return '<tr>'+lab+Array(5).join('<td class="r ph">·</td>')+rooCells(dt)+Array(8).join('<td class="r ph">·</td>')+gc+bc+'</tr>';
     var v=r[1]?(r[0]-r[1])/r[1]*100:null;
-    return '<tr>'+lab+'<td class="r">'+f(r[0])+'</td><td class="r">'+f(r[1])+'</td><td class="r'+(v==null?'':' c-'+(v>=0?'g':v>-10?'a':'r'))+'">'+(v==null?NA:pctS(v))+'</td>'+delCell(dt)+rooCells(dt)+'<td class="r">'+(r[2]==null?NA:r[2])+'</td><td class="r'+(r[3]==null?'':' c-'+band(r[3],22,20.9,true))+'">'+(r[3]==null?NA:'£'+r[3].toFixed(2))+'</td><td class="r">'+pc(r[4],r[0])+'</td><td class="r">'+pc(r[5],r[0])+'</td><td class="r'+(r[6]==null?'':' c-'+wageRag(r[6]))+'">'+pct1(r[6])+'</td>'+gc+bc+'</tr>'}
+    return '<tr>'+lab+'<td class="r">'+f(r[0])+'</td><td class="r">'+f(r[1])+'</td><td class="r'+(v==null?'':' c-'+(v>=0?'g':v>-10?'a':'r'))+'">'+(v==null?NA:pctS(v))+'</td>'+delCell(dt)+rooCells(dt)+'<td class="r">'+(r[2]==null?NA:r[2])+'</td><td class="r'+(r[3]==null?'':' c-'+band(r[3],22,20.9,true))+'">'+(r[3]==null?NA:'£'+r[3].toFixed(2))+'</td><td class="r">'+pc(r[4],sp(r[4],r[5]))+'</td><td class="r">'+pc(r[5],sp(r[4],r[5]))+'</td><td class="r'+(r[6]==null?'':' c-'+wageRag(r[6]))+'">'+pct1(r[6])+'</td>'+gc+bc+'</tr>'}
   function agg7(dts){var o={s:0,t:0,c:0,fo:0,bo:0,lw:0,n:0,d:0,dt:0,dn:0,ro:0,rp:0,rpn:0,rn:0,rred:0,rmiss:0,rrej:0,rcan:0},rv=revIn(dts[0],dts[dts.length-1]);dts.forEach(function(dt){var r=DAY[dt];if(r){o.n++;o.s+=r[0]||0;o.t+=r[1]||0;o.c+=r[2]||0;if(r[4]!=null)o.fo+=r[4];if(r[5]!=null)o.bo+=r[5];if(r[6]!=null)o.lw+=r[6]*(r[0]||0)}var d=DEL[dt];if(d){o.dn++;o.d+=d[1];o.dt+=d[0]||0}var q=DD[dt];if(q){o.rn++;o.ro+=q[0]||0;if(q[1]!=null){o.rp+=q[1]*(q[0]||1);o.rpn+=(q[0]||1)}if(q[7])o.rred++;if(q[3])o.rmiss++;o.rrej+=q[6]||0;o.rcan+=q[4]||0}});
     o.sph=o.c?o.s/o.c:null;o.lab=o.s?o.lw/o.s:null;o.rprep=o.rpn?o.rp/o.rpn:null;o.var=o.t?(o.s-o.t)/o.t*100:null;o.rv=rv.length;o.ra=rv.length?rv.reduce(function(t,y){return t+y.s},0)/rv.length:null;o.br=dts.filter(function(x){return brothSt(x)==='g'}).length;o.brn=dts.filter(function(x){return brothSt(x)!=='n'}).length;
     var wk0=wk(dts[0]);o.roo=wk0&&dts[0]===wk0.wc?wk0.d:null;return o}
-  function tot(lab,o){return '<tr class="tot"><td>'+lab+'</td><td class="r">'+(o.n?f(o.s):NA)+'</td><td class="r">'+(o.n?f(o.t):NA)+'</td><td class="r">'+(o.var==null?NA:pctS(o.var))+'</td><td class="r'+(o.dn&&o.dt?' c-'+(o.d>=o.dt?'g':'r'):'')+'">'+(o.dn?f(o.d):NA)+'</td><td class="r" title="Deliveroo orders delivered over the days with a feed'+(o.roo?'; Tax Invoice sales '+gbp(o.roo.sales):'')+'">'+(o.rn?o.ro:'<span class="ph">·</span>')+'</td><td class="r'+(o.rprep==null?'':' c-'+(o.rred?'r':'g'))+'" title="Average prep, weighted by orders; red days in the window">'+(o.rprep==null?'<span class="ph">·</span>':o.rprep.toFixed(1)+' min'+(o.rred?' <small>'+o.rred+' red</small>':''))+'</td><td class="small">'+(o.rn?(o.rmiss||o.rrej||o.rcan?[o.rmiss?o.rmiss+' miss':'',o.rrej?o.rrej+' rej':'',o.rcan?o.rcan+' canc':''].filter(Boolean).join(' · '):'<span class="c-g">✓</span>'):'<span class="ph">·</span>')+'</td><td class="r">'+(o.n?o.c.toLocaleString('en-GB'):NA)+'</td><td class="r">'+(o.sph==null?NA:'£'+o.sph.toFixed(2))+'</td><td class="r">'+(o.n?pc(o.fo,o.s):NA)+'</td><td class="r">'+(o.n?pc(o.bo,o.s):NA)+'</td><td class="r">'+pct1(o.lab)+'</td><td class="r'+(o.rv?'':' c-r')+'">'+o.rv+(o.ra!=null?' · '+o.ra.toFixed(2)+'★':'')+'</td><td class="small">'+(o.brn?o.br+'/'+o.brn+' in spec':NA)+'</td></tr>'}
+  function tot(lab,o){return '<tr class="tot"><td>'+lab+'</td><td class="r">'+(o.n?f(o.s):NA)+'</td><td class="r">'+(o.n?f(o.t):NA)+'</td><td class="r">'+(o.var==null?NA:pctS(o.var))+'</td><td class="r'+(o.dn&&o.dt?' c-'+(o.d>=o.dt?'g':'r'):'')+'">'+(o.dn?f(o.d):NA)+'</td><td class="r" title="Deliveroo orders delivered over the days with a feed'+(o.roo?'; Tax Invoice sales '+gbp(o.roo.sales):'')+'">'+(o.rn?o.ro:'<span class="ph">·</span>')+'</td><td class="r'+(o.rprep==null?'':' c-'+(o.rred?'r':'g'))+'" title="Average prep, weighted by orders; red days in the window">'+(o.rprep==null?'<span class="ph">·</span>':o.rprep.toFixed(1)+' min'+(o.rred?' <small>'+o.rred+' red</small>':''))+'</td><td class="small">'+(o.rn?(o.rmiss||o.rrej||o.rcan?[o.rmiss?o.rmiss+' miss':'',o.rrej?o.rrej+' rej':'',o.rcan?o.rcan+' canc':''].filter(Boolean).join(' · '):'<span class="c-g">✓</span>'):'<span class="ph">·</span>')+'</td><td class="r">'+(o.n?o.c.toLocaleString('en-GB'):NA)+'</td><td class="r">'+(o.sph==null?NA:'£'+o.sph.toFixed(2))+'</td><td class="r">'+(o.n?pc(o.fo,o.fo+o.bo):NA)+'</td><td class="r">'+(o.n?pc(o.bo,o.fo+o.bo):NA)+'</td><td class="r">'+pct1(o.lab)+'</td><td class="r'+(o.rv?'':' c-r')+'">'+o.rv+(o.ra!=null?' · '+o.ra.toFixed(2)+'★':'')+'</td><td class="small">'+(o.brn?o.br+'/'+o.brn+' in spec':NA)+'</td></tr>'}
   function ch(a,b,kind,dir){if(a==null||b==null)return '<span class="ph">·</span>';var d=kind==='pct'?(b?(a-b)/b*100:null):a-b;if(d==null)return '<span class="ph">·</span>';var good=dir*d>0,bad=dir*d<0;var txt=kind==='pct'?pctS(d):kind==='pp'?sgn(d,1,'pp'):kind==='min'?sgn(d,1,' min'):kind==='gbp'?(d<0?'−£':'+£')+Math.abs(d).toFixed(2):sgn(d,0,'');return '<span class="chg '+(good?'up':bad?'down':'flat')+'">'+(good?'▲ ':bad?'▼ ':'● ')+txt+'</span>'}
   var A=agg7(cur),B=agg7(prv),L=agg7([addD(anchor,-7)]);
-  var chRow='<tr class="tot"><td title="Change against the same day last week">vs '+dayName(addD(anchor,-7))+' '+dm(addD(anchor,-7))+'</td><td class="r">'+ch(A.n?A.s:null,L.n?L.s:null,'pct',1)+'</td><td class="r ph">·</td><td class="r">'+ch(A.var,L.var,'pp',1)+'</td><td class="r">'+ch(A.dn?A.d:null,L.dn?L.d:null,'pct',1)+'</td><td class="r">'+ch(A.rn?A.ro:null,L.rn?L.ro:null,'n',1)+'</td><td class="r">'+ch(A.rprep,L.rprep,'min',-1)+'</td><td class="r ph">·</td><td class="r">'+ch(A.n?A.c:null,L.n?L.c:null,'pct',1)+'</td><td class="r">'+ch(A.sph,L.sph,'gbp',1)+'</td><td class="r">'+ch(A.n&&A.s?A.fo/A.s*100:null,L.n&&L.s?L.fo/L.s*100:null,'pp',-1)+'</td><td class="r">'+ch(A.n&&A.s?A.bo/A.s*100:null,L.n&&L.s?L.bo/L.s*100:null,'pp',-1)+'</td><td class="r">'+ch(A.lab,L.lab,'pp',-1)+'</td><td class="r">'+ch(A.rv,L.rv,'n',1)+'</td><td class="r ph">·</td></tr>';
+  var chRow='<tr class="tot"><td title="Change against the same day last week">vs '+dayName(addD(anchor,-7))+' '+dm(addD(anchor,-7))+'</td><td class="r">'+ch(A.n?A.s:null,L.n?L.s:null,'pct',1)+'</td><td class="r ph">·</td><td class="r">'+ch(A.var,L.var,'pp',1)+'</td><td class="r">'+ch(A.dn?A.d:null,L.dn?L.d:null,'pct',1)+'</td><td class="r">'+ch(A.rn?A.ro:null,L.rn?L.ro:null,'n',1)+'</td><td class="r">'+ch(A.rprep,L.rprep,'min',-1)+'</td><td class="r ph">·</td><td class="r">'+ch(A.n?A.c:null,L.n?L.c:null,'pct',1)+'</td><td class="r">'+ch(A.sph,L.sph,'gbp',1)+'</td><td class="r">'+ch(A.n&&(A.fo+A.bo)?A.fo/(A.fo+A.bo)*100:null,L.n&&(L.fo+L.bo)?L.fo/(L.fo+L.bo)*100:null,'pp',0)+'</td><td class="r">'+ch(A.n&&(A.fo+A.bo)?A.bo/(A.fo+A.bo)*100:null,L.n&&(L.fo+L.bo)?L.bo/(L.fo+L.bo)*100:null,'pp',0)+'</td><td class="r">'+ch(A.lab,L.lab,'pp',-1)+'</td><td class="r">'+ch(A.rv,L.rv,'n',1)+'</td><td class="r ph">·</td></tr>';
   var sec=function(t){return '<tr class="sechd"><td colspan="15">'+t+'</td></tr>'};
   $('#dailyRows').innerHTML=sec((isCur()?'Latest cash-up day':'Last day of the week')+' · '+dayName(anchor)+' '+dm(anchor))+row(anchor)+chRow+sec('Previous 7 days')+prv.slice().reverse().map(row).join('')+tot('7 days',B);renderRooOps(anchor);
   $('#dailyWin').textContent=(isCur()?'Latest cash-up day, '+dmy(anchor)+', on top; the 7 days before it underneath, newest first.':'Sunday '+dmy(anchor)+' on top; the 7 days before it underneath, newest first.');
@@ -1419,10 +1420,10 @@ function rvCard(r){
   var pr=r[6].map(function(p){return '<span class="pill p-g">'+esc(RPR[p]||p)+'</span>'}).join('');
   var who=r[7].map(function(x){return rvWho(x[0],x[1])}).join(' ');
   var ds=r[8].map(function(x){return '<span class="pill '+(x[1]==='neg'?'p-r':x[1]==='pos'?'p-g':'p-n')+'" data-rd="'+esc(x[0])+'" style="cursor:pointer">'+esc(x[0])+'</span>'}).join('');
-  return '<div class="review"><div class="ch"><b>'+stars(r[2])+' · '+dayName(r[1])+' '+dmy(r[1])+'</b><span class="small">'+esc(r[3])+'</span></div>'+
+  return '<details class="review"'+(S.rvOpen&&S.rvOpen[r[0]]?' open':'')+' data-rvid="'+r[0]+'"><summary><div class="ch"><b>'+stars(r[2])+' · '+dayName(r[1])+' '+dmy(r[1])+'</b><span class="small">'+esc(r[3])+'</span></div><div class="peek">'+(r[4]?esc(r[4]):'Star rating only, no comment')+'</div></summary>'+
     (r[9]&&rvNeg(r)?'<div style="font-weight:700">'+rvHi(r[9])+'</div>':'')+
     '<div>'+(r[4]?rvHi(r[4]):'<span class="ph">Star rating only, no comment</span>')+'</div>'+iss+
-    ((pr||who||ds)?'<div class="chips">'+who+pr+ds+'</div>':'')+'</div>'}
+    ((pr||who||ds)?'<div class="chips">'+who+pr+ds+'</div>':'')+'</details>'}
 function rvSet(k,v){var s=rvS();s[k]=v;if(k==='cat')s.sub=null;save();renderReviews()}
 function renderReviews(){
   if(!$('#rvFeed'))return;var v=rvS(),g=rvRange(),base=rvBase();
@@ -1523,10 +1524,13 @@ $('#siteMeta').innerHTML='GM '+(SITE.gm&&!/vacant/i.test(SITE.gm)?esc(SITE.gm):'
 $$('.decName').forEach(function(e){e.textContent=SITE.dec||'DEC'});
 $('#siteName').textContent=SITE.label+' · '+SITE.name;   /* 08/10/2026 (Michael): no site switcher, a site sees only itself */
 /* reviews tab and audit report: own listener, runs before the main one */
+/* 13/10/2026 (Michael): review cards expand and collapse; open state remembered per review; Expand all / Collapse all per panel */
+document.addEventListener('toggle',function(e){var d=e.target;if(d.tagName==='DETAILS'&&d.classList.contains('review')&&d.dataset.rvid){S.rvOpen=S.rvOpen||{};if(d.open)S.rvOpen[d.dataset.rvid]=1;else delete S.rvOpen[d.dataset.rvid];save()}},true);
 document.addEventListener('click',function(e){
   if(e.target.closest('[data-repx]')||e.target.id==='repOvl'){repClose();e.stopImmediatePropagation();return}
   var z=e.target.closest('[data-zoom]');if(z){z.classList.toggle('big');e.stopImmediatePropagation();return}
   var m=e.target.closest('[data-mrep]');if(m){var q=m.dataset.mrep.split('|');repOpen(+q[0],q.slice(1).join('|'));e.stopImmediatePropagation();return}
+  var ra=e.target.closest('[data-rvall]');if(ra){var box=document.getElementById(ra.dataset.rvbox);if(box)box.querySelectorAll('details.review').forEach(function(d){d.open=ra.dataset.rvall==='1'});e.stopImmediatePropagation();return}
   if(rvClick(e))e.stopImmediatePropagation()});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('#repOvl').hidden)repClose()});
 $('#rvQ').addEventListener('input',function(e){rvS().q=e.target.value.trim();save();renderReviews()});

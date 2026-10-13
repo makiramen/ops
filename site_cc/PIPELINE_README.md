@@ -33,3 +33,7 @@ Meeting notes (AM: Gmail task; GM/HC: folder), Mapal hygiene, intangibles and fo
 
 ## Local test without Google
 `python3 build.py --out /tmp/x` rebuilds from the files here. Each pull takes `--csv <export>` and `--check` (compare only, writes nothing).
+
+## 13/10/2026 (Michael)
+- Daily tab FOH % and BOH % are now the split of the day's labour cost between the two departments (FOH + BOH = 100%), not each department's wages as a % of sales. Labour % unchanged. The vs last week row shows the share shift as a neutral change.
+- Review cards (Daily tab and Reviews tab) are collapsible: click a card to expand or collapse it, Expand all / Collapse all per panel, open state remembered per review in the page cache.
