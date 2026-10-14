@@ -136,6 +136,7 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);font-weight:800;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
 td{padding:10px;border-bottom:1px solid #eef1f6;vertical-align:middle}
 th.r,td.r{text-align:right}
+#rooFull th{background:var(--maki-orange);color:#fff;text-align:right;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;padding:9px 10px}#rooFull th:first-child{text-align:left}#rooFull td{text-align:right;white-space:nowrap;vertical-align:middle}#rooFull td:first-child{text-align:left}#rooFull .sechd td{text-align:left;background:#fff;border-bottom:2px solid var(--maki-orange);padding:10px 6px 4px}#rooFull .wkc{color:#9aa3b2;font-size:11px;font-weight:500}#rooFull tr.tot td{font-weight:800;border-top:2px solid var(--line)}#rooFull tr.sel td:first-child{background:var(--maki-orange-bg);font-weight:800}#rooFull .sub2{display:block;font-size:11px;font-weight:600}
 tr.tgtrow td{background:var(--maki-orange-bg);color:var(--maki-orange-deep);font-weight:700;font-size:12px;border-bottom:1px solid var(--maki-orange-ring)}
 tr.tot td{background:var(--surface-2);font-weight:700}
 tr.sel td{box-shadow:inset 0 2px 0 var(--maki-orange),inset 0 -2px 0 var(--maki-orange)}
@@ -515,13 +516,13 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
       <div><div class="eyebrow">Deliveroo</div><h2 id="drooTitle">Operations</h2><div class="sub">Same five metrics and thresholds as the Control Centre Deliveroo RAG. Red if any metric crosses its Red Light line. A missing metric shows as no data, not as a pass.</div></div>
       <div id="drooOverall"></div>
     </div>
-    <div class="card" id="rooDailyCard" style="margin-bottom:14px"><div class="ch"><div><h3>Daily · latest 8 days</h3><div class="small">Each morning's Deliveroo drop, latest posted day on top, whatever week the picker is on. Same thresholds as the Control Centre Deliveroo panel; weekly figures below are the selected week.</div></div><span class="tag t-auto">AUTO</span></div><div id="rooDaily"></div></div>
     <div class="grid" id="drooCards"></div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Deliveroo sales</h3><span class="tag t-auto">AUTO</span></div><div class="kv" id="dSales"></div><div class="small" id="dSalesSub"></div></div>
       <div class="card s4"><div class="ch"><h3>Orders</h3><span class="tag t-auto">AUTO</span></div><div class="kv" id="dOrders"></div><div class="small" id="dOrdersSub"></div></div>
       <div class="card s4"><div class="ch"><h3>Average order value</h3><span class="tag t-auto">AUTO</span></div><div class="kv" id="dAov"></div><div class="small" id="dAovSub"></div></div>
     </div>
+    <div class="card" id="rooDailyCard"><div class="ch"><div><h3>Weekly and daily</h3><div class="small">Same ten columns, thresholds and tints as the Control Centre Deliveroo panel. Weekly rows are the selected week and the week before (this week is week to date from the daily drops); daily rows are the latest 7 posted days, whatever week the picker is on.</div></div><span class="tag t-auto">AUTO</span></div><div id="rooDaily"></div></div>
     <div class="card">
       <div class="ch"><h3>Ad spend &amp; ROAS</h3><span class="tag t-auto">DELIVEROO ADS EXPORT</span></div>
       <div id="adBox"></div>
@@ -890,17 +891,53 @@ function gauge(m,v){
   else z=[['var(--green)',pos(m.g)],['var(--amber)',pos(m.a)-pos(m.g)],['var(--red)',100-pos(m.a)]];
   return '<div class="gwrap"><div class="gauge" aria-hidden="true">'+z.map(function(x){return '<span style="width:'+x[1]+'%;background:'+x[0]+';opacity:.28"></span>'}).join('')+'</div>'+(v==null?'':'<div class="marker" style="left:calc('+pos(v)+'% - 2px)"></div>')+'</div><div class="gscale"><span>'+m.min+'</span><span>'+m.max+'</span></div>';
 }
+/* 14/10/2026 (Michael): the Deliveroo tab follows the picker. A week with no weekly summary yet (this week, or a closing week before the summary lands) is aggregated week to date from the daily drops: orders, prep and inaccuracy order weighted, open/rider/busy averaged over the posted days, revenue = cash up delivery £, AOV = revenue / orders. Rating is weekly only at Deliveroo. */
+function rooLatest(){return Object.keys(DD).sort().pop()||null}
+function rooAgg(days){var o={n:0,ord:0,pw:0,pn:0,mw:0,mn:0,dv:0,dn:0,x:[[0,0],[0,0],[0,0]]};
+  days.forEach(function(dt){var e=DEL[dt];if(e&&e[1]!=null){o.dv+=e[1];o.dn++}var q=DD[dt];if(!q)return;o.n++;o.ord+=q[0]||0;var wt=q[0]||1;
+    if(q[1]!=null){o.pw+=q[1]*wt;o.pn+=wt}if(q[3]!=null){o.mw+=q[3]*wt;o.mn+=wt}
+    for(var e2=0;e2<3;e2++){var xv=q[8+e2];if(xv==null&&e2===0&&q.length>8)xv=0;if(xv!=null){o.x[e2][0]+=xv;o.x[e2][1]++}}});
+  return {n:o.n,orders:o.n?o.ord:null,prep:o.pn?o.pw/o.pn:null,inacc:o.mn?o.mw/o.mn:null,sales:o.dn?o.dv:null,aov:o.dn&&o.ord?o.dv/o.ord:null,rider:o.x[0][1]?o.x[0][0]/o.x[0][1]:null,open:o.x[1][1]?o.x[1][0]/o.x[1][1]:null,busy:o.x[2][1]?o.x[2][0]/o.x[2][1]:null,r:null,wtd:true}}
+function rooWeekOf(wc){var w=wk(wc);if(!w)return null;var d=w.d||{};if(DM.some(function(m){return d[m.k]!=null})){var o={};for(var k in d)o[k]=d[k];o.busy=DW[wc]?DW[wc][2]:null;o.wtd=false;return o}
+  var last=rooLatest(),days=[];for(var i=0;i<7;i++){var dt=addD(wc,i);if(last&&dt<=last)days.push(dt)}var a=rooAgg(days);a.days=days.length;return a}
+function rooBusyBand(v){return v==null?'n':v<=0?'g':v<=10?'a':'r'}
+function rooOvr(d,withR){var rs=DM.filter(function(m){return withR||m.k!=='r'}).map(function(m){return d[m.k]==null?'n':rooBand(d[m.k],m.g,m.a,m.hi)});if(rs.indexOf('r')>-1)return 'r';if(rs.every(function(x){return x==='n'}))return 'n';if(rs.indexOf('a')>-1)return 'a';return 'g'}
+function renderRooFull(){var el=$('#rooDaily');if(!el)return;var last=rooLatest();if(!last){el.innerHTML='<div class="small">No Deliveroo daily drop stored yet.</div>';return}
+  var dot='<span class="ph">·</span>',wkc='<td class="wkc" title="Deliveroo reports this weekly only">weekly</td>';
+  var n1=function(v,dp,u){return v==null?dot:v.toFixed(dp)+(u||'')};
+  var cell=function(k,v,dp,u){var m=DM.filter(function(x){return x.k===k})[0],b=v==null?'n':rooBand(v,m.g,m.a,m.hi);return '<td class="'+(b==='n'?'ph':'c-'+b)+'">'+n1(v,dp,u)+'</td>'};
+  var busy=function(v){var b=rooBusyBand(v);return '<td class="'+(b==='n'?'ph':'c-'+b)+'">'+n1(v,1,'%')+'</td>'};
+  var ovr=function(r){return '<td class="'+(r==='n'?'ph':'c-'+r)+'"><b>'+({g:'GREEN',a:'AMBER',r:'RED',n:'·'})[r]+'</b></td>'};
+  var chg=function(v,pv,lab){if(v==null||pv==null||!pv)return '';var dd=(v-pv)/pv*100;return '<span class="sub2 c-'+(dd>=0?'g':'r')+'">'+pctS(dd)+' '+lab+'</span>'};
+  var wrow=function(wc,d,lab,sel){if(!d)return '';return '<tr'+(sel?' class="sel"':'')+'><td>'+lab+'</td><td><b>'+gbp(d.sales)+'</b>'+(d.pwsales!=null?chg(d.sales,d.pwsales,d.wtd?'vs same days last wk':'WoW'):'')+'</td><td>'+(d.orders==null?dot:d.orders)+'</td><td>'+(d.aov==null?dot:'£'+d.aov.toFixed(2))+'</td>'+(d.wtd?wkc:cell('r',d.r,2))+cell('open',d.open,1,'%')+cell('prep',d.prep,1)+cell('inacc',d.inacc,1,'%')+cell('rider',d.rider==null&&!d.wtd?0:d.rider,1,'%')+busy(d.busy)+ovr(rooOvr(d,!d.wtd))+'</tr>'};
+  var h='<div class="tscroll"><table id="rooFull"><thead><tr><th></th><th>Revenue</th><th>Orders</th><th>AOV</th><th>Rating</th><th>Open %</th><th>Prep</th><th>Inacc %</th><th>Rider %</th><th>Busy %</th><th>Overall</th></tr></thead><tbody>';
+  h+='<tr class="sechd"><td colspan="11">Weekly · Deliveroo weekly summary</td></tr>';
+  var cw=rooWeekOf(S.wc),pwk=prevW(S.wc),pd=pwk?rooWeekOf(pwk.wc):null;if(cw&&pd)cw.pwsales=cw.wtd?rooAgg(Array.apply(null,Array(cw.days)).map(function(_,i){return addD(S.wc,i-7)})).sales:pd.sales;  /* week to date compares with the same weekdays last week */
+  h+=wrow(S.wc,cw,'w/c '+dayName(S.wc)+' '+dm(S.wc)+(cw&&cw.wtd?' <span class="wkc">(week to date, '+cw.days+' day'+(cw.days===1?'':'s')+')</span>':''),true);
+  if(pwk)h+=wrow(pwk.wc,pd,'w/c '+dayName(pwk.wc)+' '+dm(pwk.wc)+(pd&&pd.wtd?' <span class="wkc">(from the dailies)</span>':''),false);
+  var days=[],prv=[];for(var i=6;i>=0;i--)days.push(addD(last,-i));for(var j=13;j>=7;j--)prv.push(addD(last,-j));
+  h+='<tr class="sechd"><td colspan="11">Daily · last 7 days to '+dayName(last)+' '+dm(last)+'</td></tr>';
+  days.forEach(function(dt){var q=DD[dt],e=DEL[dt],v=e?e[1]:null,e7=DEL[addD(dt,-7)];
+    h+='<tr'+(dt===last?' class="sel"':'')+'><td>'+dayName(dt)+' '+dm(dt)+'</td><td><b>'+(v==null?dot:gbp(v))+'</b>'+chg(v,e7?e7[1]:null,'vs last wk')+'</td>';
+    if(!q){h+='<td colspan="9" class="ph" style="text-align:left">no Deliveroo row</td></tr>';return}
+    var rw=q.length>8?(q[8]==null?0:q[8]):null,op=q.length>8?q[9]:null,bz=q.length>8?q[10]:null;
+    h+='<td>'+(q[0]==null?dot:q[0])+'</td>'+wkc+wkc+cell('open',op,1,'%')+cell('prep',q[1],1)+cell('inacc',q[3],1,'%')+cell('rider',rw,1,'%')+busy(bz)+ovr(rooOvr({open:op,prep:q[1],inacc:q[3],rider:rw},false))+'</tr>'});
+  var A=rooAgg(days),B=rooAgg(prv);
+  var tot=function(lab,o,base){return '<tr class="tot"><td>'+lab+'</td><td>'+(o.sales==null?dot:gbp(o.sales))+(base?chg(o.sales,base.sales,'vs prior 7'):'')+'</td><td>'+(o.n?o.orders:dot)+'</td>'+wkc+wkc+cell('open',o.open,1,'%')+cell('prep',o.prep,1)+cell('inacc',o.inacc,1,'%')+cell('rider',o.rider,1,'%')+busy(o.busy)+ovr(rooOvr(o,false))+'</tr>'};
+  h+=tot('7 days to '+dayName(last)+' '+dm(last),A,B)+tot('7 days before',B,null)+'</tbody></table></div>';el.innerHTML=h}
 function renderDroo(){
-  var w=wk(S.wc),pw=prevW(S.wc),d=w.d,pd=pw?pw.d:{},r=drooRag(d);
-  $('#drooTitle').innerHTML='Operations · w/c '+dmy(S.wc)+gmNote();
+  var w=wk(S.wc),pw=prevW(S.wc),d=rooWeekOf(S.wc)||{},pd=pw?(rooWeekOf(pw.wc)||{}):{},r=drooRag(d);if(d.wtd&&d.days){var _sd=rooAgg(Array.apply(null,Array(d.days)).map(function(_,i){return addD(S.wc,i-7)}));['sales','orders','aov','prep','inacc','open','rider'].forEach(function(k){pd[k]=_sd[k]})}  /* week to date tiles compare with the same weekdays last week */if(d.wtd&&r!=='r'&&rooOvr(d,false)==='a')r='a';
+  $('#drooTitle').innerHTML='Operations · w/c '+dmy(S.wc)+(d.wtd?' <span class="small" style="font-weight:500;color:var(--ink-2)">week to date from the daily drops, '+(d.days||0)+' of 7 days posted</span>':'');
+  renderRooFull();
   $('#drooOverall').innerHTML='<span class="pill p-'+r+'" style="height:30px;font-size:13px;padding:0 14px">Deliveroo RAG: '+({g:'✓ GREEN',a:'! AMBER',r:'✕ RED',n:'NO DATA'})[r]+'</span>';
   $('#drooCards').innerHTML=DM.map(function(m){var v=d[m.k],pv=pd[m.k],rg=v==null?'n':band(v,m.g,m.a,m.hi);
-    var c='';if(v!=null&&pv!=null){var dd=v-pv,b=m.hi?dd>0:dd<0;c=dd===0?'<span class="chg flat">● same as last week</span>':'<span class="chg '+(b?'up':'down')+'">'+(b?'▲':'▼')+' '+sgn(dd,m.dp,m.u)+' vs last week</span>'}else c='<span class="chg flat">no comparison</span>';
-    return '<div class="card" style="grid-column:span '+(m.k==='r'?4:2)+'"><div class="ch"><h3>'+m.lab+'</h3>'+(v==null?TLo('n','No data'):PILL[rg])+'</div><div class="kv">'+(v==null?NA:m.fmt(v))+'</div>'+gauge(m,v)+'<div class="small">'+m.tl+'</div>'+c+'</div>'}).join('');
+    var c='';if(v!=null&&pv!=null){var dd=v-pv,b=m.hi?dd>0:dd<0;c=dd===0?'<span class="chg flat">● same as last week</span>':'<span class="chg '+(b?'up':'down')+'">'+(b?'▲':'▼')+' '+sgn(dd,m.dp,m.u)+' vs '+(d.wtd?'same days last week':'last week')+'</span>'}else c='<span class="chg flat">no comparison</span>';
+    if(d.wtd&&m.k==='r')c='<span class="chg flat">weekly only at Deliveroo, lands with the weekly summary</span>';
+    return '<div class="card" style="grid-column:span '+(m.k==='r'?4:2)+'"><div class="ch"><h3>'+m.lab+'</h3>'+(v==null?TLo('n','No data'):PILL[rg])+'</div><div class="kv">'+(v==null?NA:m.fmt(v))+'</div>'+gauge(m,v)+'<div class="small">'+m.tl+(d.wtd&&m.k!=='r'?' · week to date':'')+'</div>'+c+'</div>'}).join('');
   if(window.innerWidth<1100)$$('#drooCards .card').forEach(function(c){c.style.gridColumn='span 6'});
   if(window.innerWidth<680)$$('#drooCards .card').forEach(function(c){c.style.gridColumn='span 12'});
-  function cm(v,pv,f){if(v==null)return 'Invoice not filed for this week';if(pv==null)return 'No comparison';var dd=(v-pv)/pv*100;return '<span class="chg '+(dd>=0?'up':'down')+'">'+(dd>=0?'▲':'▼')+' '+pctS(dd)+' vs last week</span>'}
-  $('#dSales').innerHTML=gbp(d.sales);$('#dSalesSub').innerHTML=cm(d.sales,pd.sales);
+  function cm(v,pv,f){if(v==null)return d.wtd?'No delivery cash up yet this week':'Invoice not filed for this week';if(pv==null)return 'No comparison';var dd=(v-pv)/pv*100;return '<span class="chg '+(dd>=0?'up':'down')+'">'+(dd>=0?'▲':'▼')+' '+pctS(dd)+' vs '+(d.wtd?'same days last week':'last week')+'</span>'}
+  $('#dSales').innerHTML=gbp(d.sales)+(d.wtd?' <span class="small" style="font-weight:500">cash up, week to date</span>':'');$('#dSalesSub').innerHTML=cm(d.sales,pd.sales);
   $('#dOrders').innerHTML=d.orders==null?NA:d.orders;$('#dOrdersSub').innerHTML=cm(d.orders,pd.orders);
   $('#dAov').innerHTML=d.aov==null?NA:'£'+d.aov.toFixed(2);$('#dAovSub').innerHTML=cm(d.aov,pd.aov);
   var ws=lastN(S.wc,12).slice().reverse();
@@ -988,7 +1025,7 @@ function renderDaily(){renderFold();
   var E='<td class="r ph">·</td>';function lyRow(lab,o,dts){var l={sales:0,covers:0,del:0,n:0};dts.forEach(function(dt){var v=lyDay(dt);if(v){l.n++;l.sales+=v[0];l.covers+=v[1];l.del+=v[2]}});if(!l.n)return '<tr class="tot"><td title="No cash up for these days last year">'+lab+'</td><td colspan="14" class="small">No cash up last year</td></tr>';l.sph=l.covers?l.sales/l.covers:null;
     return '<tr class="tot"><td title="Change against the same weekday'+(dts.length>1?'s':'')+' 52 weeks earlier ('+l.n+' day'+(l.n===1?'':'s')+' cashed up last year)">'+lab+'</td><td class="r">'+lyCell(o.n?o.s:null,l.sales,'pct',1)+'</td>'+E+E+'<td class="r">'+lyCell(o.dn?o.d:null,l.del,'pct',1)+'</td>'+E+E+E+'<td class="r">'+lyCell(o.n?o.c:null,l.covers,'n',1)+'</td><td class="r">'+lyCell(o.sph,l.sph,'gbp',1)+'</td>'+E+E+E+E+E+'</tr>'}
   var lyA=addD(anchor,-364);
-  $('#dailyRows').innerHTML=sec('Latest cash-up day · '+dayName(anchor)+' '+dm(anchor))+row(anchor)+chRow+lyRow('vs LY '+dayName(lyA)+' '+dmy(lyA).slice(0,5)+'/'+lyA.slice(2,4),A,cur)+sec('Previous 7 days')+prv.slice().reverse().map(row).join('')+tot('7 days',B)+lyRow('7 days vs LY',B,prv);renderRooOps(anchor);renderRooDaily(anchor);
+  $('#dailyRows').innerHTML=sec('Latest cash-up day · '+dayName(anchor)+' '+dm(anchor))+row(anchor)+chRow+lyRow('vs LY '+dayName(lyA)+' '+dmy(lyA).slice(0,5)+'/'+lyA.slice(2,4),A,cur)+sec('Previous 7 days')+prv.slice().reverse().map(row).join('')+tot('7 days',B)+lyRow('7 days vs LY',B,prv);renderRooOps(anchor);
   $('#dailyWin').textContent='Latest cash-up day, '+dayName(anchor)+' '+dmy(anchor)+', on top; the 7 days before it underneath, newest first. Not tied to the week picker.';
   /* reviews: last 7 days, with the 7 before as context */
   var wr=revIn(prv[0],anchor),pr=revIn(addD(prv[0],-8),addD(prv[0],-1));
@@ -1141,8 +1178,8 @@ function renderSheet(){
 function renderBanner(){
   var b=$('#banner');b.className='banner';
   if(S.per==='month'){b.innerHTML='<span><b>Month view.</b> Read-only roll-up of the weekly sheets. A week counts in the month its Monday falls in.</span>';return}
-  if(isOpen()){b.innerHTML='<span><b>This week, in progress.</b> Sales, target, covers, SPH and wage % are week to date from the daily cash up ('+(wk(S.wc).wtd||0)+' of 7 days). Food cost, hours, league and efficiency close on Monday. The KPI Sheet, Stock &amp; Cost and Deliveroo tabs stay on the last completed week.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
-  if(isPend(S.wc)){b.innerHTML='<span><b>Week closing (w/c '+dmy(S.wc)+').</b> Sales and covers are final; food cost, stock take, league and efficiency land on Tuesday, when this becomes the last completed week. The KPI Sheet, Stock &amp; Cost and Deliveroo tabs stay on the last completed week until then.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
+  if(isOpen()){b.innerHTML='<span><b>This week, in progress.</b> Sales, target, covers, SPH and wage % are week to date from the daily cash up ('+(wk(S.wc).wtd||0)+' of 7 days). Food cost, hours, league and efficiency close on Monday. The KPI Sheet and Stock &amp; Cost tabs stay on the last completed week; Deliveroo shows this week to date.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
+  if(isPend(S.wc)){b.innerHTML='<span><b>Week closing (w/c '+dmy(S.wc)+').</b> Sales and covers are final; food cost, stock take, league and efficiency land on Tuesday, when this becomes the last completed week. The KPI Sheet and Stock &amp; Cost tabs stay on the last completed week until then.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
   if(!isLast()){b.innerHTML='<span><b>Viewing a past week (w/c '+dmy(S.wc)+').</b> Everything is read-only. Figures are the stored weekly build.</span><button type="button" class="btn sm" id="toLatest">Back to last completed week</button>';return}
   if(locked()){b.className='banner ok';b.innerHTML='<span><b>✓ Week signed off and locked.</b> Entries are read-only.</span>'+(S.role==='AM'?'<button type="button" class="btn sm" data-go="kpi">Reopen on the KPI Sheet</button>':'');return}
   if(S.role==='GM')b.innerHTML=S.sheet==='submitted'?'<span><b>GM view.</b> Sheet submitted, waiting for AM sign-off. You can still update actions.</span>':'<span><b>GM view.</b> Numbers are locked. Fill the manual fields, update actions, then submit the KPI Sheet.</span><button type="button" class="btn sm pri" data-go="kpi">Go to KPI Sheet</button>';
@@ -1568,7 +1605,7 @@ function renderAll(){
   $('#bsub').textContent='Site Control Centre · '+SCODE+' '+SITE.name;
   renderBanner();
   if(mo){renderChips();renderMonth();return}
-  var lab=withWc(gwc(),function(){var l=renderSheet();renderFields();renderKpi();renderDroo();renderStock();return l});renderChips(lab);renderOverview();renderDaily();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
+  var lab=withWc(gwc(),function(){var l=renderSheet();renderFields();renderKpi();renderStock();return l});renderChips(lab);renderOverview();renderDaily();renderDroo();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
 }
 /* site header and site switcher (sites.json) */
 $('#siteH1').innerHTML=esc(SITE.label)+' <span>·</span> '+esc(SITE.name);
@@ -1643,7 +1680,7 @@ if(NODEL&&S.tab==='droo')S.tab='overview';
 /* No delivery site: strip every delivery and Deliveroo element after each render (tabs, cards, Red Light rows, gaps, table columns). */
 function stripDel(){
   var t=document.querySelector('nav.tabs [data-t="droo"]');if(t)t.hidden=true;
-  var rc=document.getElementById('rooCard');if(rc)rc.hidden=true;var rd=document.getElementById('rooDailyCard');if(rd)rd.hidden=true;
+  var rc=document.getElementById('rooCard');if(rc)rc.hidden=true;
   $$('[data-go="droo"]').forEach(function(b){var c=b.closest('.card');if(c)c.hidden=true});
   $$('.hlist h4').forEach(function(h){if(/^Deliveroo/.test(h.textContent)){h.parentNode.remove()}});
   $$('.card .eyebrow').forEach(function(e){if(e.textContent==='Deliveroo'){var c=e.closest('.card');if(c)c.hidden=true}});
