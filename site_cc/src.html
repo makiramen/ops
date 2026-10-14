@@ -515,6 +515,7 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
       <div><div class="eyebrow">Deliveroo</div><h2 id="drooTitle">Operations</h2><div class="sub">Same five metrics and thresholds as the Control Centre Deliveroo RAG. Red if any metric crosses its Red Light line. A missing metric shows as no data, not as a pass.</div></div>
       <div id="drooOverall"></div>
     </div>
+    <div class="card" id="rooDailyCard" style="margin-bottom:14px"><div class="ch"><div><h3>Daily · latest 8 days</h3><div class="small">Each morning's Deliveroo drop, latest posted day on top, whatever week the picker is on. Same thresholds as the Control Centre Deliveroo panel; weekly figures below are the selected week.</div></div><span class="tag t-auto">AUTO</span></div><div id="rooDaily"></div></div>
     <div class="grid" id="drooCards"></div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Deliveroo sales</h3><span class="tag t-auto">AUTO</span></div><div class="kv" id="dSales"></div><div class="small" id="dSalesSub"></div></div>
@@ -624,10 +625,16 @@ var SITE=__SITE__,SCODE=SITE.code;
 /* Sites with no delivery (sites.json delivery:false, e.g. M7 SJQ): no delivery sales, Deliveroo rating, prep or Deliveroo tab. */
 var NODEL=SITE.has.delivery===false;
 /* 13/10/2026 (Michael): the week in progress is on the page as "this week" (week to date from the daily cash up) and opens by default; the last closed week is "last week" and keeps the KPI sheet and sign off. */
-var OPEN=WK.length&&WK[WK.length-1].open?WK[WK.length-1].wc:null,LAST=(function(){for(var i=WK.length-1;i>=0;i--)if(!WK[i].open)return WK[i].wc;return null})();
-var CUR=OPEN||LAST||'__TODAY__';
+/* 14/10/2026 (Michael): GM facing tabs anchor on the LAST COMPLETED week. A closed week only counts as completed from the Tuesday after it (food cost and stock take land Tuesday); on Monday it is "closing". The page opens on the last completed week; the picker still reaches this week and history. */
+var NOWD=(function(){try{var d=new Date();var k=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);return k>='__TODAY__'?k:'__TODAY__'}catch(e){return '__TODAY__'}})();
+function isPend(wc){var w=wk(wc);return !!w&&!w.open&&addD(wc,8)>NOWD}
+var OPEN=WK.length&&WK[WK.length-1].open?WK[WK.length-1].wc:null,LAST=(function(){for(var i=WK.length-1;i>=0;i--)if(!WK[i].open&&!isPend(WK[i].wc))return WK[i].wc;return null})();
+var CUR=LAST||OPEN||'__TODAY__';
 function isOpen(){return !!OPEN&&S.wc===OPEN}function isLast(){return S.wc===LAST}
-function wkTag(wc){return wc===OPEN?' (this week)':wc===LAST?(OPEN?' (last week)':' (latest)'):''}
+/* the week the GM tabs (KPI sheet, Stock & Cost, Deliveroo weekly) show: the picker's week, unless that week is still open or closing, then the last completed week */
+function gwc(){return (S.wc===OPEN||isPend(S.wc))&&LAST?LAST:S.wc}
+function withWc(wc,fn){var o=S.wc;S.wc=wc;try{return fn()}finally{S.wc=o}}
+function wkTag(wc){return wc===OPEN?' (this week)':isPend(wc)?' (closing, final Tuesday)':wc===LAST?' (last completed)':''}
 var TGTW=(function(){for(var i=WK.length-1;i>=0;i--)if(WK[i].target&&!WK[i].open)return WK[i].target;return 0})(),YMAX=Math.ceil(Math.max(TGTW,Math.max.apply(null,WK.map(function(w){return w.sales||0}).concat([1])))*1.1/5000)*5000;
 var KEY='maki_site_cc_'+SCODE.toLowerCase()+'_v4';
 var ACTS=__ACTS__.map(function(a){a.s=a.s||'open';a.ev=a.ev||'';return a});
@@ -747,7 +754,7 @@ function renderHero(){
   function item(e,ic){return '<div class="hitem"><span class="ic ic-'+ic+'">'+(ic==='g'?'✓':ic==='r'?'✕':'!')+'</span><div><b>'+e.m.lab+': '+e.m.fmt(e.v)+'</b><small>'+(e.m.tl(w)?'Target '+e.m.tl(w)+(e.m.gap?' · '+e.m.gap(e.v,w):''):'')+(e.pv!=null?' · last week '+e.m.fmt(e.pv):'')+'</small></div></div>'}
   var tot=tg.length||1;
   $('#hero').innerHTML=
-   '<div style="display:flex;flex-direction:column;gap:14px"><div><div class="eyebrow">w/c '+dmy(S.wc)+(isOpen()?' · this week, in progress ('+(wk(S.wc).wtd||0)+' of 7 days cashed up)':isLast()?' · last week':'')+'</div><h2>'+head+'</h2><div class="sub">'+hit+' of '+tg.length+' targets hit, '+miss+' Red Light. '+bet+' of '+cmp.length+' targets better than last week.'+(function(){var ly=lyOf(w);if(!ly||w.sales==null)return '';return ' Year on year: sales '+lyCell(w.sales,ly.sales,'pct',1)+(w.covers!=null?', covers '+lyCell(w.covers,ly.covers,'n',1):'')+(w.sph!=null&&ly.sph?', SPH '+lyCell(w.sph,ly.sph,'gbp',1):'')+' (same '+(w.open?(w.wtd||0)+' weekdays':'week')+' last year).'})()+'</div></div>'+
+   '<div style="display:flex;flex-direction:column;gap:14px"><div><div class="eyebrow">w/c '+dmy(S.wc)+(isOpen()?' · this week, in progress ('+(wk(S.wc).wtd||0)+' of 7 days cashed up)':isLast()?' · last completed week':isPend(S.wc)?' · closing, final figures Tuesday':'')+'</div><h2>'+head+'</h2><div class="sub">'+hit+' of '+tg.length+' targets hit, '+miss+' Red Light. '+bet+' of '+cmp.length+' targets better than last week.'+(function(){var ly=lyOf(w);if(!ly||w.sales==null)return '';return ' Year on year: sales '+lyCell(w.sales,ly.sales,'pct',1)+(w.covers!=null?', covers '+lyCell(w.covers,ly.covers,'n',1):'')+(w.sph!=null&&ly.sph?', SPH '+lyCell(w.sph,ly.sph,'gbp',1):'')+' (same '+(w.open?(w.wtd||0)+' weekdays':'week')+' last year).'})()+'</div></div>'+
    '<div class="meter"><div class="lab"><span>Targets hit</span><b>'+hit+' / '+tg.length+'</b></div><div class="track" aria-hidden="true"><i style="width:'+(hit/tot*100)+'%;background:var(--green)"></i><i style="width:'+(close/tot*100)+'%;background:var(--amber)"></i><i style="width:'+(miss/tot*100)+'%;background:var(--red)"></i></div></div>'+
    '<div class="meter"><div class="lab"><span>Better than last week</span><b>'+bet+' / '+cmp.length+'</b></div><div class="track" aria-hidden="true"><i style="width:'+(bet/(cmp.length||1)*100)+'%;background:var(--maki-orange)"></i><i style="width:'+((cmp.length-bet-wor)/(cmp.length||1)*100)+'%;background:#7a6a5e"></i></div></div></div>'+
    '<div class="hlist"><h4>Working</h4>'+(wins.length?wins.map(function(e){return item(e,'g')}).join(''):'<div class="hitem">No targets hit this week.</div>')+'</div>'+
@@ -856,7 +863,7 @@ function renderSignLog(){var L=S.signlog.slice().reverse();
 function logSign(r,act,n){var ts=stamp(),e={wc:S.wc,r:r,n:n,act:act,ts:ts,late:r==='GM'&&ts.slice(0,10)>dueBy(S.wc)};S.signlog.push(e);S.soName[r]=n;queue('signoff',e)}
 function renderKpi(){
   var w=wk(S.wc),pw=prevW(S.wc),ev=evaluate(w,pw).filter(function(e){return ['dr','dprep'].indexOf(e.m.k)<0});
-  $('#kpiTitle').textContent='w/c '+dmy(S.wc);
+  $('#kpiTitle').innerHTML='w/c '+dmy(S.wc)+gmNote();
   var ly=lyOf(w),lyt=ly?'Same '+(w.open?(w.wtd||0)+' weekday'+(w.wtd===1?'':'s'):'week')+' last year ('+ly.n+' day'+(ly.n===1?'':'s')+' cashed up)':'No cash up for this week last year';
   var h='<thead><tr><th>Metric</th><th class="r">This week</th><th class="r">Last week</th><th>WoW</th><th title="'+lyt+'">vs LY</th><th class="r">Target</th><th>vs Target</th><th>Source</th></tr></thead><tbody>';
   ev.forEach(function(e){var lk=LYK[e.m.k];h+='<tr><td class="mname">'+e.m.lab+'</td><td class="r val">'+e.m.fmt(e.v)+'</td><td class="r small">'+(e.pv==null?NA:e.m.fmt(e.pv))+'</td><td>'+e.c.h+'</td><td>'+(lk&&ly?lyCell(e.v,ly[lk[0]],lk[1],1):'<span class="ph">·</span>')+'</td><td class="r small">'+(e.m.tl(w)||'<span class="ph">none</span>')+'</td><td>'+(e.v==null&&e.r!=='r'?TLo('n','No data'):PILL[e.r])+'</td><td><span class="tag t-auto">🔒 '+e.m.src.toUpperCase()+'</span></td></tr>'});
@@ -885,7 +892,7 @@ function gauge(m,v){
 }
 function renderDroo(){
   var w=wk(S.wc),pw=prevW(S.wc),d=w.d,pd=pw?pw.d:{},r=drooRag(d);
-  $('#drooTitle').textContent='Operations · w/c '+dmy(S.wc);
+  $('#drooTitle').innerHTML='Operations · w/c '+dmy(S.wc)+gmNote();
   $('#drooOverall').innerHTML='<span class="pill p-'+r+'" style="height:30px;font-size:13px;padding:0 14px">Deliveroo RAG: '+({g:'✓ GREEN',a:'! AMBER',r:'✕ RED',n:'NO DATA'})[r]+'</span>';
   $('#drooCards').innerHTML=DM.map(function(m){var v=d[m.k],pv=pd[m.k],rg=v==null?'n':band(v,m.g,m.a,m.hi);
     var c='';if(v!=null&&pv!=null){var dd=v-pv,b=m.hi?dd>0:dd<0;c=dd===0?'<span class="chg flat">● same as last week</span>':'<span class="chg '+(b?'up':'down')+'">'+(b?'▲':'▼')+' '+sgn(dd,m.dp,m.u)+' vs last week</span>'}else c='<span class="chg flat">no comparison</span>';
@@ -941,6 +948,13 @@ function rooCells(dt){var q=DD[dt];if(!q)return '<td class="r ph">·</td><td cla
   return '<td class="r">'+(q[0]==null?NA:q[0])+'</td><td class="r'+(q[1]==null?'':' c-'+(q[7]?'r':'g'))+'" title="'+(q[2]!=null?'Average order duration '+q[2].toFixed(1)+' min':'')+'">'+(q[1]==null?NA:q[1].toFixed(1)+' min')+'</td><td class="small'+(iss.length?' c-r':'')+'">'+(iss.length?iss.join(' · '):'<span class="c-g">✓</span>')+'</td>'}
 function mondayOf(d){var x=new Date(d+'T00:00:00Z');return addD(d,-((x.getUTCDay()+6)%7))}
 function rooBand(v,g,a,hi){if(v==null)return '';return hi?(v>=g?'g':v>=a?'a':'r'):(v<=g?'g':v<=a?'a':'r')}
+/* 14/10/2026 (Michael): the Deliveroo tab carries the dailies too (orders, prep, issues, rider wait, open hours, busy mode), latest posted day on top */
+function renderRooDaily(anchor){var el=$('#rooDaily');if(!el)return;var days=[];for(var j=0;j<8;j++)days.push(addD(anchor,-j));
+  var M=[['Rider wait >5 min',8,2,4,false],['Hours open',9,98,95,true],['Busy mode',10,0,10,false]];
+  var cell=function(v,m){if(v==null)return '<td class="r ph">·</td>';var b=rooBand(v,m[2],m[3],m[4]);return '<td class="r'+(b?' c-'+b:'')+'">'+v.toFixed(1)+'%</td>'};
+  var h='<div class="tscroll"><table><thead><tr><th>Day</th><th class="r">Orders</th><th class="r">Prep</th><th>Issues</th>'+M.map(function(m){return '<th class="r">'+m[0]+'</th>'}).join('')+'</tr></thead><tbody>';
+  var any=false;days.forEach(function(dt){var q=DD[dt];if(q)any=true;h+='<tr><td>'+dayName(dt)+' '+dm(dt)+'</td>'+rooCells(dt)+M.map(function(m){return cell(q?q[m[1]]:null,m)}).join('')+'</tr>'});
+  h+='</tbody></table></div>';el.innerHTML=any?h:'<div class="small">No Deliveroo daily drop stored yet for these days.</div>';}
 function renderRooOps(anchor){var el=$('#rooOps');if(!el)return;var days=[anchor];for(var j=1;j<=7;j++)days.push(addD(anchor,-j));
   /* same thresholds as the AM Control Centre Deliveroo panel: rider wait green to 2%, amber to 4%; open hours green 98%+, amber 95%+; busy mode 0 green, amber to 10% */
   var M=[['Rider wait over 5 min',8,2,4,false],['Scheduled hours open',9,98,95,true],['Time in busy mode',10,0,10,false]];
@@ -954,7 +968,7 @@ function renderRooOps(anchor){var el=$('#rooOps');if(!el)return;var days=[anchor
   h+='</tbody></table></div><div class="small" style="margin-top:6px">Source: '+esc(DROO.src||'')+(DROO.to?', latest day '+dmy(DROO.to):'')+'. Each morning drop\'s figures sit on that day; a blank rider wait is 0. Days before the feed started show a dot. The weekly figures are on the weekly tab too.</div>';
   el.innerHTML=h}
 function renderDaily(){renderFold();
-  var lastDay=Object.keys(DAY).filter(function(k){var r=DAY[k];return r&&r[0]!=null}).sort().pop(),anchor=isCur()?(lastDay||addD(S.wc,-1)):addD(S.wc,6);
+  var lastDay=Object.keys(DAY).filter(function(k){var r=DAY[k];return r&&r[0]!=null}).sort().pop(),anchor=lastDay||addD(NOWD,-1);  /* 14/10/2026 (Michael): Daily always shows the latest posted day, whatever week the picker is on */
   var cur=[anchor],prv=[];for(var j=7;j>=1;j--)prv.push(addD(anchor,-j));
   var f=function(n){return n==null?'<span class="ph">·</span>':'£'+Math.round(n).toLocaleString('en-GB')},pc=function(n,s){return n==null||!s?'<span class="ph">·</span>':(n/s*100).toFixed(1)+'%'},sp=function(a,b){return a==null||b==null?null:a+b};
   function gcell(rv){if(!rv.length)return '<td class="r ph">0</td>';var av=rv.reduce(function(t,y){return t+y.s},0)/rv.length;return '<td class="r c-'+(av>=4.7?'g':'r')+'" title="'+rv.map(function(y){return y.s+'★ '+esc(y.a)}).join(', ')+'">'+rv.length+' · '+av.toFixed(1)+'★</td>'}
@@ -974,8 +988,8 @@ function renderDaily(){renderFold();
   var E='<td class="r ph">·</td>';function lyRow(lab,o,dts){var l={sales:0,covers:0,del:0,n:0};dts.forEach(function(dt){var v=lyDay(dt);if(v){l.n++;l.sales+=v[0];l.covers+=v[1];l.del+=v[2]}});if(!l.n)return '<tr class="tot"><td title="No cash up for these days last year">'+lab+'</td><td colspan="14" class="small">No cash up last year</td></tr>';l.sph=l.covers?l.sales/l.covers:null;
     return '<tr class="tot"><td title="Change against the same weekday'+(dts.length>1?'s':'')+' 52 weeks earlier ('+l.n+' day'+(l.n===1?'':'s')+' cashed up last year)">'+lab+'</td><td class="r">'+lyCell(o.n?o.s:null,l.sales,'pct',1)+'</td>'+E+E+'<td class="r">'+lyCell(o.dn?o.d:null,l.del,'pct',1)+'</td>'+E+E+E+'<td class="r">'+lyCell(o.n?o.c:null,l.covers,'n',1)+'</td><td class="r">'+lyCell(o.sph,l.sph,'gbp',1)+'</td>'+E+E+E+E+E+'</tr>'}
   var lyA=addD(anchor,-364);
-  $('#dailyRows').innerHTML=sec((isCur()?'Latest cash-up day':'Last day of the week')+' · '+dayName(anchor)+' '+dm(anchor))+row(anchor)+chRow+lyRow('vs LY '+dayName(lyA)+' '+dmy(lyA).slice(0,5)+'/'+lyA.slice(2,4),A,cur)+sec('Previous 7 days')+prv.slice().reverse().map(row).join('')+tot('7 days',B)+lyRow('7 days vs LY',B,prv);renderRooOps(anchor);
-  $('#dailyWin').textContent=(isCur()?'Latest cash-up day, '+dmy(anchor)+', on top; the 7 days before it underneath, newest first.':'Sunday '+dmy(anchor)+' on top; the 7 days before it underneath, newest first.');
+  $('#dailyRows').innerHTML=sec('Latest cash-up day · '+dayName(anchor)+' '+dm(anchor))+row(anchor)+chRow+lyRow('vs LY '+dayName(lyA)+' '+dmy(lyA).slice(0,5)+'/'+lyA.slice(2,4),A,cur)+sec('Previous 7 days')+prv.slice().reverse().map(row).join('')+tot('7 days',B)+lyRow('7 days vs LY',B,prv);renderRooOps(anchor);renderRooDaily(anchor);
+  $('#dailyWin').textContent='Latest cash-up day, '+dayName(anchor)+' '+dmy(anchor)+', on top; the 7 days before it underneath, newest first. Not tied to the week picker.';
   /* reviews: last 7 days, with the 7 before as context */
   var wr=revIn(prv[0],anchor),pr=revIn(addD(prv[0],-8),addD(prv[0],-1));
   $('#rvHead').textContent='Google reviews · '+dm(prv[0])+' to '+dm(anchor)+' · '+wr.length;
@@ -989,7 +1003,7 @@ function renderDaily(){renderFold();
   var bc=function(v,k){if(v==null)return '<td class="ph">·</td>';return '<td class="c-'+brothRd(v,k)+'">'+v.toFixed(1)+'</td>'};
   var brow=function(dt){var b=BROTH.d[dt]||[null,null],st=BST[brothSt(dt)];return '<tr><td><b>'+dayName(dt)+'</b> '+dm(dt)+'</td>'+bc(b[0],'tk')+bc(b[1],'tp')+'<td><span class="pill '+st[0]+'">'+st[1]+'</span></td></tr>'};
   var bsec=function(t){return '<tr class="sechd"><td colspan="4">'+t+'</td></tr>'};
-  $('#brothTable').innerHTML='<thead><tr><th>Day</th><th>Tonkotsu · '+brothSpecTxt('tk')+'</th><th>Tori Paitan · '+brothSpecTxt('tp')+'</th><th>Day</th></tr></thead><tbody>'+bsec((isCur()?'Latest cash-up day':'Last day of the week'))+brow(anchor)+bsec('Previous 7 days · '+(B.brn?B.br+' / '+B.brn+' in spec'+(B.bra?', '+B.bra+' amber':''):'n/a'))+prv.slice().reverse().map(brow).join('')+'</tbody>';
+  $('#brothTable').innerHTML='<thead><tr><th>Day</th><th>Tonkotsu · '+brothSpecTxt('tk')+'</th><th>Tori Paitan · '+brothSpecTxt('tp')+'</th><th>Day</th></tr></thead><tbody>'+bsec('Latest cash-up day')+brow(anchor)+bsec('Previous 7 days · '+(B.brn?B.br+' / '+B.brn+' in spec'+(B.bra?', '+B.bra+' amber':''):'n/a'))+prv.slice().reverse().map(brow).join('')+'</tbody>';
   var dv=(BROTH.dev||[]).filter(function(x){return x[0]>=prv[0]&&x[0]<=anchor});
   $('#brothFoot').textContent='Source: '+BROTH.src+', '+dmy(BROTH.from)+' to '+dmy(BROTH.to)+'. A missed check counts as a fail. Amber: a reading just above the range (not a fail).'+(dv.length?' Mapal deviations in these 8 days: '+dv.map(function(x){return dm(x[0])+' '+(x[1]==='pork'?'tonkotsu':'tori paitan')+' '+x[2]+' ('+x[3]+')'}).join(', ')+'.':'');
 }
@@ -1058,8 +1072,9 @@ function renderEff(){
 }
 /* 13/10/2026 (Rory x Mike): the month's aggregated food cost (sales weighted over the closed weeks whose Monday is in the month) sits next to the week, so one red week is read against the month */
 function foodMtd(wc){var ym=wc.slice(0,7),a=agg(ym),n=a.ws.filter(function(x){return x.food!=null}).length;return {ym:ym,v:n?a.food:null,n:n,of:a.ms.length}}
+function gmNote(){var sel=$('#weekSel').value;return sel&&sel!==S.wc?' <span class="small" style="font-weight:500;color:var(--ink-2)">last completed week · w/c '+dmy(sel)+' is '+(sel===OPEN?'still in progress':'closing, final figures Tuesday')+'</span>':''}
 function renderStock(){
-  var w=wk(S.wc),mt=foodMtd(S.wc);
+  var w=wk(S.wc),mt=foodMtd(S.wc);var _sh=$('#stockTiles').previousElementSibling;if(_sh&&_sh.querySelector('h2'))_sh.querySelector('h2').innerHTML='Stock &amp; cost control · w/c '+dmy(S.wc)+gmNote();
   $('#stockTiles').innerHTML=tile('Food cost %',pct2(w.food),'Red Light above 25%, amber from 24%',foodRag(w.food))+
     tile('Food cost · '+mLabel(mt.ym),pct2(mt.v),(mt.n?mt.n+' of '+mt.of+' weeks closed, sales weighted':'No closed week with food cost yet')+' · same bands',foodRag(mt.v))+
     tile('Food variance',w.fv==null?NA:sgn(w.fv,1,'%'),'Target ± 5%',w.fv==null?'n':band(Math.abs(w.fv),5,7.5,false))+
@@ -1103,7 +1118,7 @@ function renderActs(){
 /* ---------- roles, fields, sign-off ---------- */
 function fk(){return S.wc}
 function F(){if(!S.fields[fk()])S.fields[fk()]={};return S.fields[fk()]}
-function isCur(){return S.wc===CUR}
+function isCur(){return S.wc===OPEN||S.wc===LAST||isPend(S.wc)}  /* 14/10/2026: reviews ranges run to the latest data on this week, last completed or a closing week */
 function locked(){return S.sheet==='signed'}
 function canEdit(own){if(!isLast()||locked())return false;if(own==='GM')return S.role==='GM'&&S.sheet!=='submitted';if(own==='AM')return S.role==='AM';return true}
 function reqEls(){return $$('[data-req]').concat(overBudget()?[$('#f_rota')]:[])}
@@ -1126,8 +1141,9 @@ function renderSheet(){
 function renderBanner(){
   var b=$('#banner');b.className='banner';
   if(S.per==='month'){b.innerHTML='<span><b>Month view.</b> Read-only roll-up of the weekly sheets. A week counts in the month its Monday falls in.</span>';return}
-  if(isOpen()){b.innerHTML='<span><b>This week, in progress.</b> Sales, target, covers, SPH and wage % are week to date from the daily cash up ('+(wk(S.wc).wtd||0)+' of 7 days). Food cost, hours, league and efficiency close on Monday. The KPI sheet for last week is still open.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last week</button>':'');return}
-  if(!isLast()){b.innerHTML='<span><b>Viewing a past week (w/c '+dmy(S.wc)+').</b> Everything is read-only. Figures are the stored weekly build.</span><button type="button" class="btn sm" id="toLatest">Back to latest week</button>';return}
+  if(isOpen()){b.innerHTML='<span><b>This week, in progress.</b> Sales, target, covers, SPH and wage % are week to date from the daily cash up ('+(wk(S.wc).wtd||0)+' of 7 days). Food cost, hours, league and efficiency close on Monday. The KPI Sheet, Stock &amp; Cost and Deliveroo tabs stay on the last completed week.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
+  if(isPend(S.wc)){b.innerHTML='<span><b>Week closing (w/c '+dmy(S.wc)+').</b> Sales and covers are final; food cost, stock take, league and efficiency land on Tuesday, when this becomes the last completed week. The KPI Sheet, Stock &amp; Cost and Deliveroo tabs stay on the last completed week until then.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
+  if(!isLast()){b.innerHTML='<span><b>Viewing a past week (w/c '+dmy(S.wc)+').</b> Everything is read-only. Figures are the stored weekly build.</span><button type="button" class="btn sm" id="toLatest">Back to last completed week</button>';return}
   if(locked()){b.className='banner ok';b.innerHTML='<span><b>✓ Week signed off and locked.</b> Entries are read-only.</span>'+(S.role==='AM'?'<button type="button" class="btn sm" data-go="kpi">Reopen on the KPI Sheet</button>':'');return}
   if(S.role==='GM')b.innerHTML=S.sheet==='submitted'?'<span><b>GM view.</b> Sheet submitted, waiting for AM sign-off. You can still update actions.</span>':'<span><b>GM view.</b> Numbers are locked. Fill the manual fields, update actions, then submit the KPI Sheet.</span><button type="button" class="btn sm pri" data-go="kpi">Go to KPI Sheet</button>';
   else b.innerHTML=S.sheet==='submitted'?'<span><b>AM view.</b> The GM has submitted. Add improvement areas, then sign off or return it.</span><button type="button" class="btn sm pri" data-go="kpi">Review KPI Sheet</button>':'<span><b>AM view.</b> Waiting on the GM to submit this week. You can still close actions.</span>';
@@ -1136,7 +1152,7 @@ function renderChips(label){
   var mo=S.per==='month';
   if(mo){var a=agg(S.month);$('#siteChips').innerHTML='<span class="pill p-'+(a.red===0?'g':a.red===1?'a':'r')+'">Red Light weeks: '+a.red+' of '+a.ws.length+'</span><span class="pill p-o">'+mLabel(S.month)+'</span>';return}
   var w=wk(S.wc);
-  var trips=rlTrips(w);$('#siteChips').innerHTML=(w.open?'<span class="pill p-o">Week in progress</span><span class="pill p-n">Efficiency closes Monday</span>':'<span class="pill '+(trips.length?'p-r" title="'+trips.join(', ')+'">✕ Red Light: '+trips.length+' trigger'+(trips.length>1?'s':''):'p-g">✓ Red Light: clear')+'</span><span class="pill p-'+effRag(w.eff)+'">Efficiency '+w.eff+' / 100</span>')+'<span class="pill p-'+drooRag(w.d)+'">Deliveroo '+({g:'green',a:'amber',r:'red',n:'no data'})[drooRag(w.d)]+'</span><span class="pill p-o">'+label+'</span>';
+  var trips=rlTrips(w);$('#siteChips').innerHTML=(w.open?'<span class="pill p-o">Week in progress</span><span class="pill p-n">Efficiency closes Monday</span>':isPend(w.wc)?'<span class="pill p-o">Week closing</span><span class="pill p-n">Final figures Tuesday</span>':'<span class="pill '+(trips.length?'p-r" title="'+trips.join(', ')+'">✕ Red Light: '+trips.length+' trigger'+(trips.length>1?'s':''):'p-g">✓ Red Light: clear')+'</span><span class="pill p-'+effRag(w.eff)+'">Efficiency '+w.eff+' / 100</span>')+'<span class="pill p-'+drooRag(w.d)+'">Deliveroo '+({g:'green',a:'amber',r:'red',n:'no data'})[drooRag(w.d)]+'</span><span class="pill p-o">'+label+'</span>';
 }
 
 /* ---------- month ---------- */
@@ -1552,7 +1568,7 @@ function renderAll(){
   $('#bsub').textContent='Site Control Centre · '+SCODE+' '+SITE.name;
   renderBanner();
   if(mo){renderChips();renderMonth();return}
-  var lab=renderSheet();renderChips(lab);renderFields();renderOverview();renderKpi();renderDroo();renderDaily();renderStock();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
+  var lab=withWc(gwc(),function(){var l=renderSheet();renderFields();renderKpi();renderDroo();renderStock();return l});renderChips(lab);renderOverview();renderDaily();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
 }
 /* site header and site switcher (sites.json) */
 $('#siteH1').innerHTML=esc(SITE.label)+' <span>·</span> '+esc(SITE.name);
@@ -1627,7 +1643,7 @@ if(NODEL&&S.tab==='droo')S.tab='overview';
 /* No delivery site: strip every delivery and Deliveroo element after each render (tabs, cards, Red Light rows, gaps, table columns). */
 function stripDel(){
   var t=document.querySelector('nav.tabs [data-t="droo"]');if(t)t.hidden=true;
-  var rc=document.getElementById('rooCard');if(rc)rc.hidden=true;
+  var rc=document.getElementById('rooCard');if(rc)rc.hidden=true;var rd=document.getElementById('rooDailyCard');if(rd)rd.hidden=true;
   $$('[data-go="droo"]').forEach(function(b){var c=b.closest('.card');if(c)c.hidden=true});
   $$('.hlist h4').forEach(function(h){if(/^Deliveroo/.test(h.textContent)){h.parentNode.remove()}});
   $$('.card .eyebrow').forEach(function(e){if(e.textContent==='Deliveroo'){var c=e.closest('.card');if(c)c.hidden=true}});
