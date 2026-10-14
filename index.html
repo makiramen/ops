@@ -2917,9 +2917,9 @@ const SITES = [
     "code": "M21",
     "isNew": true,
     "name": "Maki 21",
-    "cluster": "south",
-    "clusterName": "South England",
-    "am": "Lincoln",
+    "cluster": "north",
+    "clusterName": "North England & Midlands",
+    "am": "Inka Cheung",
     "gm": "—",
     "rag": "amber",
     "vsTarget": 0,
@@ -3017,11 +3017,13 @@ function applySiteGate(weekCodes){
 // and the sales component is built on a covers figure under query (736 covers at
 // GBP 10.04 average spend). Michael's call, 26/08/2026: exclude it for this week.
 // To exempt another week, add the Monday key to that site's list. Nothing else.
-const SCORE_EXEMPT = { "M21": ["2026-08-17"] };
+// 14/10/2026, Michael: M21 is closed (fire, 11/10) and moved to North England &
+// Midlands. Exempt from the score for EVERY week: the list "*" means all weeks.
+const SCORE_EXEMPT = { "M21": ["*"] };
 function scoreExemptCodes(){
   const wk = window.currentWeekKey;
   if (!wk) return [];
-  return Object.keys(SCORE_EXEMPT).filter(c => (SCORE_EXEMPT[c] || []).indexOf(wk) !== -1);
+  return Object.keys(SCORE_EXEMPT).filter(c => { const l = SCORE_EXEMPT[c] || []; return l.indexOf("*") !== -1 || l.indexOf(wk) !== -1; });
 }
 function isScoreExempt(code){ return scoreExemptCodes().indexOf(code) !== -1; }
 
@@ -7024,7 +7026,7 @@ function fmtMonthShort(ym){ if(!ym) return ""; const [y,m]=ym.split("-"); const 
 function renderDailySpend(){
   const d = DATA.daily_spend; if(!d) return;
   let view = d.sites;
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="north_midlands";
   const effC = budgetEffCluster();
   view = view.filter(r=>{ const c=(ECB_CLOSURES||{})[r.code]; return !(c && c.from && d.as_at>=c.from && (!c.until || d.as_at<=c.until)); });   // closed sites removed
   if(effC!=="all") view = view.filter(r=>codeCluster[r.code]===effC);  const filed = d.sites.filter(r=>r.hc_wtd!=null).length;
@@ -7151,7 +7153,7 @@ function renderBudgetStatusAndOverview(d, dates, view, selSun, selThrough){
 function renderClosedWeeks(d, dates){
   const tb=document.querySelector("#closedWeeksTbl tbody"); if(!tb) return;
   const liveSun=liveWeekSun(d);
-  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
+  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="north_midlands";
   const effC=budgetEffCluster();
   const sites=d.sites.filter(r=> effC==="all" || codeCluster[r.code]===effC);
   const sumRange=(code,a,b)=>dates.filter(dt=>dt>=a&&dt<=b).reduce((s,dt)=>s+((d.ledger[dt]||{})[code]||0),0);
@@ -7241,7 +7243,7 @@ function renderBudget(){
   document.getElementById("budgetHeroTitle").textContent = `Budget burn · ${weekLabel(sunISO)}${isLiveWeek?" (current)":""} · ${dObj.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`;
   const month = date.slice(0,7);
   const dayOfMonth = parseInt(date.slice(8,10),10);
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="north_midlands";
   const sumRange = (code, fromISO, toISO) => dates.filter(dt=>dt>=fromISO&&dt<=toISO).reduce((a,dt)=>a+((d.ledger[dt]||{})[code]||0),0);
   const bar = (pct, warn, crit) => {
     if(pct==null) return '<span style="color:var(--maki-muted)">—</span>';

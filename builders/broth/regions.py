@@ -24,7 +24,7 @@ SITES = {
     # Birmingham sits under South England. Confirmed by Michael 27 Aug 26
     # (geography says Midlands, the org does not: its Head Chef reporting ran
     # through the South DEC from opening).
-    "Maki Birmingham Ltd":    ("M21",  "Birmingham",            "south"),
+    "Maki Birmingham Ltd":    ("M21",  "Birmingham",            "midlands"),  # 14/10/2026 moved to North & Midlands
     "Maki Lakeside":          ("M17",  "Lakeside",              "south"),
     "Maki Soho":              ("M18",  "Soho",                  "south"),
     "Maki Shoreditch":        ("M19",  "Shoreditch",            "south"),

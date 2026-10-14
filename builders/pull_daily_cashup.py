@@ -197,10 +197,12 @@ VENUE_IGNORE = {"Maki 4", "Ikigai 1", "AA Factory", "Maki O2", "Maki Braehead"} 
 CLUSTERS = [
     ("Scotland & Newcastle", "Ka Ho", "Óisín Patrick Darragh",
      ["M1", "M3", "M6", "M7", "M8", "IKI2", "M12", "M13", "M15"]),
+    # 14/10/2026, Michael: M21 moved from South England to North England &
+    # Midlands (it is closed after the 11/10 fire; the move applies to every week).
     ("North England & Midlands", "Inka Cheung", "Amy Tang",
-     ["M9", "M10", "M11", "M14", "M16"]),
+     ["M9", "M10", "M11", "M14", "M16", "M21"]),
     ("South England", "Lincoln (Ziang)", "Kaitlin Dorcherty",
-     ["M17", "M18", "M19", "M20", "M21", "MakiNori"]),
+     ["M17", "M18", "M19", "M20", "MakiNori"]),
 ]
 CODE_TO_CLUSTER = {c: name for name, _am, _dam, codes in CLUSTERS for c in codes}
 

@@ -1316,7 +1316,7 @@ function renderWeeklyBudget(){
 function renderDailySpend(){
   const d = DATA.daily_spend; if(!d) return;
   let view = d.sites;
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="north_midlands";
   const effC = budgetEffCluster();
   if(effC!=="all") view = view.filter(r=>codeCluster[r.code]===effC);  const filed = d.sites.filter(r=>r.hc_wtd!=null).length;
   const ydaySum = d.sites.reduce((a,r)=>a+(r.yday||0),0);
@@ -1646,7 +1646,7 @@ function renderBudgetStatusAndOverview(d, dates, view, selSun, selThrough){
 function renderClosedWeeks(d, dates){
   const tb=document.querySelector("#closedWeeksTbl tbody"); if(!tb) return;
   const liveSun=liveWeekSun(d);
-  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
+  const codeCluster={}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="north_midlands";
   const effC=budgetEffCluster();
   const sites=d.sites.filter(r=> effC==="all" || codeCluster[r.code]===effC);
   const sumRange=(code,a,b)=>dates.filter(dt=>dt>=a&&dt<=b).reduce((s,dt)=>s+((d.ledger[dt]||{})[code]||0),0);
@@ -1709,7 +1709,7 @@ function renderBudget(){
   document.getElementById("budgetHeroTitle").textContent = `Budget burn · ${weekLabel(sunISO)}${isLiveWeek?" (current)":""} · ${dObj.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`;
   const month = date.slice(0,7);
   const dayOfMonth = parseInt(date.slice(8,10),10);
-  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="south";
+  const codeCluster = {}; DATA.sites.forEach(x=>codeCluster[x.code]=x.cluster); codeCluster["IK2"]="scotland_newcastle"; codeCluster["M19"]="south"; codeCluster["M20"]="south"; codeCluster["M21"]="north_midlands";
   const sumRange = (code, fromISO, toISO) => dates.filter(dt=>dt>=fromISO&&dt<=toISO).reduce((a,dt)=>a+((d.ledger[dt]||{})[code]||0),0);
   const bar = (pct, warn, crit) => {
     if(pct==null) return '<span style="color:var(--maki-muted)">—</span>';
