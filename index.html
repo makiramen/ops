@@ -5354,6 +5354,63 @@ function salesCell(s){
 // AOV / new-customers only, orders estimated). Replaces the monthly stopgap.
 // Clickable: toggles the Deliveroo week panel rendered under the kpi-grid.
 function deliverooCell(s){
+  setTimeout(() => fillRooCellFromDailies(s), 0);
+  return `<div id="roo-cell-${rooPanelId(s.code)}" style="display:contents;">` + deliverooCellWeekly(s) + `</div>`;
+}
+// Deliveroo tile from the DAILIES (Michael 14/10/2026): orders = sum of the Deliveroo Daily
+// Master orders (data/deliveroo_daily.json), sales = sum of the cash-up delivery £
+// (data/daily/daily_<day>.json, all platforms). Invoice / weekly figure only if no daily rows.
+function fillRooCellFromDailies(s){
+  const el = document.getElementById('roo-cell-' + rooPanelId(s.code));
+  const monday = (typeof window.currentWeekKey === 'string' && window.currentWeekKey) ? window.currentWeekKey : null;
+  if (!el || !monday) return;
+  rooDailyWeekAgg(s, monday).then(a => {
+    if (!a || (a.sales == null && a.orders == null)) return;
+    const hint = `<span style="font-weight:600;color:var(--maki-orange);font-size:10px;"> · click for the week</span>`;
+    const click = `style="cursor:pointer;" onclick="toggleRooPanel('${(s.code||'').replace(/'/g, "\\'")}')" title="Click to show/hide the Deliveroo week panel"`;
+    const part = (a.sDays < 7 || a.oDays < 7);
+    const tag = `<span style="font-weight:600;color:${part ? 'var(--amber)' : 'var(--ink-3)'};font-size:10px;"> · dailies${part ? ' (' + Math.min(a.sDays, a.oDays) + '/7 days)' : ''}</span>`;
+    const gmv = a.sales == null ? 'N/A' : '£' + Number(a.sales).toLocaleString('en-GB', {maximumFractionDigits:0});
+    const ord = a.orders == null ? 'orders n/a' : a.orders.toLocaleString() + ' orders';
+    el.innerHTML = `<div class="kpi" ${click}><div class="kpi-label">Deliveroo Sales (wk)${tag}${hint}</div>`+
+      `<div class="kpi-value">${gmv}</div>`+
+      `<div class="kpi-trend" style="margin-top:6px;">${ord} · delivery £ from cash up</div></div>`;
+  });
+}
+const ROO_DAY_CACHE = {};
+function rooDayFile(day){
+  if (ROO_DAY_CACHE[day] === undefined) ROO_DAY_CACHE[day] = rooPanelFetch('daily/daily_' + day + '.json');
+  return ROO_DAY_CACHE[day];
+}
+const ROO_AGG_CACHE = {};
+function rooDailyWeekAgg(s, monday){
+  if (!monday || !s) return Promise.resolve(null);
+  const jc = (typeof DISPLAY_TO_JSON !== 'undefined' && DISPLAY_TO_JSON[s.code]) || s.jsonCode || s.code;
+  const key = s.code + '|' + monday;
+  if (ROO_AGG_CACHE[key]) return ROO_AGG_CACHE[key];
+  const days = [0,1,2,3,4,5,6].map(i => rooPanelAddDays(monday, i));
+  const p = Promise.all([rooPanelDaily()].concat(days.map(rooDayFile))).then(res => {
+    const daily = res[0], files = res.slice(1);
+    const iO = (daily && daily.k) ? daily.k.indexOf('orders') : 0;
+    let sales = 0, sDays = 0, orders = 0, oDays = 0;
+    days.forEach((day, i) => {
+      const f = files[i], ss = f && f.sites;
+      const x = ss && (ss[jc] || ss[s.code]);
+      const v = (x && x.sales) ? x.sales.delivery : null;
+      if (v != null && !isNaN(v)) { sales += Number(v); sDays++; }
+      const dd = daily && daily.d && daily.d[day];
+      const q = dd && (dd[jc] || dd[s.code]);
+      if (q && iO >= 0 && q[iO] != null) { orders += Number(q[iO]); oDays++; }
+    });
+    // No Deliveroo orders all week and zero delivery £ = no storefront (e.g. Maki Nori), not a real £0 week.
+    if (!oDays && Math.abs(sales) < 0.005) return { sales: null, sDays: 0, orders: null, oDays: 0 };
+    return { sales: sDays ? Math.round(sales * 100) / 100 : null, sDays, orders: oDays ? orders : null, oDays };
+  }).catch(() => null);
+  ROO_AGG_CACHE[key] = p;
+  return p;
+}
+// Original weekly (invoice / brand report) tile, used only until / unless the dailies load.
+function deliverooCellWeekly(s){
   const d = s.deliveroo;
   const hint = `<span style="font-weight:600;color:var(--maki-orange);font-size:10px;"> · click for the week</span>`;
   const click = `style="cursor:pointer;" onclick="toggleRooPanel('${(s.code||'').replace(/'/g, "\\'")}')" title="Click to show/hide the Deliveroo week panel"`;
@@ -5452,22 +5509,25 @@ function buildRooPanel(s, el){
   Promise.all([
     monday ? rooPanelPrevWeek(monday) : Promise.resolve(null),
     rooPanelDaily(),
-    monday ? rooPanelReviews(monday) : Promise.resolve(null)
+    monday ? rooPanelReviews(monday) : Promise.resolve(null),
+    monday ? rooDailyWeekAgg(s, monday) : Promise.resolve(null),
+    monday ? rooDailyWeekAgg(s, rooPanelAddDays(monday, -7)) : Promise.resolve(null)
   ]).then(res => {
-    el.innerHTML = rooPanelHtml(s, d, monday, jsonCode, res[0], res[1], res[2]);
+    el.innerHTML = rooPanelHtml(s, d, monday, jsonCode, res[0], res[1], res[2], res[3], res[4]);
   }).catch(e => {
     el.innerHTML = '<div style="font-size:12px; color:var(--red);">Could not load the Deliveroo week detail (' + rooPanelEsc(e && e.message) + ').</div>';
   });
 }
 
-function rooPanelHtml(s, d, monday, jsonCode, prevWk, daily, rooRev){
+function rooPanelHtml(s, d, monday, jsonCode, prevWk, daily, rooRev, agg, prevAgg){
   const esc = rooPanelEsc;
   const pid = rooPanelId(s.code);
   const hasWeek = d && d.sales != null;
   const estGap = (s.gaps || []).some(g => typeof g === 'string' && g.indexOf('Deliveroo sales are an ESTIMATE') === 0);
   const isEst = estGap || !!d.sales_estimated;
-  const src = isEst ? 'ESTIMATE' : (d.partial ? 'weekly summary (sales only)' : (/Invoice Statement/i.test(d.source || '') ? 'invoice' : 'weekly summary'));
-  const srcCol = isEst ? 'var(--amber)' : (d.partial ? 'var(--amber)' : 'var(--ink-3)');
+  const fromDailies = !!(agg && (agg.sales != null || agg.orders != null));
+  const src = fromDailies ? 'dailies (cash up + Deliveroo daily)' : isEst ? 'ESTIMATE' : (d.partial ? 'weekly summary (sales only)' : (/Invoice Statement/i.test(d.source || '') ? 'invoice' : 'weekly summary'));
+  const srcCol = (isEst && !(agg && (agg.sales != null || agg.orders != null))) ? 'var(--amber)' : (d.partial ? 'var(--amber)' : 'var(--ink-3)');
   const prevD = (() => {
     if (!prevWk || !prevWk.sites) return null;
     const ps = prevWk.sites[jsonCode] || prevWk.sites[s.code];
@@ -5494,7 +5554,7 @@ function rooPanelHtml(s, d, monday, jsonCode, prevWk, daily, rooRev){
         <span style="font-weight:600; color:${srcCol}; font-size:10px; text-transform:none; letter-spacing:0;">· ${esc(src)}</span></span>
       <button type="button" onclick="toggleRooPanel('${esc(s.code).replace(/'/g, "\\'")}')" title="Close" style="background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:12px; line-height:1;">✕</button>
     </div>`;
-  if (isEst) {
+  if (isEst && !fromDailies) {
     h += `<div style="font-size:11px; color:var(--amber); background:var(--amber-bg); border:1px solid var(--amber-ring); border-radius:8px; padding:6px 10px; margin-bottom:10px;">Deliveroo sales for this site are an ESTIMATE from the internal all-aggregator Delivery line (+/-15%). No Deliveroo invoice or summary for this site this week.</div>`;
   }
   if (!hasWeek) {
@@ -5506,9 +5566,19 @@ function rooPanelHtml(s, d, monday, jsonCode, prevWk, daily, rooRev){
                : ((prevD && d.sales != null && prevD.sales) ? rooPanelDelta((d.sales - prevD.sales) / prevD.sales * 100, 'up-is-good', '%', 1) : rooPanelDelta(null));
   const wowOrd = (d.wow && d.wow.orders_abs != null) ? rooPanelDelta(d.wow.orders_abs, 'up-is-good', '', 0)
                : dlt('orders', 'up-is-good', '', 0);
+  // Revenue and orders from the DAILIES (Michael 14/10/2026), invoice only if no daily rows.
+  const useA = !!(agg && (agg.sales != null || agg.orders != null));
+  const aPart = useA && (agg.sDays < 7 || agg.oDays < 7);
+  const revHtml = useA ? num(agg.sales, 0, '£') : num(d.sales, 0, '£');
+  const ordHtml = useA ? num(agg.orders, 0) : num(d.orders, 0);
+  const revWow = useA ? ((prevAgg && prevAgg.sDays === 7 && agg.sDays === 7 && prevAgg.sales) ? rooPanelDelta((agg.sales - prevAgg.sales) / prevAgg.sales * 100, 'up-is-good', '%', 1) : rooPanelDelta(null)) : wowGmv;
+  const ordWow = useA ? ((prevAgg && prevAgg.oDays === 7 && agg.oDays === 7) ? rooPanelDelta(agg.orders - prevAgg.orders, 'up-is-good', '', 0) : rooPanelDelta(null)) : wowOrd;
+  if (useA) {
+    h += `<div style="font-size:11px; color:${aPart ? 'var(--amber)' : 'var(--ink-3)'}; margin-bottom:8px;">Revenue = cash-up delivery £ (all platforms), ${agg.sDays}/7 days. Orders = Deliveroo daily orders, ${agg.oDays}/7 days.${d.sales != null ? ' Deliveroo weekly report: £' + Number(d.sales).toLocaleString('en-GB', {maximumFractionDigits:0}) + (d.orders != null ? ' / ' + d.orders + ' orders' : '') + '.' : ''}</div>`;
+  }
   h += `<div class="kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap:8px; margin-bottom:14px;">
-    ${tile('Revenue', num(d.sales, 0, '£'), null, wowGmv)}
-    ${tile('Orders' + (d.orders_estimated ? ' (est.)' : ''), num(d.orders, 0), null, wowOrd)}
+    ${tile(useA ? 'Delivery £ (dailies)' : 'Revenue', revHtml, null, revWow)}
+    ${tile(useA ? 'Orders (dailies)' : 'Orders' + (d.orders_estimated ? ' (est.)' : ''), ordHtml, null, ordWow)}
     ${tile('AOV', num(d.aov, 2, '£'), null, dlt('aov', 'up-is-good', '', 2))}
     ${tile('Rating (tgt ≥4.7)', num(d.rating, 1, '', '★'), band('rating', d.rating), dlt('rating', 'up-is-good', '', 1))}
     ${tile('Open hours % (tgt ≥98)', num(d.open_hours_pct, 1, '', '%'), band('open_hours_pct', d.open_hours_pct), dlt('open_hours_pct', 'up-is-good', 'pp', 1))}
