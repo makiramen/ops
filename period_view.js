@@ -63,6 +63,16 @@
   .pv-rld{display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--line)}\
   .pv-rld.red{background:var(--red)} .pv-rld.amber{background:var(--amber)} .pv-rld.green{background:var(--green)} .pv-rld.na{background:var(--line)}\
   .pv-empty{padding:30px;text-align:center;color:var(--ink-3)}\
+  .tabbtn[data-tab=week] .pv-caret{display:inline-grid;place-items:center;width:18px;height:18px;margin-left:-2px;border-radius:6px;font-size:11px;line-height:1;color:inherit;opacity:.75;transition:all .12s}\
+  .tabbtn[data-tab=week] .pv-caret:hover{background:rgba(0,0,0,.08);opacity:1}\
+  .tabbtn[data-tab=week].pv-open .pv-caret{transform:rotate(180deg);opacity:1}\
+  #pv-menu{position:fixed;z-index:200;min-width:200px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.14);padding:6px;display:none}\
+  #pv-menu.open{display:block}\
+  #pv-menu button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:0;background:transparent;text-align:left;font:inherit;font-size:13px;font-weight:600;color:var(--ink-2);padding:8px 10px;border-radius:8px;cursor:pointer}\
+  #pv-menu button:hover{background:var(--surface-2);color:var(--ink)}\
+  #pv-menu button.active{background:var(--maki-orange-bg);color:var(--maki-orange)}\
+  #pv-menu button small{font-weight:500;color:var(--ink-3);font-size:11px}\
+  #pv-menu button.active small{color:var(--maki-orange)}\
   .pv-foot{font-size:11.5px;color:var(--ink-3);margin-top:10px;line-height:1.5}\
   @media (max-width:720px){table.pv{font-size:11px}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -251,6 +261,52 @@
   var scope = 'all';        // all | <cluster name> | site:<jsonCode>
   var DIR = { order: [], seen: {}, clusterOf: {}, clusters: [] };   // site directory from the newest week
 
+  /* ---------- "This Week" tab: little arrow + dropdown (14/10/2026, Michael) ----------
+     The arrow on the tab button opens a small menu with the same five views as the
+     View bar (This week / Last week / Month / Quarter / Year to date). The tab's
+     label follows whichever view is showing. */
+  var TAB_LABELS = { 'this': 'This Week', 'last': 'Last Week', 'month': 'Month', 'quarter': 'Quarter', 'year': 'Year to date', 'other': 'Week' };
+  var tabBtn = document.querySelector('.tabbtn[data-tab="week"]');
+  var menu = null, tabLab = null;
+  if (tabBtn){
+    tabBtn.innerHTML = '<span class="pv-tablab">This Week</span><span class="pv-caret" role="button" aria-haspopup="menu" aria-label="Change view" title="Change view">&#9662;</span>';
+    tabLab = tabBtn.querySelector('.pv-tablab');
+    menu = document.createElement('div'); menu.id = 'pv-menu'; menu.setAttribute('role', 'menu');
+    document.body.appendChild(menu);
+    tabBtn.querySelector('.pv-caret').addEventListener('click', function (ev) {
+      ev.preventDefault(); ev.stopPropagation();
+      if (menu.classList.contains('open')) closeMenu(); else openMenu();
+    });
+    document.addEventListener('click', function (ev) { if (menu.classList.contains('open') && !menu.contains(ev.target)) closeMenu(); });
+    document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape') closeMenu(); });
+    window.addEventListener('resize', closeMenu);
+    window.addEventListener('scroll', closeMenu, true);
+  }
+  function openMenu(){
+    var thisW = weeksIndex[0], lastW = weeksIndex[1];
+    var items = [
+      ['this', 'This week', thisW ? wcLabel(thisW.monday) : ''],
+      ['last', 'Last week', lastW ? wcLabel(lastW.monday) : ''],
+      ['month', 'Month', ''], ['quarter', 'Quarter', ''], ['year', 'Year to date', '']
+    ];
+    menu.innerHTML = items.map(function (it) {
+      return '<button type="button" role="menuitem" data-mode="' + it[0] + '"' + (mode === it[0] ? ' class="active"' : '') + '>' + it[1] + (it[2] ? '<small>' + it[2] + '</small>' : '') + '</button>';
+    }).join('');
+    menu.querySelectorAll('button').forEach(function (b) {
+      b.addEventListener('click', function (ev) {
+        ev.stopPropagation(); closeMenu();
+        if (!tabBtn.classList.contains('active')) tabBtn.click();   // open the tab first
+        setMode(b.getAttribute('data-mode'));
+      });
+    });
+    var r = tabBtn.getBoundingClientRect();
+    menu.style.top = (r.bottom + 6) + 'px';
+    menu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 220)) + 'px';
+    menu.classList.add('open'); tabBtn.classList.add('pv-open');
+  }
+  function closeMenu(){ if (!menu) return; menu.classList.remove('open'); tabBtn.classList.remove('pv-open'); }
+  function syncTab(){ if (tabLab) tabLab.textContent = TAB_LABELS[mode] || 'This Week'; }
+
   /* ---------- bar ---------- */
   var bar = document.createElement('div'); bar.id = 'period-bar';
   var view = document.createElement('div'); view.id = 'period-view';
@@ -291,6 +347,7 @@
     if (sel) sel.addEventListener('change', function () { periodKey = sel.value; renderPeriod(); });
     var ss = bar.querySelector('#pv-site');
     if (ss) ss.addEventListener('change', function () { scope = ss.value || 'all'; renderBar(); renderPeriod(); });
+    syncTab();
   }
 
   function showWeekly(show){
