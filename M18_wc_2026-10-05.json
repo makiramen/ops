@@ -1,0 +1,294 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-14",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-05 \u2013 2026-10-11",
+    "commencing": "2026-10-05",
+    "ending": "2026-10-11"
+  },
+  "sites": {
+    "M18": {
+      "code": "M18",
+      "name": "Maki 18",
+      "gm": "Imre Balogh",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 41751.67,
+          "target": 35500.0,
+          "var_pct": 17.61,
+          "prev": 38303.31,
+          "wow_abs": 3448.36,
+          "wow_pct": 9.0
+        },
+        "covers": {
+          "actual": 2001,
+          "prev": 1884,
+          "wow_abs": 117,
+          "wow_pct": 6.21
+        },
+        "sph": {
+          "actual": 19.63,
+          "prev": 19.14,
+          "wow_abs": 0.49,
+          "wow_pct": 2.56,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 24.29,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 30.64,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 679.1
+        },
+        "waste": {
+          "actual": 6.08
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 1.2,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": 1.4,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-10-05"
+      },
+      "efficiency_score": {
+        "score": 66,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+17.61) + 30% (\u00a3gap +6252 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 65.03,
+            "basis": "\u00a319.63 vs \u00a322 tgt \u2014 level 60, WoW +2.56% \u2192 mom 76"
+          },
+          "food": {
+            "weight": 30,
+            "value": 54.88,
+            "basis": "30.64% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 50.65,
+            "basis": "24.29% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.75\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "1.40% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 30.6%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7541,
+        "new_reviews": 61,
+        "star_breakdown": {
+          "1": 2,
+          "2": 0,
+          "3": 0,
+          "4": 7,
+          "5": 52
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "D\u01b0\u01a1ng Nguy\u1ec5n",
+            "text": "The place was crowded, and the food took too long to arrive.",
+            "date": "2026-10-10",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "K K K W",
+            "text": "Terrible experience with tasteful broth. On top of that service is close to none. We waited 15 minutes to even get anyone attention.",
+            "date": "2026-10-08",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Ladies 3x Toilets blocked we need plumber to fix this issue please . We tried on daily basis but this issue is keep coming back . Thank you .",
+            "priority": "\u2014",
+            "logged_week": "21/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Corner corridor- kitchen wall lath",
+            "priority": "\u2014",
+            "logged_week": "21/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-11",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 2269.09,
+        "orders": 82,
+        "aov": 27.67,
+        "new_customers": 49,
+        "rating": 4.4,
+        "open_hours_pct": 97.5,
+        "avg_prep_min": 13.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 4.8,
+        "rider_wait_5min_pct": 8.5,
+        "conversion_pct": 12.5,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 7.6
+      },
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Covers rose by 117 (6.21%) week on week and spend per head rose by \u00a30.49 (2.56%); SPH is better than last week but much lower than previous weeks and last month, because \u00a35 and free ramen guests mostly order nothing else, not even drinks.",
+          "Sales rose by \u00a33,448.36 (9%) week on week and were \u00a36,251.66 (17.61%) above target.",
+          "Saturday was the highest sales day to date, with many tourists and growing demand for hot ramen; without discounts, sales would have been \u00a345,699.74.",
+          "Labour was BOH 13.55% and FOH 10.83%; excluding discounts, labour was 22.19% (BOH 12.32%, FOH 9.8%) on the Kobas figures.",
+          "Deliveroo: two of four disputed orders were accepted, but no picture could be found for one order; a 2 star review (extra broth packaging, no spoon) was answered with a \u00a37.50 voucher, and a 5 star review said the ramen was okay and the sushi great.",
+          "Google rating is 4.7 (4.75), with 52 five star reviews (more showing on notifications, and some glitches with replies), 7 four star reviews (mostly complimenting FOH service) and 2 one star reviews from KKKW that may not be genuine.",
+          "The only negative review on the highest sales day said the place was crowded and the food took too long.",
+          "BOH development: Razzak will begin training in the hot section; Pallavi, Mohammed and Ram are in hot section development, with Pallavi doing half shifts on donburi and sides; Aniket has been hired as a new KP and will start cross training and hot section training soon.",
+          "With the busy season coming, new FOH hires are needed; Tamara is not coming back, the Talent Funnel has been reviewed and lots of trials will be invited to pick the best.",
+          "A new BOH kitchen assistant vacancy is open but has no candidates yet.",
+          "Maintenance log: drainage cleaning done (high, Ross); door stopper (medium to low, Ross); Zen 10 pest job (high, no owner listed); ramen section leak (medium, Francheska); draft beer (medium, Ross); VIP area leak (medium to high); dishwasher area leak.",
+          "Upcoming: 50% off first Slerp orders over \u00a320 (excluding drinks and frozen ramen), with the Slerp promotion running Friday 6 to Sunday 8 November and materials due 4 November; The Fork 30% offer (Imi and Peter); and a Monday to Friday lunch offer.",
+          "Areas for improvement: controlling maintenance and maintenance checks; the Chatha cleaners only come once a month, so the team must take over; broth will be tasted before opening and before the evening shift (some staff are vegan or halal); and constant training and Kaizen.",
+          "The printer is working again: allergen guides, the new supplier schedule and recipes have been printed.",
+          "Downstairs gets cold when the door is open, so heating will be needed in winter.",
+          "A booking for 17 teenagers left one chair broken.",
+          "A Soho booking enquiry received a response through the B2B channel.",
+          "The 117 cover rise was put down to the loyalty app and colder weather; \u00a35 ramen vouchers represented about \u00a31,500 of potential revenue, and the site projects \u00a350,000 weeks in the first two weeks of December.",
+          "Delivery: 91 orders last week generated \u00a32,790.39 gross with only two complaints, helped by the delivery radius being extended on Friday; Ziang Lin projects \u00a33,000 to \u00a34,000 of delivery sales this week, with about 200 orders expected.",
+          "Delivery prep time improved from 15 to 14 minutes against a target of 13 minutes or less.",
+          "Food stock variance was 1.4% and wet stock variance 1.2%.",
+          "To stop delivery spills, Ziang Lin demonstrated a new packing method: remove the air from takeaway bags and staple them shut with the ticket.",
+          "On the 2 star missing spoon review, Ziang Lin said spoons are not needed unless requested; Kaitlin Docherty suggested including one, which Ziang Lin accepted on condition that boxes are not stockpiled in the limited space.",
+          "\u00a35 online order vouchers and loyalty app flyers (images in the South England chat) must go in every delivery and Slerp bag.",
+          "A supplier misread unit sizes on Marian's order of 1 pack of vegan bacon and 5 packs of beef, delivering 17 full boxes of vegan bacon and 1 box of beef; Ross is arranging a redelivery on 13/10.",
+          "Weekly admin was completed except payroll, which was uncertain.",
+          "Razzak will train on the hot section ahead of Marian's three month holiday.",
+          "The kitchen assistant vacancy advert has now been posted (confirmed by Kaitlin Docherty); Ziang Lin stressed planning ahead for busy periods and not panic hiring or onboarding unqualified candidates.",
+          "Staffing is also short because one team member works only 20 hours; Kei Cannon recommended Dagenham and Barking Council as a free recruitment source that sends CVs directly and works better than Talent Funnel.",
+          "Saturdays are busy all day with a service gap between 3pm and 6pm, so fresh staff must start at 2pm, 3pm or 4pm to cover breaks rather than the same six people working the whole day.",
+          "Staff from Shoreditch or Lakeside who want extra Saturday hours can be redirected to Soho.",
+          "The dishwasher area leak persists; Ross is completing the door stoppers and the Zen garden pest job on 13/10, with the VIP section used instead of the Zen garden meanwhile, and Francesca has been sent a video of the ramen section pipe issue.",
+          "The cleaners' next visits are 20/10 and 24/11; until then FOH must empty the overflowing toilet bins weekly.",
+          "On 13/10 maggots dropping from the ceiling forced half of the restaurant to close, and Kaitlin Docherty was heading to the site that evening.",
+          "Kei Cannon flagged that the AM dashboard showed wrong figures (very low labour efficiency) for Lakeside, Soho and Shoreditch; Kaitlin Docherty said the variance reports were filled in late on Sunday night and corrected on Monday morning, and the dashboard will reload overnight.",
+          "Region: Ziang Lin introduced a mandatory seating upsell at all sites from 13/10: staff place the drinks menu from the marketing stand in the middle of the table and immediately offer edamame, and kitchens boil a large batch of edamame in advance so it can be blanched for five seconds when ordered.",
+          "Region: Kaitlin Docherty will send daily delivery performance (red, amber, green) to the group chats every day between 10:30 and 12:00 from 14/10."
+        ],
+        "actions": [
+          "Resolve the high priority Zen 10 pest job - Owner: Imre Balogh (20/10/2026)",
+          "Fix the ramen section leak - Owner: Francheska (20/10/2026)",
+          "Fix the door stopper and the draft beer issue - Owner: Ross (20/10/2026)",
+          "Log and fix the VIP area and dishwasher area leaks - Owner: Imre Balogh (20/10/2026)",
+          "Invite trials from the Talent Funnel and hire FOH staff for the busy season - Owner: Imre Balogh (20/10/2026)",
+          "Fill the BOH kitchen assistant vacancy - Owner: Imre Balogh (20/10/2026)",
+          "Start hot section training for Razzak and Aniket - Owner: Imre Balogh (20/10/2026)",
+          "Taste the broth before opening and before the evening shift - Owner: Imre Balogh (20/10/2026)",
+          "Cover cleaning in house between the monthly Chatha cleaners visits - Owner: Imre Balogh (20/10/2026)",
+          "Run The Fork 30% offer - Owner: Imi and Peter (20/10/2026)",
+          "Have Slerp promotion materials ready for the 6 to 8 November promotion - Owner: Imre Balogh (04/11/2026)",
+          "Replace the broken chair and arrange heating for downstairs - Owner: Imre Balogh (20/10/2026)",
+          "Record a video of the airtight bag stapling procedure and post it in the management and FOH group chats - Owner: Imre Balogh (13/10/2026)",
+          "Train all staff on site on the new bag sealing and stapling procedure - Owner: Imre Balogh (13/10/2026)",
+          "Supervise the team to make sure the bag stapling procedure is followed - Owner: Kaitlin Docherty (20/10/2026)",
+          "Support the site on Friday and Saturday to improve table turn times and speed at peak without cutting staff - Owner: Kaitlin Docherty (17/10/2026)",
+          "Put \u00a35 online order vouchers and loyalty app flyers in every delivery and Slerp bag - Owner: Imre Balogh (20/10/2026)",
+          "Add Ziang Lin and K to the delivery chat groups as admins - Owner: Imre Balogh (20/10/2026)",
+          "Schedule fresh staff to start at 2pm, 3pm or 4pm on Saturdays to cover breaks - Owner: Imre Balogh (17/10/2026)",
+          "Have kitchen staff prepare a large daily batch of edamame - Owner: Imre Balogh (20/10/2026)",
+          "Oversee recruitment and track Soho staffing daily - Owner: Kaitlin Docherty (20/10/2026)",
+          "Discuss recruitment standards and staffing expectations with Amy on return - Owner: Imre Balogh (20/10/2026)",
+          "Contact Ross about the dishwasher drainage if the leak persists - Owner: Imre Balogh (20/10/2026)",
+          "Empty and clean the toilet bins weekly between cleaner visits - Owner: Imre Balogh (20/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "1WsPvIbDfK-UQySvc0SS8UVqNkgMG0eH5LH1sr4iSguQ",
+        "source": "No KPI meeting notes received for this site yet for w/c 05/10 (Inka / Lincoln clusters: Tuesday meetings, notes land via the AM CC notes inbox). Declared, not missing. Top up: Used the M18 KPI Report for 05/10 to 11/10 and the Soho line of the B2B Weekly Update for 05/10 to 11/10. No Soho GM/HC doc for 12/10 or 13/10 was found (the October folder holds only the 06/10 doc, and the report's GM/HC link no longer resolves). Top up: London Region KPI Meeting Gemini notes of 13/10/2026 (meeting 14:54 BST, reviewing w/c 05/10 to 11/10; figures such as Nori's 486 covers, Soho's +117 covers, Lakeside's 265 cover drop, Southampton's 39 cover drop and Shoreditch's 3.8 variance match this week's KPI reports), mapped by speaker ('Maki & Ramen Soho' for Soho, plus Kei Cannon's Soho delivery figures); summary, decisions, next steps and details read, plus the matching gemini-notes email of 13/10. The doc has no transcript tab. No Otter summary of this meeting was found. Only lines new against the existing notes are given."
+      }
+    }
+  }
+}

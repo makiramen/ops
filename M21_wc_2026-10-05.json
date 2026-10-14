@@ -1,0 +1,265 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-14",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-05 \u2013 2026-10-11",
+    "commencing": "2026-10-05",
+    "ending": "2026-10-11"
+  },
+  "sites": {
+    "M21": {
+      "code": "M21",
+      "name": "Maki 21",
+      "gm": "Emily",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 45070.48,
+          "target": 53000.0,
+          "var_pct": -14.96,
+          "prev": 59515.49,
+          "wow_abs": -14445.01,
+          "wow_pct": -24.27
+        },
+        "covers": {
+          "actual": 2168,
+          "prev": 2498,
+          "wow_abs": -330,
+          "wow_pct": -13.21
+        },
+        "sph": {
+          "actual": 20.11,
+          "prev": 22.92,
+          "wow_abs": -2.81,
+          "wow_pct": -12.26,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 27.83,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 32.04,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 910.26
+        },
+        "waste": {
+          "actual": 18.18
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 5,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-05"
+      },
+      "efficiency_score": {
+        "score": 40,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 84.77,
+            "basis": "70% (100-14.96) + 30% (\u00a3gap -7930 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 47.95,
+            "basis": "\u00a320.11 vs \u00a322 tgt \u2014 level 68, WoW -12.26% \u2192 mom 0"
+          },
+          "food": {
+            "weight": 30,
+            "value": 43.68,
+            "basis": "32.04% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "27.83% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 96.24,
+            "basis": "4.67\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "sales -15.0% vs target",
+          "wage 27.8%",
+          "food 32.0%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.6737,
+        "new_reviews": 95,
+        "star_breakdown": {
+          "1": 3,
+          "2": 1,
+          "3": 1,
+          "4": 14,
+          "5": 76
+        },
+        "negatives": 5,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Oscar",
+            "text": "Like Wagamama, if Wagamama was trying to take the piss out of the Japanese. Food and service was fine, but the entire atmosphere, from the comically large drum at the entrance, to the loud music, pink lighting and enormous geisha at the back of the restaurant seem curated for a perfectly instagramable experience conveniently distracting from the actual food. There was so much going on the food didn't leave much of an impression.",
+            "date": "2026-10-10",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Dani Jo",
+            "text": "The food was okay but quite salty and overcooked and undercooked at the same time. There wasn't any black garlic in the black garlic tonkotsu. The gyoza, while tasty, felt like it was cooked from frozen. The way it looks is amazing, but the music was really loud and I couldn't hear my partner.",
+            "date": "2026-10-09",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Lily Abed",
+            "text": "Food was bland i had the chicken ramen, however to be fair the tempura starter was really good.\nservice was slow because when I ordered an alcoholic drink that had the bubble sitting on top, it was left sitting on their counter that by the time it came to our table it was just foam so felt dissapointed that i couldn't have the drink the way I saw its picture on the menu. Its not worth the hype, its nice visuals but the food isnt worth it.",
+            "date": "2026-10-09",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Danisan Sivakumar",
+            "text": "It was my first visiting in Birmingham so I thought of trying food at your place. Very disappointed and felt like I was ignored and not welcomed. It was really busy so I requested the male manager (British tall man) that any chance I could sit in the corner I didn\u2019t wanna sit in the middle of the crowd. He refused it and said that table is only for three people you can sit and was trying to seat me in the middle of a big group. I then refused and again requested to sit in the corner. Finally he did, no one came to take my order, felt like I was targeted.\n\nWhile I was waiting to be served there were some Japanese couple came and he gave them a big table but it was only two people so I thought he is discriminating me. Finally a server came, she didn\u2019t even ask whether I have any allergies, she took my order. I called the female manager and said that I have gluten intolerance so could you please guide me or explain the option but she didn\u2019t. I ordered a stater, a main, a drink and a glass of water. Main came first no drinks at all, starter came later still no water or drink at all. By the time I started eating I asked more than 3 times that whether I could have my drinks at least.\n\nSince I got allergy, after having the food, I was waiting to catch my train to come back home. I had server vomiting and diarrhoea in the train. It was because of their ignorance and careless behaviour. I said to that Chinese lady manager that I have allergy she didn\u2019t even care about me. I\u2019m gonna severely take action against their behaviour which is not suitable for the hospitality and I\u2019m looking forward to the head office to contact me to discuss about my health issue.\n\nThere was another man who was trying to get the payment, he was like forcing me to pay the 10% service charge as if they gave the best guest experience. I would like to claim my full refund that I paid for the meal and I need a proper explanation form the management.",
+            "date": "2026-10-06",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Maryam Hussain",
+            "text": "0 stars overcharged by gyan  by nearly a \u00a3100\nWhen we actually supposed to be using vouchers and saving money!",
+            "date": "2026-10-05",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-11",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1464.05,
+        "orders": null,
+        "aov": null,
+        "new_customers": null,
+        "rating": 3.6,
+        "open_hours_pct": 85.6,
+        "avg_prep_min": 14.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 6.5,
+        "rider_wait_5min_pct": 2.2,
+        "conversion_pct": 6,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. | ESTIMATE \u2014 internal Auto Cash Up Delivery (\u00a3) summed Mon-Sun; ALL aggregators, not Deliveroo-only. Accuracy +/-15% (measured -14% to +23% vs real Deliveroo figures, w/c 2026-07-27). Replace with the Deliveroo invoice statement when it lands. + ops from Weekly Summary sheet",
+        "sales_estimated": true,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo sales are an ESTIMATE from the internal all-aggregator Delivery line (+/-15%) \u2014 no Deliveroo source for this site this week"
+      ],
+      "notes": {
+        "issues": [
+          "Site temporarily closed after a fire on Sunday night 11/10 in the back storage and kitchen area; no injuries; awaiting restoration. Sunday 11/10 not traded, so the week is six days.",
+          "Covers and spend per head down; only six days traded, heavy 5 GBP ramen voucher use, and new competitor Kibu opened three minutes away.",
+          "Sales target was raised this week, so the miss is wider; a normal Sunday (6,000 to 7,000 GBP) would have brought it close.",
+          "Deliveroo: strong Saturday but inaccurate orders up from 0 to 5 (two cooking complaints disputed by the site, one missing items, one bamboo shoots on a no bamboo order); delivery photo chat working well.",
+          "Labour poor: FOH cut well (9% Mon and Tue) but BOH stayed high.",
+          "Compliance dropped sharply, mostly tasks not closed off on the Sunday of the fire; normally 97% plus.",
+          "FOH compliance pattern per Amy: bar opening and toilet checks late or missed.",
+          "Strong public and Instagram reaction, customers still checking the doors; reopening expected to be busy.",
+          "Region: all broth now arrives pre diluted, chefs no longer add water on site (consistency fix for bland or salty broth complaints; Ross memo).",
+          "Region: Deliveroo integrated delivery app on an iPad plus an extra order summary printer per packing station; Inka will set each site up in person once delivered.",
+          "Covers fell by 330 (13.21%) and spend per head by \u00a32.81 (12.26%) week on week.",
+          "Sales were down \u00a314,445 (24.27%) week on week and \u00a37,929.51 (14.96%) below target.",
+          "No food or drinks variance data is in Kobas yet, and no audit was done this week.",
+          "Spencer estimated the site would have done about 300 covers on the closed Sunday.",
+          "The head chef meeting ran late last week and will not be held this week; Spencer plans to use the staff clean before reopening as a training day of a couple of hours and wants an EHO walk round once the site is reset.",
+          "At the London meeting on 13/10, Kaitlin Docherty said Birmingham remains closed because it has no running water and has rust issues, with reopening expected around the end of this week or the start of next week."
+        ],
+        "actions": [
+          "Dispute the five inaccurate Deliveroo orders in the Hub today (seven day window) - Owner: Spencer (20/10/2026)",
+          "Build rotas two weeks ahead with Roger so the site can reopen at short notice - Owner: Spencer (20/10/2026)",
+          "Review last week's performance with Roger (online or on site) - Owner: Spencer (20/10/2026)",
+          "Finalise the management track training for Jimmy, Mia and Spencer this week - Owner: Amy Tang (20/10/2026)",
+          "Run online EHO visit training this week - Owner: Inka Cheung / Amy Tang (20/10/2026)",
+          "Run a training day of a couple of hours when staff return for the clean before reopening - Owner: Spencer (20/10/2026)",
+          "Do an EHO walk round with the team once the site is reset - Owner: Spencer (20/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "1WsPvIbDfK-UQySvc0SS8UVqNkgMG0eH5LH1sr4iSguQ",
+        "source": "No KPI meeting notes received for this site yet for w/c 05/10 (Inka / Lincoln clusters: Tuesday meetings, notes land via the AM CC notes inbox). Declared, not missing. Top up: Maki England KPI meeting Gemini doc 13/10/2026 14:58 BST (Inka Cheung), reviewing w/c 05/10. Mapped by transcript speaker 'Maki Birmingham Ltd' (Spencer). Top up: M21 KPI Report 05.10.26-11.10-26 (week 05/10 to 11/10), plus missed Birmingham items from the Maki England KPI meeting Gemini transcript of 13/10. No Birmingham GM/HC doc for this week was found (the report links an old June GM/HC doc). Top up: London Region KPI Meeting Gemini notes of 13/10/2026 (reviewing w/c 05/10), Kaitlin Docherty's general site update; only this line is new."
+      }
+    }
+  }
+}

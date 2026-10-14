@@ -1,0 +1,252 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-14",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-09-28 \u2013 2026-10-04",
+    "commencing": "2026-09-28",
+    "ending": "2026-10-04"
+  },
+  "sites": {
+    "M1": {
+      "code": "M1",
+      "name": "Maki 1",
+      "gm": "Derrick Cheung",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 23276.41,
+          "target": 21000.0,
+          "var_pct": 10.84,
+          "prev": 26642.34,
+          "wow_abs": -3365.93,
+          "wow_pct": -12.63
+        },
+        "covers": {
+          "actual": 1006,
+          "prev": 1060,
+          "wow_abs": -54,
+          "wow_pct": -5.09
+        },
+        "sph": {
+          "actual": 16.83,
+          "prev": 18.02,
+          "wow_abs": -1.19,
+          "wow_pct": -6.6,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 19.31,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 29.37,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 308.2
+        },
+        "waste": {
+          "actual": 0.0
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 0.7,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": 0.0,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-09-28"
+      },
+      "efficiency_score": {
+        "score": 66,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+10.84) + 30% (\u00a3gap +2276 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 9.68,
+            "basis": "\u00a316.83 vs \u00a322 tgt \u2014 level 14, WoW -6.60% \u2192 mom 0"
+          },
+          "food": {
+            "weight": 30,
+            "value": 65.04,
+            "basis": "29.37% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "19.31% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 0.0,
+            "basis": "4.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "0.00% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 29.4%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4,
+        "new_reviews": 4,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 3
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Khwanpichcha Yuthim",
+            "text": "Too many customers so they don\u2019t want anymore. Stood there for several minutes and no one even looked at me like I\u2019m a ghost. Would recommend if you want to feel humiliated!",
+            "date": "2026-09-28",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-28..2026-10-04 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-09-28.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Grease trap is overflowing",
+            "priority": "\u2014",
+            "logged_week": "13/09/2026",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-04",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 5568.68,
+        "orders": 186,
+        "aov": 29.94,
+        "new_customers": 49,
+        "rating": 5.0,
+        "open_hours_pct": 98.5,
+        "avg_prep_min": 12.3,
+        "rejection_pct": 0.6,
+        "inaccuracy_pct": 0.0,
+        "rider_wait_5min_pct": 2.2,
+        "conversion_pct": 13.2,
+        "wow": {
+          "gmv_pct": -13.5,
+          "orders_abs": -9,
+          "prev_gmv": 6436.2,
+          "prev_orders": 195
+        },
+        "gmv_vs_4wk_pct": -13.6,
+        "gmv_vs_ly_pct": -47.1,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Covers fell to 927, down 42 (4.33%) week on week and down 22 (2.31%) year on year.",
+          "Spend per head fell to \u00a318.09, down \u00a32.11 (10.44%) week on week and down \u00a33.05 (14.42%) year on year.",
+          "Sales were \u00a322,867.15, down \u00a33,319.61 (12.67%) week on week and down \u00a36,649.80 (22.52%) year on year.",
+          "Sales beat the \u00a321,000 target by \u00a31,867.15 (8.89%) on the M1/2 KPI Report, while the BOH meeting sheet shows \u00a323,276.40 (+10.84%).",
+          "Labour was 19.31% on the BOH meeting sheet.",
+          "Food cost jumped to 29.37% from 23.59% the week before, driven by about \u00a33,700 of loyalty app discounts; Derrick says that with the discount added back sales were over \u00a327,000 and food cost would be under 25%.",
+          "A lot of extra stock was ordered to cover the free and \u00a35 ramen vouchers.",
+          "The 28 seat site had 20 or more people queuing daily for free or \u00a35 ramen, all arriving at once alongside regular customers.",
+          "Derrick asked whether vouchers could be limited to off-peak hours and is discussing an extra front of house person, with the labour question to be checked with Ka.",
+          "Google reviews were three 5 star and one 1 star (4.00 average), and the 1 star review on 28/09 was about standing in the queue for several minutes without being acknowledged.",
+          "Customer queue management is the stated area for improvement.",
+          "The site opened from 16:30 on Tuesday because of ventilation work.",
+          "The new ventilation is installed, but removal of the old unit slipped because the key box was empty on Wednesday and has been rescheduled for this week without closing the shop.",
+          "Table AO1 cannot be used on weekdays because of a hole in the ceiling above it caused by upstairs construction work, with dust falling whenever they drill; a reply from Rose is still awaited.",
+          "The downstairs sink box was fixed on 05/10.",
+          "Pest control, fire, electrical, gas and ventilation compliance were all recorded as completed.",
+          "Alice is being hired as a part time FOH team member.",
+          "XOXO, the app and the lunch menu are the upcoming promotions.",
+          "Region-wide (Scotland BOH meeting 06/10): last week's chicken broth usage discrepancy was traced to a takeaway recipe still linked to the old tonkotsu broth in stock counts, which has been corrected, so usage should return to normal next week.",
+          "Region-wide (Scotland BOH meeting 06/10): Bidfood is being brought in as a new supplier, starting with Aberdeen and reaching the other sites within one to two months, and new beef samples are being trialled with a view to pre-cooked beef so sites no longer cook it themselves.",
+          "Region-wide (Scotland BOH meeting 06/10): frozen ramen promotion stock is delivered from the factory on 07/10, but storage space at the smaller sites is unconfirmed and the memo does not specify quantities per flavour."
+        ],
+        "actions": [
+          "Push for more reviews - Owner: Derrick Cheung (13/10/2026)",
+          "Improve customer queue management so no guest is ignored - Owner: Derrick Cheung (13/10/2026)",
+          "Check the labour position with Ka on adding an extra front of house person - Owner: Derrick Cheung (13/10/2026)",
+          "Remove the old ventilation unit without closing the shop - Owner: Derrick Cheung (11/10/2026)",
+          "Chase Rose for a reply on repairing the ceiling hole above table AO1 - Owner: Oisin Darragh (13/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "10p5RI3NkQs1PBb7Mc1JPthGNf_vK0GXQw6eC7vQUSEQ",
+        "source": "Used the M1/2 KPI Report 28.09.26-04.10-26 and the Maki 1 section of the Scotland BOH KPI Meeting 06-10-2026 PDF (week of 28/09); no separate M1 GM/HC doc was found. The EDI/NEW Weekly KPI Meeting Gemini notes of 06/10 were not reachable (PDF attachment only, no Drive copy)."
+      }
+    }
+  }
+}

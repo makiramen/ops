@@ -1,0 +1,237 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-14",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-09-28 \u2013 2026-10-04",
+    "commencing": "2026-09-28",
+    "ending": "2026-10-04"
+  },
+  "sites": {
+    "M20": {
+      "code": "M20",
+      "name": "Maki 20",
+      "gm": "TBC",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 41212.79,
+          "target": 40000.0,
+          "var_pct": 3.03,
+          "prev": 39352.87,
+          "wow_abs": 1859.92,
+          "wow_pct": 4.73
+        },
+        "covers": {
+          "actual": 1949,
+          "prev": 1933,
+          "wow_abs": 16,
+          "wow_pct": 0.83
+        },
+        "sph": {
+          "actual": 20.49,
+          "prev": 19.84,
+          "wow_abs": 0.65,
+          "wow_pct": 3.28,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 24.03,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 25.92,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 684.4
+        },
+        "waste": {
+          "actual": 310.87
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": -2.3,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": -1.0,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-09-28"
+      },
+      "efficiency_score": {
+        "score": 81,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+3.03) + 30% (\u00a3gap +1213 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 77.22,
+            "basis": "\u00a320.49 vs \u00a322 tgt \u2014 level 75, WoW +3.28% \u2192 mom 83"
+          },
+          "food": {
+            "weight": 30,
+            "value": 92.64,
+            "basis": "25.92% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 54.55,
+            "basis": "24.03% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.94\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-1.00% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 25.9%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.9388,
+        "new_reviews": 49,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 3,
+          "5": 46
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-09-28..2026-10-04 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-09-28.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-04",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1103.94,
+        "orders": 35,
+        "aov": 31.54,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 100.0,
+        "avg_prep_min": 11.7,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 2.9,
+        "rider_wait_5min_pct": null,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo weekly Tax Invoice PDF (Total Order Value) \u2014 w/c 2026-09-28 [sales/orders/AOV] + ops from Weekly Summary sheet",
+        "orders_estimated": false,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Covers rose by 16 (0.82%) to 1,949 week on week and spend per head rose by \u00a30.65 (3.37%) to \u00a320.49.",
+          "Sales were \u00a341,212.79, up \u00a31,859.92 (4.72%) week on week and \u00a31,212.79 (3.03%) above the \u00a340,000 target.",
+          "Wage cost was 24% and food cost 25.92%, and Ziang Lin described Southampton as potentially the strongest site in South England.",
+          "Ziang Lin will visit on Friday and Saturday to help bring labour down to 22%, and the site is cross training staff to reduce reliance on dedicated bartenders.",
+          "The aggregated weekly rating was 4.94 across 49 reviews; the report records 40 five star, 3 four star and one 1 star review.",
+          "The 1 star review said the steak was chewy, the broth tasted strongly of MSG and was too salty, the sushi rice was warm and the drinks tasted artificial.",
+          "Chris is responsible for Google reviews and June for loyalty app sign ups.",
+          "Customers were initially told to sign up to the app at the start of their visit rather than after paying, and sign up rewards are taking between two minutes and two hours to process.",
+          "A minimum target of 100 app sign ups a week has been set, which may rise to 200 a week next month.",
+          "Recurring drinks ordering errors (orange syrup) mean drinks ordering is being moved to another team member.",
+          "Ziang Lin stressed that assistant general managers must be able to step up to GM within three to six months so sites do not struggle during absences.",
+          "The Go Southampton B2B link with 15 organisations launches officially on Thursday, with campus meetings at Southampton Crossings and MTM digital platform meetings on 14, 22 and 24 October.",
+          "Kitchen lead Justyna has been on holiday since 01/10 and ordered extra stock beforehand, causing a slight food cost spike; stock levels are strong with no shortages.",
+          "Full timers (Jenny and Pantan) are being prioritised over part timers with rigid availability.",
+          "Several tickets came through with impossible allergen requests, such as a gluten allergy ordering black garlic tonkotsu, so FOH needs more allergen training rather than relying on the kitchen.",
+          "The recurring electrical tripping has worsened, and the panel could no longer be reset when all kitchen equipment ran at once.",
+          "Walk-in freezer repairs are awaiting confirmed dates, and Ross has fixed the hand wash tap pressure.",
+          "No audit was done this week.",
+          "Sammy has resigned.",
+          "Half term is the next upcoming event, and the areas for improvement are labour cost (through cross training) and increasing Google reviews.",
+          "At the 07/10 AM Updates meeting, the 24% wage to revenue figure was reported as the lowest the site has recorded.",
+          "Kai is coordinating B2B catering menus and local shopping centre marketing, and an \u00a38,000 MTM approval is waiting on digital platform activation.",
+          "Region-wide (South, AM Updates 07/10): every site is targeted to reach a 4.5 star delivery rating."
+        ],
+        "actions": [
+          "Achieve at least 100 app sign ups a week - Owner: Diana Freitas (13/10/2026)",
+          "Assign Chris to Google reviews and June to loyalty app sign ups, with guests asked to sign up after paying - Owner: Diana Freitas (13/10/2026)",
+          "Move drinks ordering to another team member to stop recurring ordering errors - Owner: Diana Freitas (13/10/2026)",
+          "Review the outstanding items on the management training checklist with Freeze - Owner: Diana Freitas (13/10/2026)",
+          "Send the team a thank you message for last week and organise a staff night out - Owner: Diana Freitas (13/10/2026)",
+          "Post an advert for talent who can be developed into a future GM - Owner: Diana Freitas (13/10/2026)",
+          "Visit the site on Friday and Saturday to help bring labour down to 22% - Owner: Ziang Lin (10/10/2026)",
+          "Train FOH staff on allergen procedures so they do not rely solely on BOH - Owner: Diana Freitas (13/10/2026)",
+          "Chase maintenance to resolve the recurring electrical tripping - Owner: M20 (13/10/2026)",
+          "Confirm dates for the walk-in freezer repairs - Owner: M20 (13/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "1oOXlrEFhVn6eV7npMUvOmVvJaTV4wOR59aYmzPUBlDA",
+        "source": "Used the M20 KPI Report for 28/09 to 04/10; no Southampton GM/HC doc for this week was found in Drive (the report still links a June GM/HC doc, not used). Added from the London Region KPI Meeting Gemini notes of 06/10 (Diana and Maki Southampton items), the Otter summary of the same meeting (sign up target rising to 200) and the South Region BOH weekly report of 06/10. Top up: AM Updates Gemini notes of 07/10 (reviewing week 28/09, figures match the KPI reports), new items only."
+      }
+    }
+  }
+}

@@ -1,0 +1,237 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-14",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-05 \u2013 2026-10-11",
+    "commencing": "2026-10-05",
+    "ending": "2026-10-11"
+  },
+  "sites": {
+    "M17": {
+      "code": "M17",
+      "name": "Maki 17",
+      "gm": "Kei Cannon",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 23190.92,
+          "target": 33000.0,
+          "var_pct": -29.72,
+          "prev": 29002.88,
+          "wow_abs": -5811.96,
+          "wow_pct": -20.04
+        },
+        "covers": {
+          "actual": 867,
+          "prev": 1132,
+          "wow_abs": -265,
+          "wow_pct": -23.41
+        },
+        "sph": {
+          "actual": 24.02,
+          "prev": 24.03,
+          "wow_abs": -0.01,
+          "wow_pct": -0.04,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 22.0,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 30.44,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 351.1
+        },
+        "waste": {
+          "actual": 1.07
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 6,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 3.0,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": 3.2,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-10-05"
+      },
+      "efficiency_score": {
+        "score": 78,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 73.31,
+            "basis": "70% (100-29.72) + 30% (\u00a3gap -9809 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 84.88,
+            "basis": "\u00a324.02 vs \u00a322 tgt \u2014 level 100, WoW -0.04% \u2192 mom 50"
+          },
+          "food": {
+            "weight": 30,
+            "value": 56.48,
+            "basis": "30.44% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 85.0,
+            "basis": "22.00% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.98\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "3.20% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "sales -29.7% vs target",
+          "food 30.4%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.9778,
+        "new_reviews": 45,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 44
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-05..2026-10-11 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-13."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-05.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-11",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1931.31,
+        "orders": 68,
+        "aov": 28.4,
+        "new_customers": 30,
+        "rating": 3.75,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 11.5,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 0.0,
+        "rider_wait_5min_pct": 4.4,
+        "conversion_pct": 6.1,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [],
+      "notes": {
+        "issues": [
+          "Covers fell by 265 (23.40%) week on week while spend per head was almost unchanged, down \u00a30.01 (0.04%).",
+          "Sales were down \u00a35,817.95 (20.05%) week on week and \u00a39,809.08 (29.72%) below target; the report says this is Lakeside's last slow week.",
+          "Sales were supported by advertising and by staff talking to people locally.",
+          "Deliveroo has moved to Deliverect; on Thursday and Friday the site took \u00a3800 of Deliveroo orders with only two staff, which has now been fixed and rostered.",
+          "Delivery had a good week, though late orders on Thursday (since fixed) mean delivery reviews need work.",
+          "The latest audit was a pass and the site reports everything is back on track.",
+          "Staffing: Tom has left; Jordan has been hired for BOH; Satyaman is training in the kitchen and on placing orders; Elvis is training on the floor; Satyaman and Elvis are being trained for deliveries; Joc is training in the kitchen.",
+          "Satyaman and Elvis are being developed as supervisors to cover when kitchen manager Rio is on holiday.",
+          "Job interviews are under way for an assistant manager, and Kayleigh has been trained in the AGM role.",
+          "Weekly hygiene compliance was 100%.",
+          "The heat lamp is broken; it is logged on the new app as high priority with Ross responsible.",
+          "Pest control is complete with no clear signs and daily checks in place; fire safety is complete but equipment needs weekly and monthly checks; electrical, gas and ventilation have no issues.",
+          "Upcoming events are Halloween, Fireworks Night and Friday Night Live.",
+          "Areas for improvement: keeping work areas and the pass clean, toilet checks, Deliveroo, continuing to ask for reviews, being more productive when it is not busy, and doing closing checks and rubbish removal correctly.",
+          "B2B outreach around Lakeside included Orsett Golf Club, Mercure Thurrock Stifford Hall, Holiday Inn Express Dartford and DoubleTree Dartford Bridge; these are outreach actions, not confirmed partnerships.",
+          "Labour was brought down to 22%.",
+          "Delivery reached a record high, although the delivery radius changes caused some late prep orders; delivery prep time was 12 minutes.",
+          "A 3 star review on Saturday about salty broth was handled with BOH.",
+          "Elvis, a BOH team member with five years of experience as an operations and area manager, is being considered for the assistant manager role, alongside active searches on Talent Funnel.",
+          "The bloody gyoza Halloween special needs final allergen and plating documentation before the Halloween memo is sent out, including to Soho.",
+          "Kei Cannon flagged that the AM dashboard showed wrong figures (very low labour efficiency) for Lakeside, Soho and Shoreditch; Kaitlin Docherty said the variance reports were filled in late on Sunday night and corrected on Monday morning, and the dashboard will reload overnight.",
+          "Staff from Shoreditch or Lakeside who want extra Saturday hours can be redirected to Soho.",
+          "Region: Ziang Lin introduced a mandatory seating upsell at all sites from 13/10: staff place the drinks menu from the marketing stand in the middle of the table and immediately offer edamame, and kitchens boil a large batch of edamame in advance so it can be blanched for five seconds when ordered.",
+          "Region: Kaitlin Docherty will send daily delivery performance (red, amber, green) to the group chats every day between 10:30 and 12:00 from 14/10."
+        ],
+        "actions": [
+          "Fix the broken heat lamp (high priority, logged on the new app) - Owner: Ross (20/10/2026)",
+          "Develop Elvis and Satyaman as supervisors to cover Rio's holiday - Owner: Kei Cannon (20/10/2026)",
+          "Complete the assistant manager interviews and appoint - Owner: Kei Cannon (20/10/2026)",
+          "Improve Deliveroo reviews and keep asking guests for reviews - Owner: Kei Cannon (20/10/2026)",
+          "Keep work areas and the pass clean, carry out toilet checks, and complete closing checks and rubbish removal correctly - Owner: Kei Cannon (20/10/2026)",
+          "Carry out the weekly and monthly fire safety equipment checks - Owner: Kei Cannon (20/10/2026)",
+          "Follow up the Lakeside local business prospects - Owner: Kei Cannon (18/10/2026)",
+          "Complete and submit the allergen documentation for the Halloween special menu items - Owner: Rio (20/10/2026)",
+          "Finalise the Halloween event plan and distribute the memo to the team - Owner: Kei Cannon (20/10/2026)"
+        ],
+        "carryover": [],
+        "empty": false,
+        "docId": "1WsPvIbDfK-UQySvc0SS8UVqNkgMG0eH5LH1sr4iSguQ",
+        "source": "No KPI meeting notes received for this site yet for w/c 05/10 (Inka / Lincoln clusters: Tuesday meetings, notes land via the AM CC notes inbox). Declared, not missing. Top up: Used the M17 KPI Report for 05/10 to 11/10 and the '13th OCT GM_HC Meeting Notes' docx (meeting 13/10, reviewing 3 to 11 October), plus the Lakeside section of the B2B Weekly Update for 05/10 to 11/10. Its line on kitchen cleanliness kept up for three weeks and the service due in two weeks are unchanged from last week and were not repeated. Its stated sales of \u00a323,982.12 and SPH 24.03 conflict with the KPI report and were not used. Top up: London Region KPI Meeting Gemini notes of 13/10/2026 (meeting 14:54 BST, reviewing w/c 05/10 to 11/10; figures such as Nori's 486 covers, Soho's +117 covers, Lakeside's 265 cover drop, Southampton's 39 cover drop and Shoreditch's 3.8 variance match this week's KPI reports), mapped by speaker (Kei Cannon for Lakeside); summary, decisions, next steps and details read, plus the matching gemini-notes email of 13/10. The doc has no transcript tab. No Otter summary of this meeting was found. Only lines new against the existing notes are given."
+      }
+    }
+  }
+}
