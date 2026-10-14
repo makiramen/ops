@@ -4328,12 +4328,7 @@ function openSite(code) {
     </div>
     <div class="modal-body">
       <div class="kpi-grid">
-        <div class="kpi">
-          <div class="kpi-label">Sales vs Target</div>
-          <div class="kpi-value ${deltaClass(s.vsTarget)}">${s.kpis.vsTarget}</div>
-          <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).sales, 'up-is-good', '#4f46e5')}</div>
-          <div class="kpi-trend">${wowChip((METRICS[s.code]||{}).salesWowPct, 'up-is-good', '%')}</div>
-        </div>
+        ${salesCell(s)}
         <div class="kpi">
           <div class="kpi-label">Wage % (tgt ≤21%)</div>
           <div class="kpi-value ${wageRag((METRICS[s.code]||{}).wage)}">${(METRICS[s.code]||{}).wage == null ? 'N/A' : (METRICS[s.code]).wage.toFixed(2) + '%'}</div>
@@ -4388,6 +4383,8 @@ function openSite(code) {
           <div class="kpi-trend" style="margin-top:6px;">${s.kpis.covers} · ${s.kpis.sph}</div>
         </div>
       </div>
+
+      <div class="panel roo-wk-panel" id="roo-panel-${rooPanelId(s.code)}" style="display:none;"></div>
 
       ${((REVIEWS[s.code]||{}).negativeReviews||[]).length ? `
       <div class="panel" id="neg-panel-${s.code}" style="display:none;">
@@ -5320,13 +5317,46 @@ if (document.readyState === 'loading') {
   try { renderPeopleBoard(); } catch (e) { console.warn('people board init failed', e); }
 }
 
+// Sales tile for the site modal: ACTUAL weekly revenue as the headline, target
+// and variance underneath. Falls back to the original variance-only tile when
+// the live actual is not known (baked weeks / failed fetch).
+function salesCell(s){
+  const m = METRICS[s.code] || {};
+  const spark = `<div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).sales, 'up-is-good', '#4f46e5')}</div>`;
+  const wow   = `<div class="kpi-trend">${wowChip(m.salesWowPct, 'up-is-good', '%')}</div>`;
+  if (m.salesActual == null) {
+    return `<div class="kpi">
+          <div class="kpi-label">Sales (wk) vs Target</div>
+          <div class="kpi-value ${deltaClass(s.vsTarget)}">${s.kpis.vsTarget}</div>
+          ${spark}${wow}
+        </div>`;
+  }
+  const gbp = (n) => '£' + Math.round(Math.abs(n)).toLocaleString('en-GB');
+  let vs = '';
+  if (m.salesTarget != null) {
+    const gap = m.salesActual - m.salesTarget;
+    const vp  = (s.vsTarget != null && !isNaN(s.vsTarget)) ? s.vsTarget : (m.salesTarget ? (gap / m.salesTarget * 100) : null);
+    const vpTxt = vp == null ? '' : ` (${vp >= 0 ? '+' : ''}${Number(vp).toFixed(2)}%)`;
+    const cls = deltaClass(vp == null ? gap : vp);
+    vs = `<div style="font-size:11px; color:var(--ink-2); margin-top:3px;">vs target ${gbp(m.salesTarget)}: <span class="kpi-value ${cls}" style="font-size:11px; margin-top:0;">${gap >= 0 ? '+' : '-'}${gbp(gap)}${vpTxt}</span></div>`;
+  }
+  return `<div class="kpi">
+          <div class="kpi-label">Sales (wk) vs Target</div>
+          <div class="kpi-value">${gbp(m.salesActual)}</div>
+          ${vs}${spark}${wow}
+        </div>`;
+}
+
 // Deliveroo weekly sales cell for the site detail. Handles the gap sites
 // (M11-M18) whose figure comes from the weekly Dash PDF (partial=true: sales /
 // AOV / new-customers only, orders estimated). Replaces the monthly stopgap.
+// Clickable: toggles the Deliveroo week panel rendered under the kpi-grid.
 function deliverooCell(s){
   const d = s.deliveroo;
+  const hint = `<span style="font-weight:600;color:var(--maki-orange);font-size:10px;"> · click for the week</span>`;
+  const click = `style="cursor:pointer;" onclick="toggleRooPanel('${(s.code||'').replace(/'/g, "\\'")}')" title="Click to show/hide the Deliveroo week panel"`;
   if(!d || d.sales == null){
-    return `<div class="kpi"><div class="kpi-label">Deliveroo Sales (wk)</div>`+
+    return `<div class="kpi" ${click}><div class="kpi-label">Deliveroo Sales (wk)${hint}</div>`+
       `<div class="kpi-value" style="color:var(--ink-3); font-size:18px;">N/A</div>`+
       `<div class="kpi-trend" style="margin-top:6px;">no Deliveroo feed this week</div></div>`;
   }
@@ -5334,12 +5364,246 @@ function deliverooCell(s){
   const aov = d.aov != null ? ('£' + Number(d.aov).toFixed(2) + ' AOV') : '';
   const ord = d.orders != null ? (d.orders.toLocaleString() + (d.orders_estimated ? ' est. orders' : ' orders')) : '';
   const nc  = d.new_customers != null ? (d.new_customers + ' new') : '';
-  const srcLabel = d.partial ? 'weekly · PDF (sales only)' : 'weekly';
-  const tagColor = d.partial ? 'var(--amber)' : 'var(--ink-3)';
+  const srcLabel = d.partial ? 'weekly · PDF (sales only)' : (d.sales_estimated ? 'ESTIMATE' : 'weekly');
+  const tagColor = (d.partial || d.sales_estimated) ? 'var(--amber)' : 'var(--ink-3)';
   const tag = `<span style="font-weight:600;color:${tagColor};font-size:10px;"> · ${srcLabel}</span>`;
-  return `<div class="kpi"><div class="kpi-label">Deliveroo Sales (wk)${tag}</div>`+
+  return `<div class="kpi" ${click}><div class="kpi-label">Deliveroo Sales (wk)${tag}${hint}</div>`+
     `<div class="kpi-value">${gmv}</div>`+
     `<div class="kpi-trend" style="margin-top:6px;">${[ord, aov, nc].filter(Boolean).join(' · ')}</div></div>`;
+}
+
+// ===================== DELIVEROO WEEK PANEL (site modal) =====================
+// Expandable card under the modal kpi-grid: weekly scorecard (same thresholds as
+// the Deliveroo RAG tab, DELIV_METRIC_DEFS), the site's last 7 days from
+// data/deliveroo_daily.json, Deliveroo review text (data/deliveroo_reviews_<monday>.json)
+// and the week's Google reviews. All fetches are cached per week.
+const ROO_PANEL_CACHE = { daily: null, dailyTried: false, prevWeek: {}, reviews: {} };
+function rooPanelId(code){ return String(code || '').replace(/[^A-Za-z0-9]/g, '_'); }
+function rooPanelEsc(t){ return (t == null ? '' : String(t)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function rooPanelFetch(url){
+  return fetch(DATA_DIR + url, {cache:'no-store'}).then(r => r.ok ? r.json() : null).catch(() => null);
+}
+function rooPanelDaily(){
+  if (ROO_PANEL_CACHE.dailyTried) return Promise.resolve(ROO_PANEL_CACHE.daily);
+  ROO_PANEL_CACHE.dailyTried = true;
+  return rooPanelFetch('deliveroo_daily.json').then(j => { ROO_PANEL_CACHE.daily = (j && j.d) ? j : null; return ROO_PANEL_CACHE.daily; });
+}
+// Previous week's all_sites file, located through weeks_index.json (newest first).
+function rooPanelPrevWeek(monday){
+  if (ROO_PANEL_CACHE.prevWeek[monday] !== undefined) return Promise.resolve(ROO_PANEL_CACHE.prevWeek[monday]);
+  const p = rooPanelFetch('weeks_index.json').then(idx => {
+    const weeks = (idx && idx.weeks) || [];
+    const i = weeks.findIndex(w => w.monday === monday);
+    const prev = (i >= 0 && weeks[i + 1]) ? weeks[i + 1].monday : (typeof prevMonday === 'function' ? prevMonday(monday) : null);
+    if (!prev) return null;
+    return rooPanelFetch('all_sites_wc_' + prev + '.json').then(j => j ? { monday: prev, sites: j.sites || {} } : null);
+  });
+  ROO_PANEL_CACHE.prevWeek[monday] = p;
+  return p;
+}
+function rooPanelReviews(monday){
+  if (ROO_PANEL_CACHE.reviews[monday] !== undefined) return Promise.resolve(ROO_PANEL_CACHE.reviews[monday]);
+  const p = rooPanelFetch('deliveroo_reviews_' + monday + '.json');
+  ROO_PANEL_CACHE.reviews[monday] = p;
+  return p;
+}
+function rooPanelDate(iso){
+  if (!iso) return '';
+  const d = new Date(iso + 'T12:00:00Z');
+  if (isNaN(d)) return iso;
+  return d.toLocaleDateString('en-GB', { weekday:'short', day:'2-digit', month:'short', timeZone:'UTC' });
+}
+function rooPanelAddDays(iso, n){ return new Date(Date.parse(iso + 'T00:00:00Z') + n * 864e5).toISOString().slice(0,10); }
+function rooPanelTint(band){
+  return band === 'green' ? 'background:var(--green-bg);color:var(--green);' :
+         band === 'amber' ? 'background:var(--amber-bg);color:var(--amber);' :
+         band === 'red'   ? 'background:var(--red-bg);color:var(--red);' : 'color:var(--ink-3);';
+}
+// Delta chip: delta = current - previous. direction 'up-is-good' / 'down-is-good' / 'neutral'.
+function rooPanelDelta(delta, direction, unit, dp){
+  if (delta == null || isNaN(delta)) return '<span style="color:var(--ink-3); font-size:10px;">no WoW</span>';
+  if (Math.abs(delta) < 0.005) return '<span style="color:var(--ink-3); font-size:10px;">flat WoW</span>';
+  const up = delta > 0;
+  const col = direction === 'neutral' ? 'var(--ink-2)' : (((direction === 'up-is-good') ? up : !up) ? 'var(--green)' : 'var(--red)');
+  return `<span style="color:${col}; font-size:10px; font-weight:700;">${up ? '▲' : '▼'} ${Math.abs(delta).toFixed(dp == null ? 1 : dp)}${unit || ''} WoW</span>`;
+}
+
+function toggleRooPanel(code){
+  const s = SITES.find(x => x.code === code);
+  const el = document.getElementById('roo-panel-' + rooPanelId(code));
+  if (!s || !el) return;
+  const open = el.style.display !== 'none' && el.style.display !== '';
+  if (open) { el.style.display = 'none'; return; }
+  el.style.display = 'block';
+  if (!el.getAttribute('data-built')) {
+    el.setAttribute('data-built', '1');
+    el.innerHTML = '<div style="font-size:12px; color:var(--ink-3);">Loading Deliveroo week detail...</div>';
+    buildRooPanel(s, el);
+  }
+}
+
+function buildRooPanel(s, el){
+  const d = s.deliveroo || {};
+  const monday = (typeof window.currentWeekKey === 'string' && window.currentWeekKey) ? window.currentWeekKey
+               : (d.week_ending ? rooPanelAddDays(d.week_ending, -6) : null);
+  const jsonCode = (typeof DISPLAY_TO_JSON !== 'undefined' && DISPLAY_TO_JSON[s.code]) || s.jsonCode || s.code;
+  Promise.all([
+    monday ? rooPanelPrevWeek(monday) : Promise.resolve(null),
+    rooPanelDaily(),
+    monday ? rooPanelReviews(monday) : Promise.resolve(null)
+  ]).then(res => {
+    el.innerHTML = rooPanelHtml(s, d, monday, jsonCode, res[0], res[1], res[2]);
+  }).catch(e => {
+    el.innerHTML = '<div style="font-size:12px; color:var(--red);">Could not load the Deliveroo week detail (' + rooPanelEsc(e && e.message) + ').</div>';
+  });
+}
+
+function rooPanelHtml(s, d, monday, jsonCode, prevWk, daily, rooRev){
+  const esc = rooPanelEsc;
+  const pid = rooPanelId(s.code);
+  const hasWeek = d && d.sales != null;
+  const estGap = (s.gaps || []).some(g => typeof g === 'string' && g.indexOf('Deliveroo sales are an ESTIMATE') === 0);
+  const isEst = estGap || !!d.sales_estimated;
+  const src = isEst ? 'ESTIMATE' : (d.partial ? 'weekly summary (sales only)' : (/Invoice Statement/i.test(d.source || '') ? 'invoice' : 'weekly summary'));
+  const srcCol = isEst ? 'var(--amber)' : (d.partial ? 'var(--amber)' : 'var(--ink-3)');
+  const prevD = (() => {
+    if (!prevWk || !prevWk.sites) return null;
+    const ps = prevWk.sites[jsonCode] || prevWk.sites[s.code];
+    return ps && ps.deliveroo ? ps.deliveroo : null;
+  })();
+  const defs = (typeof DELIV_METRIC_DEFS !== 'undefined') ? DELIV_METRIC_DEFS : [];
+  const def = (f) => defs.filter(x => x[0] === f)[0];
+  const band = (f, v) => { const m = def(f); return (m && typeof _delivBand === 'function') ? _delivBand(v, m[2], m[3], m[4]) : 'missing'; };
+  const num = (v, dp, pre, suf) => v == null ? '<span style="color:var(--ink-3);">n/a</span>' : (pre || '') + Number(v).toLocaleString('en-GB', { minimumFractionDigits: dp, maximumFractionDigits: dp }) + (suf || '');
+  const dlt = (f, dir, unit, dp) => (prevD && d[f] != null && prevD[f] != null) ? rooPanelDelta(d[f] - prevD[f], dir, unit, dp) : rooPanelDelta(null);
+  // Busy mode: 0 green, any busy minutes amber, above 10% red (Michael 07/10/2026, Daily tab rule).
+  const busyBand = (v) => v == null ? 'missing' : (v <= 0 ? 'green' : (v <= 10 ? 'amber' : 'red'));
+  // Rejections: the Daily tab Red Light rule, any rejection is red.
+  const rejBand = (v) => v == null ? 'missing' : (v <= 0 ? 'green' : 'red');
+  const tile = (label, valueHtml, bandName, deltaHtml) =>
+    `<div class="kpi" style="padding:10px; ${bandName && bandName !== 'missing' ? rooPanelTint(bandName) : ''}">
+       <div class="kpi-label">${label}</div>
+       <div class="kpi-value" style="font-size:16px; ${bandName && bandName !== 'missing' ? '' : 'color:var(--ink-2);'}">${valueHtml}</div>
+       <div style="margin-top:4px;">${deltaHtml || ''}</div>
+     </div>`;
+
+  let h = `<div class="panel-head" style="color:var(--maki-orange); justify-content:space-between;">
+      <span style="display:flex; align-items:center; gap:8px;"><span class="dot" style="background:var(--maki-orange);"></span>Deliveroo, w/c ${esc(monday || '?')}
+        <span style="font-weight:600; color:${srcCol}; font-size:10px; text-transform:none; letter-spacing:0;">· ${esc(src)}</span></span>
+      <button type="button" onclick="toggleRooPanel('${esc(s.code).replace(/'/g, "\\'")}')" title="Close" style="background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2); border-radius:50%; width:24px; height:24px; cursor:pointer; font-size:12px; line-height:1;">✕</button>
+    </div>`;
+  if (isEst) {
+    h += `<div style="font-size:11px; color:var(--amber); background:var(--amber-bg); border:1px solid var(--amber-ring); border-radius:8px; padding:6px 10px; margin-bottom:10px;">Deliveroo sales for this site are an ESTIMATE from the internal all-aggregator Delivery line (+/-15%). No Deliveroo invoice or summary for this site this week.</div>`;
+  }
+  if (!hasWeek) {
+    h += `<div style="font-size:12px; color:var(--ink-3); margin-bottom:10px;">No Deliveroo weekly feed for this site this week.</div>`;
+  }
+
+  // Scorecard
+  const wowGmv = (d.wow && d.wow.gmv_pct != null) ? rooPanelDelta(d.wow.gmv_pct, 'up-is-good', '%', 1)
+               : ((prevD && d.sales != null && prevD.sales) ? rooPanelDelta((d.sales - prevD.sales) / prevD.sales * 100, 'up-is-good', '%', 1) : rooPanelDelta(null));
+  const wowOrd = (d.wow && d.wow.orders_abs != null) ? rooPanelDelta(d.wow.orders_abs, 'up-is-good', '', 0)
+               : dlt('orders', 'up-is-good', '', 0);
+  h += `<div class="kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap:8px; margin-bottom:14px;">
+    ${tile('Revenue', num(d.sales, 0, '£'), null, wowGmv)}
+    ${tile('Orders' + (d.orders_estimated ? ' (est.)' : ''), num(d.orders, 0), null, wowOrd)}
+    ${tile('AOV', num(d.aov, 2, '£'), null, dlt('aov', 'up-is-good', '', 2))}
+    ${tile('Rating (tgt ≥4.7)', num(d.rating, 1, '', '★'), band('rating', d.rating), dlt('rating', 'up-is-good', '', 1))}
+    ${tile('Open hours % (tgt ≥98)', num(d.open_hours_pct, 1, '', '%'), band('open_hours_pct', d.open_hours_pct), dlt('open_hours_pct', 'up-is-good', 'pp', 1))}
+    ${tile('Avg prep (tgt ≤15 min)', num(d.avg_prep_min, 1, '', ' min'), band('avg_prep_min', d.avg_prep_min), dlt('avg_prep_min', 'down-is-good', ' min', 1))}
+    ${tile('Inaccuracy % (tgt ≤2)', num(d.inaccuracy_pct, 1, '', '%'), band('inaccuracy_pct', d.inaccuracy_pct), dlt('inaccuracy_pct', 'down-is-good', 'pp', 1))}
+    ${tile('Rider wait >5 min % (tgt ≤2)', num(d.rider_wait_5min_pct, 1, '', '%'), band('rider_wait_5min_pct', d.rider_wait_5min_pct), dlt('rider_wait_5min_pct', 'down-is-good', 'pp', 1))}
+    ${tile('Busy mode %', num(d.busy_mode_pct, 1, '', '%'), busyBand(d.busy_mode_pct), dlt('busy_mode_pct', 'down-is-good', 'pp', 1))}
+    ${tile('Rejections %', num(d.rejection_pct, 1, '', '%'), rejBand(d.rejection_pct), dlt('rejection_pct', 'down-is-good', 'pp', 1))}
+  </div>
+  <div style="font-size:10px; color:var(--ink-3); margin:-8px 0 14px;">Thresholds as the Deliveroo RAG tab: rating ≥4.7/≥4.0, open hours ≥98/≥95, prep ≤15/≤18, inaccuracy ≤2/≤3, rider wait ≤2/≤4. WoW: ${prevWk ? 'vs w/c ' + esc(prevWk.monday) : 'previous week not available'}.</div>`;
+
+  // Last 7 days from deliveroo_daily.json
+  const thS = 'font-size:10px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em; font-weight:600; text-align:right; padding:4px 6px; border-bottom:1px solid var(--line);';
+  const tdS = 'font-size:12px; color:var(--ink); text-align:right; padding:4px 6px; border-bottom:1px solid var(--line);';
+  const na  = '<span style="color:var(--ink-3);">n/a</span>';
+  h += `<div class="panel-head" style="color:var(--ink-2); margin-top:4px;"><span class="dot" style="background:var(--ink-3);"></span>Last 7 days${monday ? ', ' + esc(rooPanelDate(monday)) + ' to ' + esc(rooPanelDate(rooPanelAddDays(monday, 6))) : ''}</div>`;
+  if (!daily || !monday) {
+    h += `<div style="font-size:12px; color:var(--ink-3); margin-bottom:14px;">No Deliveroo daily feed available (data/deliveroo_daily.json).</div>`;
+  } else {
+    const k = daily.k || ['orders','prep','aod','missing_pct','cancel','cancel_pct','rejections','prep_red'];
+    const ix = (name) => k.indexOf(name);
+    const iO = ix('orders'), iP = ix('prep'), iA = ix('aod'), iM = ix('missing_pct'), iC = ix('cancel'), iR = ix('rejections'), iPR = ix('prep_red');
+    const prepRed = daily.prep_red_above != null ? daily.prep_red_above : 15;
+    let tot = { orders:0, cancel:0, rej:0, prepW:0, prepN:0, aodW:0, aodN:0, missW:0, missN:0, days:0 };
+    let rows = '';
+    for (let i = 0; i < 7; i++) {
+      const day = rooPanelAddDays(monday, i);
+      const q = daily.d[day] && daily.d[day][jsonCode];
+      const dayLab = `<td style="${tdS} text-align:left; font-weight:600; color:var(--ink-2);">${esc(rooPanelDate(day))}</td>`;
+      if (!q) { rows += `<tr>${dayLab}<td style="${tdS}" colspan="6">${na}</td></tr>`; continue; }
+      const g = (i2) => (i2 >= 0 && q[i2] != null) ? q[i2] : null;
+      const o = g(iO), p = g(iP), a = g(iA), m = g(iM), c = g(iC), r = g(iR), pr = g(iPR);
+      const prepCol = p == null ? 'var(--ink-3)' : ((pr === 1 || p > prepRed) ? 'var(--red)' : 'var(--green)');
+      rows += `<tr>${dayLab}
+        <td style="${tdS}">${o == null ? na : o}</td>
+        <td style="${tdS} color:${prepCol}; font-weight:700;">${p == null ? na : Number(p).toFixed(1)}</td>
+        <td style="${tdS}">${a == null ? na : Number(a).toFixed(1)}</td>
+        <td style="${tdS} ${m ? 'color:var(--red);' : ''}">${m == null ? na : Number(m).toFixed(1) + '%'}</td>
+        <td style="${tdS} ${c ? 'color:var(--red); font-weight:700;' : ''}">${c == null ? na : c}</td>
+        <td style="${tdS} ${r ? 'color:var(--red); font-weight:700;' : ''}">${r == null ? na : r}</td></tr>`;
+      if (o != null) { tot.days++; tot.orders += o; }
+      if (c != null) tot.cancel += c;
+      if (r != null) tot.rej += r;
+      if (p != null && o) { tot.prepW += p * o; tot.prepN += o; }
+      if (a != null && o) { tot.aodW += a * o; tot.aodN += o; }
+      if (m != null && o) { tot.missW += m * o; tot.missN += o; }
+    }
+    const wavg = (w, n, dp, suf) => n ? Number(w / n).toFixed(dp) + (suf || '') : na;
+    rows += `<tr style="background:var(--surface-2);">
+      <td style="${tdS} text-align:left; font-weight:800; border-bottom:0;">Total (${tot.days} day${tot.days === 1 ? '' : 's'})</td>
+      <td style="${tdS} font-weight:800; border-bottom:0;">${tot.orders}</td>
+      <td style="${tdS} font-weight:800; border-bottom:0;">${wavg(tot.prepW, tot.prepN, 1)}</td>
+      <td style="${tdS} font-weight:800; border-bottom:0;">${wavg(tot.aodW, tot.aodN, 1)}</td>
+      <td style="${tdS} font-weight:800; border-bottom:0;">${wavg(tot.missW, tot.missN, 1, '%')}</td>
+      <td style="${tdS} font-weight:800; border-bottom:0;">${tot.cancel}</td>
+      <td style="${tdS} font-weight:800; border-bottom:0;">${tot.rej}</td></tr>`;
+    h += `<div style="overflow-x:auto; margin-bottom:6px;"><table style="width:100%; border-collapse:collapse;">
+      <thead><tr><th style="${thS} text-align:left;">Day</th><th style="${thS}">Orders</th><th style="${thS}">Prep min</th><th style="${thS}">Order duration</th><th style="${thS}">Missing %</th><th style="${thS}">Cancellations</th><th style="${thS}">Rejections</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>
+      <div style="font-size:10px; color:var(--ink-3); margin-bottom:14px;">Prep red above ${prepRed} min (Red Light rule). Totals: prep, order duration and missing % are order-weighted averages. Feed to ${esc(daily.to || '?')}, pulled ${esc(daily.pulled || '?')}.</div>`;
+  }
+
+  // Reviews
+  h += `<div class="panel-head" style="color:var(--ink-2);"><span class="dot" style="background:var(--ink-3);"></span>Reviews</div>`;
+  const rr = (rooRev && Array.isArray(rooRev.reviews)) ? rooRev.reviews.filter(r => r && (r.site_code === jsonCode || r.site_code === s.code)) : [];
+  h += `<div style="font-size:11px; font-weight:700; color:var(--ink-2); margin-bottom:4px;">Deliveroo reviews${d.rating != null ? ' · week rating ' + Number(d.rating).toFixed(1) + '★' : ''}</div>`;
+  if (!rr.length) {
+    h += `<div style="font-size:12px; color:var(--ink-3); margin-bottom:12px;">No Deliveroo review text in the feed for this week (rating only)</div>`;
+  } else {
+    h += rr.map(r => `<div class="item" style="border-left-color:${(r.stars != null && r.stars <= 3) ? 'var(--red)' : 'var(--green)'};">
+        <div style="font-size:12px; font-weight:700; color:${(r.stars != null && r.stars <= 3) ? 'var(--red)' : 'var(--green)'}; margin-bottom:4px;">${r.stars != null ? esc(r.stars) + '★' : ''} &middot; ${esc(r.date || '')}${r.venue ? ' &middot; ' + esc(r.venue) : ''}</div>
+        <div style="font-size:13px; color:var(--ink-2); white-space:pre-line;">${esc(r.text || '')}</div></div>`).join('') + '<div style="height:8px;"></div>';
+  }
+  const rv = s.reviewsWeek || null;
+  const bd = (rv && rv.star_breakdown) || null;
+  const negs = (rv && Array.isArray(rv.negative_reviews)) ? rv.negative_reviews : [];
+  h += `<div style="font-size:11px; font-weight:700; color:var(--ink-2); margin-bottom:4px;">Google reviews this week</div>`;
+  if (!rv || rv.new_reviews == null) {
+    h += `<div style="font-size:12px; color:var(--ink-3);">No Google review data this week</div>`;
+  } else {
+    const avg = rv.week_avg_rating != null ? Number(rv.week_avg_rating).toFixed(2) + '★' : 'n/a';
+    const stars = bd ? ['5','4','3','2','1'].map(k2 => `<span style="color:${k2 <= '3' ? (k2 === '3' ? 'var(--amber)' : 'var(--red)') : 'var(--ink-2)'}; font-size:12px; font-weight:600;">${k2}★ ${bd[k2] || 0}</span>`).join(' &nbsp; ') : '';
+    h += `<div style="font-size:13px; margin-bottom:6px;"><span style="font-weight:700;">${avg}</span> avg &nbsp;·&nbsp; <span style="font-weight:700;">${rv.new_reviews}</span> new reviews${rv.negatives != null ? ' &nbsp;·&nbsp; ' + rv.negatives + ' at ≤3★' : ''}</div>
+      <div style="margin-bottom:8px;">${stars}</div>`;
+    if (negs.length) {
+      h += `<button type="button" onclick="var p=document.getElementById('roo-greviews-${pid}'); var o=p.style.display!=='none'; p.style.display=o?'none':'block'; this.textContent=o?'Show reviews (${negs.length})':'Hide reviews';" style="background:var(--surface-2); border:1px solid var(--line); color:var(--ink-2); border-radius:8px; padding:5px 10px; font-size:11px; font-weight:600; cursor:pointer; margin-bottom:8px;">Show reviews (${negs.length})</button>
+        <div id="roo-greviews-${pid}" style="display:none;">` +
+        negs.map(r => `<div class="item" style="border-left-color:var(--red);">
+          <div style="font-size:12px; font-weight:700; color:var(--red); margin-bottom:4px;">${esc(r.stars)}★ &middot; ${esc(r.author || 'Anonymous')} &middot; ${esc(r.date || '')}</div>
+          <div style="font-size:13px; color:var(--ink-2); white-space:pre-line;">${esc(r.text || '')}</div>
+          ${r.url ? `<a href="${esc(r.url)}" target="_blank" style="font-size:11px; color:var(--ink-3); margin-top:4px; display:block;">View on Google →</a>` : ''}</div>`).join('') +
+        `</div>`;
+    } else {
+      h += `<div style="font-size:12px; color:var(--ink-3);">No ≤3★ review text this week</div>`;
+    }
+  }
+  return `<div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:14px 16px; box-shadow:var(--shadow);">${h}</div>`;
 }
 
 // --- ADAPTER: one fetched site JSON -> overwrite the baked shapes IN PLACE ---
@@ -5369,6 +5633,10 @@ function adaptSite(jsonCode, s, isNewest){
     // pipe 6 / 6b: Deliveroo weekly block (full for the 8-store CSV list; PDF
     // sales-only fallback for gap sites M11-M18). Surfaced in the detail grid.
     site.deliveroo = s.deliveroo || null;
+    // Deliveroo week panel (site modal): raw gaps + Google reviews block + json code for the daily feed.
+    site.gaps        = s.gaps || [];
+    site.reviewsWeek = s.reviews || null;
+    site.jsonCode    = jsonCode;
 
     // Narrative: per-week notes from JSON `notes` block if present, else baked
     // fallback (older weeks with no notes JSON). NARRATIVE_WEEK gate retired —
