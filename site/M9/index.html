@@ -265,6 +265,49 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
 .hist{display:flex;flex-direction:column;gap:4px}
 .hist button{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;font-size:12.5px;cursor:pointer;text-align:left}
 .hist button:hover{border-color:var(--maki-orange-ring);background:var(--maki-orange-bg)}
+
+/* 15/10/2026 (Michael): view menus open from the tab arrow; Comparison controls; KPI Sheet quarter comparison (AM CC period view layout) */
+.tabs button .caret{display:inline-grid;place-items:center;width:20px;height:20px;margin:-3px -7px -3px 2px;border-radius:6px;font-size:11px;opacity:.8;transition:transform .15s,background .15s}
+.tabs button .caret:hover{background:rgba(15,23,42,.1);opacity:1}.tabs button[aria-selected="true"] .caret:hover{background:rgba(255,255,255,.22)}
+.tabs button .caret.open{transform:rotate(180deg);opacity:1}
+.tabs button .tv{font-size:11px;font-weight:700;opacity:.85;margin-left:2px}
+#tabMenu{position:fixed;z-index:80;min-width:240px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(15,23,42,.16);padding:6px}
+#tabMenu button{display:flex;flex-direction:column;align-items:flex-start;gap:1px;width:100%;border:0;background:transparent;text-align:left;font-size:13px;font-weight:700;color:var(--ink-2);padding:8px 10px;border-radius:8px;cursor:pointer}
+#tabMenu button small{font-weight:500;color:var(--ink-3);font-size:11.5px}
+#tabMenu button:hover{background:var(--surface-2);color:var(--ink)}
+#tabMenu button[aria-pressed="true"]{background:var(--maki-orange-bg);color:var(--maki-orange-deep)}#tabMenu button[aria-pressed="true"] small{color:var(--maki-orange-deep)}
+.ctlbar{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;box-shadow:var(--shadow)}
+.ctlgrp{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ctlbar .cl{font-size:10.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3)}
+.seg{display:inline-flex;gap:4px;flex-wrap:wrap}
+.seg button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 11px;font-size:12.5px;font-weight:700;color:var(--ink-2);cursor:pointer}
+.seg button:hover{border-color:var(--maki-orange);color:var(--ink)}
+.seg button[aria-pressed="true"]{background:var(--maki-orange);border-color:var(--maki-orange);color:#fff}
+tr[data-cwk]{cursor:pointer}tr[data-cwk]:hover td{filter:brightness(.97)}
+.kq-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.kq-chips{display:flex;gap:8px;flex-wrap:wrap;background:var(--maki-orange);padding:10px;border-radius:12px}
+.kq-chip{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:10px;padding:6px 12px;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;text-align:left;min-width:110px}
+.kq-chip b{display:block;font-size:16px;letter-spacing:0;text-transform:none;margin-top:1px}
+.kq-chip span{display:block;font-size:10.5px;font-weight:700;letter-spacing:0;text-transform:none;opacity:.9}
+.kq-chip:hover{background:rgba(255,255,255,.24)}
+.kq-chip[aria-pressed="true"]{background:#fff;color:var(--maki-orange-deep);border-color:#fff}
+table.kq{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px;table-layout:fixed;min-width:1000px}
+table.kq th{background:var(--surface-2);color:var(--ink-2);font-weight:700;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:9px 5px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle;line-height:1.25}
+table.kq td{padding:8px 5px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle;line-height:1.3;overflow-wrap:anywhere}
+table.kq td.nm{font-weight:700;color:var(--ink);text-align:center}table.kq td.nm span{display:block;font-weight:500;color:var(--ink-3);font-size:11px}
+table.kq td.tx{font-size:11.5px;color:var(--ink-2)}table.kq td.tx b{display:block;font-size:13px;color:var(--ink)}
+table.kq.dense{font-size:11px}table.kq.dense th{font-size:10px;padding:7px 3px}table.kq.dense td{padding:6px 3px}
+table.kq tr.kq-tot td{background:var(--maki-ink);color:#fff;font-weight:800;border-bottom:0}
+table.kq tr.kq-tot td span,table.kq tr.kq-tot td.tx b,table.kq tr.kq-tot td.tx,table.kq tr.kq-tot .kq-w{color:#fff}
+table.kq tr.kq-fut td{color:var(--ink-3);background:var(--surface-2)}
+table.kq tr.kq-open td{background:var(--maki-orange-bg)}
+table.kq tr.kq-sel td.nm{box-shadow:inset 3px 0 0 var(--maki-orange)}
+table.kq th.kq-f{background:var(--maki-orange);color:#fff}table.kq td.kq-f{box-shadow:inset 2px 0 0 var(--maki-orange),inset -2px 0 0 var(--maki-orange)}
+.kq-w{display:block;font-size:10.5px;font-weight:700;margin-top:2px;white-space:nowrap}.kq-w.up{color:var(--green)}.kq-w.down{color:var(--red)}.kq-w.flat,.kq-w.na{color:var(--ink-3);font-weight:500}
+.t-g{background:var(--green-bg)}.t-a{background:var(--amber-bg)}.t-r{background:var(--red-bg)}
+.kq-r{color:var(--red);font-weight:800}.kq-a{color:var(--amber);font-weight:800}.kq-g{color:var(--green);font-weight:800}
+.kq-dots{display:flex;gap:2px;justify-content:center;flex-wrap:wrap;margin-bottom:3px}.kq-d{display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--line)}.kq-d.r{background:var(--red)}.kq-d.a{background:var(--amber)}.kq-d.g{background:var(--green)}
+.kq-chart svg{width:100%;height:auto;display:block}
 </style>
 </head>
 <body>
@@ -297,10 +340,10 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
       <div class="chips" id="siteChips"></div>
     </div>
     <nav class="tabs" role="tablist" aria-label="Sections">
-      <button role="tab" data-t="overview">Overview <span aria-hidden="true" class="caret">▾</span></button>
+      <button role="tab" data-t="overview">Overview<span class="tv" id="tvOverview"></span> <span class="caret" data-menu="overview" title="Choose the view" aria-label="Choose the Overview view">▾</span></button>
       <button role="tab" data-t="daily">Daily</button>
       <button role="tab" data-t="reviews">Reviews</button>
-      <button role="tab" data-t="kpi">Weekly KPI Sheet</button>
+      <button role="tab" data-t="kpi">Weekly KPI Sheet<span class="tv" id="tvKpi"></span> <span class="caret" data-menu="kpi" title="Choose the view" aria-label="Choose the KPI Sheet view">▾</span></button>
       <button role="tab" data-t="droo">Deliveroo</button>
       <button role="tab" data-t="stock">Stock &amp; Cost</button>
       <button role="tab" data-t="people">People &amp; Rota</button>
@@ -315,12 +358,12 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
   <!-- WEEK: OVERVIEW -->
   <section class="pane" data-p="overview">
     <!-- 14/10/2026 (Michael): Overview has two views, Summary and Comparison (vs last week, vs last year, month consolidated) -->
-    <div class="subtabs" id="ovSub" role="group" aria-label="Overview view"><button type="button" data-ov="main" aria-pressed="true">Summary</button><button type="button" data-ov="comp" aria-pressed="false">Comparison <span class="small" style="color:inherit;opacity:.85">· last week, last year, month</span></button></div>
     <div id="cmpView" class="pane" hidden>
-      <div class="row"><div><div class="eyebrow">Comparison</div><h2 id="cmpTitle">Week against last week and last year</h2><div class="sub">Covers, revenue and spend per head for the selected week against the week before and the same weekdays last year (364 days back, from the cash up). Then the month rolled up: a week counts in the month its Monday falls in, this week to date. Only cashed up days count; where last year has no cash up the cell says so.</div></div><span class="tag t-auto">AUTO</span></div>
+      <div class="row"><div><div class="eyebrow">Comparison</div><h2 id="cmpTitle">Week against last week and last year</h2><div class="sub">Revenue, covers, spend per head and wages as a share of revenue for the selected week against the week before and the same weekdays last year (364 days back, from the cash up). Then the month rolled up: a week counts in the month its Monday falls in, this week to date. Only cashed up days count; where last year has no cash up the cell says so.</div></div><span class="tag t-auto">AUTO</span></div>
+      <div class="ctlbar" id="cmpCtl"></div>
       <div class="grid" id="cmpTiles"></div>
       <div class="card"><div class="ch"><div><h3 id="cmpDayHead">Day by day</h3><div class="small">Each day against the same weekday last week and last year. Hover a change for the comparison figure.</div></div><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table class="cmp" id="cmpDays"></table></div></div>
-      <div class="card"><div class="ch"><div><h3>Last 8 weeks</h3><div class="small">Week on week and year on year, newest first; the selected week is highlighted. This week is week to date against the same weekdays.</div></div><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table class="cmp" id="cmpWeeks"></table></div></div>
+      <div class="card"><div class="ch"><div><h3 id="cmpWkHead">Last 8 weeks</h3><div class="small">Week on week and year on year, newest first; the selected week is highlighted. Click a week to open it. This week is week to date against the same weekdays.</div></div><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table class="cmp" id="cmpWeeks"></table></div></div>
       <div class="card"><div class="ch"><div><h3 id="cmpMonHead">Month consolidated</h3><div class="small">Revenue, covers, spend per head, wages and food as a share of revenue, and the KPI set, for the month against the month before and the same weeks last year. Wage and food are sales weighted over the closed weeks.</div></div><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table class="cmp" id="cmpMonth"></table></div><div class="small" id="cmpMonFoot"></div></div>
       <div class="card"><div class="ch"><div><h3 id="cmpMonWkHead">Weeks in the month</h3><div class="small">The weeks behind the month figure, newest first. Wage and food tinted on the Site CC bands.</div></div><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table class="cmp" id="cmpMonWeeks"></table></div></div>
     </div>
@@ -462,6 +505,7 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
 
   <!-- WEEK: KPI SHEET -->
   <section class="pane" data-p="kpi" hidden>
+    <div id="kpiMain" class="pane">
     <div class="row">
       <div><div class="eyebrow">Weekly KPI Sheet</div><h2 id="kpiTitle">w/c</h2><div class="sub">Replaces the per-site Google Doc. Numbers fill themselves and cannot be typed over. The GM completes the manual fields and submits; the AM adds improvement areas and signs off, which locks the week.</div></div>
       <div class="small" id="completion"></div>
@@ -532,6 +576,17 @@ table.ppl tr[data-who]{cursor:pointer}table.ppl tr[data-who]:hover td{background
           <div class="chips"><button type="button" class="btn pri" id="btnSign">Sign off and lock</button><button type="button" class="btn" id="btnReturn">Return to GM</button><button type="button" class="btn" id="btnReopen" hidden>Reopen week</button></div><div class="err" id="amErr" hidden></div></div>
       </div>
       <details style="margin-top:12px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700" id="logSum">Sign-off log</summary><div class="tscroll"><table id="signLog"></table></div><div class="small">Every signature is stored with name and time and syncs through the outbox to the sign-off log sheet.</div></details>
+    </div>
+    </div>
+    <!-- 15/10/2026 (Michael): Weekly KPI Sheet Comparison, the quarter week on week (13 weeks), AM Control Centre period view layout -->
+    <div id="kqView" class="pane" hidden>
+      <div class="kq-head"><div><div class="eyebrow">Weekly KPI Sheet · Comparison</div><h2 id="kqTitle">Quarter week on week</h2><div class="sub">Every week of the quarter against the week before it. A week counts in the quarter its Monday falls in. Pick a measure to chart it; click a week to open its KPI Sheet.</div></div><span class="tag t-auto">AUTO</span></div>
+      <div class="ctlbar" id="kqCtl"></div>
+      <div class="kq-chips" id="kqChips"></div>
+      <div class="card"><div class="ch"><h3 id="kqChartHead">Week by week</h3><span class="small" id="kqChartNote"></span></div><div class="kq-chart" id="kqChart"></div></div>
+      <div class="card"><div class="ch"><div><h3 id="kqWowHead">Week on week</h3><div class="small">One row per week. WoW compares each row with the one before it (the first row with the last week of the prior quarter). Cells tinted on the Site CC bands.</div></div></div><div class="tscroll"><table class="kq" id="kqWow"></table></div></div>
+      <div class="card"><div class="ch"><div><h3 id="kqRlHead">Red lights, week after week</h3><div class="small">One square per closed week in the quarter (oldest left, newest right): red, amber or green on the same bands as every other cell, grey = no data. "Streak" counts consecutive red weeks up to the newest week, across the full history.</div></div></div><div class="tscroll"><table class="kq dense" id="kqRl"></table></div></div>
+      <div class="card"><div class="ch"><div><h3 id="kqAllHead">Every measure week by week</h3><div class="small">Quarter column: sales and covers summed, SPH from the totals, wage % and food % sales weighted, score averaged; compared like for like with the same number of weeks of the quarter before.</div></div></div><div class="tscroll"><table class="kq dense" id="kqAll"></table></div></div>
     </div>
   </section>
 
@@ -668,7 +723,7 @@ var COMP={"src":"NE/Midland Site Compliance Tracker, tab M9","url":"https://docs
 var TODAY='2026-10-15';
 var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[]};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
-/* 12/10/2026 (Michael): the page always opens on the latest week and month, never the week saved from the last visit */S.per="week";S.wc=CUR;S.month=CUR.slice(0,7);S.ov="main";
+/* 12/10/2026 (Michael): the page always opens on the latest week and month, never the week saved from the last visit */S.per="week";S.wc=CUR;S.month=CUR.slice(0,7);S.ov="main";S.kv="sheet";S.kq=null;
 ['repl','broth','eotm','soName','rvOpen','fold'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});if(S.fold.rv==null)S.fold.rv=true;  /* 13/10/2026: first visit, Google reviews panel folded, Needs a reply open; click the heading to toggle */S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
 /* merge any actions or gaps added at build since the cache was written */
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
@@ -837,33 +892,57 @@ function cmpCh(a,b,kind,dir,lab){if(a==null||b==null)return '<span class="ph">·
 function lySum(dts){var o={sales:0,covers:0,del:0,n:0};dts.forEach(function(dt){var v=lyDay(dt);if(v){o.n++;o.sales+=v[0];o.covers+=v[1];o.del+=v[2]||0}});o.sph=o.covers?(o.sales-o.del)/o.covers:null;return o}  /* SPH is dine in spend per head: (sales minus delivery) / covers, the cash up definition */
 function daySum(dts){var o={sales:0,covers:0,n:0,sw:0};dts.forEach(function(dt){var r=DAY[dt];if(r&&r[0]!=null){o.n++;o.sales+=r[0];o.covers+=r[2]||0;if(r[3]!=null&&r[2])o.sw+=r[3]*r[2]}});o.sph=o.covers&&o.sw?o.sw/o.covers:null;return o}  /* covers weighted daily SPH = (sales minus delivery) / covers */
 function cashedDays(wc){var o=[];for(var i=0;i<7;i++){var dt=addD(wc,i);var r=DAY[dt];if(r&&r[0]!=null)o.push(dt)}return o}
-function renderComparison(){if(!$('#cmpTiles'))return;var wc=S.wc,w=wk(wc)||{},open=!!w.open,dts=cashedDays(wc),lw=dts.map(function(d){return addD(d,-7)});
-  var cur=daySum(dts),prv=daySum(lw),ly=lySum(dts),NOLY='<span class="ph" title="No cash up for these days last year">No cash up last year</span>';
+/* 15/10/2026 (Michael): Comparison is interactive (compare with, measures, change or figure, number of weeks, click a week to open it) and carries wages as a share of revenue */
+function cvS(){var c=S.cv;if(!c||typeof c!=='object')c=S.cv={};if(['lw','ly','both'].indexOf(c.vs)<0)c.vs='both';if(!c.m||typeof c.m!=='object')c.m={sales:1,covers:1,sph:1,wage:1};if([4,8,13].indexOf(c.n)<0)c.n=8;c.fig=!!c.fig;return c}
+var CM=[{k:'sales',lab:'Revenue',sh:'Revenue',kind:'pct',dir:1,f:function(v){return '£'+Math.round(v).toLocaleString('en-GB')}},
+ {k:'covers',lab:'Covers',sh:'Covers',kind:'pct',dir:1,f:function(v){return Math.round(v).toLocaleString('en-GB')}},
+ {k:'sph',lab:'Spend per head',sh:'SPH',kind:'gbp',dir:1,f:function(v){return '£'+v.toFixed(2)}},
+ {k:'wage',lab:'Wages / revenue',sh:'Wage %',kind:'pp',dir:-1,f:function(v){return v.toFixed(1)+'%'},noly:1,rag:wageRag}];
+/* cash up days: revenue, covers, covers weighted SPH, wages / revenue (labour % weighted by sales) */
+function dVals(dts){var o={sales:0,covers:0,n:0,sw:0,ws:0,wn:0};dts.forEach(function(dt){var r=DAY[dt];if(r&&r[0]!=null){o.n++;o.sales+=r[0];o.covers+=r[2]||0;if(r[3]!=null&&r[2])o.sw+=r[3]*r[2];if(r[6]!=null&&r[0]){o.ws+=r[6]*r[0];o.wn+=r[0]}}});
+  o.sph=o.covers&&o.sw?o.sw/o.covers:null;o.wage=o.wn?o.ws/o.wn:null;if(!o.n){o.sales=null;o.covers=null}return o}
+function cvCh(a,b,m,lab){var h=cmpCh(a,b,m.kind,m.dir,lab);if(cvS().fig&&a!=null&&b!=null)h+='<span class="sub2">'+lab.toLowerCase()+' '+m.f(b)+'</span>';return h}
+function cvCtl(){var c=cvS(),bt=function(attr,val,on,txt){return '<button type="button" '+attr+'="'+val+'" aria-pressed="'+(on?'true':'false')+'">'+txt+'</button>'};
+  $('#cmpCtl').innerHTML='<div class="ctlgrp"><span class="cl">Compare with</span><div class="seg">'+bt('data-cvs','lw',c.vs==='lw','Last week')+bt('data-cvs','ly',c.vs==='ly','Last year')+bt('data-cvs','both',c.vs==='both','Both')+'</div></div>'+
+    '<div class="ctlgrp"><span class="cl">Measures</span><div class="seg">'+CM.map(function(m){return bt('data-cvm',m.k,!!c.m[m.k],m.sh)}).join('')+'</div></div>'+
+    '<div class="ctlgrp"><span class="cl">Show</span><div class="seg">'+bt('data-cvf','0',!c.fig,'Change')+bt('data-cvf','1',c.fig,'Change and figure')+'</div></div>'+
+    '<div class="ctlgrp"><span class="cl">Weeks</span><div class="seg">'+[4,8,13].map(function(n){return bt('data-cvn',n,c.n===n,String(n))}).join('')+'</div></div>'}
+function renderComparison(){if(!$('#cmpTiles'))return;cvCtl();var c=cvS(),ms=CM.filter(function(m){return c.m[m.k]}),LW=c.vs!=='ly',LY=c.vs!=='lw';
+  var wc=S.wc,w=wk(wc)||{},open=!!w.open,dts=cashedDays(wc),lw=dts.map(function(d){return addD(d,-7)});
+  var cur=dVals(dts),prv=dVals(lw),ly=lySum(dts),NOLY='<span class="ph" title="No cash up for these days last year">No cash up last year</span>';
+  /* a closed week reads its wage % from the KPI Sheet (Mona Lisa), the open week from the daily cash up */
+  var pw0=prevW(wc);if(!open&&w.wage!=null){cur.wage=w.wage;if(pw0&&pw0.wage!=null)prv.wage=pw0.wage}
   var wlab='w/c '+dmy(wc)+(open?' · this week, '+dts.length+' of 7 days cashed up':isPend(wc)?' · closing, final figures Tuesday':'');
-  $('#cmpTitle').textContent='Week against last week and last year · '+wlab;
-  function tile(lab,v,fmt,kind,dir){var lwv=prv.n?prv[v]:null,lyv=ly.n?ly[v]:null,cv=cur.n?cur[v]:null;
-    return '<div class="card tile s4"><div class="ch"><span class="lab">'+lab+'</span><span class="tag t-auto">'+(open?'WEEK TO DATE':'WEEK')+'</span></div><div class="big">'+(cv==null?NA:fmt(cv))+'</div><div class="two"><div>'+cmpCh(cv,lwv,kind,dir,'Last week')+'<small>vs last week'+(open?' (same '+dts.length+' days)':'')+(lwv!=null?', '+fmt(lwv):'')+'</small></div><div>'+(ly.n?cmpCh(cv,lyv,kind,dir,'Last year')+'<small>vs last year, '+fmt(lyv)+(ly.n<dts.length?' ('+ly.n+' of '+dts.length+' days)':'')+'</small>':NOLY)+'</div></div></div>'}
-  var fS=function(v){return '£'+Math.round(v).toLocaleString('en-GB')},fC=function(v){return Math.round(v).toLocaleString('en-GB')},fP=function(v){return '£'+v.toFixed(2)};
-  $('#cmpTiles').innerHTML=tile('Revenue','sales',fS,'pct',1)+tile('Covers','covers',fC,'pct',1)+tile('Spend per head','sph',fP,'gbp',1);
+  $('#cmpTitle').textContent='Week against '+(c.vs==='lw'?'last week':c.vs==='ly'?'last year':'last week and last year')+' · '+wlab;
+  var span=ms.length>=4?'s3':ms.length===3?'s4':ms.length===2?'s6':'s12';
+  function tile(m){var cv=cur[m.k],lwv=prv.n||prv[m.k]!=null?prv[m.k]:null,lyv=ly.n&&!m.noly?ly[m.k]:null,L=[];
+    if(LW)L.push('<div>'+cmpCh(cv,lwv,m.kind,m.dir,'Last week')+'<small>vs last week'+(open?' (same '+dts.length+' days)':'')+(lwv!=null?', '+m.f(lwv):'')+'</small></div>');
+    if(LY)L.push('<div>'+(m.noly?'<span class="ph" title="The last year feed is the cash up: sales, covers and delivery only">No wage figure last year</span>':ly.n?cmpCh(cv,lyv,m.kind,m.dir,'Last year')+'<small>vs last year, '+(lyv==null?'n/a':m.f(lyv))+(ly.n<dts.length?' ('+ly.n+' of '+dts.length+' days)':'')+'</small>':NOLY)+'</div>');
+    var rg=m.rag&&cv!=null?{g:'<span class="pill p-g">Green</span>',a:'<span class="pill p-a">Amber</span>',r:'<span class="pill p-r">Red Light</span>'}[m.rag(cv)]||'':'';
+    return '<div class="card tile '+span+'"><div class="ch"><span class="lab">'+m.lab+'</span><span class="tag t-auto">'+(open?'WEEK TO DATE':'WEEK')+'</span></div><div class="big">'+(cv==null?NA:m.f(cv))+(rg?' '+rg:'')+'</div><div class="two">'+L.join('')+'</div></div>'}
+  $('#cmpTiles').innerHTML=ms.length?ms.map(tile).join(''):'<div class="small s12">Pick at least one measure.</div>';
   /* day by day */
-  var th='<thead><tr><th>Day</th><th class="grp">Revenue</th><th>vs last wk</th><th>vs last yr</th><th class="grp">Covers</th><th>vs last wk</th><th>vs last yr</th><th class="grp">SPH</th><th>vs last wk</th><th>vs last yr</th></tr></thead>';
-  var dot='<td class="ph">·</td>',h=th+'<tbody>';
+  var cols=function(m){return 1+(LW?1:0)+(LY&&!m.noly?1:0)},ncol=1+ms.reduce(function(t,m){return t+cols(m)},0);
+  var th='<thead><tr><th>Day</th>'+ms.map(function(m){return '<th class="grp">'+m.sh+'</th>'+(LW?'<th>vs last wk</th>':'')+(LY&&!m.noly?'<th>vs last yr</th>':'')}).join('')+'</tr></thead>';
+  var h=th+'<tbody>';
+  function dv(r,k){if(!r)return null;return k==='sales'?r[0]:k==='covers'?r[2]:k==='sph'?r[3]:r[6]}
+  function lv(l,k){if(!l)return null;return k==='sales'?l[0]:k==='covers'?l[1]:k==='sph'?(l[1]?(l[0]-(l[2]||0))/l[1]:null):null}
   for(var i=0;i<7;i++){var dt=addD(wc,i),r=DAY[dt],p=DAY[addD(dt,-7)],l=lyDay(dt),lab='<td><b>'+DAYS[i]+'</b> '+dm(dt)+'</td>';
-    if(!r||r[0]==null){h+='<tr>'+lab+'<td colspan="9" class="ph" style="text-align:left">'+(dt>NOWD?'ahead':dt>=NOWD?'today, cash up tomorrow':'not cashed up')+'</td></tr>';continue}
-    var ls=l?l[0]:null,lc=l?l[1]:null,lp=l&&l[1]?(l[0]-(l[2]||0))/l[1]:null,ps=p?p[0]:null,pc=p?p[2]:null,pp=p?p[3]:null;
-    h+='<tr>'+lab+'<td class="grp"><b>'+fS(r[0])+'</b></td><td>'+cmpCh(r[0],ps,'pct',1,'Last week')+'</td><td>'+(l?cmpCh(r[0],ls,'pct',1,'Last year'):'<span class="ph" title="No cash up on '+dmy(addD(dt,-364))+'">no LY</span>')+'</td>'+
-      '<td class="grp"><b>'+(r[2]==null?NA:fC(r[2]))+'</b></td><td>'+cmpCh(r[2],pc,'pct',1,'Last week')+'</td><td>'+(l?cmpCh(r[2],lc,'pct',1,'Last year'):'<span class="ph">no LY</span>')+'</td>'+
-      '<td class="grp"><b>'+(r[3]==null?NA:fP(r[3]))+'</b></td><td>'+cmpCh(r[3],pp,'gbp',1,'Last week')+'</td><td>'+(l?cmpCh(r[3],lp,'gbp',1,'Last year'):'<span class="ph">no LY</span>')+'</td></tr>'}
-  h+='<tr class="tot"><td>'+(open?'Week to date':'Week')+' · '+dts.length+' day'+(dts.length===1?'':'s')+'</td><td class="grp">'+(cur.n?fS(cur.sales):NA)+'</td><td>'+cmpCh(cur.n?cur.sales:null,prv.n?prv.sales:null,'pct',1,'Last week')+'</td><td>'+(ly.n?cmpCh(cur.sales,ly.sales,'pct',1,'Last year'):NOLY)+'</td><td class="grp">'+(cur.n?fC(cur.covers):NA)+'</td><td>'+cmpCh(cur.n?cur.covers:null,prv.n?prv.covers:null,'pct',1,'Last week')+'</td><td>'+(ly.n?cmpCh(cur.covers,ly.covers,'pct',1,'Last year'):'<span class="ph">·</span>')+'</td><td class="grp">'+(cur.sph==null?NA:fP(cur.sph))+'</td><td>'+cmpCh(cur.sph,prv.sph,'gbp',1,'Last week')+'</td><td>'+(ly.n?cmpCh(cur.sph,ly.sph,'gbp',1,'Last year'):'<span class="ph">·</span>')+'</td></tr></tbody>';
-  $('#cmpDays').innerHTML=h;$('#cmpDayHead').textContent='Day by day · w/c '+dmy(wc);
-  /* last 8 weeks */
-  var ws=lastN(wc,8).slice().reverse();h='<thead><tr><th>Week</th><th class="grp">Revenue</th><th>WoW</th><th>YoY</th><th class="grp">Covers</th><th>WoW</th><th>YoY</th><th class="grp">SPH</th><th>WoW</th><th>YoY</th></tr></thead><tbody>';
-  ws.forEach(function(x){var pw=prevW(x.wc),xd=x.open?cashedDays(x.wc):null,xl=xd?lySum(xd):lyOf(x),ps=null,pcv=null,psp=null;
-    if(x.open&&xd){var _p=daySum(xd.map(function(d){return addD(d,-7)}));ps=_p.n?_p.sales:null;pcv=_p.n?_p.covers:null;psp=_p.sph}else if(pw){ps=pw.sales;pcv=pw.covers;psp=pw.sph}
+    if(!r||r[0]==null){h+='<tr>'+lab+'<td colspan="'+(ncol-1)+'" class="ph" style="text-align:left">'+(dt>NOWD?'ahead':dt>=NOWD?'today, cash up tomorrow':'not cashed up')+'</td></tr>';continue}
+    h+='<tr>'+lab+ms.map(function(m){var v=dv(r,m.k),cls=m.rag&&v!=null?' c-'+m.rag(v):'';return '<td class="grp'+cls+'"><b>'+(v==null?NA:m.f(v))+'</b></td>'+(LW?'<td>'+cvCh(v,dv(p,m.k),m,'Last week')+'</td>':'')+(LY&&!m.noly?'<td>'+(l?cvCh(v,lv(l,m.k),m,'Last year'):'<span class="ph" title="No cash up on '+dmy(addD(dt,-364))+'">no LY</span>')+'</td>':'')}).join('')+'</tr>'}
+  h+='<tr class="tot"><td>'+(open?'Week to date':'Week')+' · '+dts.length+' day'+(dts.length===1?'':'s')+'</td>'+ms.map(function(m){var v=cur[m.k];return '<td class="grp">'+(v==null?NA:m.f(v))+'</td>'+(LW?'<td>'+cvCh(v,prv[m.k],m,'Last week')+'</td>':'')+(LY&&!m.noly?'<td>'+(ly.n?cvCh(v,ly[m.k],m,'Last year'):'<span class="ph">·</span>')+'</td>':'')}).join('')+'</tr></tbody>';
+  $('#cmpDays').innerHTML=ms.length?h:'';$('#cmpDayHead').textContent='Day by day · w/c '+dmy(wc);
+  /* last N weeks */
+  var ws=lastN(wc,c.n).slice().reverse();$('#cmpWkHead').textContent='Last '+c.n+' weeks';
+  h='<thead><tr><th>Week</th>'+ms.map(function(m){return '<th class="grp">'+m.sh+'</th>'+(LW?'<th>WoW</th>':'')+(LY&&!m.noly?'<th>YoY</th>':'')}).join('')+'</tr></thead><tbody>';
+  ws.forEach(function(x){var pw=prevW(x.wc),xd=x.open?cashedDays(x.wc):null,xl=xd?lySum(xd):lyOf(x),pv={};
+    if(x.open&&xd){pv=dVals(xd.map(function(d){return addD(d,-7)}))}else if(pw){pv=pw}
+    var cv={sales:x.sales,covers:x.covers,sph:x.sph,wage:x.wage};
     var lab='<td><b>w/c '+dm(x.wc)+'</b>'+(x.open?'<span class="sub2">this week, '+(xd?xd.length:0)+' days, vs same days</span>':isPend(x.wc)?'<span class="sub2">closing</span>':'')+'</td>';
     var noly='<span class="ph" title="No cash up for these days last year">no LY</span>';
-    h+='<tr'+(x.wc===wc?' class="sel"':'')+'>'+lab+'<td class="grp"><b>'+gbp(x.sales)+'</b></td><td>'+cmpCh(x.sales,ps,'pct',1,'Last week')+'</td><td>'+(xl&&xl.n?cmpCh(x.sales,xl.sales,'pct',1,'Last year'):noly)+'</td><td class="grp"><b>'+(x.covers==null?NA:fC(x.covers))+'</b></td><td>'+cmpCh(x.covers,pcv,'pct',1,'Last week')+'</td><td>'+(xl&&xl.n?cmpCh(x.covers,xl.covers,'pct',1,'Last year'):noly)+'</td><td class="grp"><b>'+(x.sph==null?NA:fP(x.sph))+'</b></td><td>'+cmpCh(x.sph,psp,'gbp',1,'Last week')+'</td><td>'+(xl&&xl.n&&xl.sph?cmpCh(x.sph,xl.sph,'gbp',1,'Last year'):noly)+'</td></tr>'});
-  $('#cmpWeeks').innerHTML=h+'</tbody>';
+    h+='<tr data-cwk="'+x.wc+'" title="Open w/c '+dmy(x.wc)+'"'+(x.wc===wc?' class="sel"':'')+'>'+lab+ms.map(function(m){var v=cv[m.k],cls=m.rag&&v!=null?' c-'+m.rag(v):'';return '<td class="grp'+cls+'"><b>'+(v==null?NA:m.f(v))+'</b></td>'+(LW?'<td>'+cvCh(v,pv[m.k],m,'Last week')+'</td>':'')+(LY&&!m.noly?'<td>'+(xl&&xl.n&&xl[m.k]!=null?cvCh(v,xl[m.k],m,'Last year'):noly)+'</td>':'')}).join('')+'</tr>'});
+  $('#cmpWeeks').innerHTML=ms.length?h+'</tbody>':'';
+  var fS=CM[0].f,fC=CM[1].f,fP=CM[2].f;
   /* month consolidated */
   var ym=wc.slice(0,7),mi=MONTHS.indexOf(ym),a=agg(ym),pm=mi>-1&&mi+1<MONTHS.length?MONTHS[mi+1]:null,b=pm?agg(pm):null;
   var mlab=function(y){var d=new Date(y+'-01T00:00:00Z');return d.toLocaleDateString('en-GB',{month:'short',year:'numeric',timeZone:'UTC'})};
@@ -901,8 +980,98 @@ function renderComparison(){if(!$('#cmpTiles'))return;var wc=S.wc,w=wk(wc)||{},o
     h+='<tr'+(x.wc===wc?' class="sel"':'')+'><td><b>w/c '+dm(x.wc)+'</b></td><td>'+gbp(x.sales)+'</td><td>'+gbp(x.target)+'</td><td'+(v==null?'':' class="c-'+(v>=0?'g':v>-10?'a':'r')+'"')+'>'+(v==null?NA:pctS(v))+'</td><td>'+(x.covers==null?NA:fC(x.covers))+'</td><td>'+(x.sph==null?NA:fP(x.sph))+'</td><td class="'+rag(x.wage,wageRag).trim()+'">'+pct1(x.wage)+'</td><td class="'+rag(x.food,foodRag).trim()+'">'+pct2(x.food)+'</td><td>'+(x.rating==null?NA:x.rating.toFixed(2)+'★'+(x.rev?' <small>('+x.rev+')</small>':''))+'</td><td>'+(x.eff==null?NA:x.eff.toFixed(1))+'</td><td>'+st+'</td></tr>'});
   $('#cmpMonWeeks').innerHTML=h+'</tbody>';$('#cmpMonWkHead').textContent='Weeks in '+mlab(ym);
 }
+
+/* ---------- KPI Sheet Comparison (15/10/2026, Michael): the quarter week on week, 13 weeks, AM Control Centre period view layout. A week counts in the quarter its Monday falls in (AM CC rule). ---------- */
+var MON3=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function qMons(q){var y=+q.slice(0,4),s0=(+q.slice(6)-1)*3,o=[];for(var i=1;i<=3;i++)o=o.concat(mondays(y+'-'+String(s0+i).padStart(2,'0')));return o}
+function qShort(q){return 'Q'+q.slice(6)+' '+q.slice(0,4)}
+function qLab(q){var n=+q.slice(6);return 'Q'+n+' '+q.slice(0,4)+' ('+MON3[(n-1)*3]+' to '+MON3[(n-1)*3+2]+')'}
+function kqList(){var o=[];WK.forEach(function(w){var q=qOf(w.wc);if(o.indexOf(q)<0)o.push(q)});return o}
+function wkVt(w){return w&&w.target&&w.sales!=null?(w.sales-w.target)/w.target*100:null}
+function vtRag(v){return v==null?'n':v>=0?'g':v>-10?'a':'r'}
+function ratRag(w){if(!w||w.rev==null)return 'n';if(!w.rev)return 'r';return w.rating==null?'n':w.rating>=4.7?'g':'r'}
+function kqCmp(wc){var rv=revIn(wc,addD(wc,6)),ng=rv.filter(function(r){return r.i&&r.i.length}),c={};ng.forEach(function(r){var seen={};r.i.forEach(function(x){var t=REV.tax[x[0]],l=t?t.l:x[0];if(seen[l])return;seen[l]=1;c[l]=(c[l]||0)+1})});
+  var top=Object.keys(c).sort(function(a,b){return c[b]-c[a]})[0];return {n:ng.length,of:rv.length,top:top?[top,c[top]]:null}}
+function kqRoo(w){var d=w&&w.d||{},r=0,a=0,n=0;DM.forEach(function(m){var b=rooBand(d[m.k],m.g,m.a,m.hi);if(b){n++;if(b==='r')r++;if(b==='a')a++}});return {r:r,a:a,n:n,rt:d.r,rag:!n?'n':r?'r':a?'a':'g'}}
+function kqW(cur,prev,kind,up){if(cur==null)return '';if(prev==null)return '<span class="kq-w na">no WoW</span>';var d=kind==='pct'?(prev?(cur-prev)/Math.abs(prev)*100:null):cur-prev;if(d==null)return '<span class="kq-w na">no WoW</span>';
+  var fl=Math.abs(d)<(kind==='star'?0.005:0.05),g=up?d>0:d<0,t=kind==='pct'?sgn(d,1,'%'):kind==='pp'?sgn(d,1,'pp'):kind==='gbp'?(d<0?'−£':'+£')+Math.abs(d).toFixed(2):kind==='pts'?sgn(d,1,' pts'):kind==='n'?sgn(d,0,''):sgn(d,2,'★');
+  return '<span class="kq-w '+(fl?'flat':g?'up':'down')+'">'+(fl?'● ':g?'▲ ':'▼ ')+t+'</span>'}
+function kqTot(ws){var o={n:0,sales:0,target:0,ts:0,covers:0,cw:0,sw:0,wg:0,wn:0,fd:0,fn:0,ef:0,en:0,rt:0,rv:0,rl:0,ng:0,of:0,dr:0,dn:0,rr:0,ra:0,top:{}};
+  ws.forEach(function(w){if(!w||w.sales==null)return;o.n++;o.sales+=w.sales;if(w.target){o.target+=w.target;o.ts+=w.sales}o.covers+=w.covers||0;if(w.sph!=null&&w.covers){o.sw+=w.sph*w.covers;o.cw+=w.covers}
+    if(w.wage!=null){o.wg+=w.wage*w.sales;o.wn+=w.sales}if(w.food!=null){o.fd+=w.food*w.sales;o.fn+=w.sales}if(w.eff!=null){o.ef+=w.eff;o.en++}if(w.rev){o.rt+=(w.rating||0)*w.rev;o.rv+=w.rev}
+    if(rlTrips(w).length)o.rl++;var c=kqCmp(w.wc);o.ng+=c.n;o.of+=c.of;if(c.top)o.top[c.top[0]]=(o.top[c.top[0]]||0)+c.top[1];var r=kqRoo(w);if(r.rt!=null){o.dr+=r.rt;o.dn++}o.rr+=r.r;o.ra+=r.a});
+  o.vt=o.target?(o.ts-o.target)/o.target*100:null;o.sph=o.cw?o.sw/o.cw:null;o.wage=o.wn?o.wg/o.wn:null;o.food=o.fn?o.fd/o.fn:null;o.eff=o.en?o.ef/o.en:null;o.rating=o.rv?o.rt/o.rv:null;o.drt=o.dn?o.dr/o.dn:null;
+  var tk=Object.keys(o.top).sort(function(a,b){return o.top[b]-o.top[a]})[0];o.topl=tk?[tk,o.top[tk]]:null;if(!o.n){o.sales=null;o.covers=null}return o}
+var KQM=[{k:'sales',lab:'Sales',f:function(v){return gbp(v)},kind:'pct',up:1},{k:'vt',lab:'vs target',f:function(v){return v==null?NA:pctS(v)},kind:'pp',up:1,rag:vtRag},{k:'covers',lab:'Covers',f:function(v){return v==null?NA:Math.round(v).toLocaleString('en-GB')},kind:'pct',up:1},
+  {k:'sph',lab:'SPH',f:function(v){return v==null?NA:'£'+v.toFixed(2)},kind:'gbp',up:1},{k:'wage',lab:'Wage %',f:function(v){return pct1(v)},kind:'pp',up:0,rag:wageRag},{k:'food',lab:'Food %',f:function(v){return pct1(v)},kind:'pp',up:0,rag:foodRag},
+  {k:'eff',lab:'Score',f:function(v){return v==null?NA:Math.round(v)},kind:'pts',up:1,rag:effRag},{k:'rating',lab:'Google rating',f:function(v){return v==null?NA:v.toFixed(2)+'★'},kind:'star',up:1}];
+function kqV(w,k){if(!w)return null;return k==='vt'?wkVt(w):w[k]}
+function kqBands(k){return k==='wage'?[[22,'green to 22%'],[24,'red above 24%']]:k==='food'?[[24,'green below 24%'],[25,'Red Light 25%']]:k==='eff'?[[90,'green 90'],[85,'amber 85']]:k==='rating'?[[4.7,'Red Light below 4.70']]:k==='vt'?[[0,'on target'],[-10,'Red Light at -10%']]:k==='sph'?[[22,'£22.00']]:[]}
+function kqChart(q,mons,k){var m=KQM.filter(function(x){return x.k===k})[0],W=900,H=230,L=46,R=10,T=18,B=34,bw=(W-L-R)/mons.length,vals=mons.map(function(mo){var w=wk(mo);return w&&!w.open?kqV(w,k):null});
+  var pts=vals.filter(function(v){return v!=null}),bands=kqBands(k),all=pts.concat(bands.map(function(b){return b[0]})),tg=k==='sales'?mons.map(function(mo){var w=wk(mo);return w&&w.target?w.target:null}):[];all=all.concat(tg.filter(function(v){return v!=null}));
+  if(!pts.length)return '<div class="small">No closed weeks in '+qLab(q)+' yet.</div>';
+  var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all),zero=['sales','covers','sph'].indexOf(k)>-1;if(zero)lo=0;else{var pad=(hi-lo)*0.15||1;lo-=pad;hi+=pad}if(zero)hi*=1.12;if(k==='vt'){lo=Math.min(lo,-12);hi=Math.max(hi,4)}
+  var y=function(v){return T+(H-T-B)*(1-(v-lo)/((hi-lo)||1))},base=y(k==='vt'?0:lo),o='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="'+m.lab+' week by week">';
+  [0,0.5,1].forEach(function(f){var v=lo+(hi-lo)*f,yy=y(v);o+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="#e2e8f0"/><text x="'+(L-6)+'" y="'+(yy+4)+'" font-size="10" text-anchor="end" fill="#8491a5">'+(k==='sales'?'£'+Math.round(v/1000)+'k':k==='sph'?'£'+v.toFixed(0):k==='rating'?v.toFixed(2):k==='covers'||k==='eff'?Math.round(v):v.toFixed(1)+'%')+'</text>'});
+  bands.forEach(function(b){var yy=y(b[0]);o+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="#0f172a" stroke-dasharray="4 4" opacity=".5"/><text x="'+(W-R)+'" y="'+(yy-4)+'" font-size="10" text-anchor="end" fill="#475569">'+esc(b[1])+'</text>'});
+  mons.forEach(function(mo,i){var v=vals[i],x=L+i*bw+bw*0.18,bwid=bw*0.64,w=wk(mo);o+='<text x="'+(L+i*bw+bw/2)+'" y="'+(H-B+16)+'" font-size="10" text-anchor="middle" fill="'+(mo===gwc()?'#C43E12':'#8491a5')+'" font-weight="'+(mo===gwc()?'800':'500')+'">'+dm(mo)+'</text>';
+    if(v==null){o+='<text x="'+(L+i*bw+bw/2)+'" y="'+(base-6)+'" font-size="10" text-anchor="middle" fill="#cbd5e1">'+(w&&w.open?'open':mo>NOWD?'':'n/a')+'</text>';return}
+    var rg=m.rag?m.rag(v):k==='rating'?(v>=4.7?'g':'r'):null,col=rg==='g'?'#059669':rg==='a'?'#d97706':rg==='r'?'#dc2626':'#E94E1B',y1=y(v),top=Math.min(y1,base),hh=Math.max(2,Math.abs(base-y1));
+    o+='<rect x="'+x+'" y="'+top+'" width="'+bwid+'" height="'+hh+'" rx="3" fill="'+col+'" opacity=".85"><title>w/c '+dmy(mo)+': '+m.f(v).replace(/<[^>]+>/g,'')+'</title></rect><text x="'+(x+bwid/2)+'" y="'+(v>=(k==='vt'?0:lo)?top-4:top+hh+11)+'" font-size="10" font-weight="700" text-anchor="middle" fill="#0f172a">'+(k==='sales'?'£'+(v/1000).toFixed(1)+'k':m.f(v).replace(/<[^>]+>/g,''))+'</text>';
+    if(tg[i]!=null){var ty=y(tg[i]);o+='<line x1="'+(x-3)+'" x2="'+(x+bwid+3)+'" y1="'+ty+'" y2="'+ty+'" stroke="#0f172a" stroke-width="2"><title>Target '+gbp(tg[i]).replace(/<[^>]+>/g,'')+'</title></line>'}});
+  return o+'</svg>'}
+function renderKq(){if(!$('#kqView'))return;var on=S.kv==='comp';$('#kpiMain').hidden=on;$('#kqView').hidden=!on;if(!on)return;
+  var qs=kqList(),q=S.kq&&qs.indexOf(S.kq)>-1?S.kq:qOf(gwc());if(qs.indexOf(q)<0)q=qs[qs.length-1];var k=S.kqm||'sales';
+  var mons=qMons(q),rows=mons.map(function(m){return wk(m)}),done=rows.filter(function(w){return w&&!w.open&&w.sales!=null}),openW=rows.filter(function(w){return w&&w.open})[0];
+  var site=SITE.label+' '+SITE.name;$('#kqTitle').textContent='Week on week · '+qLab(q);
+  $('#kqCtl').innerHTML='<div class="ctlgrp"><span class="cl">Quarter</span><div class="seg">'+qs.map(function(x){return '<button type="button" data-kq="'+x+'" aria-pressed="'+(x===q)+'">'+qLab(x)+'</button>'}).join('')+'</div></div><div class="ctlgrp"><span class="small">'+done.length+' of '+mons.length+' weeks closed'+(openW?', w/c '+dm(openW.wc)+' in progress (not in the totals)':'')+'</span></div>';
+  var T=kqTot(done),pq=prevQ(q),PT=null;
+  if(pq&&done.length){var pm=qMons(pq).map(function(m){return wk(m)}).filter(function(w){return w&&!w.open&&w.sales!=null}).slice(0,done.length);if(pm.length===done.length)PT=kqTot(pm)}
+  /* headline chips: click to chart a measure */
+  var chip=function(key,lab,val,sub){return '<button type="button" class="kq-chip" data-kqm="'+key+'" aria-pressed="'+(k===key)+'">'+lab+'<b>'+val+'</b><span>'+sub+'</span></button>'},vsp=function(key,kind,up){return PT?kqW(T[key],PT[key],kind,up).replace(/<[^>]+>/g,'')+' vs '+qShort(pq):'quarter to date'};
+  $('#kqChips').innerHTML=chip('sales','Sales',T.n?gbp(T.sales).replace(/<[^>]+>/g,''):'n/a',T.vt==null?'no target':pctS(T.vt)+' vs target')+chip('vt','vs target',T.vt==null?'n/a':pctS(T.vt),vsp('vt','pp',1))+chip('covers','Covers',T.n?Math.round(T.covers).toLocaleString('en-GB'):'n/a',vsp('covers','pct',1))+chip('sph','SPH',T.sph==null?'n/a':'£'+T.sph.toFixed(2),vsp('sph','gbp',1))+
+    chip('wage','Wage %',T.wage==null?'n/a':T.wage.toFixed(1)+'%',vsp('wage','pp',0))+chip('food','Food %',T.food==null?'n/a':T.food.toFixed(1)+'%',vsp('food','pp',0))+chip('eff','Avg score',T.eff==null?'n/a':Math.round(T.eff),vsp('eff','pts',1))+chip('rating','Google',T.rating==null?'n/a':T.rating.toFixed(2)+'★',T.rv+' reviews');
+  var km=KQM.filter(function(x){return x.k===k})[0];$('#kqChartHead').textContent=km.lab+' week by week · '+qLab(q);$('#kqChartNote').textContent=k==='sales'?'Bars = sales, black tick = weekly target':'Dashed lines = Site CC bands';
+  $('#kqChart').innerHTML=kqChart(q,mons,k);
+  /* week on week table */
+  var fc=function(key){return key===k?' kq-f':''};
+  var h='<thead><tr><th style="width:11%">Week</th><th class="'+fc('sales')+'">Sales</th><th class="'+fc('vt')+'">vs target</th><th class="'+fc('covers')+'">Covers</th><th class="'+fc('sph')+'">SPH</th><th class="'+fc('wage')+'">Wage %</th><th class="'+fc('food')+'">Food %</th><th class="'+fc('eff')+'">Score</th><th class="'+fc('rating')+'">Rating</th><th>Red Light</th><th>Complaints</th>'+(NODEL?'':'<th>Deliveroo</th>')+'</tr></thead><tbody>';
+  var ncol=NODEL?11:12;
+  mons.forEach(function(mo){var w=wk(mo),sun=addD(mo,6),lab='<td class="nm">w/c '+dm(mo)+'<span>'+dm(mo)+' to '+dm(sun)+'</span></td>';
+    if(!w){h+='<tr class="kq-fut">'+lab+'<td colspan="'+(ncol-1)+'" class="tx">'+(mo>NOWD?'ahead':'no data')+'</td></tr>';return}
+    var pw=prevW(mo),op=!!w.open,pv=pw;if(op){var xd=cashedDays(mo);pv=dVals(xd.map(function(d){return addD(d,-7)}));pv.wage=pv.wage;pv.target=null}
+    var cell=function(key){var m=KQM.filter(function(x){return x.k===key})[0],v=kqV(w,key),p=op&&['sales','covers','sph','wage'].indexOf(key)<0?null:kqV(pv,key),rg=m.rag&&v!=null?m.rag(v):key==='rating'?ratRag(w):'n';
+      var val=key==='rating'?(w.rev===0?'<b class="kq-r">0 reviews</b>':v==null?NA:v.toFixed(2)+'★<span class="kq-w na">'+w.rev+' review'+(w.rev===1?'':'s')+'</span>'):m.f(v);
+      return '<td class="'+(rg!=='n'?'t-'+rg:'')+fc(key)+'">'+val+(key==='rating'?(v!=null&&w.rev?kqW(v,pw?pw.rating:null,'star',1).replace('kq-w','kq-w'):''):op&&p==null?'':kqW(v,p,m.kind,m.up))+'</td>'};
+    var tr=op?[]:rlTrips(w),cp=kqCmp(mo),ro=kqRoo(w),cpr=cp.n===0?'g':cp.n<3?'a':'r';
+    h+='<tr data-kqwk="'+mo+'" class="'+(op?'kq-open':'')+(mo===gwc()?' kq-sel':'')+'" title="Open the KPI Sheet for w/c '+dmy(mo)+'">'+lab.replace('<span>',op?'<span>week to date, '+(w.wtd||0)+' of 7 days · ':isPend(mo)?'<span>closing · ':'<span>')+
+      cell('sales')+cell('vt')+cell('covers')+cell('sph')+cell('wage')+cell('food')+cell('eff')+cell('rating')+
+      '<td class="tx '+(op?'':tr.length?'t-r':'t-g')+'">'+(op?'<span class="ph">open</span>':tr.length?'<b class="kq-r">'+tr.length+'</b>'+esc(tr.join(', ').toLowerCase()):'clear')+'</td>'+
+      '<td class="tx t-'+cpr+'">'+(cp.of?'<b>'+cp.n+'</b>of '+cp.of+' reviews'+(cp.top?' · '+esc(cp.top[0])+' '+cp.top[1]:''):'<b>0</b>no reviews')+'</td>'+
+      (NODEL?'':'<td class="tx '+(ro.rag!=='n'?'t-'+ro.rag:'')+'">'+(ro.rt!=null?'<b>'+ro.rt.toFixed(2)+'★</b>':'<b>n/a</b>')+(ro.n?(ro.r||ro.a?(ro.r?ro.r+' red':'')+(ro.r&&ro.a?', ':'')+(ro.a?ro.a+' amber':''):'all green'):'')+'</td>')+'</tr>'});
+  h+='<tr class="kq-tot"><td class="nm">'+qLab(q).split(' (')[0]+'<span>'+(T.n?T.n+' closed week'+(T.n===1?'':'s'):'no closed weeks')+'</span></td><td>'+gbp(T.n?T.sales:null)+'</td><td>'+(T.vt==null?NA:pctS(T.vt))+'</td><td>'+(T.n?Math.round(T.covers).toLocaleString('en-GB'):NA)+'</td><td>'+(T.sph==null?NA:'£'+T.sph.toFixed(2))+'</td><td>'+pct1(T.wage)+'</td><td>'+pct1(T.food)+'</td><td>'+(T.eff==null?NA:Math.round(T.eff))+'</td><td>'+(T.rating==null?NA:T.rating.toFixed(2)+'★<span class="kq-w">'+T.rv+' reviews</span>')+'</td><td class="tx">'+T.rl+' of '+T.n+' wks</td><td class="tx"><b>'+T.ng+'</b>of '+T.of+' reviews'+(T.topl?' · '+esc(T.topl[0])+' '+T.topl[1]:'')+'</td>'+(NODEL?'':'<td class="tx"><b>'+(T.drt==null?'n/a':T.drt.toFixed(2)+'★')+'</b>'+(T.rr||T.ra?(T.rr?T.rr+' red':'')+(T.rr&&T.ra?', ':'')+(T.ra?T.ra+' amber':''):'')+'</td>')+'</tr>';
+  $('#kqWow').innerHTML=h+'</tbody>';$('#kqWowHead').textContent='Week on week: '+qLab(q)+' · '+site;
+  /* red lights board */
+  var RLK=[{lab:'Sales vs target',st:function(w){return vtRag(wkVt(w))}},{lab:'Wage %',st:function(w){return wageRag(w.wage)}},{lab:'Food %',st:function(w){return foodRag(w.food)}},{lab:'Google rating',st:function(w){return ratRag(w)}}].concat(NODEL?[]:[{lab:'Deliveroo',st:function(w){return kqRoo(w).rag}}]).concat([{lab:'Efficiency score',st:function(w){return effRag(w.eff)}}]);
+  var hist=WK.filter(function(w){return !w.open&&w.sales!=null}),dot=function(st,w){return '<span class="kq-d '+(st==='n'?'':st)+'" title="w/c '+dmy(w.wc)+'"></span>'};
+  var ov=done.map(function(w){return rlTrips(w).length?'r':'g'}),ostk=0;for(var i=hist.length-1;i>=0;i--){if(rlTrips(hist[i]).length)ostk++;else break}
+  h='<thead><tr><th style="width:11%">Site</th><th style="width:12%">Red Light<br>streak</th>'+RLK.map(function(x){return '<th>'+x.lab+'</th>'}).join('')+'</tr></thead><tbody><tr><td class="nm">'+esc(SITE.label)+'<span>'+esc(SITE.name)+'</span></td>'+
+    '<td class="tx '+(ostk?'t-r':'t-g')+'"><div class="kq-dots">'+done.map(function(w,j){return dot(ov[j],w)}).join('')+'</div><b>'+(ostk?ostk+' wk':'clear')+'</b>'+(ostk?'in a row · ':'')+ov.filter(function(x){return x==='r'}).length+' of '+done.length+' this quarter</td>'+
+    RLK.map(function(x){var sts=done.map(function(w){return x.st(w)}),stk=0;for(var i=hist.length-1;i>=0;i--){var st=x.st(hist[i]);if(st==='r')stk++;else if(st!=='n')break}var nr=sts.filter(function(s){return s==='r'}).length,nn=sts.filter(function(s){return s!=='n'}).length;
+      return '<td class="tx '+(stk?'t-r':nr?'t-a':nn?'t-g':'')+'"><div class="kq-dots">'+done.map(function(w,j){return dot(sts[j],w)}).join('')+'</div><span class="kq-w '+(stk?'down':'na')+'">'+(stk?stk+' in a row':nn?'clear':'no data')+(nn?' · '+nr+'/'+nn:'')+'</span></td>'}).join('')+'</tr></tbody>';
+  $('#kqRl').innerHTML=done.length?h:'<tbody><tr><td class="tx">No closed weeks in '+qLab(q)+' yet.</td></tr></tbody>';$('#kqRlHead').textContent='Red lights, week after week · '+site;
+  /* every measure week by week */
+  var cw=rows.filter(function(w){return w}),thW='',MR=KQM.slice();
+  h='<thead><tr><th style="width:9%">Measure</th>'+cw.map(function(w){return '<th>w/c '+dm(w.wc)+(w.open?'<br><span style="font-weight:600;text-transform:none">to date</span>':'')+'</th>'}).join('')+'<th>'+qLab(q).split(' (')[0]+'</th>'+(PT?'<th>vs '+qShort(pq)+'</th>':'')+'</tr></thead><tbody>';
+  MR.forEach(function(m){h+='<tr data-kqm-row="'+m.k+'"><td class="nm'+fc(m.k)+'">'+m.lab+'</td>'+cw.map(function(w){var pw=prevW(w.wc),v=kqV(w,m.k),rg=m.k==='rating'?ratRag(w):m.rag&&v!=null?m.rag(v):'n';return '<td class="'+(rg!=='n'?'t-'+rg:'')+'">'+(m.k==='rating'&&w.rev===0?'<b class="kq-r">0 rev</b>':m.f(v))+(w.open?'':kqW(v,kqV(pw,m.k),m.kind,m.up))+'</td>'}).join('')+
+    '<td><b>'+m.f(T.n?T[m.k]:null)+'</b></td>'+(PT?'<td>'+kqW(T[m.k],PT[m.k],m.kind,m.up)+'</td>':'')+'</tr>'});
+  var ex=[['Complaints',function(w){var c=kqCmp(w.wc);return {h:c.n+(c.top?'<span class="kq-w na">'+esc(c.top[0])+'</span>':''),r:c.n===0?'g':c.n<3?'a':'r'}},'<b>'+T.ng+'</b>',PT?PT.ng:null],['Red Light',function(w){if(w.open)return {h:'<span class="ph">open</span>',r:'n'};var t=rlTrips(w);return {h:t.length?esc(t.join(', ').toLowerCase()):'clear',r:t.length?'r':'g'}},T.rl+' of '+T.n,null]];
+  if(!NODEL)ex.splice(1,0,['Deliveroo',function(w){var r=kqRoo(w);return {h:(r.rt!=null?r.rt.toFixed(2)+'★':'n/a')+(r.n?'<span class="kq-w na">'+(r.r||r.a?(r.r?r.r+' red':'')+(r.r&&r.a?', ':'')+(r.a?r.a+' amber':''):'all green')+'</span>':''),r:r.rag}},(T.drt==null?'n/a':T.drt.toFixed(2)+'★'),null]);
+  ex.forEach(function(e){h+='<tr><td class="nm">'+e[0]+'</td>'+cw.map(function(w){var x=e[1](w);return '<td class="tx '+(x.r!=='n'?'t-'+x.r:'')+'">'+x.h+'</td>'}).join('')+'<td class="tx">'+e[2]+'</td>'+(PT?'<td>'+(e[3]!=null?kqW(T.ng,e[3],'n',0):'<span class="ph">·</span>')+'</td>':'')+'</tr>'});
+  $('#kqAll').innerHTML=h+'</tbody>';$('#kqAllHead').textContent=site+', every measure week by week';
+}
 function renderOverview(){
-  var cmp=S.ov==='comp';$('#ovMain').hidden=cmp;$('#cmpView').hidden=!cmp;$$('[data-ov]').forEach(function(b){b.setAttribute('aria-pressed',b.dataset.ov===(cmp?'comp':'main'))});renderComparison();
+  var cmp=S.ov==='comp';$('#ovMain').hidden=cmp;$('#cmpView').hidden=!cmp;if(cmp)renderComparison();
   renderStandingWeek();renderHero();renderScore();renderDayChart();renderEff();
   var ws=lastN(S.wc,10);
   $('#salesChart').innerHTML=barChart(ws,[S.wc],function(w){return w.sales},null,YMAX,'k',[{v:TGTW,c:'#0f172a',l:'Target £'+Math.round(TGTW/1000)+'k'}]);
@@ -1688,7 +1857,7 @@ function renderAll(){
   $('#bsub').textContent='Site Control Centre · '+SCODE+' '+SITE.name;
   renderBanner();
   if(mo){renderChips();renderMonth();return}
-  var lab=withWc(gwc(),function(){var l=renderSheet();renderFields();renderKpi();renderStock();return l});renderChips(lab);renderOverview();renderDaily();renderDroo();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
+  var lab=withWc(gwc(),function(){var l=renderSheet();renderFields();renderKpi();renderStock();return l});renderChips(lab);renderOverview();renderKq();$('#tvOverview').textContent=S.ov==='comp'?' · Comparison':'';$('#tvKpi').textContent=S.kv==='comp'?' · Comparison':'';renderDaily();renderDroo();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
 }
 /* site header and site switcher (sites.json) */
 $('#siteH1').innerHTML=esc(SITE.label)+' <span>·</span> '+esc(SITE.name);
@@ -1714,6 +1883,25 @@ $('#monthSel').innerHTML=MONTHS.map(function(m){var a=agg(m);return '<option val
 $('#weekSel').addEventListener('change',function(e){S.wc=e.target.value;save();renderAll()});
 $('#monthSel').addEventListener('change',function(e){S.month=e.target.value;save();renderAll()});
 $$('[data-f]').forEach(function(el){el.addEventListener('input',function(){F()[el.dataset.f]=el.value;save();renderFields()})});
+/* 15/10/2026 (Michael): the arrow on a tab opens its views as a drop down; Comparison and quarter controls */
+var TMENU={overview:[['ov','main','Summary','The week at a glance'],['ov','comp','Comparison','Last week, last year, month']],kpi:[['kv','sheet','KPI Sheet','Fill, submit and sign off'],['kv','comp','Comparison','The quarter, week on week']]};
+function tmClose(){var m=$('#tabMenu');if(m)m.remove();$$('.caret.open').forEach(function(c){c.classList.remove('open')})}
+function tmOpen(car){var t=car.dataset.menu,was=car.classList.contains('open');tmClose();if(was)return;var m=document.createElement('div');m.id='tabMenu';m.setAttribute('role','menu');
+  var cur=t==='overview'?(S.ov||'main'):(S.kv||'sheet');m.innerHTML=TMENU[t].map(function(x){return '<button type="button" role="menuitemradio" data-tm="'+x[0]+'" data-tmv="'+x[1]+'" aria-pressed="'+(S.tab===t&&cur===x[1])+'">'+x[2]+'<small>'+x[3]+'</small></button>'}).join('');
+  document.body.appendChild(m);var r=car.getBoundingClientRect(),w=m.offsetWidth;m.style.top=(r.bottom+6)+'px';m.style.left=Math.max(8,Math.min(window.innerWidth-w-8,r.right-w+14))+'px';car.classList.add('open')}
+document.addEventListener('click',function(e){
+  var car=e.target.closest('.caret[data-menu]');if(car){e.preventDefault();e.stopImmediatePropagation();return tmOpen(car)}
+  var mi=e.target.closest('#tabMenu button');if(mi){e.stopImmediatePropagation();tmClose();if(mi.dataset.tm==='ov'){S.ov=mi.dataset.tmv;S.tab='overview'}else{S.kv=mi.dataset.tmv;S.tab='kpi'}S.per='week';save();renderAll();return window.scrollTo(0,0)}
+  if(!e.target.closest('#tabMenu'))tmClose();
+  var b=e.target.closest('[data-cvs],[data-cvm],[data-cvf],[data-cvn],[data-kq],[data-kqm]');
+  if(b){e.stopImmediatePropagation();var c=cvS(),d=b.dataset;
+    if(d.cvs)c.vs=d.cvs;if(d.cvm){c.m[d.cvm]=c.m[d.cvm]?0:1;if(!CM.some(function(m){return c.m[m.k]}))c.m[d.cvm]=1}if(d.cvf)c.fig=d.cvf==='1';if(d.cvn)c.n=+d.cvn;
+    if(d.kq)S.kq=d.kq;if(d.kqm)S.kqm=d.kqm;save();if(d.kq||d.kqm)return renderKq();return renderComparison()}
+  var tr=e.target.closest('tr[data-cwk]');if(tr&&!e.target.closest('a,button')){e.stopImmediatePropagation();S.wc=tr.dataset.cwk;save();renderAll();return}
+  var kr=e.target.closest('tr[data-kqwk]');if(kr&&!e.target.closest('a,button')){e.stopImmediatePropagation();S.wc=kr.dataset.kqwk;S.kv='sheet';S.tab='kpi';save();renderAll();return window.scrollTo(0,0)}
+});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')tmClose()});
+window.addEventListener('resize',tmClose);window.addEventListener('scroll',function(){if($('#tabMenu'))tmClose()},{passive:true});
 function go(t){S.per='week';S.tab=t;save();renderAll();window.scrollTo(0,0)}
 document.addEventListener('click',function(e){
   var el=e.target.closest('button');if(!el)return;var ds=el.dataset;
