@@ -1632,7 +1632,7 @@ function ppmRows(){var n=nowIso();return PPM.items.map(function(it){var due=it[2
   if(!due){r='r';st='No date'}else{var k=dd(n,due);if(k<0){r='r';st='Overdue '+(-k)+'d'}else if(k<=42){r='a';st='Due in '+k+'d'}else{r='g';st='In date'}}
   return {lab:esc(it[0])+(it[6]?' <a href="'+esc(it[6])+'" target="_blank" rel="noopener" class="small">Open in Mapal</a>':''),who:it[1],last:it[5]||null,m:m,note:(m?'every '+m+' months':'')+(it[4]?(m?' · ':'')+it[4]:''),r:r,st:st,due:due}})}
 /* Mapal task compliance: Mapal Weekly Compliance Tracker (on time %, open deviations, flag), weekly */
-var MCOMP={"src":"Mapal Weekly Compliance Tracker (Mapal Compliance Hub, weekly pull every Monday)","pulled":"2026-10-15","to":"2026-10-04","location":"Maki Nori","w":[["2026-09-21",82.0,0,"OK",99.1,1317.0,1329.0],["2026-09-28",86.0,0,"OK",99.3,1325.0,1334.0]],"chain":[["2026-09-21",85.2,12,"RED",98.6,31226.0,31681.0],["2026-09-28",88.9,7,"OK",98.1,31457.0,32051.0]]};
+var MCOMP={"src":"Mapal Weekly Compliance Tracker (Mapal Compliance Hub, weekly pull every Monday)","pulled":"2026-10-15","to":"2026-10-11","location":"Maki Nori","w":[["2026-09-21",82.0,0,"OK",99.1,1317.0,1329.0],["2026-09-28",86.0,0,"OK",99.3,1325.0,1334.0],["2026-10-05",88.0,0,"OK",100.0,1335.0,1335.0]],"chain":[["2026-09-21",85.2,12,"RED",98.6,31226.0,31681.0],["2026-09-28",88.9,7,"OK",98.1,31457.0,32051.0],["2026-10-05",88.7,12,"RED",98.0,31452.0,32078.0]]};
 function mcompRag(x){return !x?'n':x[3]==='RED'?'r':x[3]==='WATCH'?'a':'g'}
 function mcompHtml(full){var W=MCOMP.w||[];if(!W.length)return '<div class="small">Mapal task compliance: not in the feed for this site yet.</div>';
   var x=W[W.length-1],p=W[W.length-2],ch=(MCOMP.chain||[]).filter(function(c){return c[0]===x[0]})[0],r=mcompRag(x),L=W.slice(-8);
@@ -1971,7 +1971,7 @@ window.addEventListener('resize',function(){if(S.per==='week'&&S.tab==='droo')re
 })();
 </script>
 
-<div id="sccStale" style="position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:#fff;border:2px solid #E94E1B;border-radius:10px;padding:8px 12px;font:600 12px/1.4 system-ui,sans-serif;color:#0f172a;box-shadow:0 4px 14px rgba(15,23,42,.15)"><span style="color:#E94E1B">Late data:</span> Deliveroo daily (last n/a), Mapal compliance (last 04/10) <button onclick="this.parentNode.remove()" style="float:right;border:0;background:none;color:#475569;cursor:pointer;font:inherit">Hide</button></div>
+<div id="sccStale" style="position:fixed;left:12px;right:12px;bottom:12px;z-index:9999;background:#fff;border:2px solid #E94E1B;border-radius:10px;padding:8px 12px;font:600 12px/1.4 system-ui,sans-serif;color:#0f172a;box-shadow:0 4px 14px rgba(15,23,42,.15)"><span style="color:#E94E1B">Late data:</span> Deliveroo daily (last n/a) <button onclick="this.parentNode.remove()" style="float:right;border:0;background:none;color:#475569;cursor:pointer;font:inherit">Hide</button></div>
 
 <!-- maki usage beacon --><script>(function(){var P="Site CC MakiNori",U="https://script.google.com/macros/s/AKfycbyVrmiIOv3loHNtR-s6c_d5tfJKe8HXWfy29XdvKt3iz_uWJzK2Ul_89q9BMFYbWu2B/exec";try{if(location.protocol==="file:"||/[?&]embed=1/.test(location.search))return;var k="maki_seen_"+P,n=Date.now();if(+(localStorage.getItem(k)||0)>n-30*60e3)return;localStorage.setItem(k,n);fetch(U,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},keepalive:true,body:JSON.stringify({name:P,kind:"viewed",at:new Date(n).toISOString(),w:screen.width,ua:navigator.userAgent.slice(0,160)})}).catch(function(){})}catch(e){}})();</script>
 </body>
