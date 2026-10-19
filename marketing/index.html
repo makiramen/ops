@@ -1420,6 +1420,7 @@ td.sitecell { white-space: nowrap; }
 <!-- v6.6.2 (9 Oct 2026): STATIC_MAX_AGE_H 6 -> 30 for the once-a-day publish -->
 <!-- v6.8 (13 Oct 2026): Summary story and marketing return tightened; assumptions and actions via the manual feeds sheet -->
 <!-- v6.8.1 (13 Oct 2026): hero covers from the weekly cash-up feed; Monthly compares the same weekdays 4 weeks earlier -->
+<!-- v6.9.2 (19 Oct 2026): Slerp tab fetches the published data.json itself so a stale browser cache can't pin it to the 5 Oct snapshot -->
 <!-- v6.9 (19 Oct 2026): Slerp tab rebuilt as Summary / Daily / Weekly / Monthly views in the Loyalty design; feed-stale banner -->
 <!-- v6.6.1 (9 Oct 2026): Add/Remove feed-down banner (reads the ERROR row, names the Windsor fix) -->
 <!-- v6.6 (9 Oct 2026): Summary rebuilt (loyalty, Slerp, content, influencers, paid, feeds health); 18 Aug £5 batch removed from Loyalty -->
@@ -9686,7 +9687,20 @@ var SLERP_WAVES = [
 var SLERP_WAVE_OF = {Aberdeen:1,Nottingham:1,Shoreditch:1,Metrocentre:2,Leicester:2,Southampton:2,Newcastle:3,Meadowhall:3,Birmingham:3,
   Fountainbridge:4,'Bath Street':4,Leeds:4,Soho:4,'Maki Nori':4,'Nicolson Street':5,SJQ:5,Renfield:5,Manchester:5,Lakeside:5};
 var SL_VIEW = 'sum', SL_DAY = null, SL_DAY_ASOF = null;
-function slerpData_() { return (typeof DATA !== 'undefined' && DATA && DATA.slerp) ? DATA.slerp : SLERP_SNAP; }
+var SL_FRESH = null, SL_FRESH_TRIED = false;
+function slerpData_() {
+  var d = (typeof DATA !== 'undefined' && DATA && DATA.slerp) ? DATA.slerp : null;
+  if (SL_FRESH && (!d || String(SL_FRESH.asof) >= String(d.asof))) d = SL_FRESH;
+  if (!SL_FRESH_TRIED) {
+    // v6.9.2: the cache-first loader can hold a payload with no (or an older) Slerp
+    // section, so the tab always pulls the published file once and uses the newer.
+    SL_FRESH_TRIED = true;
+    fetch('data.json?sl=' + Date.now(), {cache: 'no-store'}).then(function(r) { return r.json(); }).then(function(j) {
+      if (j && j.slerp) { SL_FRESH = j.slerp; try { slerpRender(); } catch (e) { console.error('slerp fresh', e); } }
+    }).catch(function(e) { console.warn('slerp fresh fetch failed', e); });
+  }
+  return d || SLERP_SNAP;
+}
 function slNum_(x) { return Number(String(x == null ? 0 : x).replace(/[£,%\s]/g, '')) || 0; }
 function slGbp_(n, dp) { return '£' + Number(n || 0).toLocaleString('en-GB', {minimumFractionDigits: dp == null ? 0 : dp, maximumFractionDigits: dp == null ? 0 : dp}); }
 function slPct_(a, b) { return b ? (a / b * 100) : 0; }
