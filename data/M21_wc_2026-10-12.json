@@ -1,0 +1,167 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-10-19",
+  "source": "build_site_json.py — per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-12 – 2026-10-18",
+    "commencing": "2026-10-12",
+    "ending": "2026-10-18"
+  },
+  "sites": {
+    "M21": {
+      "code": "M21",
+      "name": "Maki 21",
+      "gm": "Emily",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 0.0,
+          "target": null,
+          "var_pct": null,
+          "prev": 45070.48,
+          "wow_abs": -45070.48,
+          "wow_pct": -100.0
+        },
+        "covers": {
+          "actual": null,
+          "prev": 2168,
+          "wow_abs": null,
+          "wow_pct": null
+        },
+        "sph": {
+          "actual": null,
+          "prev": 20.11,
+          "wow_abs": null,
+          "wow_pct": null,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": null,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 0.0
+        },
+        "waste": {
+          "actual": 0.0
+        }
+      },
+      "labour_split": {
+        "split_status": "absent",
+        "days_with_split": 0,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "±5%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "±5%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-12"
+      },
+      "efficiency_score": null,
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target ≤ -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 3.2,
+        "new_reviews": 5,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 1,
+          "4": 3,
+          "5": 0
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "M",
+            "text": "food was terrible. overpriced for that you get in terms of taste and quuality. looked nice i guess. only decent thing was the mocktail and the salmon rolls rest was a waste of money NEVER going here again. WAS ALSO EXTREMELY GIMMICKY. THAT STUPID BANGING OF THE DRUM OR GONG OR WHATEVER. INTERUPTING CONVVERSTAIONS EVVERYTIME ANOTHER CUSTOMER WALKED IN. STOP IT",
+            "date": "2026-10-13",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source — left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-12..2026-10-18 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-19."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-12.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes — email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-10-18",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 0.0,
+        "orders": null,
+        "aov": null,
+        "new_customers": null,
+        "rating": null,
+        "open_hours_pct": 0.0,
+        "avg_prep_min": null,
+        "rejection_pct": null,
+        "inaccuracy_pct": null,
+        "rider_wait_5min_pct": null,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": -100.0,
+          "orders_abs": null,
+          "prev_gmv": 1332.0,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": -100.0,
+        "gmv_vs_ly_pct": null,
+        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding) + ops from Weekly Summary sheet",
+        "sales_estimated": false,
+        "busy_mode_pct": null
+      },
+      "gaps": [
+        "Site CLOSED all week: kitchen fire Sun 11/10, closed pending restoration (Inka KPI notes 13/10). Mona Lisa posts GBP 0.00 sales and no budget every day 12-18/10, so GBP 0 is a closure, not a trading result; red light and score not applicable.",
+        "Food % — no entry in the Mona Lisa Food Cost % table this week",
+        "Covers/SPH — no KPI Raw Data row this week",
+        "Stock-take — no variance entered this week"
+      ],
+      "notes": {
+        "issues": [],
+        "actions": [],
+        "carryover": [],
+        "empty": true,
+        "docId": "",
+        "source": "No KPI meeting notes received for this site yet for w/c 12/10 (regional KPI meetings are Tuesday 20/10; notes land via the AM CC notes inbox / pipe 9). Declared, not missing."
+      }
+    }
+  }
+}
