@@ -3751,7 +3751,7 @@ async function loadTab(name) {
     if (name === 'survey') return;
     if (name === 'focus') return;
     if (name === 'loyalty') return await loadLoyalty();
-    if (name === 'slerp') return slerpRender();
+    if (name === 'slerp') return (typeof slerpRender === 'function') ? slerpRender() : null;
   } catch (e) {
     var pane = document.getElementById('tab-' + name);
     if (pane) {
