@@ -168,6 +168,12 @@ td.c-r{background:var(--red-bg);color:var(--red-ink);font-weight:700}
 .kl-why{display:block;font-weight:500;color:var(--ink-3);font-size:11.5px;max-width:320px}
 #klSup .pill{white-space:normal;height:auto;min-height:24px;padding:3px 10px}
 #klTable td.r{white-space:nowrap}
+/* 20/10/2026 (Michael): the compliance table scrolled sideways; names wrap, dates and status stay on one line */
+#compTable td{white-space:normal;text-align:left}#compTable td.r{text-align:right;white-space:nowrap}#compTable td:last-child{white-space:nowrap}#compTable th{white-space:normal}
+.bbar{display:flex;align-items:center;gap:8px}.bbar>div{flex:1;height:9px;background:#eef1f6;border-radius:999px;overflow:hidden}.bbar>div>i{display:block;height:100%;border-radius:999px}.bbar>b{font-size:12px;min-width:40px;text-align:right}
+.bdays{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}.bdays>div{border:1px solid var(--line);border-radius:10px;padding:8px 6px;text-align:center}.bdays small{display:block;font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}.bdays b{display:block;font-size:14px;margin-top:2px}.bdays>div.on{border-color:var(--maki-orange);background:var(--maki-orange-bg)}.bdays>div.nf{opacity:.55}
+.promo{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:8px}.promo.live{border-color:var(--maki-orange);background:var(--maki-orange-bg)}.promo .when{flex:none;min-width:118px}.promo .when b{display:block;font-size:14px}.promo .when small{display:block;color:var(--ink-2);font-size:11.5px}.promo .what b{font-size:14.5px}.promo .what div{font-size:12.5px;color:var(--ink-2);margin-top:3px}
+@media (max-width:760px){.bdays{grid-template-columns:repeat(4,minmax(0,1fr))}.promo{flex-direction:column;gap:6px}}
 .kl-urg td:first-child{box-shadow:inset 3px 0 0 var(--red)}
 .slot{border:1.5px dashed var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink-2);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:13px;min-height:84px}
 label.fl{font-size:12px;font-weight:700;color:var(--ink-2)}
@@ -337,6 +343,7 @@ table.kq th.kq-f{background:var(--maki-orange);color:#fff}table.kq td.kq-f{box-s
       <button role="tab" data-t="reviews">Reviews</button>
       <button role="tab" data-t="kpi">Weekly KPI Sheet<span class="tv" id="tvKpi"></span> <span class="caret" data-menu="kpi" title="Choose the view" aria-label="Choose the KPI Sheet view">▾</span></button>
       <button role="tab" data-t="droo">Deliveroo</button>
+      <button role="tab" data-t="marketing">Marketing</button>
       <button role="tab" data-t="stock">Stock &amp; Cost</button>
       <button role="tab" data-t="people">People &amp; Rota</button>
       <button role="tab" data-t="actions">Actions &amp; Compliance</button>
@@ -609,6 +616,21 @@ table.kq th.kq-f{background:var(--maki-orange);color:#fff}table.kq td.kq-f{box-s
   <!-- WEEK: STOCK -->
   <section class="pane" data-p="stock" hidden>
     <div><div class="eyebrow">Stock &amp; cost</div><h2>Stock &amp; cost control</h2></div>
+    <!-- 20/10/2026 (Michael): Budget burn at the top of Stock & Cost, same source as the AM Control Centre Budget Burn tab (EC ledger) -->
+    <div class="card bud" id="budCard">
+      <div class="ch"><h3 id="budH">Budget burn · Head Chef daily spend</h3><span id="budTL"></span></div>
+      <div class="grid" id="budTiles"></div>
+      <div id="budWeek" style="margin-top:12px"></div>
+      <div class="small" id="budFoot" style="margin-top:8px"></div>
+    </div>
+    <div class="card bud" id="budMonthCard">
+      <div class="ch"><h3 id="budMH">Month to date · food cost including the budget burn</h3><span class="tag t-auto">AUTO</span></div>
+      <div class="grid" id="budMTiles"></div>
+      <div class="grid" style="margin-top:12px">
+        <div class="card s7" style="box-shadow:none;border:1px solid var(--line)"><div class="ch"><h3>Rolling · last 6 Head Chef weeks (Sun to Sat)</h3><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table id="budRoll"></table></div><div class="small" id="budRollFoot" style="margin-top:8px"></div></div>
+        <div class="card s5" style="box-shadow:none;border:1px solid var(--line)"><div class="ch"><h3>How the proposed month food cost is built</h3></div><div id="budExplain" class="small"></div></div>
+      </div>
+    </div>
     <div class="grid" id="stockTiles"></div>
     <div class="grid">
       <div class="card s6"><div class="ch"><h3>Stock-take variance · last 8 weeks</h3><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table id="varTable"></table></div></div>
@@ -621,6 +643,25 @@ table.kq th.kq-f{background:var(--maki-orange);color:#fff}table.kq td.kq-f{box-s
       <div class="chips" id="klSup" style="margin-top:8px"></div>
       <div class="tscroll" style="margin-top:10px"><table id="klTable"></table></div>
       <div class="small" id="klFoot" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <!-- WEEK: MARKETING (20/10/2026, Michael): promotions coming up at the top, then loyalty -->
+  <section class="pane" data-p="marketing" hidden>
+    <div><div class="eyebrow">Marketing</div><h2 id="mkH">Marketing · promotions and loyalty</h2></div>
+    <div class="card"><div class="ch"><h3>Promotions, events and campaigns at this site</h3><span id="mkPromoTL"></span></div>
+      <div id="mkPromos"></div>
+      <div class="small" id="mkPromoFoot" style="margin-top:8px"></div>
+    </div>
+    <div class="card"><div class="ch"><h3 id="mkLoyH">Loyalty · Ramen Royalty</h3><span id="mkLoyTL"></span></div>
+      <div class="grid" id="mkLoyTiles"></div>
+      <div class="grid" style="margin-top:12px">
+        <div class="card s7" style="box-shadow:none;border:1px solid var(--line)"><div class="ch"><h3>Member bills by week · last 10 weeks</h3><span class="tag t-auto">AUTO</span></div><div class="tscroll" id="mkLoyChart"></div>
+          <div class="legend"><span><i class="sw" style="background:var(--maki-orange)"></i>Selected week</span></div></div>
+        <div class="card s5" style="box-shadow:none;border:1px solid var(--line)"><div class="ch"><h3>Last 7 days</h3><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table id="mkLoyDays"></table></div></div>
+      </div>
+      <div class="tscroll" style="margin-top:12px"><table id="mkLoyTable"></table></div>
+      <div class="small" id="mkLoyFoot" style="margin-top:8px"></div>
     </div>
   </section>
 
@@ -691,6 +732,8 @@ var NOTES=__NOTES__;
 var BROTH=__BROTH__,REV=__REV__,LAB=__LAB__,EOTM=__EOTM__;
 /* Loyalty: Ramen Royalty (Trifft) member bills at this site by day, from the Marketing Hub payload. Launched 18/08/2026; weeks wholly before launch are n/a. */
 var LOY=__LOY__,LOYD=LOY.d||{};
+/* Budget burn (EC Daily Spend Ledger via the AM CC snapshot) and the marketing calendar, 20/10/2026 (Michael). */
+var BUD=__BUD__,BUDL=BUD.ledger||{},BUDW=BUD.wk||{};var PROMO=__PROMO__;
 function loyWeek(wc){var b=new Date(wc+'T00:00:00Z').getTime(),o={b:0,m:0,s:0,n:0,days:0};for(var i=0;i<7;i++){var k=new Date(b+i*864e5).toISOString().slice(0,10);if(k<LOY.launch||k>LOY.to)continue;o.days++;var r=LOYD[k];if(r){o.n++;o.b+=r[0];o.m+=r[1];o.s+=r[2]}}return o.days?o:null}
 WK.forEach(function(w){var l=loyWeek(w.wc);w.loyB=l?l.b:null;w.loyM=l?l.m:null;w.loyS=l?l.s:null;w.loyDays=l?l.days:0;w.loyShare=l&&w.covers?l.b/w.covers*100:null});
 var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8},peer:{n:'Leeds (M10)',roas:4.57,spend:447.23}};
@@ -865,8 +908,8 @@ function barChart(ws,selSet,getV,tgt,maxV,unit,refs){
   var s='<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'" role="img" aria-label="Weekly chart">';
   var step=maxV/5;for(var t=0;t<=maxV+1e-9;t+=step){s+='<line x1="'+L+'" x2="'+(W-6)+'" y1="'+y(t)+'" y2="'+y(t)+'" stroke="#eef1f6"/><text x="'+(L-7)+'" y="'+(y(t)+4)+'" text-anchor="end" font-size="11" fill="#475569">'+(unit==='k'?Math.round(t/1000)+'k':Math.round(t)+unit)+'</text>'}
   ws.forEach(function(w,i){var v=getV(w),bx=L+i*bw+bw*.2,on=selSet.indexOf(w.wc)>-1;
-    if(v!=null){s+='<rect x="'+bx+'" y="'+y(v)+'" width="'+(bw*.6)+'" height="'+(y(0)-y(v))+'" rx="3" fill="'+(on?'#E94E1B':'#f6b79f')+'"><title>w/c '+dm(w.wc)+': '+(unit==='k'?gbp(v).replace(/<[^>]+>/g,''):v.toFixed(2)+unit)+'</title></rect>';
-      if(on)s+='<text x="'+(bx+bw*.3)+'" y="'+(y(v)-5)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a">'+(unit==='k'?(v/1000).toFixed(1)+'k':v.toFixed(1)+unit)+'</text>'}
+    if(v!=null){s+='<rect x="'+bx+'" y="'+y(v)+'" width="'+(bw*.6)+'" height="'+(y(0)-y(v))+'" rx="3" fill="'+(on?'#E94E1B':'#f6b79f')+'"><title>w/c '+dm(w.wc)+': '+(unit==='k'?gbp(v).replace(/<[^>]+>/g,''):unit===''?Math.round(v):v.toFixed(2)+unit)+'</title></rect>';
+      if(on)s+='<text x="'+(bx+bw*.3)+'" y="'+(y(v)-5)+'" text-anchor="middle" font-size="11" font-weight="700" fill="#0f172a">'+(unit==='k'?(v/1000).toFixed(1)+'k':unit===''?Math.round(v):v.toFixed(1)+unit)+'</text>'}
     else s+='<text x="'+(bx+bw*.3)+'" y="'+(y(0)-6)+'" text-anchor="middle" font-size="10" fill="#8491a5">n/a</text>';
     s+='<text x="'+(bx+bw*.3)+'" y="'+(H-8)+'" text-anchor="middle" font-size="10.5" font-weight="'+(on?800:500)+'" fill="'+(on?'#0f172a':'#475569')+'">'+dm(w.wc)+'</text>'});
   (refs||[]).forEach(function(r){s+='<line x1="'+L+'" x2="'+(W-6)+'" y1="'+y(r.v)+'" y2="'+y(r.v)+'" stroke="'+r.c+'" stroke-width="1.5" stroke-dasharray="5 4"/><rect x="'+(L+4)+'" y="'+(y(r.v)-17)+'" width="'+(r.l.length*6.4+8)+'" height="15" rx="4" fill="#fff" opacity=".9"/><text x="'+(L+8)+'" y="'+(y(r.v)-6)+'" text-anchor="start" font-size="11" font-weight="700" fill="'+r.c+'">'+r.l+'</text>'});
@@ -1354,7 +1397,7 @@ function renderEff(){
 /* 13/10/2026 (Rory x Mike): the month's aggregated food cost (sales weighted over the closed weeks whose Monday is in the month) sits next to the week, so one red week is read against the month */
 function foodMtd(wc){var ym=wc.slice(0,7),a=agg(ym),n=a.ws.filter(function(x){return x.food!=null}).length;return {ym:ym,v:n?a.food:null,n:n,of:a.ms.length}}
 function gmNote(){var sel=$('#weekSel').value;return sel&&sel!==S.wc?' <span class="small" style="font-weight:500;color:var(--ink-2)">last completed week · w/c '+dmy(sel)+' is '+(sel===OPEN?'still in progress':'closing, final figures Tuesday')+'</span>':''}
-function renderStock(){
+function renderStock(){renderBudget();
   var w=wk(S.wc),mt=foodMtd(S.wc);var _sh=$('#stockTiles').previousElementSibling;if(_sh&&_sh.querySelector('h2'))_sh.querySelector('h2').innerHTML='Stock &amp; cost control · w/c '+dmy(S.wc)+gmNote();
   $('#stockTiles').innerHTML=tile('Food cost %',pct2(w.food),'Red Light above 25%, amber from 24%',foodRag(w.food))+
     tile('Food cost · '+mLabel(mt.ym),pct2(mt.v),(mt.n?mt.n+' of '+mt.of+' weeks closed, sales weighted':'No closed week with food cost yet')+' · same bands',foodRag(mt.v))+
@@ -1365,6 +1408,99 @@ function renderStock(){
   $('#varTable').innerHTML='<thead><tr><th>w/c</th><th class="r">Food var</th><th class="r">Drinks var</th><th class="r">Food cost</th></tr></thead><tbody><tr class="tgtrow"><td>Target</td><td class="r">± 5%</td><td class="r">± 5%</td><td class="r">< 25%</td></tr>'+
     ws.map(function(x){function c(v,g,a){return v==null?'':' c-'+band(v,g,a,false)}return '<tr'+(x.wc===S.wc?' class="sel"':'')+'><td><b>'+dm(x.wc)+'</b></td><td class="r'+c(x.fv==null?null:Math.abs(x.fv),5,7.5)+'">'+(x.fv==null?NA:sgn(x.fv,1,'%'))+'</td><td class="r'+c(x.dv==null?null:Math.abs(x.dv),5,7.5)+'">'+(x.dv==null?NA:sgn(x.dv,1,'%'))+'</td><td class="r'+(x.food==null?'':' c-'+foodRag(x.food))+'">'+pct2(x.food)+'</td></tr>'}).join('')+'</tbody>';
   $('#foodChart').innerHTML=barChart(lastN(S.wc,10),[S.wc],function(x){return x.food},null,40,'%',[{v:25,c:'#dc2626',l:'Red Light 25%'}]);
+}
+
+/* ---------- Budget burn on Stock & Cost (20/10/2026, Michael) ----------
+   Same numbers as the AM Control Centre Budget Burn tab: Head Chef daily spend (EC ledger), HC week Sun to Sat, weekly budget =
+   HC base (Total Spend From Sunday + Budget Left This Week), interim month cap. Anchored on the latest filed day, not the week picker.
+   Month food cost = purchases (ledger) against the cash up sales for the same days; the proposed month figure adds the rest of the
+   month at the weekly budget (spend) and at the last 4 weeks' same weekday average (sales). The stock adjusted figure stays on the tile below. */
+function budSun(d){var x=new Date(d+'T00:00:00Z');return new Date(x.getTime()-x.getUTCDay()*864e5).toISOString().slice(0,10)}
+function budDim(ym){var y=+ym.slice(0,4),m=+ym.slice(5,7);return new Date(Date.UTC(y,m,0)).getUTCDate()}
+function budSum(a,b){var t=0,n=0;for(var k in BUDL){if(k>=a&&k<=b&&BUDL[k]!=null){t+=BUDL[k];n++}}return {t:t,n:n}}
+function salesSum(a,b){var t=0,n=0;for(var k in DAY){if(k>=a&&k<=b&&DAY[k]&&DAY[k][0]!=null){t+=DAY[k][0];n++}}return {t:t,n:n}}
+function budBar(p,warn,crit){if(p==null)return '<span class="small">n/a</span>';var c=p>crit?'var(--red)':p>warn?'var(--amber)':'var(--green)';return '<div class="bbar"><div><i style="width:'+Math.min(100,p).toFixed(0)+'%;background:'+c+'"></i></div><b style="color:'+c+'">'+p.toFixed(0)+'%</b></div>'}
+function budRag(p,warn,crit){return p==null?'n':p>crit?'r':p>warn?'a':'g'}
+function fcSales(from,to){/* forecast cash up sales for each day from..to: mean of the same weekday over the last 4 weeks before `from` */
+  var t=0,used=0,miss=0,d=from;while(d<=to){var vals=[];for(var i=1;i<=4;i++){var k=addD(d,-7*i);if(DAY[k]&&DAY[k][0]!=null)vals.push(DAY[k][0])}if(vals.length){t+=mean(vals);used++}else miss++;d=addD(d,1)}return {t:t,days:used,miss:miss}}
+function renderBudget(){
+  var el=$('#budTiles');if(!el)return;
+  var days=Object.keys(BUDL).sort(),last=BUD.through||days[days.length-1];
+  if(!days.length){$('#budH').textContent='Budget burn · Head Chef daily spend';$('#budTL').innerHTML=TL('n','No feed');el.innerHTML='<div class="small" style="grid-column:span 12">'+esc(BUD.note||BUD.src||'No Head Chef daily spend on file for this site.')+'</div>';$('#budWeek').innerHTML='';$('#budFoot').textContent='';$('#budMTiles').innerHTML='';$('#budRoll').innerHTML='';$('#budRollFoot').textContent='';$('#budExplain').innerHTML='';$('#budMH').textContent='Month to date · food cost including the budget burn';return}
+  var sun=budSun(last),sat=addD(sun,6),wtd=budSum(sun,last),wb=BUDW[sun],usage=wb?wtd.t/wb*100:null,left=wb!=null?wb-wtd.t:null,yday=BUDL[last];
+  var cl=BUD.closure,closed=!!(cl&&cl.from&&last>=cl.from&&(!cl.until||last<=cl.until));
+  var r=closed?'n':budRag(usage,85,100);
+  $('#budH').innerHTML='Budget burn · HC week Sun '+dm(sun)+' to Sat '+dm(sat)+' · filed to '+dmy(last);
+  $('#budTL').innerHTML=closed?TL('n','Closed since '+dm(cl.from)):TL(r,r==='n'?'No weekly budget':r==='r'?'Over budget':r==='a'?'Over 85% used':'Within budget');
+  el.innerHTML=tile('Spent '+dm(last),yday==null?'<span style="color:var(--red-ink)">Not filed</span>':gbp(yday),yday==null?'Head Chef daily report missing for '+dmy(last):'Head Chef daily report',null,'<span class="tag t-auto">EC LEDGER</span>')+
+    tile('Week spend to date',gbp(wtd.t),wtd.n+' of '+(daysBetween(sun,last)+1)+' days filed since Sunday',null,'<span class="tag t-auto">AUTO</span>')+
+    tile('Weekly budget',wb==null?NA:gbp(wb),wb==null?'No HC base filed for this week':'HC base: spend from Sunday + budget left',null,'<span class="tag t-auto">AUTO</span>')+
+    tile('Week usage',usage==null?NA:usage.toFixed(0)+'%',left==null?'Budget left n/a':(left>=0?gbp(left)+' left for the week':'<span style="color:var(--red-ink)">'+gbp(-left)+' over budget</span>'),closed?'n':r);
+  var h='<div class="bdays">';for(var i=0;i<7;i++){var k=addD(sun,i),v=BUDL[k],fut=k>last;h+='<div class="'+(k===last?'on':'')+(v==null&&!fut?' nf':'')+'"><small>'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][i]+' '+dm(k).slice(0,2)+'</small><b>'+(fut?'·':v==null?'<span style="color:var(--red-ink);font-size:11px">not filed</span>':gbp(v))+'</b></div>'}
+  $('#budWeek').innerHTML=h+'</div>';
+  $('#budFoot').innerHTML='Source: '+esc(BUD.src||'EC Daily Spend Ledger')+', ledger as at '+dmy(BUD.as_at||last)+'. A day with no Head Chef report shows "not filed", never zero. Usage RAG: red over 100%, amber over 85%. Same figures as the AM Control Centre Budget Burn tab.';
+  /* month */
+  var ym=last.slice(0,7),m1=ym+'-01',dim=budDim(ym),dom=+last.slice(8,10),mtd=budSum(m1,last),base=0;
+  if(BUD.june_baseline&&BUD.june_baseline.amt!=null&&BUD.june_baseline.through&&BUD.june_baseline.through.slice(0,7)===ym)base=BUD.june_baseline.amt;
+  var spend=mtd.t+base,cap=BUD.cap,paceBase=cap?cap*dom/30:null,pace=paceBase?spend/paceBase*100:null;
+  var sl=salesSum(m1,last),todayPct=sl.t?spend/sl.t*100:null;
+  var rem=dim-dom,remTo=ym+'-'+String(dim).padStart(2,'0'),fc=rem>0?fcSales(addD(last,1),remTo):{t:0,days:0,miss:0};
+  var remBud=wb!=null?wb/7*rem:null,propSpend=remBud!=null?spend+remBud:null,propSales=sl.t+fc.t;
+  var prop=propSpend!=null&&propSales?propSpend/propSales*100:null,runSpend=dom?spend/dom*dim:null,run=runSpend!=null&&propSales?runSpend/propSales*100:null;
+  var capEnd=cap&&propSales?cap/propSales*100:null;
+  $('#budMH').innerHTML='Month to date · '+mLabel(ym)+' · 1 to '+dm(last)+' · food cost including the budget burn';
+  $('#budMTiles').innerHTML=tile('Month spend to date',gbp(spend),(cap?'Cap '+gbp(cap)+' · pace '+(pace==null?'n/a':pace.toFixed(0)+'%')+' of where the cap should be on day '+dom:'No month cap on file')+(base?' · incl. June baseline '+gbp(base):''),closed?'n':budRag(pace,100,110))+
+    tile('Sales to date',gbp(sl.t),sl.n+' cash up days · '+(sl.n<dom?(dom-sl.n)+' day'+(dom-sl.n>1?'s':'')+' not posted':'all days posted'),null,'<span class="tag t-auto">CASH UP</span>')+
+    tile('Food cost to date',pct2(todayPct),'Purchases ÷ sales, same days · before stock adjustment',foodRag(todayPct))+
+    tile('Proposed month food cost',pct2(prop),(prop==null?'Needs a weekly budget and sales':'If the kitchen spends to budget for the last '+rem+' day'+(rem===1?'':'s')+' · at the current run rate '+pct2(run)),foodRag(prop));
+  /* rolling: last 6 HC weeks */
+  var weeks=[];for(var j=5;j>=0;j--){var ws=addD(sun,-7*j),we=addD(ws,6),to=we>last?last:we,sp=budSum(ws,to),sa=salesSum(ws,to),b=BUDW[ws];weeks.push({ws:ws,we:we,to:to,sp:sp,sa:sa,b:b,cur:ws===sun})}
+  var r4=weeks.slice(1,5),r4sp=r4.reduce(function(t,x){return t+x.sp.t},0),r4sa=r4.reduce(function(t,x){return t+x.sa.t},0),r4b=r4.filter(function(x){return x.b!=null}),r4bud=r4b.reduce(function(t,x){return t+x.b},0);
+  var cw=WK.filter(function(w){return w.food!=null&&!w.open}).slice(-4),cwS=cw.reduce(function(t,w){return t+w.sales},0),cwF=cw.length&&cwS?cw.reduce(function(t,w){return t+w.food*w.sales},0)/cwS:null;
+  $('#budRoll').innerHTML='<thead><tr><th>HC week</th><th class="r">Spend</th><th class="r">Budget</th><th class="r">Usage</th><th class="r">Sales</th><th class="r">Purchases % sales</th></tr></thead><tbody>'+
+    weeks.map(function(x){var u=x.b?x.sp.t/x.b*100:null,pp=x.sa.t&&!x.cur?x.sp.t/x.sa.t*100:null;return '<tr'+(x.cur?' class="sel"':'')+'><td><b>'+dm(x.ws)+'</b><small style="display:block;color:var(--ink-3)">'+(x.cur?'to '+dm(x.to)+' · in progress':x.sp.n<7?x.sp.n+' of 7 filed':'')+'</small></td><td class="r">'+gbp(x.sp.t)+'</td><td class="r">'+(x.b==null?NA:gbp(x.b))+'</td><td class="r'+(u==null?'':' c-'+budRag(u,85,100))+'">'+(u==null?NA:u.toFixed(0)+'%')+'</td><td class="r">'+(x.sa.n?gbp(x.sa.t):NA)+'</td><td class="r'+(pp==null?'':' c-'+foodRag(pp))+'">'+(x.cur?'<span class="small">week in progress</span>':pct2(pp))+'</td></tr>'}).join('')+
+    '<tr class="tgtrow"><td><b>Rolling 4 wk avg</b><small style="display:block;color:var(--ink-3)">4 closed HC weeks</small></td><td class="r">'+gbp(r4sp/4)+'</td><td class="r">'+(r4b.length?gbp(r4bud/r4b.length):NA)+'</td><td class="r">'+(r4bud?(r4sp/r4bud*100).toFixed(0)+'%':NA)+'</td><td class="r">'+gbp(r4sa/4)+'</td><td class="r'+(r4sa?' c-'+foodRag(r4sp/r4sa*100):'')+'">'+pct2(r4sa?r4sp/r4sa*100:null)+'</td></tr>'+
+    '<tr class="tgtrow"><td><b>Rolling 4 wk food cost</b><small style="display:block;color:var(--ink-3)">stock adjusted, Mona Lisa, '+cw.length+' closed weeks</small></td><td class="r" colspan="4"></td><td class="r'+(cwF==null?'':' c-'+foodRag(cwF))+'">'+pct2(cwF)+'</td></tr></tbody>';
+  $('#budRollFoot').textContent='Spend = Head Chef daily reports for the HC week (Sun to Sat). Sales = cash up for the same days. Purchases % of sales is before the stock take adjustment, so it moves with delivery timing; the stock adjusted food cost % on the tiles below is the figure of record for a closed week.';
+  $('#budExplain').innerHTML='<div style="display:grid;gap:6px"><div><b>'+gbp(spend)+'</b> spent 1 to '+dm(last)+(remBud!=null?' + <b>'+gbp(remBud)+'</b> if the last '+rem+' day'+(rem===1?'':'s')+' run at the weekly budget ('+gbp(wb)+' ÷ 7 × '+rem+')':' (no weekly budget on file, so no spend forecast)')+' = <b>'+(propSpend==null?NA:gbp(propSpend))+'</b></div>'+
+    '<div><b>'+gbp(sl.t)+'</b> sales 1 to '+dm(last)+' + <b>'+gbp(fc.t)+'</b> forecast ('+fc.days+' day'+(fc.days===1?'':'s')+' at the last 4 weeks’ same weekday average'+(fc.miss?', '+fc.miss+' with no history':'')+') = <b>'+gbp(propSales)+'</b></div>'+
+    '<div>Proposed month food cost = '+(propSpend==null?NA:gbp(propSpend))+' ÷ '+gbp(propSales)+' = <b>'+pct2(prop)+'</b>'+(capEnd!=null?' · spending the full cap would land at '+pct2(capEnd):'')+'</div>'+
+    '<div class="small">Bands as food cost: green under 24%, amber to 25%, red from 25% (Red Light). This is a purchases view; the stock take at month end can move it either way.</div></div>';
+}
+/* ---------- Marketing tab (20/10/2026, Michael): promotions coming up at the top, then loyalty ---------- */
+function promoWhen(x){var t=TODAY;if(x.end&&x.end<t)return 'past';if(x.start>t)return 'up';return 'live'}
+function renderMarketing(){
+  var el=$('#mkPromos');if(!el)return;var items=(PROMO.items||[]).slice(),t=TODAY;
+  var live=items.filter(function(x){return promoWhen(x)==='live'}),up=items.filter(function(x){return promoWhen(x)==='up'}),past=items.filter(function(x){return promoWhen(x)==='past'}).slice(-4).reverse();
+  var card=function(x,cls){var days=x.start>t?daysBetween(t,x.start):null;return '<div class="promo '+cls+'"><div class="when"><b>'+dm(x.start)+(x.end?' to '+dm(x.end):' onwards')+'</b><small>'+(cls==='live'?'Live now'+(x.end?' · '+daysBetween(t,x.end)+' day'+(daysBetween(t,x.end)===1?'':'s')+' left':''):cls==='up'?'Starts in '+days+' day'+(days===1?'':'s'):'Finished')+'</small>'+(x.type?'<small>'+esc(x.type)+'</small>':'')+'</div><div class="what"><b>'+esc(x.name)+'</b>'+(x.offer?'<div>'+esc(x.offer)+'</div>':'')+'<div>'+[x.channel?esc(x.channel):'',x.sites&&x.sites.toUpperCase()!=='ALL'?esc(x.sites):'All sites',x.owner?'Owner '+esc(x.owner):''].filter(Boolean).join(' · ')+(x.link?' · <a href="'+esc(x.link)+'" target="_blank" rel="noopener">Open</a>':'')+'</div>'+(x.notes?'<div>'+esc(x.notes)+'</div>':'')+'</div></div>'};
+  var h='';
+  if(!PROMO.pulled)h='<div class="small">'+esc(PROMO.src||'Marketing calendar not connected yet')+'. Share the Site CC Marketing Calendar with the service account and the next nightly fills this in.</div>';
+  else{h+='<h4 style="margin:4px 0 2px">Coming up</h4>'+(up.length?up.map(function(x){return card(x,'up')}).join(''):'<div class="small">Nothing scheduled for this site yet. Add a row to the Site CC Marketing Calendar.</div>');
+    h+='<h4 style="margin:14px 0 2px">Live now</h4>'+(live.length?live.map(function(x){return card(x,'live')}).join(''):'<div class="small">No promotion running at this site today.</div>');
+    if(past.length)h+='<h4 style="margin:14px 0 2px">Recently finished</h4>'+past.map(function(x){return card(x,'past')}).join('')}
+  el.innerHTML=h;
+  $('#mkPromoTL').innerHTML=!PROMO.pulled?TL('n','No feed'):up.length?TL('g',up.length+' coming up'):live.length?TL('g',live.length+' live'):TL('a','Nothing planned');
+  $('#mkPromoFoot').innerHTML='Source: Site CC Marketing Calendar (marketing team)'+(PROMO.pulled?', pulled '+dmy(PROMO.pulled):'')+(PROMO.sheet?' · <a href="https://docs.google.com/spreadsheets/d/'+PROMO.sheet+'/edit" target="_blank" rel="noopener">Open the calendar</a>':'')+'. Rows reach this page when Sites is ALL, the cluster, or includes '+SCODE+'.';
+  /* loyalty */
+  var w=wk(S.wc)||{},pw=WK[idx(S.wc)-1],lt=$('#mkLoyTiles');
+  $('#mkLoyH').textContent='Loyalty · Ramen Royalty · w/c '+dmy(S.wc);
+  if(!SITE.has.loyalty||!LOY.launch){lt.innerHTML='<div class="small" style="grid-column:span 12">No Ramen Royalty venue on file for this site.</div>';$('#mkLoyTL').innerHTML=TL('n','No feed');$('#mkLoyChart').innerHTML='';$('#mkLoyDays').innerHTML='';$('#mkLoyTable').innerHTML='';$('#mkLoyFoot').textContent='';return}
+  var sr=w.loyShare==null?'n':band(w.loyShare,25,15,true);
+  $('#mkLoyTL').innerHTML=w.loyB==null?TL('n','Before launch'):TL(sr,sr==='g'?'On target':'Below 25%');
+  var chg=function(a,b,fmt){if(a==null||b==null||!b)return '';var d=(a-b)/b*100;return ' <span class="chg flat">'+(d>0?'▲ +':d<0?'▼ ':'● ')+d.toFixed(0)+'% vs last week</span>'};
+  lt.innerHTML=tile('Member bills this week',w.loyB==null?NA:w.loyB.toLocaleString('en-GB'),(w.loyDays==null||w.loyDays===0?'Launched '+dmy(LOY.launch):w.loyDays<7?w.loyDays+' days of the week since launch':(w.loyM!=null?w.loyM.toLocaleString('en-GB')+' different members':''))+chg(w.loyB,pw&&pw.loyB),null,'<span class="tag t-auto">RAMEN ROYALTY</span>')+
+    tile('Member share of covers',pct1(w.loyShare),'Programme target 25% of covers'+(w.loyShare!=null&&pw&&pw.loyShare!=null?' <span class="chg flat">'+sgn(w.loyShare-pw.loyShare,1,'pp')+' vs last week</span>':''),sr)+
+    tile('Member spend',gbp(w.loyS),(w.loyS!=null&&w.sales?pct1(w.loyS/w.sales*100)+' of sales':'')+chg(w.loyS,pw&&pw.loyS),null,'<span class="tag t-auto">AUTO</span>')+
+    tile('Members who have visited',LOY.venue_members==null?NA:LOY.venue_members.toLocaleString('en-GB'),'Since launch '+dmy(LOY.launch)+' · data to '+dmy(LOY.to),null,'<span class="tag t-auto">AUTO</span>');
+  var ws=lastN(S.wc,10),mx=Math.max.apply(null,ws.map(function(x){return x.loyB||0}).concat([10]));
+  $('#mkLoyChart').innerHTML=barChart(ws,[S.wc],function(x){return x.loyB},null,Math.ceil(mx*1.15/10)*10,'',[]);
+  var dk=Object.keys(LOYD).sort().slice(-7).reverse(),lastZero=dk.length&&dk[0]===LOY.to&&LOYD[dk[0]][0]===0;
+  $('#mkLoyDays').innerHTML='<thead><tr><th>Day</th><th class="r">Bills</th><th class="r">Members</th><th class="r">Spend</th></tr></thead><tbody>'+dk.map(function(k){var r=LOYD[k];return '<tr><td><b>'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(k+'T00:00:00Z').getUTCDay()]+' '+dm(k)+'</b></td><td class="r">'+r[0]+'</td><td class="r">'+r[1]+'</td><td class="r">'+gbp(r[2])+'</td></tr>'}).join('')+'</tbody>';
+  var t8=lastN(S.wc,8).slice().reverse();
+  $('#mkLoyTable').innerHTML='<thead><tr><th>w/c</th><th class="r">Member bills</th><th class="r">Members</th><th class="r">Covers</th><th class="r">Share of covers</th><th class="r">Member spend</th><th class="r">% of sales</th></tr></thead><tbody><tr class="tgtrow"><td>Target</td><td class="r">·</td><td class="r">·</td><td class="r">·</td><td class="r">≥ 25%</td><td class="r">·</td><td class="r">·</td></tr>'+
+    t8.map(function(x){var s=x.loyShare==null?'':' c-'+band(x.loyShare,25,15,true);return '<tr'+(x.wc===S.wc?' class="sel"':'')+'><td><b>'+dm(x.wc)+'</b>'+(x.open?'<small style="display:block;color:var(--ink-3)">week to date</small>':x.loyDays>0&&x.loyDays<7?'<small style="display:block;color:var(--ink-3)">launch week, '+x.loyDays+' days</small>':'')+'</td><td class="r">'+(x.loyB==null?NA:x.loyB.toLocaleString('en-GB'))+'</td><td class="r">'+(x.loyM==null?NA:x.loyM.toLocaleString('en-GB'))+'</td><td class="r">'+(x.covers==null?NA:x.covers.toLocaleString('en-GB'))+'</td><td class="r'+s+'">'+pct1(x.loyShare)+'</td><td class="r">'+gbp(x.loyS)+'</td><td class="r">'+(x.loyS!=null&&x.sales?pct1(x.loyS/x.sales*100):NA)+'</td></tr>'}).join('')+'</tbody>';
+  var a=agg(S.wc.slice(0,7));
+  $('#mkLoyFoot').innerHTML='Source: '+esc(LOY.src||'Ramen Royalty')+', to '+dmy(LOY.to)+'. '+mLabel(a.ym)+' to date: '+(a.loyB==null?'n/a':a.loyB.toLocaleString('en-GB')+' member bills, '+pct1(a.loyShare)+' of covers, '+gbp(a.loyS)+' member spend')+(lastZero?' '+dm(LOY.to)+' shows no member bills yet: Trifft posts bills through the day after, so treat the latest day as still filling.':'')+'. Site sign ups are not attributable (Trifft has no venue on a sign up), so members here = members who have paid a bill at this site.';
 }
 function renderPeople(){
   var w=wk(S.wc);
@@ -1849,7 +1985,7 @@ function renderAll(){
   $('#bsub').textContent='Site Control Centre · '+SCODE+' '+SITE.name;
   renderBanner();
   if(mo){renderChips();renderMonth();return}
-  var lab=withWc(gwc(),function(){var l=renderSheet();renderFields();renderKpi();renderStock();return l});renderChips(lab);renderOverview();renderKq();$('#tvOverview').textContent=S.ov==='comp'?' · Comparison':'';$('#tvKpi').textContent=S.kv==='comp'?' · Comparison':'';renderDaily();renderDroo();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
+  var lab=withWc(gwc(),function(){var l=renderSheet();renderFields();renderKpi();renderStock();renderMarketing();return l});renderChips(lab);renderOverview();renderKq();$('#tvOverview').textContent=S.ov==='comp'?' · Comparison':'';$('#tvKpi').textContent=S.kv==='comp'?' · Comparison':'';renderDaily();renderDroo();renderKeyline();renderPeople();renderActs();renderComp();renderTeam();renderGaps();renderOb();renderMapal();renderReviews();
 }
 /* site header and site switcher (sites.json) */
 $('#siteH1').innerHTML=esc(SITE.label)+' <span>·</span> '+esc(SITE.name);
