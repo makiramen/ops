@@ -1211,9 +1211,10 @@ function logSign(r,act,n){var ts=stamp(),e={wc:S.wc,r:r,n:n,pos:S.pos||r,act:act
   /* 20/10/2026: the signature goes to the shared sign-off log (same web app as Asana) so the other side's device sees it; the GM's manual fields travel with the submit. Offline: kept in S.pend and retried. */
   if(ASH)asanaSend({op:'sign',site:SCODE,id:e.wc+'|'+e.r+'|'+e.ts,wc:e.wc,r:r,n:n,pos:e.pos,act:act,ts:ts,late:e.late,fields:r==='GM'?(S.fields[S.wc]||{}):null});else queue('signoff',e)}
 /* 20/10/2026: pull the shared sign-off log on every open and when back online; merge, replay week states (last entry per week wins), adopt the GM's fields where this device has none. */
+function isoD(v,t){v=String(v||'').trim();if(/^\d{4}-\d{2}-\d{2}/.test(v))return t?v.slice(0,16):v.slice(0,10);var d=new Date(v);if(isNaN(d))return v;var p=function(n){return ('0'+n).slice(-2)},s=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());return t?s+' '+p(d.getHours())+':'+p(d.getMinutes()):s}  /* 20/10: the log sheet may hand back Date strings */
 var SIGN_ST={'Signed and submitted':'submitted','Signed off and locked':'signed','Returned to GM':'returned','Reopened':'submitted'};
 function signMerge(rows){var ch=false,seen={};S.signlog.forEach(function(x){seen[x.wc+'|'+x.r+'|'+x.act+'|'+x.ts]=1});
-  rows.forEach(function(x){if(!x||!x.wc||!x.act)return;var k=x.wc+'|'+x.r+'|'+x.act+'|'+x.ts;if(!seen[k]){seen[k]=1;S.signlog.push({wc:x.wc,r:x.r,n:x.n,pos:x.pos,act:x.act,ts:x.ts,late:!!x.late});ch=true}
+  rows.forEach(function(x){if(!x||!x.wc||!x.act)return;x.wc=isoD(x.wc);x.ts=isoD(x.ts,true);var k=x.wc+'|'+x.r+'|'+x.act+'|'+x.ts;if(!seen[k]){seen[k]=1;S.signlog.push({wc:x.wc,r:x.r,n:x.n,pos:x.pos,act:x.act,ts:x.ts,late:!!x.late});ch=true}
     if(x.fields&&x.r==='GM'){var f=S.fields[x.wc]||(S.fields[x.wc]={});for(var q in x.fields){if((f[q]==null||f[q]==='')&&x.fields[q]!=null&&x.fields[q]!==''){f[q]=x.fields[q];ch=true}}}});
   if(!ch)return false;S.signlog.sort(function(a,b){return a.ts<b.ts?-1:a.ts>b.ts?1:0});var st={};S.signlog.forEach(function(x){if(SIGN_ST[x.act])st[x.wc]=SIGN_ST[x.act];if(x.n&&x.r)S.soName[x.r]=x.n});
   for(var w in st)S.sheets[w]=st[w];return true}

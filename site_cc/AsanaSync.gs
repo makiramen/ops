@@ -44,13 +44,19 @@ function signSheet_() {
   if (sh.getLastRow() === 0) sh.appendRow(['site', 'wc', 'role', 'name', 'pos', 'action', 'ts', 'late', 'fields', 'received']);
   return sh;
 }
+/* Sheets auto-converts '2026-10-12' and '2026-10-20 15:18' into Dates (found 20/10 19:40: the AM page could not match the week). Store as text, and normalise anything already converted on the way out. */
+function p2_(n) { return ('0' + n).slice(-2); }
+function ymd_(v, withTime) {
+  if (v instanceof Date) { var s = v.getFullYear() + '-' + p2_(v.getMonth() + 1) + '-' + p2_(v.getDate()); return withTime ? s + ' ' + p2_(v.getHours()) + ':' + p2_(v.getMinutes()) : s; }
+  return String(v == null ? '' : v).trim();
+}
 function signRows_(site) {
   var sh = signSheet_(), n = sh.getLastRow(); if (n < 2) return [];
   var v = sh.getRange(2, 1, n - 1, 9).getValues(), out = [];
   v.forEach(function (r) {
     if (String(r[0]) !== site) return;
     var f = null; try { f = r[8] ? JSON.parse(r[8]) : null; } catch (x) {}
-    out.push({ wc: String(r[1]), r: String(r[2]), n: String(r[3]), pos: String(r[4]), act: String(r[5]), ts: String(r[6]), late: r[7] === true || r[7] === 'TRUE', fields: f });
+    out.push({ wc: ymd_(r[1]), r: String(r[2]), n: String(r[3]), pos: String(r[4]), act: String(r[5]), ts: ymd_(r[6], true), late: r[7] === true || r[7] === 'TRUE', fields: f });
   });
   return out;
 }
@@ -76,8 +82,9 @@ function doPost(e) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(m.wc || '')) return out_({ ok: false, error: 'bad week' });
       var sh = signSheet_(), ts = clean_(m.ts, 16);
       var dup = signRows_(m.site).some(function (r) { return r.wc === m.wc && r.r === m.r && r.act === m.act && r.ts === ts; });
-      if (!dup) sh.appendRow([m.site, m.wc, clean_(m.r, 3), clean_(m.n, 80), clean_(m.pos, 20), clean_(m.act, 40), ts, !!m.late,
+      if (!dup) { sh.appendRow([m.site, m.wc, clean_(m.r, 3), clean_(m.n, 80), clean_(m.pos, 20), clean_(m.act, 40), ts, !!m.late,
                               m.fields ? JSON.stringify(m.fields).slice(0, 40000) : '', new Date().toISOString()]);
+                  var last = sh.getLastRow(); sh.getRange(last, 2).setNumberFormat('@').setValue(m.wc); sh.getRange(last, 7).setNumberFormat('@').setValue(ts); }
       return out_({ ok: true, dup: dup });
     }
 
