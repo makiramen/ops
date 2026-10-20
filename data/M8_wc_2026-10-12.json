@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-19",
+  "generated_at": "2026-10-20",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-10-12 \u2013 2026-10-18",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
+          "actual": 24.93,
           "target": 23.0,
           "gated": false
         },
@@ -74,7 +74,7 @@
         "week_commencing": "2026-10-12"
       },
       "efficiency_score": {
-        "score": 81,
+        "score": 87,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -96,6 +96,11 @@
             "value": 70.48,
             "basis": "\u00a320.84 vs \u00a322 tgt \u2014 level 81, WoW -0.33% \u2192 mom 47"
           },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "24.93% vs 25% baseline, -8/pp over"
+          },
           "wage": {
             "weight": 30,
             "value": 82.45,
@@ -112,9 +117,7 @@
             "basis": "-2.40% inside \u00b15% band"
           }
         },
-        "components_dropped": [
-          "food"
-        ],
+        "components_dropped": [],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
@@ -153,7 +156,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-12..2026-10-18 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-19."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-12..2026-10-18 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-20."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-12.json (AGMM Task List Status). Open items only.",
@@ -199,7 +202,6 @@
         "partial": false,
         "sales": 4383.71,
         "orders": 144,
-        "orders_estimated": true,
         "aov": 30.44,
         "new_customers": 42,
         "rating": 4.46,
@@ -208,21 +210,19 @@
         "rejection_pct": 0.0,
         "inaccuracy_pct": 1.4,
         "rider_wait_5min_pct": 2.1,
-        "conversion_pct": null,
+        "conversion_pct": 11.1,
         "wow": {
           "gmv_pct": 7.4,
-          "orders_abs": null,
-          "prev_gmv": 4080.0,
-          "prev_orders": null
+          "orders_abs": 5,
+          "prev_gmv": 4080.4,
+          "prev_orders": 139
         },
         "gmv_vs_4wk_pct": -6.9,
         "gmv_vs_ly_pct": -17.9,
-        "source": "Deliveroo Weekly Dash PDF overview (Sales Overview) \u2014 gap-site weekly sales; ops metrics not in this source. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
         "busy_mode_pct": 2.0
       },
-      "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [],
         "actions": [],
