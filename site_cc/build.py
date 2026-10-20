@@ -95,6 +95,7 @@ for a in ACTS:
         t=AT[g];a['gid']=g;a['ag']=1
         if t['c']:a['s']='closed';a['ca']=t.get('ca')
         if t.get('d'):a['d']=t['d']
+    elif g:a['s']='removed'  # 20/10/2026 (Michael): the task was deleted in Asana, so the action comes off the page
     elif (a.get('wc') or '')<(SJ['sources'].get('asana') or {}).get('from','9999'):a['loc']=1  # before the Asana go live: page only
 LINKED=set(AMAP.values())
 for t in AS.get('tasks',[]):
@@ -104,7 +105,7 @@ for t in AS.get('tasks',[]):
     ACTS.append(a)
 # Clean start 06/10/2026 (Michael, 08/10): no action or compliance history from before sources.cutoff shows on the page
 CUT=(SJ.get('sources') or {}).get('cutoff') or '0000'
-ACTS=[a for a in ACTS if (a.get('wc') or a.get('d') or '9999')>=CUT]
+ACTS=[a for a in ACTS if (a.get('wc') or a.get('d') or '9999')>=CUT and a.get('s')!='removed']
 MCOMP=JD('mcomp.json',{'w':[],'chain':[],'to':None,'src':'Mapal compliance not pulled yet'})
 CUTW=(datetime.date.fromisoformat(CUT)-datetime.timedelta(datetime.date.fromisoformat(CUT).weekday())).isoformat() if CUT!='0000' else '0000'
 MCOMP['w']=[w for w in MCOMP.get('w',[]) if str(w[0])>=CUTW];MCOMP['chain']=[c for c in MCOMP.get('chain',[]) if str(c[0])>=CUTW]

@@ -800,6 +800,9 @@ function sheetOf(wc){return S.sheets[wc||S.wc]||'draft'}function setSheet(st){S.
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
 var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
 S.acts=S.acts.filter(function(y){return LIVEIDS[y.id]||(y.gid&&LIVEIDS['g'+y.gid])||typeof y.id==='number'});
+/* 20/10/2026 (Michael): a cached action whose Asana task the build no longer knows (deleted in Asana) loses the stale gid, so Mark done no longer hits a 404; page-added actions stay as page-only */
+S.acts.forEach(function(y){if(y.gid&&!LIVEIDS['g'+y.gid]&&!ACTS.some(function(a){return a.id===y.id&&a.gid})){y.gid=null;y.ag=0;y.loc=1}});
+S.pend=(S.pend||[]).filter(function(p){return !(p.op==='done'&&p.gid&&!LIVEIDS['g'+p.gid])});
 ACTS.forEach(function(a){var x=S.acts.filter(function(y){return y.id===a.id||(a.gid&&y.gid===a.gid)})[0];if(!x){S.acts.push(a);return}
   ['gid','ag','ca','t','o','src','wc'].forEach(function(k){if(a[k]!=null)x[k]=a[k]});x.loc=a.loc||0;if(a.d)x.d=a.d;if(a.s==='closed')x.s='closed'});  /* 08/10: text, owner, source, w/c always refreshed from the build (owner name map) */
 if(!Array.isArray(S.pend))S.pend=[];
@@ -811,7 +814,9 @@ var ASH=(SITE.asana&&SITE.asana.hook)||null;
 function asanaSend(m,retry){if(!retry)S.pend.push(m);save();
   fetch(ASH,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(m)}).then(function(r){return r.json()}).then(function(r){
     var a=S.acts.filter(function(x){return x.id===m.id})[0];
-    if(!r||!r.ok){S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});queue(m.op,m);if(a&&m.op==='done')a.ax=0;save();renderActs();renderOb();return toast((m.op==='sign'?'Sign-off log said no: ':'Asana said no: ')+((r&&r.error)||'error')+'. Queued')}
+    if(!r||!r.ok){S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});
+      if(a&&m.op==='done'&&/404|Not a recognized ID/i.test((r&&r.error)||'')){a.gid=null;a.ag=0;a.ax=0;a.loc=1;save();renderActs();renderOb();return toast('That task was deleted in Asana. Kept as done here only')}  /* 20/10/2026 */
+      queue(m.op,m);if(a&&m.op==='done')a.ax=0;save();renderActs();renderOb();return toast((m.op==='sign'?'Sign-off log said no: ':'Asana said no: ')+((r&&r.error)||'error')+'. Queued')}
     S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});
     if(a&&m.op==='done'){a.ax=1;toast('Completed in Asana')}
     if(a&&m.op==='add'&&r.gid){a.gid=r.gid;a.ag=1;toast('Added to Asana')}
