@@ -84,7 +84,7 @@ if 'start' in h and ('promotion' in h or 'name' in h):
         if sc!='ALL' and A.site not in sc and g(r,'sites').upper()!='ALL':
             if A.site.lower() not in g(r,'sites').lower():continue
         st=isod(g(r,'start'))
-        if st:items.append({'start':st,'end':isod(g(r,'end')) if g(r,'end') else None,'name':g(r,'name'),'type':g(r,'type') or 'Promotion','sites':g(r,'sites') or 'ALL','offer':g(r,'offer'),'owner':g(r,'owner'),'notes':g(r,'notes'),'link':g(r,'link')})
+        if st:items.append({'start':st,'end':isod(g(r,'end')) if g(r,'end') else None,'name':g(r,'name'),'type':g(r,'type') or 'Promotion','sites':g(r,'sites') or 'ALL','scope':'site' if (sc!='ALL' or A.site.lower() in g(r,'sites').lower()) else ('all' if named or g(r,'sites').upper()=='ALL' else 'unnamed'),'offer':g(r,'offer'),'owner':g(r,'owner'),'notes':g(r,'notes'),'link':g(r,'link')})
     layout='table'
 else:
     # Becca's month grid
@@ -122,11 +122,12 @@ else:
             if re.search(r'launch|pre order|live on',txt,re.I) and st==en:en=None  # a launch is a start, not a one day event
             key=(name,st,en)
             if any((i['name'],i['start'],i['end'])==key for i in items):continue   # the same cell repeated in two month columns
-            items.append({'start':st,'end':en,'name':name,'type':kind(txt),'sites':'ALL' if sc=='ALL' else ', '.join(sc),'offer':rest,'owner':'','notes':'' if named or sc=='ALL' else '','link':''})
+            # 20/10/2026 (Michael): scope = site (names this site or its city), all (says all sites / all locations), unnamed (no site in the cell). The page shows site and all only.
+            items.append({'start':st,'end':en,'name':name,'type':kind(txt),'sites':'ALL' if sc=='ALL' else ', '.join(sc),'scope':'site' if sc!='ALL' else ('all' if named else 'unnamed'),'offer':rest,'owner':'','notes':'' if named or sc=='ALL' else '','link':''})
     layout='month grid'
 items.sort(key=lambda x:(x['start'],x['name']))
 out={'src':'2026-2027 MAKI & RAMEN OFFICIAL CALENDAR (marketing team sheet), service account read','pulled':datetime.date.today().isoformat(),'sheet':SRC.get('id'),'layout':layout,'items':items,
-     'note':'One entry per promotion, event or campaign whose cell names this site, its city, or no site at all (estate wide). end null = ongoing or no end given. Dates and site names parsed from the free text cells.'}
+     'note':'One entry per promotion, event or campaign whose cell names this site, its city, all sites, or no site at all (scope unnamed, not shown on the page). end null = ongoing or no end given. Dates and site names parsed from the free text cells.'}
 if A.check:
     old=json.load(open(P)) if os.path.exists(P) else {'items':[]}
     print(f'check: {len(items)} rows for {A.site}, stored {len(old["items"])}');[print(' ',i['start'],i['end'],i['name'],'|',i['sites']) for i in items];sys.exit(0)

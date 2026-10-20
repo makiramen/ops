@@ -756,10 +756,13 @@ var KEY='maki_site_cc_'+SCODE.toLowerCase()+'_v4';
 var ACTS=__ACTS__.map(function(a){a.s=a.s||'open';a.ev=a.ev||'';return a});
 var COMP=__COMP__,TEAM=__TEAM__,GAPS0=__GAPS__,MAINT=__MAINT__,PPM=__PPM__;
 var TODAY='__TODAY__';
-var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[]};
+var S={per:'week',wc:CUR,month:CUR.slice(0,7),role:'GM',tab:'overview',fields:{},sheet:'draft',intang:'',acts:ACTS,filter:'open',replied:false,gaps:GAPS0,ob:[],sheets:{}};
 try{var raw=localStorage.getItem(KEY);if(raw){var p=JSON.parse(raw);for(var k in p)S[k]=p[k];}}catch(e){}
 /* 12/10/2026 (Michael): the page always opens on the latest week and month, never the week saved from the last visit */S.per="week";S.wc=CUR;S.month=CUR.slice(0,7);S.ov="main";S.kv="sheet";S.kq=null;
 ['repl','broth','eotm','soName','rvOpen','fold'].forEach(function(k){if(!S[k]||typeof S[k]!=='object')S[k]={}});if(S.fold.rv==null)S.fold.rv=true;  /* 13/10/2026: first visit, Google reviews panel folded, Needs a reply open; click the heading to toggle */S.role='GM';   /* 08/10/2026 (Michael): GM view only, the AM toggle is gone */if(!Array.isArray(S.signlog))S.signlog=[];
+/* 20/10/2026 (Michael): the KPI sheet state is PER WEEK (S.sheets[wc]), not one global flag. The old S.sheet carried last week's Submitted / Signed into the next week, so the GM could not sign again and the AM buttons stayed grey. Migrated once from the sign-off log. */
+if(!S.sheets||typeof S.sheets!=='object'){S.sheets={};S.signlog.forEach(function(x){S.sheets[x.wc]={'Signed and submitted':'submitted','Signed off and locked':'signed','Returned to GM':'returned','Reopened':'submitted'}[x.act]||S.sheets[x.wc]})}delete S.sheet;
+function sheetOf(wc){return S.sheets[wc||S.wc]||'draft'}function setSheet(st){S.sheets[S.wc]=st}
 /* merge any actions or gaps added at build since the cache was written */
 /* 08/10/2026: drop cached actions the build no longer sends (clean start, Asana deletions); keep page added actions (numeric id) until a later build carries them under their Asana gid */
 var LIVEIDS={};ACTS.forEach(function(a){LIVEIDS[a.id]=1;if(a.gid)LIVEIDS['g'+a.gid]=1});
@@ -1470,7 +1473,10 @@ function renderBudget(){
 /* ---------- Marketing tab (20/10/2026, Michael): promotions coming up at the top, then loyalty ---------- */
 function promoWhen(x){var t=TODAY;if(x.end&&x.end<t)return 'past';if(x.start>t)return 'up';return 'live'}
 function renderMarketing(){
-  var el=$('#mkPromos');if(!el)return;var items=(PROMO.items||[]).slice(),t=TODAY;
+  var el=$('#mkPromos');if(!el)return;var t=TODAY;
+  /* 20/10/2026 (Michael): only what is specifically for this site. A calendar cell that names this site (or its city) or says "all sites" shows; a cell naming no site at all is not shown (counted in the footnote). */
+  var scopeOf=function(x){if(x.scope)return x.scope;if(x.sites&&x.sites.toUpperCase()!=='ALL')return 'site';return /all\s+(sites|locations|customers|branches)/i.test([x.name,x.offer,x.notes].join(' '))?'all':'unnamed'};
+  var all=(PROMO.items||[]),items=all.filter(function(x){return scopeOf(x)!=='unnamed'}),unnamed=all.length-items.length;
   var live=items.filter(function(x){return promoWhen(x)==='live'}),up=items.filter(function(x){return promoWhen(x)==='up'}),past=items.filter(function(x){return promoWhen(x)==='past'}).slice(-4).reverse();
   var card=function(x,cls){var days=x.start>t?daysBetween(t,x.start):null;return '<div class="promo '+cls+'"><div class="when"><b>'+dm(x.start)+(x.end?(x.end===x.start?'':' to '+dm(x.end)):' onwards')+'</b><small>'+(cls==='live'?'Live now'+(x.end?' · '+daysBetween(t,x.end)+' day'+(daysBetween(t,x.end)===1?'':'s')+' left':''):cls==='up'?'Starts in '+days+' day'+(days===1?'':'s'):'Finished')+'</small>'+(x.type?'<small>'+esc(x.type)+'</small>':'')+'</div><div class="what"><b>'+esc(x.name)+'</b>'+(x.offer?'<div>'+esc(x.offer)+'</div>':'')+'<div>'+[x.channel?esc(x.channel):'',x.sites&&x.sites.toUpperCase()!=='ALL'?'Sites: '+esc(x.sites):'All sites',x.owner?'Owner '+esc(x.owner):''].filter(Boolean).join(' · ')+(x.link?' · <a href="'+esc(x.link)+'" target="_blank" rel="noopener">Open</a>':'')+'</div>'+(x.notes?'<div>'+esc(x.notes)+'</div>':'')+'</div></div>'};
   var h='';
@@ -1478,6 +1484,7 @@ function renderMarketing(){
   else{h+='<h4 style="margin:4px 0 2px">Coming up</h4>'+(up.length?up.map(function(x){return card(x,'up')}).join(''):'<div class="small">Nothing scheduled for this site yet. Add a row to the Site CC Marketing Calendar.</div>');
     h+='<h4 style="margin:14px 0 2px">Live now</h4>'+(live.length?live.map(function(x){return card(x,'live')}).join(''):'<div class="small">No promotion running at this site today.</div>');
     if(past.length)h+='<h4 style="margin:14px 0 2px">Recently finished</h4>'+past.map(function(x){return card(x,'past')}).join('')}
+  if(PROMO.pulled&&unnamed)h+='<div class="small" style="margin-top:10px">'+unnamed+' calendar entr'+(unnamed===1?'y names':'ies name')+' no site and '+(unnamed===1?'is':'are')+' not shown here. To show one at this site, name the site (or "all sites") in its calendar cell.</div>';
   el.innerHTML=h;
   $('#mkPromoTL').innerHTML=!PROMO.pulled?TL('n','No feed'):up.length?TL('g',up.length+' coming up'):live.length?TL('g',live.length+' live'):TL('a','Nothing planned');
   $('#mkPromoFoot').innerHTML='Source: 2026-2027 Maki &amp; Ramen Official Calendar (marketing team)'+(PROMO.pulled?', pulled '+dmy(PROMO.pulled):'')+(PROMO.sheet?' · <a href="https://docs.google.com/spreadsheets/d/'+PROMO.sheet+'/edit" target="_blank" rel="noopener">Open the calendar</a>':'')+'. A promotion shows here when its cell names this site or its city, or names no site at all (estate wide).';
@@ -1536,23 +1543,24 @@ function renderActs(){
 function fk(){return S.wc}
 function F(){if(!S.fields[fk()])S.fields[fk()]={};return S.fields[fk()]}
 function isCur(){return S.wc===OPEN||S.wc===LAST||isPend(S.wc)}  /* 14/10/2026: reviews ranges run to the latest data on this week, last completed or a closing week */
-function locked(){return S.sheet==='signed'}
-function canEdit(own){if(!isLast()||locked())return false;if(own==='GM')return S.role==='GM'&&S.sheet!=='submitted';if(own==='AM')return S.role==='AM';return true}
+function locked(){return sheetOf()==='signed'}
+/* GM fields open until the GM submits; AM fields (improvement areas, sign off, return, reopen) open once the GM has submitted. No role toggle: the AM signs with a full name. */
+function canEdit(own){if(!isLast()||locked())return false;if(own==='GM')return sheetOf()!=='submitted';if(own==='AM')return sheetOf()==='submitted';return true}
 function reqEls(){return $$('[data-req]').concat(overBudget()?[$('#f_rota')]:[])}
 function renderFields(){
   var f=F();$$('[data-f]').forEach(function(el){el.value=f[el.dataset.f]||'';el.disabled=!canEdit(el.dataset.own)});
-  $('#so_gm').value=S.soName.GM||'';$('#so_am').value=S.soName.AM||'';$('#so_gm').disabled=!canEdit('GM');$('#so_am').disabled=!(isLast()&&S.role==='AM'&&!locked());
+  $('#so_gm').value=S.soName.GM||'';$('#so_am').value=S.soName.AM||'';$('#so_gm').disabled=!canEdit('GM');$('#so_am').disabled=!(isLast()&&!locked()&&sheetOf()==='submitted');
   $('#btnSuggest').disabled=!canEdit('AM');
   var req=reqEls(),done=req.filter(function(e){return (f[e.dataset.f]||'').trim()}).length;
   $('#completion').innerHTML=isLast()?'<span class="pill '+(done===req.length?'p-g':'p-o')+'">Manual fields '+done+' / '+req.length+'</span>':(isOpen()?'<span class="pill p-o">Opens when the week closes (Monday)</span>':'<span class="pill p-n">Past week: read-only</span>');
 }
 function renderSheet(){
-  var st=isLast()?S.sheet:isOpen()?'open':'past';
+  var st=isLast()?sheetOf():isOpen()?'open':'past';
   var map={draft:['p-n','Not submitted','p-n','Not signed','KPI sheet: draft'],returned:['p-r','Returned by AM','p-n','Not signed','KPI sheet: returned'],submitted:['p-g','✓ Submitted','p-o','Awaiting sign-off','KPI sheet: with AM'],signed:['p-g','✓ Submitted','p-g','✓ Signed · locked','KPI sheet: signed'],past:['p-n','Before launch','p-n','Before launch','KPI sheet: before launch'],open:['p-n','Week in progress','p-n','Week in progress','KPI sheet: opens Monday']}[st];
   $('#gmState').className='pill '+map[0];$('#gmState').textContent=map[1];$('#amState').className='pill '+map[2];$('#amState').textContent=map[3];
-  $('#btnSubmit').disabled=!(isLast()&&S.role==='GM'&&(S.sheet==='draft'||S.sheet==='returned'));
-  $('#btnSign').disabled=$('#btnReturn').disabled=!(isLast()&&S.role==='AM'&&S.sheet==='submitted');
-  $('#btnReopen').hidden=!(isLast()&&S.role==='AM'&&S.sheet==='signed');$('#btnSign').hidden=$('#btnReturn').hidden=isLast()&&S.sheet==='signed';
+  $('#btnSubmit').disabled=!(isLast()&&(st==='draft'||st==='returned'));
+  $('#btnSign').disabled=$('#btnReturn').disabled=!(isLast()&&st==='submitted');
+  $('#btnReopen').hidden=!(isLast()&&st==='signed');$('#btnSign').hidden=$('#btnReturn').hidden=isLast()&&st==='signed';
   return map[4];
 }
 function renderBanner(){
@@ -1561,9 +1569,9 @@ function renderBanner(){
   if(isOpen()){b.innerHTML='<span><b>This week, in progress.</b> Sales, target, covers, SPH and wage % are week to date from the daily cash up ('+(wk(S.wc).wtd||0)+' of 7 days). Food cost, hours, league and efficiency close on Monday. The KPI Sheet and Stock &amp; Cost tabs stay on the last completed week; Deliveroo shows this week to date.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
   if(isPend(S.wc)){b.innerHTML='<span><b>Week closing (w/c '+dmy(S.wc)+').</b> Sales and covers are final; food cost, stock take, league and efficiency land on Tuesday, when this becomes the last completed week. The KPI Sheet and Stock &amp; Cost tabs stay on the last completed week until then.</span>'+(LAST?'<button type="button" class="btn sm" data-openwk="'+LAST+'">Go to last completed week</button>':'');return}
   if(!isLast()){b.innerHTML='<span><b>Viewing a past week (w/c '+dmy(S.wc)+').</b> Everything is read-only. Figures are the stored weekly build.</span><button type="button" class="btn sm" id="toLatest">Back to last completed week</button>';return}
-  if(locked()){b.className='banner ok';b.innerHTML='<span><b>✓ Week signed off and locked.</b> Entries are read-only.</span>'+(S.role==='AM'?'<button type="button" class="btn sm" data-go="kpi">Reopen on the KPI Sheet</button>':'');return}
-  if(S.role==='GM')b.innerHTML=S.sheet==='submitted'?'<span><b>GM view.</b> Sheet submitted, waiting for AM sign-off. You can still update actions.</span>':'<span><b>GM view.</b> Numbers are locked. Fill the manual fields, update actions, then submit the KPI Sheet.</span><button type="button" class="btn sm pri" data-go="kpi">Go to KPI Sheet</button>';
-  else b.innerHTML=S.sheet==='submitted'?'<span><b>AM view.</b> The GM has submitted. Add improvement areas, then sign off or return it.</span><button type="button" class="btn sm pri" data-go="kpi">Review KPI Sheet</button>':'<span><b>AM view.</b> Waiting on the GM to submit this week. You can still close actions.</span>';
+  if(locked()){b.className='banner ok';b.innerHTML='<span><b>✓ Week signed off and locked.</b> Entries are read-only.</span><button type="button" class="btn sm" data-go="kpi">Reopen on the KPI Sheet</button>';return}
+  if(S.role==='GM')b.innerHTML=sheetOf()==='submitted'?'<span><b>Sheet submitted</b> by the GM, waiting for AM sign-off. The AM signs off on the KPI Sheet; the GM can still update actions.</span><button type="button" class="btn sm pri" data-go="kpi">Go to KPI Sheet</button>':'<span><b>GM view.</b> Numbers are locked. Fill the manual fields, update actions, then submit the KPI Sheet.</span><button type="button" class="btn sm pri" data-go="kpi">Go to KPI Sheet</button>';
+  else b.innerHTML=sheetOf()==='submitted'?'<span><b>AM view.</b> The GM has submitted. Add improvement areas, then sign off or return it.</span><button type="button" class="btn sm pri" data-go="kpi">Review KPI Sheet</button>':'<span><b>AM view.</b> Waiting on the GM to submit this week. You can still close actions.</span>';
 }
 function renderChips(label){
   var mo=S.per==='month';
@@ -2055,10 +2063,10 @@ document.addEventListener('click',function(e){
 });
 ['GM','AM'].forEach(function(r){$('#so_'+r.toLowerCase()).addEventListener('input',function(e){S.soName[r]=e.target.value;save()})});
 $('#btnSubmit').onclick=function(){var f=F(),miss=reqEls().filter(function(e){return !(f[e.dataset.f]||'').trim()}).map(function(e){return document.querySelector('label[for="'+e.id+'"]').textContent.replace(' *','').split(':').pop().trim()});
-  var nm=$('#so_gm').value.trim();if(nm.split(/\s+/).length<2)miss.push('your full name');var er=$('#gmErr');if(miss.length){er.hidden=false;er.textContent='Still needed: '+miss.join(', ')+'.';return}er.hidden=true;logSign('GM','Signed and submitted',nm);S.sheet='submitted';save();renderAll();toast('Signed and sent to Inka Cheung')};
-$('#btnSign').onclick=function(){var er=$('#amErr'),nm=$('#so_am').value.trim();if(!(F().improve||'').trim()&&!mtgItems().im.length){er.hidden=false;er.textContent='Add the areas of improvement before signing.';$('#f_improve').focus();return}if(nm.split(/\s+/).length<2){er.hidden=false;er.textContent='Add your full name to sign.';$('#so_am').focus();return}er.hidden=true;logSign('AM','Signed off and locked',nm);S.sheet='signed';save();renderAll();toast('Signed off. Week locked')};
-$('#btnReturn').onclick=function(){logSign('AM','Returned to GM',$('#so_am').value.trim()||'AM');S.sheet='returned';save();renderAll();toast('Returned to the GM')};
-$('#btnReopen').onclick=function(){logSign('AM','Reopened',$('#so_am').value.trim()||'AM');S.sheet='submitted';save();renderAll();toast('Week reopened')};
+  var nm=$('#so_gm').value.trim();if(nm.split(/\s+/).length<2)miss.push('your full name');var er=$('#gmErr');if(miss.length){er.hidden=false;er.textContent='Still needed: '+miss.join(', ')+'.';return}er.hidden=true;logSign('GM','Signed and submitted',nm);setSheet('submitted');save();renderAll();toast('Signed and sent to Inka Cheung')};
+$('#btnSign').onclick=function(){var er=$('#amErr'),nm=$('#so_am').value.trim();if(!(F().improve||'').trim()&&!mtgItems().im.length){er.hidden=false;er.textContent='Add the areas of improvement before signing.';$('#f_improve').focus();return}if(nm.split(/\s+/).length<2){er.hidden=false;er.textContent='Add your full name to sign.';$('#so_am').focus();return}er.hidden=true;logSign('AM','Signed off and locked',nm);setSheet('signed');save();renderAll();toast('Signed off. Week locked')};
+$('#btnReturn').onclick=function(){logSign('AM','Returned to GM',$('#so_am').value.trim()||'AM');setSheet('returned');save();renderAll();toast('Returned to the GM')};
+$('#btnReopen').onclick=function(){logSign('AM','Reopened',$('#so_am').value.trim()||'AM');setSheet('submitted');save();renderAll();toast('Week reopened')};
 $('#btnSuggest').onclick=function(){var w=wk(S.wc),ev=evaluate(w,prevW(S.wc)).filter(function(e){return e.r==='r'||e.r==='a'});
   var t=ev.slice(0,3).map(function(e,i){return (i+1)+'. '+e.m.lab+' '+e.m.fmt(e.v).replace(/<[^>]+>/g,'')+' vs target '+e.m.tl(w).replace(/<[^>]+>/g,'')+': [action, owner, date]'}).join('\n');
   $('#f_improve').value=t;F().improve=t;save();renderFields();toast('Pre-filled. Add the actions')};
