@@ -2158,6 +2158,9 @@ function stripDel(){
 }
 if(NODEL){var _ra=renderAll;renderAll=function(){_ra.apply(this,arguments);stripDel()};var _rm=renderMonth;renderMonth=function(){_rm.apply(this,arguments);stripDel()};var _rd=renderDaily;renderDaily=function(){_rd.apply(this,arguments);stripDel()}}
 renderAll();asanaFlush();signPull();window.addEventListener('online',function(){asanaFlush();signPull()});
+/* 20/10/2026 (Michael): the other side's signature must land without a reload. Poll the shared log every 60 s while the tab is visible, and the moment it comes back into focus. */
+setInterval(function(){if(document.visibilityState==='visible')signPull()},60000);
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')signPull()});window.addEventListener('focus',signPull);
 /* ---------- the gate (20/10/2026, Michael) ---------- */
 var GATE_LOG='__LOGURL__';
 function gateLog(kind){try{if(!GATE_LOG||GATE_LOG.indexOf('http')!==0||location.protocol==='file:')return;fetch(GATE_LOG,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},keepalive:true,body:JSON.stringify({name:'Site CC '+SCODE+' · '+S.pos,kind:kind,at:new Date().toISOString(),w:screen.width,ua:navigator.userAgent.slice(0,160)})}).catch(function(){})}catch(e){}}
