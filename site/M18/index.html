@@ -1220,7 +1220,10 @@ function signMerge(rows){var ch=false,seen={};S.signlog.forEach(function(x){seen
     if(x.fields&&x.r==='GM'){var f=S.fields[x.wc]||(S.fields[x.wc]={});for(var q in x.fields){if((f[q]==null||f[q]==='')&&x.fields[q]!=null&&x.fields[q]!==''){f[q]=x.fields[q];ch=true}}}});
   if(!ch)return false;S.signlog.sort(function(a,b){return a.ts<b.ts?-1:a.ts>b.ts?1:0});var st={};S.signlog.forEach(function(x){if(SIGN_ST[x.act])st[x.wc]=SIGN_ST[x.act];if(x.n&&x.r)S.soName[x.r]=x.n});
   for(var w in st)S.sheets[w]=st[w];return true}
-function signPull(){if(!ASH||navigator.onLine===false)return;fetch(ASH+'?signoffs='+encodeURIComponent(SCODE)).then(function(r){return r.json()}).then(function(r){if(r&&r.ok&&Array.isArray(r.rows)&&signMerge(r.rows)){save();renderAll();toast('Sign-off log updated')}}).catch(function(){})}
+function signPull(){if(!ASH||navigator.onLine===false)return;fetch(ASH+'?signoffs='+encodeURIComponent(SCODE)).then(function(r){return r.json()}).then(function(r){if(!r||!r.ok||!Array.isArray(r.rows))return;
+  /* backfill: any signature this device holds that the shared log does not (signed before 20/10, or while offline) goes up now; the server dedupes */
+  var have={};r.rows.forEach(function(x){have[x.wc+'|'+x.r+'|'+x.act+'|'+x.ts]=1});S.signlog.forEach(function(e){var k=e.wc+'|'+e.r+'|'+e.act+'|'+e.ts,id=e.wc+'|'+e.r+'|'+e.ts;if(have[k]||S.pend.some(function(p){return p.op==='sign'&&p.id===id}))return;asanaSend({op:'sign',site:SCODE,id:id,wc:e.wc,r:e.r,n:e.n,pos:e.pos||e.r,act:e.act,ts:e.ts,late:!!e.late,fields:e.r==='GM'?(S.fields[e.wc]||{}):null})});
+  if(signMerge(r.rows)){save();renderAll();toast('Sign-off log updated')}}).catch(function(){})}
 function renderKpi(){
   var w=wk(S.wc),pw=prevW(S.wc),ev=evaluate(w,pw).filter(function(e){return ['dr','dprep'].indexOf(e.m.k)<0});
   $('#kpiTitle').innerHTML='w/c '+dmy(S.wc)+gmNote();
