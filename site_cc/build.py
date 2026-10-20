@@ -145,6 +145,9 @@ T={'__TODAY__':TODAY.isoformat(),'__WK__':json.dumps(WK,separators=(',',':')),'_
    '__KL__':C(J('keyline.json')),'__BROTH__':C(br),'__LY__':C(LY),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__MCOMP__':C(MCOMP),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE),'__MAINT__':C(MT).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__PPM__':C(PPM),'__BUD__':C(BUD).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013',' to '),'__PROMO__':C(PRM).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')}
 s=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src.html')).read()
 ND=lambda v:v.replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')  # feed text (reviews, notes, actions) never brings a dash in
+import sys as _s;_s.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','builders'))
+from usage_beacon import LOG_URL as _logurl  # 20/10/2026: the gate posts 'entered' rows (position, no names) to the same Area Room log sheet as the beacon
+T['__LOGURL__']=_logurl
 for k,v in T.items():s=s.replace(k,ND(v))
 
 # Stale feed bar: shows only when a feed is late, Maki orange, never hides the data
