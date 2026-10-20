@@ -390,7 +390,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
   <section class="pane" data-p="overview">
     <!-- 14/10/2026 (Michael): Overview has two views, Summary and Comparison (vs last week, vs last year, month consolidated) -->
     <div id="cmpView" class="pane" hidden>
-      <div class="row"><div><div class="eyebrow">Comparison</div><h2 id="cmpTitle">Week against last week and last year</h2><div class="sub">Revenue, covers, spend per head and wages as a share of revenue for the selected week against the week before and the same weekdays last year (364 days back, from the cash up). Then the month rolled up: a week counts in the month its Monday falls in, this week to date. Only cashed up days count; where last year has no cash up the cell says so.</div></div><span class="tag t-auto">AUTO</span></div>
+      <div class="row"><div><div class="eyebrow">Comparison</div><h2 id="cmpTitle">Week against last week and last year</h2></div><span class="tag t-auto">AUTO</span></div>
       <div class="ctlbar" id="cmpCtl"></div>
       <div class="grid" id="cmpTiles"></div>
       <div class="card"><div class="ch"><div><h3 id="cmpDayHead">Day by day</h3><div class="small">Each day against the same weekday last week and last year. Hover a change for the comparison figure.</div></div><span class="tag t-auto">AUTO</span></div><div class="tscroll"><table class="cmp" id="cmpDays"></table></div></div>
@@ -451,14 +451,13 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
 
   <!-- WEEK: DAILY -->
   <section class="pane" data-p="daily" hidden>
-    <div class="row"><div><div class="eyebrow">Daily</div><h2>Daily cash-up, reviews &amp; quality</h2><div class="sub">Same Auto Cash Up feed as the Control Centre Daily tab, filtered to this site, with the broth checks alongside. Google reviews and replies live on the Reviews tab; the Google column here is the day's count and average. FOH % and BOH % show how the day's labour cost splits between the two departments (they add up to 100%). Labour % is total wages as a % of sales. A blank FOH / BOH means the split failed validation that day. Roo issues: orders with missing or wrong items, orders the restaurant rejected, and restaurant error cancellations from Deliveroo's morning drop; any of them is a Red Light (hover a cell for the detail).</div><div class="small" id="dailyWin" style="margin-top:4px;font-weight:700;color:var(--maki-orange-deep)"></div></div>
+    <div class="row"><div><div class="eyebrow">Daily</div><h2>Daily cash-up, reviews &amp; quality</h2><div class="small" id="dailyWin" style="margin-top:4px;font-weight:700;color:var(--maki-orange-deep)"></div></div>
       <div class="chips"><span class="tag t-auto">AUTO</span><span class="pill p-g">✓ Kobas guard passed</span></div></div>
     <div class="card">
       <div class="tscroll"><table id="dailyTable">
         <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Target</th><th class="r">Var</th><th class="r">Delivery</th><th class="r" title="Deliveroo orders delivered that day and estimated prep time (red above 15.00 min); any missing items, rejections or restaurant error cancellations are listed underneath">Deliveroo</th><th class="r">Covers</th><th class="r">SPH</th><th class="r" title="FOH share of total labour cost (FOH + BOH = 100%)">FOH %</th><th class="r" title="BOH share of total labour cost (FOH + BOH = 100%)">BOH %</th><th class="r">Labour %</th><th class="r">Google</th><th>Broth</th></tr></thead>
         <tbody id="dailyRows"></tbody>
       </table></div>
-      <div class="small" style="margin-top:8px">Delivery is every platform as cashed up. The Deliveroo column (orders · prep, issues underneath) comes from the Deliveroo daily ops feed (Deliveroo Daily Master, from the morning CSV drops); prep is red above 15.00 min; issues are missing items %, restaurant error cancellations and rejections. The 7 day total shows the weekly Tax Invoice sales when the 7 days are a full Monday to Sunday week. vs LY rows compare with the same weekdays 52 weeks earlier (sales, delivery, covers and spend per head). Google: reviews received that day and their average; green 4.70★ and above, amber 4.50 to 4.69, red below.</div>
     </div>
     <div class="card" id="rooCard"><div class="ch"><div><h3>Deliveroo · weekly and daily</h3><div class="small">Same ten columns, thresholds and tints as the Control Centre Deliveroo panel. Weekly rows are the week of the latest Deliveroo drop (week to date) and the week before; daily rows are the latest 7 posted days. Not tied to the week picker.</div></div><span class="tag t-auto">AUTO</span></div><div id="rooOps"></div></div>
     <div class="card">
@@ -472,7 +471,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
   <!-- REVIEWS: Reviews Intelligence for this site, interactive -->
   <section class="pane" data-p="reviews" hidden>
     <div class="row"><div><div class="eyebrow">Reviews</div><h2 id="rvTitle">What guests are saying</h2>
-      <div class="sub">The last 8 days of Google reviews and the ones still needing a reply first, then every Google review for this site labelled by the Control Centre Reviews Intelligence: the complaint, the quoted evidence, staff named, dishes and praise. Click any bar, name, star or week to filter; everything below follows.</div></div>
+      </div>
       <span class="tag t-auto">AUTO</span></div>
     <!-- 13/10/2026 (Rory x Mike): the Google reviews and Needs a reply panels moved here from the Daily tab; renderDaily still fills them -->
     <div class="grid">
@@ -538,7 +537,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
   <section class="pane" data-p="kpi" hidden>
     <div id="kpiMain" class="pane">
     <div class="row">
-      <div><div class="eyebrow">Weekly KPI Sheet</div><h2 id="kpiTitle">w/c</h2><div class="sub">Replaces the per-site Google Doc. Numbers fill themselves and cannot be typed over. The GM completes the manual fields and submits; the AM adds improvement areas and signs off, which locks the week.</div></div>
+      <div><div class="eyebrow">Weekly KPI Sheet</div><h2 id="kpiTitle">w/c</h2></div>
       <div class="small" id="completion"></div>
     </div>
     <div class="card">
@@ -611,7 +610,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
     </div>
     <!-- 15/10/2026 (Michael): Weekly KPI Sheet Comparison, the quarter week on week (13 weeks), AM Control Centre period view layout -->
     <div id="kqView" class="pane" hidden>
-      <div class="kq-head"><div><div class="eyebrow">Weekly KPI Sheet · Comparison</div><h2 id="kqTitle">Quarter week on week</h2><div class="sub">Every week of the quarter against the week before it. A week counts in the quarter its Monday falls in. Pick a measure to chart it; click a week to open its KPI Sheet.</div></div><span class="tag t-auto">AUTO</span></div>
+      <div class="kq-head"><div><div class="eyebrow">Weekly KPI Sheet · Comparison</div><h2 id="kqTitle">Quarter week on week</h2></div><span class="tag t-auto">AUTO</span></div>
       <div class="ctlbar" id="kqCtl"></div>
       <div class="kq-chips" id="kqChips"></div>
       <div class="card"><div class="ch"><h3 id="kqChartHead">Week by week</h3><span class="small" id="kqChartNote"></span></div><div class="kq-chart" id="kqChart"></div></div>
@@ -624,7 +623,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
   <!-- WEEK: DELIVEROO -->
   <section class="pane" data-p="droo" hidden>
     <div class="row">
-      <div><div class="eyebrow">Deliveroo</div><h2 id="drooTitle">Operations</h2><div class="sub">Same five metrics and thresholds as the Control Centre Deliveroo RAG. Red if any metric crosses its Red Light line. A missing metric shows as no data, not as a pass.</div></div>
+      <div><div class="eyebrow">Deliveroo</div><h2 id="drooTitle">Operations</h2></div>
       <div id="drooOverall"></div>
     </div>
     <div class="grid" id="drooCards"></div>
@@ -680,9 +679,9 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
   <!-- WEEK: MARKETING (20/10/2026, Michael): promotions coming up at the top, then loyalty -->
   <section class="pane" data-p="marketing" hidden>
     <div><div class="eyebrow">Marketing</div><h2 id="mkH">Marketing · promotions and loyalty</h2></div>
-    <div class="card"><div class="ch"><h3>Promotions, events and campaigns at this site</h3><span id="mkPromoTL"></span></div>
-      <div id="mkPromos"></div>
-      <div class="small" id="mkPromoFoot" style="margin-top:8px"></div>
+    <div class="card"><div class="ch" id="mkPromoH" style="cursor:pointer;user-select:none" title="Click to collapse or expand"><h3><span id="mkPromoCaret" style="display:inline-block;width:14px;color:var(--ink-3)">▾</span>Promotions, events and campaigns at this site</h3><span id="mkPromoTL"></span></div>
+      <div id="mkPromoBody"><div id="mkPromos"></div>
+      <div class="small" id="mkPromoFoot" style="margin-top:8px"></div></div>
     </div>
     <div class="card"><div class="ch"><h3 id="mkLoyH">Loyalty · Ramen Royalty</h3><span id="mkLoyTL"></span></div>
       <div class="grid" id="mkLoyTiles"></div>
@@ -716,7 +715,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
 
   <!-- WEEK: ACTIONS -->
   <section class="pane" data-p="actions" hidden>
-    <div class="row"><div><div class="eyebrow">Actions</div><h2>Actions &amp; compliance</h2><div class="sub">Data, diagnosis, action, owner, follow-up, closure. Every action from w/c 21/09/2026 is a task in the Asana project Maki &amp; Ramen Management (site section). Mark done completes the Asana task straight away; a task completed in Asana moves to Completed here at the next nightly sync.</div></div>
+    <div class="row"><div><div class="eyebrow">Actions</div><h2>Actions &amp; compliance</h2></div>
       <button type="button" class="btn" id="btnAsana">Sync outbox</button></div>
     <div class="card" id="obCard" hidden><div class="ch"><h3>Sync outbox</h3><span class="small" id="obMeta"></span></div><div class="small" style="margin-bottom:6px">This page works fully offline. Changes that could not reach Asana (no signal, or an action not in Asana yet) queue here; Asana changes are retried when the page is next open online. Copy and send to your AM if they stay waiting.</div><textarea id="obTxt" rows="5" readonly aria-label="Queued changes"></textarea><div class="obx" style="margin-top:6px"><button type="button" class="btn sm pri" id="obCopy">Copy changes</button><button type="button" class="btn sm" id="obClear">Mark as sent</button></div></div>
     <div class="grid" id="actTiles"></div>
@@ -737,7 +736,6 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
           <button type="button" data-fl="open" aria-pressed="true">Open</button><button type="button" data-fl="done" aria-pressed="false">Marked done</button><button type="button" data-fl="closed" aria-pressed="false">Completed</button>
         </div></div>
       <div class="tscroll"><table><thead><tr><th>Action</th><th>Raised at</th><th>Owner</th><th>Due</th><th>Status</th></tr></thead><tbody id="actRows"></tbody></table></div>
-      <div class="small" style="margin-top:8px">Every GM/HC, GMH chef and AM meeting action from 06/10/2026 lands here and in the site section of the Asana project; tasks added straight in Asana show here too. <span class="tag t-auto">ASANA</span> means it is an Asana task; <span class="tag t-no">ASANA QUEUED</span> means it goes up at the next nightly sync; <span class="tag t-auto">SUPPORT</span> means a support team (EC, maintenance, marketing) is assigned too. Status here is cached for offline use.</div>
     </div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Maintenance log</h3><span class="mtTL"></span></div><div class="maintBox"></div></div>
@@ -1505,7 +1503,9 @@ function renderBudget(){
 }
 /* ---------- Marketing tab (20/10/2026, Michael): promotions coming up at the top, then loyalty ---------- */
 function promoWhen(x){var t=TODAY;if(x.end&&x.end<t)return 'past';if(x.start>t)return 'up';return 'live'}
+function mkPromoToggle(force){var body=$('#mkPromoBody'),car=$('#mkPromoCaret');if(!body)return;var open=force!=null?force:body.style.display==='none';body.style.display=open?'':'none';if(car)car.textContent=open?'▾':'▸';try{localStorage.setItem('maki_site_cc_mkpromo_'+SCODE,open?'1':'0')}catch(e){}}
 function renderMarketing(){
+  if(!renderMarketing._w){renderMarketing._w=1;var h=$('#mkPromoH');if(h)h.addEventListener('click',function(){mkPromoToggle()});var st=null;try{st=localStorage.getItem('maki_site_cc_mkpromo_'+SCODE)}catch(e){}if(st==='0')mkPromoToggle(false)}
   var el=$('#mkPromos');if(!el)return;var t=TODAY;
   /* 20/10/2026 (Michael): only what is specifically for this site. A calendar cell that names this site (or its city) or says "all sites" shows; a cell naming no site at all is not shown (counted in the footnote). */
   var scopeOf=function(x){if(x.scope)return x.scope;if(x.sites&&x.sites.toUpperCase()!=='ALL')return 'site';return /all\s+(sites|locations|customers|branches)/i.test([x.name,x.offer,x.notes].join(' '))?'all':'unnamed'};
