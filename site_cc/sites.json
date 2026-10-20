@@ -1,5 +1,5 @@
 {
- "_note": "One entry per site. The nightly job builds every site listed with \"live\": true. Sheet ids are shared by all sites. A null source key (for example loyalty_venue) means that feed does not exist for the site: the pull writes an empty feed and the page shows n/a. Tiers = The Maki League tiers (+3 lowest wage %, +3 lowest food cost %, +3 highest SPH, within the tier, each week). Rollout: M7, M14, M17 live (08/10/2026); M18, M9, M1 added 12/10/2026; set live true per site to roll out. Optional \"gm\" per site overrides the GM name the reviews intelligence has on file.",
+ "_note": "One entry per site. The nightly job builds every site listed with \"live\": true. Sheet ids are shared by all sites. A null source key (for example loyalty_venue) means that feed does not exist for the site: the pull writes an empty feed and the page shows n/a. Tiers = The Maki League tiers (+3 lowest wage %, +3 lowest food cost %, +3 highest SPH, within the tier, each week). Rollout: M7, M14, M17 live (08/10/2026); M18, M9, M1 added 12/10/2026; set live true per site to roll out. Optional \"gm\" per site overrides the GM name the reviews intelligence has on file. Tiers re-read from the Tier System sheet 20/10/2026 (Q4 2026 season): Omori M17 M9 M15 M8 M16 M7 M21; Chumori M19 M3 M14 M13 M10 M11 M18 M20 M12; Kobachi IKI2 M6 M1. The sheet is the official table, re-check it whenever a tier looks wrong.",
  "sources": {
   "auto_cash_up": {
    "id": "1T4TtCs-SkBjinToxG45oKksUiPPPIllo2Pqrqbaix6w",
@@ -17,9 +17,27 @@
    "range": "'Raw Data'!A:L"
   },
   "broth_spec": {
-    "tk": {"g": [6.5, 7.5], "a": [7.6, 7.7]},
-    "tp": {"g": [4.5, 5.5], "a": [5.6, 5.7]},
-    "note": "Site CC broth spec, after water. Proposed by Rory (M7 GM) 13/10/2026 from the better performing sites, pending EC sign off: Tonkotsu green 6.5 to 7.5, Tori Paitan green 4.5 to 5.5, the 0.2 above each range amber (5.6 and 5.7 as Rory said; 7.6 and 7.7 assumed the same way), anything else red. Change the numbers here only; the AM Control Centre Broth tab keeps its own spec."
+   "tk": {
+    "g": [
+     6.5,
+     7.5
+    ],
+    "a": [
+     7.6,
+     7.7
+    ]
+   },
+   "tp": {
+    "g": [
+     4.5,
+     5.5
+    ],
+    "a": [
+     5.6,
+     5.7
+    ]
+   },
+   "note": "Site CC broth spec, after water. Proposed by Rory (M7 GM) 13/10/2026 from the better performing sites, pending EC sign off: Tonkotsu green 6.5 to 7.5, Tori Paitan green 4.5 to 5.5, the 0.2 above each range amber (5.6 and 5.7 as Rory said; 7.6 and 7.7 assumed the same way), anything else red. Change the numbers here only; the AM Control Centre Broth tab keeps its own spec."
   },
   "ramen_royalty": {
    "id": "1BU8Shqe4PajaoUfqvEFY_KVcNNzAZ-BIMq5AE-xcvkE",
@@ -156,7 +174,7 @@
    "cluster": "Scotland & Newcastle",
    "am": "Ka Ho",
    "dam": "Óisín Patrick Darragh",
-   "tier": "Chūmori 中盛り",
+   "tier": "Ōmori 大盛り",
    "asana_section": "1219205670910233",
    "gm": "Rory Ferguson"
   },
@@ -226,7 +244,7 @@
    "cluster": "Scotland & Newcastle",
    "am": "Ka Ho",
    "dam": "Óisín Patrick Darragh",
-   "tier": "Ōmori 大盛り",
+   "tier": "Chūmori 中盛り",
    "asana_section": "1219205670910239"
   },
   "M15": {
@@ -354,7 +372,7 @@
    "cluster": "South England",
    "am": "Ziang Lin",
    "dam": "Kaitlin Docherty",
-   "tier": "Chūmori 中盛り",
+   "tier": "Ōmori 大盛り",
    "asana_section": "1219205670910243"
   },
   "M18": {
@@ -371,7 +389,7 @@
    "cluster": "South England",
    "am": "Ziang Lin",
    "dam": "Kaitlin Docherty",
-   "tier": "Ōmori 大盛り",
+   "tier": "Chūmori 中盛り",
    "asana_section": "1219205670910244"
   },
   "MakiNori": {
@@ -406,7 +424,7 @@
    "cluster": "South England",
    "am": "Ziang Lin",
    "dam": "Kaitlin Docherty",
-   "tier": null,
+   "tier": "Chūmori 中盛り",
    "asana_section": "1219205670910245"
   },
   "M20": {
@@ -423,7 +441,7 @@
    "cluster": "South England",
    "am": "Ziang Lin",
    "dam": "Kaitlin Docherty",
-   "tier": null,
+   "tier": "Chūmori 中盛り",
    "asana_section": "1219205670910246"
   },
   "M21": {
@@ -440,32 +458,35 @@
    "cluster": "South England",
    "am": "Ziang Lin",
    "dam": "Kaitlin Docherty",
-   "tier": null,
+   "tier": "Ōmori 大盛り",
    "asana_section": "1219205670910247"
   }
  },
  "tiers": {
-  "Kobachi 小鉢": [
-   "M1",
-   "M6",
-   "IKI2"
+  "Ōmori 大盛り": [
+   "M17",
+   "M9",
+   "M15",
+   "M8",
+   "M16",
+   "M7",
+   "M21"
   ],
   "Chūmori 中盛り": [
+   "M19",
    "M3",
-   "M7",
-   "M12",
+   "M14",
+   "M13",
    "M10",
    "M11",
-   "M14",
-   "M17"
+   "M18",
+   "M20",
+   "M12"
   ],
-  "Ōmori 大盛り": [
-   "M8",
-   "M13",
-   "M15",
-   "M9",
-   "M16",
-   "M18"
+  "Kobachi 小鉢": [
+   "IKI2",
+   "M6",
+   "M1"
   ]
  },
  "clusters": {
