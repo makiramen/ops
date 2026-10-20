@@ -33,7 +33,36 @@ function asana_(method, path, body) {
 
 function clean_(s, n) { return String(s == null ? '' : s).replace(/[\u2013\u2014]/g, ', ').slice(0, n || 500); }
 
-function doGet() { return out_({ ok: true, service: 'Site CC Asana sync' }); }
+/* 20/10/2026: shared KPI sheet sign-off log. Sign-offs used to live only in the signing browser's localStorage, so the AM's
+ * device never saw the GM's submit (Oisin / Rory, M7). Every signature is now POSTed here (op 'sign') and every page open
+ * GETs ?signoffs=<site> and merges it in. Rows live in a Google Sheet created on first use (id in Script Properties SIGNOFF_SHEET). */
+function signSheet_() {
+  var pr = PropertiesService.getScriptProperties(), id = pr.getProperty('SIGNOFF_SHEET'), ss;
+  if (id) { try { ss = SpreadsheetApp.openById(id); } catch (x) { ss = null; } }
+  if (!ss) { ss = SpreadsheetApp.create('Site CC KPI Sheet Sign-off Log'); pr.setProperty('SIGNOFF_SHEET', ss.getId()); }
+  var sh = ss.getSheets()[0];
+  if (sh.getLastRow() === 0) sh.appendRow(['site', 'wc', 'role', 'name', 'pos', 'action', 'ts', 'late', 'fields', 'received']);
+  return sh;
+}
+function signRows_(site) {
+  var sh = signSheet_(), n = sh.getLastRow(); if (n < 2) return [];
+  var v = sh.getRange(2, 1, n - 1, 9).getValues(), out = [];
+  v.forEach(function (r) {
+    if (String(r[0]) !== site) return;
+    var f = null; try { f = r[8] ? JSON.parse(r[8]) : null; } catch (x) {}
+    out.push({ wc: String(r[1]), r: String(r[2]), n: String(r[3]), pos: String(r[4]), act: String(r[5]), ts: String(r[6]), late: r[7] === true || r[7] === 'TRUE', fields: f });
+  });
+  return out;
+}
+function doGet(e) {
+  var q = (e && e.parameter) || {};
+  if (q.signoffs) {
+    if (!SECTIONS[q.signoffs]) return out_({ ok: false, error: 'unknown site' });
+    try { return out_({ ok: true, site: q.signoffs, rows: signRows_(q.signoffs) }); }
+    catch (err) { return out_({ ok: false, error: String(err.message || err) }); }
+  }
+  return out_({ ok: true, service: 'Site CC Asana sync' });
+}
 
 function doPost(e) {
   var lock = LockService.getScriptLock();
@@ -42,6 +71,15 @@ function doPost(e) {
     var m = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     var sec = SECTIONS[m.site];
     if (!sec) return out_({ ok: false, error: 'unknown site' });
+
+    if (m.op === 'sign') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(m.wc || '')) return out_({ ok: false, error: 'bad week' });
+      var sh = signSheet_(), ts = clean_(m.ts, 16);
+      var dup = signRows_(m.site).some(function (r) { return r.wc === m.wc && r.r === m.r && r.act === m.act && r.ts === ts; });
+      if (!dup) sh.appendRow([m.site, m.wc, clean_(m.r, 3), clean_(m.n, 80), clean_(m.pos, 20), clean_(m.act, 40), ts, !!m.late,
+                              m.fields ? JSON.stringify(m.fields).slice(0, 40000) : '', new Date().toISOString()]);
+      return out_({ ok: true, dup: dup });
+    }
 
     if (m.op === 'done') {
       if (!/^\d+$/.test(String(m.gid || ''))) return out_({ ok: false, error: 'bad task id' });

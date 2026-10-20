@@ -605,7 +605,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
           <label class="fl" for="so_am">Full name</label><input type="text" id="so_am" placeholder="Name of the AM signing">
           <div class="chips"><button type="button" class="btn pri" id="btnSign">Sign off and lock</button><button type="button" class="btn" id="btnReturn">Return to GM</button><button type="button" class="btn" id="btnReopen" hidden>Reopen week</button></div><div class="err" id="amErr" hidden></div></div>
       </div>
-      <details style="margin-top:12px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700" id="logSum">Sign-off log</summary><div class="tscroll"><table id="signLog"></table></div><div class="small">Every signature is stored with name and time and syncs through the outbox to the sign-off log sheet.</div></details>
+      <details style="margin-top:12px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700" id="logSum">Sign-off log</summary><div class="tscroll"><table id="signLog"></table></div><div class="small">Every signature is stored with name and time in the shared sign-off log sheet, so the GM and the AM see the same state on any device. Reopen the page to pick up the other side's signature.</div></details>
     </div>
     </div>
     <!-- 15/10/2026 (Michael): Weekly KPI Sheet Comparison, the quarter week on week (13 weeks), AM Control Centre period view layout -->
@@ -811,7 +811,7 @@ var ASH=(SITE.asana&&SITE.asana.hook)||null;
 function asanaSend(m,retry){if(!retry)S.pend.push(m);save();
   fetch(ASH,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(m)}).then(function(r){return r.json()}).then(function(r){
     var a=S.acts.filter(function(x){return x.id===m.id})[0];
-    if(!r||!r.ok){S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});queue(m.op,m);if(a&&m.op==='done')a.ax=0;save();renderActs();renderOb();return toast('Asana said no: '+((r&&r.error)||'error')+'. Queued')}
+    if(!r||!r.ok){S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});queue(m.op,m);if(a&&m.op==='done')a.ax=0;save();renderActs();renderOb();return toast((m.op==='sign'?'Sign-off log said no: ':'Asana said no: ')+((r&&r.error)||'error')+'. Queued')}
     S.pend=S.pend.filter(function(p){return !(p.op===m.op&&p.id===m.id)});
     if(a&&m.op==='done'){a.ax=1;toast('Completed in Asana')}
     if(a&&m.op==='add'&&r.gid){a.gid=r.gid;a.ag=1;toast('Added to Asana')}
@@ -1202,7 +1202,17 @@ function renderSignLog(){var L=S.signlog.slice().reverse();
   var g=S.signlog.filter(function(x){return x.wc===S.wc&&x.r==='GM'&&x.act==='Signed and submitted'}).pop();
   $('#gmDue').textContent=g?'Signed by '+g.n+' at '+dmy(g.ts.slice(0,10))+' '+g.ts.slice(11)+(g.late?' (late)':''):'Due by 23:59 '+dayName(dueBy(S.wc))+' '+dmy(dueBy(S.wc))+'. Required fields are marked *.';
 }
-function logSign(r,act,n){var ts=stamp(),e={wc:S.wc,r:r,n:n,pos:S.pos||r,act:act,ts:ts,late:r==='GM'&&ts.slice(0,10)>dueBy(S.wc)};S.signlog.push(e);S.soName[r]=n;queue('signoff',e)}
+function logSign(r,act,n){var ts=stamp(),e={wc:S.wc,r:r,n:n,pos:S.pos||r,act:act,ts:ts,late:r==='GM'&&ts.slice(0,10)>dueBy(S.wc)};S.signlog.push(e);S.soName[r]=n;
+  /* 20/10/2026: the signature goes to the shared sign-off log (same web app as Asana) so the other side's device sees it; the GM's manual fields travel with the submit. Offline: kept in S.pend and retried. */
+  if(ASH)asanaSend({op:'sign',site:SCODE,id:e.wc+'|'+e.r+'|'+e.ts,wc:e.wc,r:r,n:n,pos:e.pos,act:act,ts:ts,late:e.late,fields:r==='GM'?(S.fields[S.wc]||{}):null});else queue('signoff',e)}
+/* 20/10/2026: pull the shared sign-off log on every open and when back online; merge, replay week states (last entry per week wins), adopt the GM's fields where this device has none. */
+var SIGN_ST={'Signed and submitted':'submitted','Signed off and locked':'signed','Returned to GM':'returned','Reopened':'submitted'};
+function signMerge(rows){var ch=false,seen={};S.signlog.forEach(function(x){seen[x.wc+'|'+x.r+'|'+x.act+'|'+x.ts]=1});
+  rows.forEach(function(x){if(!x||!x.wc||!x.act)return;var k=x.wc+'|'+x.r+'|'+x.act+'|'+x.ts;if(!seen[k]){seen[k]=1;S.signlog.push({wc:x.wc,r:x.r,n:x.n,pos:x.pos,act:x.act,ts:x.ts,late:!!x.late});ch=true}
+    if(x.fields&&x.r==='GM'){var f=S.fields[x.wc]||(S.fields[x.wc]={});for(var q in x.fields){if((f[q]==null||f[q]==='')&&x.fields[q]!=null&&x.fields[q]!==''){f[q]=x.fields[q];ch=true}}}});
+  if(!ch)return false;S.signlog.sort(function(a,b){return a.ts<b.ts?-1:a.ts>b.ts?1:0});var st={};S.signlog.forEach(function(x){if(SIGN_ST[x.act])st[x.wc]=SIGN_ST[x.act];if(x.n&&x.r)S.soName[x.r]=x.n});
+  for(var w in st)S.sheets[w]=st[w];return true}
+function signPull(){if(!ASH||navigator.onLine===false)return;fetch(ASH+'?signoffs='+encodeURIComponent(SCODE)).then(function(r){return r.json()}).then(function(r){if(r&&r.ok&&Array.isArray(r.rows)&&signMerge(r.rows)){save();renderAll();toast('Sign-off log updated')}}).catch(function(){})}
 function renderKpi(){
   var w=wk(S.wc),pw=prevW(S.wc),ev=evaluate(w,pw).filter(function(e){return ['dr','dprep'].indexOf(e.m.k)<0});
   $('#kpiTitle').innerHTML='w/c '+dmy(S.wc)+gmNote();
@@ -2138,7 +2148,7 @@ function stripDel(){
     Array.prototype.forEach.call(tb.rows,function(r){if(r.cells.length===n)ix.forEach(function(k){r.cells[k].hidden=true})})});
 }
 if(NODEL){var _ra=renderAll;renderAll=function(){_ra.apply(this,arguments);stripDel()};var _rm=renderMonth;renderMonth=function(){_rm.apply(this,arguments);stripDel()};var _rd=renderDaily;renderDaily=function(){_rd.apply(this,arguments);stripDel()}}
-renderAll();asanaFlush();window.addEventListener('online',asanaFlush);
+renderAll();asanaFlush();signPull();window.addEventListener('online',function(){asanaFlush();signPull()});
 /* ---------- the gate (20/10/2026, Michael) ---------- */
 var GATE_LOG='__LOGURL__';
 function gateLog(kind){try{if(!GATE_LOG||GATE_LOG.indexOf('http')!==0||location.protocol==='file:')return;fetch(GATE_LOG,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},keepalive:true,body:JSON.stringify({name:'Site CC '+SCODE+' · '+S.pos,kind:kind,at:new Date().toISOString(),w:screen.width,ua:navigator.userAgent.slice(0,160)})}).catch(function(){})}catch(e){}}
