@@ -112,3 +112,6 @@ function doPost(e) {
     try { lock.releaseLock(); } catch (x) {}
   }
 }
+
+/* Run once from the editor to grant the Sheets permission; creates the sign-off log sheet. */
+function authoriseSheets() { var sh = signSheet_(); Logger.log(sh.getParent().getUrl()); }
