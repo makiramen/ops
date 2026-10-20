@@ -1421,6 +1421,7 @@ td.sitecell { white-space: nowrap; }
 <!-- v6.8 (13 Oct 2026): Summary story and marketing return tightened; assumptions and actions via the manual feeds sheet -->
 <!-- v6.8.1 (13 Oct 2026): hero covers from the weekly cash-up feed; Monthly compares the same weekdays 4 weeks earlier -->
 <!-- v6.9.2 (19 Oct 2026): Slerp tab fetches the published data.json itself so a stale browser cache can't pin it to the 5 Oct snapshot -->
+<!-- v6.10 (20 Oct 2026): Slerp Daily / Weekly / Monthly show which sites had orders (click a day, week or month); needs HubPublish v5 dayStores -->
 <!-- v6.9 (19 Oct 2026): Slerp tab rebuilt as Summary / Daily / Weekly / Monthly views in the Loyalty design; feed-stale banner -->
 <!-- v6.6.1 (9 Oct 2026): Add/Remove feed-down banner (reads the ERROR row, names the Windsor fix) -->
 <!-- v6.6 (9 Oct 2026): Summary rebuilt (loyalty, Slerp, content, influencers, paid, feeds health); 18 Aug £5 batch removed from Loyalty -->
@@ -1513,6 +1514,9 @@ td.sitecell { white-space: nowrap; }
 #tab-slerp td.num, #tab-slerp th.num { text-align: right; font-variant-numeric: tabular-nums; }
 #tab-slerp tr.dim { opacity: .5; }
 #tab-slerp tr.hl { background: var(--rr-soft); }
+#tab-slerp tr.pick { cursor: pointer; }
+#tab-slerp tr.pick:hover { background: #FFF4EA; }
+#tab-slerp tr.tot td { font-weight: 700; border-top: 2px solid var(--rr-line); }
 
 /* chart classes are namespaced (.rrbar not .bar): a page-level .bar rule
    with a height also matches an SVG rect and overrides the attribute.       */
@@ -1681,7 +1685,12 @@ td.sitecell { white-space: nowrap; }
         <div class="tw"><table id="sl-d-dow"><thead><tr><th>Day</th><th class="num">Avg orders</th><th class="num">Avg revenue</th><th style="width:110px"></th></tr></thead><tbody></tbody></table></div>
       </div>
     </div>
-    <p class="caveat">Per-store and per-product splits by day are not in the payload yet; HubPublish carries totals per day only. Add them when the daily cut is needed.</p>
+    <div class="card" style="margin-top:12px">
+      <h3>Sites with orders <span id="sl-d-sites-sub"></span></h3>
+      <div class="tw" style="max-height:480px;overflow-y:auto"><table id="sl-d-sites"><thead><tr><th>Site</th><th>Wave</th><th class="num">Orders</th><th class="num">Share</th><th class="num">Revenue</th><th class="num">AOV</th><th style="width:110px"></th></tr></thead><tbody></tbody></table></div>
+      <p class="caveat" id="sl-d-sites-note" hidden></p>
+    </div>
+    <p class="caveat">Sites are the Slerp store names. Counts exclude refunded, rejected and test-store orders. Pick a day above or click a day in the table.</p>
   </section>
 
   <!-- ---------------- WEEKLY ---------------- -->
@@ -1695,6 +1704,12 @@ td.sitecell { white-space: nowrap; }
     <div class="card" style="margin-top:12px">
       <h3>All weeks <span>since first order</span></h3>
       <div class="tw"><table id="sl-w-table"><thead><tr><th>Week</th><th class="num">Orders</th><th class="num">WoW</th><th class="num">Revenue</th><th class="num">WoW</th><th class="num">AOV</th><th class="num">Orders / day</th><th class="num">vs 150</th><th style="width:110px"></th></tr></thead><tbody></tbody></table></div>
+      <p class="caveat">Click a week to see which sites had orders.</p>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>Sites with orders <span id="sl-w-sites-sub"></span></h3>
+      <div class="tw" style="max-height:480px;overflow-y:auto"><table id="sl-w-sites"><thead><tr><th>Site</th><th>Wave</th><th class="num">Orders</th><th class="num">Share</th><th class="num">Revenue</th><th class="num">AOV</th><th style="width:110px"></th></tr></thead><tbody></tbody></table></div>
+      <p class="caveat" id="sl-w-sites-note" hidden></p>
     </div>
   </section>
 
@@ -1706,7 +1721,12 @@ td.sitecell { white-space: nowrap; }
       <h3>All months <span>since first order</span></h3>
       <div class="tw"><table id="sl-m-table"><thead><tr><th>Month</th><th class="num">Orders</th><th class="num">MoM</th><th class="num">Revenue</th><th class="num">MoM</th><th class="num">AOV</th><th class="num">Trading days</th><th class="num">Orders / day</th><th style="width:110px"></th></tr></thead><tbody></tbody></table></div>
     </div>
-    <p class="caveat">A month is counted on the orders received that month. Trading days are days with at least one order. The current month is partial until the last day has passed.</p>
+    <p class="caveat">A month is counted on the orders received that month. Trading days are days with at least one order. The current month is partial until the last day has passed. Click a month to see which sites had orders.</p>
+    <div class="card" style="margin-top:12px">
+      <h3>Sites with orders <span id="sl-m-sites-sub"></span></h3>
+      <div class="tw" style="max-height:480px;overflow-y:auto"><table id="sl-m-sites"><thead><tr><th>Site</th><th>Wave</th><th class="num">Orders</th><th class="num">Share</th><th class="num">Revenue</th><th class="num">AOV</th><th style="width:110px"></th></tr></thead><tbody></tbody></table></div>
+      <p class="caveat" id="sl-m-sites-note" hidden></p>
+    </div>
   </section>
 </div>
 
@@ -9719,6 +9739,38 @@ function slAddDays_(iso, n) { var d = new Date(iso + 'T00:00:00Z'); d.setUTCDate
 function slDayMap_(S) { var m = {}; (S.days || []).forEach(function(r) { m[r[0]] = {o: Number(r[1]) || 0, r: Number(r[2]) || 0}; }); return m; }
 function slSortedDays_(S) { return (S.days || []).map(function(r) { return r[0]; }).sort(); }
 
+// v6.10: per-site split. S.dayStores = [[date, store, orders, revenue], ...] (HubPublish v5)
+var SL_WEEK = null, SL_MONTH = null, SL_WEEK_ASOF = null, SL_MONTH_ASOF = null;
+function slSites_(S, from, to) {
+  var agg = {};
+  (S.dayStores || []).forEach(function(r) {
+    var d = String(r[0]).slice(0, 10); if (d < from || d > to) return;
+    var st = String(r[1] || '?'); var a = (agg[st] = agg[st] || {o: 0, r: 0}); a.o += Number(r[2]) || 0; a.r += Number(r[3]) || 0;
+  });
+  return Object.keys(agg).map(function(st) { return [st, agg[st].o, agg[st].r]; }).sort(function(a, b) { return b[1] - a[1] || b[2] - a[2]; });
+}
+function slSitesTable_(S, id, from, to, subText) {
+  var tb = document.querySelector('#' + id + ' tbody'), note = document.getElementById(id + '-note'), sub = document.getElementById(id + '-sub');
+  if (!tb) return 0;
+  if (sub) sub.textContent = subText || '';
+  if (!S.dayStores) {
+    tb.innerHTML = ''; note.hidden = false;
+    note.textContent = 'The per-site split is not in the published data yet. It arrives with HubPublish v5 on the next 4-hourly publish after it is pasted in.';
+    return 0;
+  }
+  var rows = slSites_(S, from, to), tot = {o: 0, r: 0};
+  rows.forEach(function(r) { tot.o += r[1]; tot.r += r[2]; });
+  var max = rows.length ? rows[0][1] : 0;
+  var minD = null; (S.dayStores || []).forEach(function(r) { var d = String(r[0]).slice(0, 10); if (!minD || d < minD) minD = d; });
+  if (minD && from < minD) { note.hidden = false; note.textContent = 'Site split covers ' + slDayLabel_(minD, true) + ' onwards (latest 60 days in the payload); earlier days in this range are not split.'; }
+  else { note.hidden = true; note.textContent = ''; }
+  if (!rows.length) { tb.innerHTML = '<tr class="dim"><td colspan="7">No orders in this period.</td></tr>'; return 0; }
+  tb.innerHTML = rows.map(function(r) {
+    return '<tr><td>' + escAttr(r[0]) + '</td><td>' + (SLERP_WAVE_OF[r[0]] || '') + '</td><td class="num">' + r[1] + '</td><td class="num">' + Math.round(slPct_(r[1], tot.o)) + '%</td><td class="num">' + slGbp_(r[2]) + '</td><td class="num">' + slGbp_(r[1] ? r[2] / r[1] : 0, 2) + '</td><td>' + slBar_(r[1], max) + '</td></tr>';
+  }).join('') + '<tr class="tot"><td>' + rows.length + ' site' + (rows.length === 1 ? '' : 's') + '</td><td></td><td class="num">' + tot.o + '</td><td class="num">100%</td><td class="num">' + slGbp_(tot.r) + '</td><td class="num">' + slGbp_(tot.o ? tot.r / tot.o : 0, 2) + '</td><td></td></tr>';
+  return rows.length;
+}
+
 // Bar chart: pts = [[label, value, isPartial]], target line optional
 function slChart_(pts, opts) {
   opts = opts || {};
@@ -9826,12 +9878,14 @@ function slDaily_(S, days, map, asof) {
     slKpi_(slGbp_(d.o ? d.r / d.o : 0, 2), 'Average order', ''),
     slKpi_(avg7o.toFixed(1), 'Prior 7-day avg orders', 'this day ' + slDelta_(d.o, avg7o)),
     slKpi_(slGbp_(avg7r), 'Prior 7-day avg revenue', 'this day ' + slDelta_(d.r, avg7r)),
-    slKpi_(Math.round(slPct_(d.o, 21.4)) + '%', 'Of daily target', '21.4 orders a day')
+    slKpi_(Math.round(slPct_(d.o, 21.4)) + '%', 'Of daily target', '21.4 orders a day'),
+    slKpi_(S.dayStores ? String(slSites_(S, SL_DAY, SL_DAY).length) : '—', 'Sites with orders', S.dayStores ? 'of ' + (S.stores || []).length + ' live on Slerp' : 'needs HubPublish v5')
   ].join('');
+  slSitesTable_(S, 'sl-d-sites', SL_DAY, SL_DAY, slDayLabel_(SL_DAY, true));
   var rows = list.map(function(k) { var v = map[k] || {o: 0, r: 0}; var a = 0; for (var q = 1; q <= 7; q++) { var z = map[slAddDays_(k, -q)]; if (z) a += z.o; } a /= 7; return [k, v.o, v.r, a]; });
   var dmax = Math.max.apply(null, rows.map(function(r) { return r[1]; }));
   document.querySelector('#sl-d-table tbody').innerHTML = rows.map(function(r) {
-    return '<tr class="' + (r[0] === SL_DAY ? 'hl' : (!r[1] ? 'dim' : '')) + '"><td>' + slDayLabel_(r[0]) + '</td><td class="num">' + r[1] + '</td><td class="num">' + slGbp_(r[2]) + '</td><td class="num">' + slGbp_(r[1] ? r[2] / r[1] : 0, 2) + '</td><td class="num">' + slDelta_(r[1], r[3]) + '</td><td>' + slBar_(r[1], dmax) + '</td></tr>'; }).join('');
+    return '<tr class="pick ' + (r[0] === SL_DAY ? 'hl' : (!r[1] ? 'dim' : '')) + '" data-day="' + r[0] + '"><td>' + slDayLabel_(r[0]) + '</td><td class="num">' + r[1] + '</td><td class="num">' + slGbp_(r[2]) + '</td><td class="num">' + slGbp_(r[1] ? r[2] / r[1] : 0, 2) + '</td><td class="num">' + slDelta_(r[1], r[3]) + '</td><td>' + slBar_(r[1], dmax) + '</td></tr>'; }).join('');
   var pts = rows.slice().reverse().map(function(r) { var dt = new Date(r[0] + 'T00:00:00Z'); return [slDayLabel_(r[0]), Math.round(r[2]), false, dt.getUTCDay() === 5 ? dt.getUTCDate() + '/' + (dt.getUTCMonth() + 1) : '']; });
   document.getElementById('sl-d-chart').innerHTML = slChart_(pts, {money: true, min: 100, label: 'Slerp revenue per day', el: document.getElementById('sl-d-chart')});
   // day of week, last 8 weeks
@@ -9869,9 +9923,13 @@ function slWeekly_(S, days, map, asof) {
   var show = weeks.slice(-16);
   document.getElementById('sl-w-chart').innerHTML = slChart_(show.map(function(w) { var p = w.wc.split('-'); return ['w/c ' + slDayLabel_(w.wc), w.o, w.partial, +p[2] + '/' + +p[1]]; }), {target: 150, min: 40, label: 'Slerp orders per week', el: document.getElementById('sl-w-chart')});
   var wmax = Math.max.apply(null, weeks.map(function(w) { return w.o; }));
+  if (SL_WEEK_ASOF !== asof) { SL_WEEK_ASOF = asof; SL_WEEK = null; }
+  if (!SL_WEEK || !weeks.some(function(w) { return w.wc === SL_WEEK; })) SL_WEEK = cur.wc;
   document.querySelector('#sl-w-table tbody').innerHTML = weeks.slice().reverse().map(function(w, i, arr) {
     var p = arr[i + 1];
-    return '<tr' + (w.partial ? ' class="hl"' : '') + '><td>w/c ' + slDayLabel_(w.wc, true) + (w.partial ? ' <span class="sl-pill live">so far</span>' : '') + '</td><td class="num">' + w.o + '</td><td class="num">' + (p && !w.partial ? slDelta_(w.o, p.o) : '—') + '</td><td class="num">' + slGbp_(w.r) + '</td><td class="num">' + (p && !w.partial ? slDelta_(w.r, p.r) : '—') + '</td><td class="num">' + slGbp_(w.o ? w.r / w.o : 0, 2) + '</td><td class="num">' + (w.o / w.daysIn).toFixed(1) + '</td><td class="num ' + (w.o >= 150 ? 'good' : '') + '">' + Math.round(slPct_(w.o, 150)) + '%</td><td>' + slBar_(w.o, wmax) + '</td></tr>'; }).join('');
+    return '<tr class="pick' + (w.wc === SL_WEEK ? ' hl' : '') + '" data-wc="' + w.wc + '"><td>w/c ' + slDayLabel_(w.wc, true) + (w.partial ? ' <span class="sl-pill live">so far</span>' : '') + '</td><td class="num">' + w.o + '</td><td class="num">' + (p && !w.partial ? slDelta_(w.o, p.o) : '—') + '</td><td class="num">' + slGbp_(w.r) + '</td><td class="num">' + (p && !w.partial ? slDelta_(w.r, p.r) : '—') + '</td><td class="num">' + slGbp_(w.o ? w.r / w.o : 0, 2) + '</td><td class="num">' + (w.o / w.daysIn).toFixed(1) + '</td><td class="num ' + (w.o >= 150 ? 'good' : '') + '">' + Math.round(slPct_(w.o, 150)) + '%</td><td>' + slBar_(w.o, wmax) + '</td></tr>'; }).join('');
+  var sw = weeks.filter(function(w) { return w.wc === SL_WEEK; })[0] || cur;
+  slSitesTable_(S, 'sl-w-sites', sw.wc, slAddDays_(sw.wc, 6), 'w/c ' + slDayLabel_(sw.wc, true) + (sw.partial ? ' (so far)' : ''));
 }
 
 function slMonthly_(S, days, map, asof) {
@@ -9894,9 +9952,13 @@ function slMonthly_(S, days, map, asof) {
     slKpi_(slGbp_(cur.o ? cur.r / cur.o : 0, 2), 'Average order this month', last ? 'last month ' + slGbp_(last.o ? last.r / last.o : 0, 2) : '')
   ].join('');
   var mmax = Math.max.apply(null, list.map(function(x) { return x.o; }));
+  if (SL_MONTH_ASOF !== asof) { SL_MONTH_ASOF = asof; SL_MONTH = null; }
+  if (!SL_MONTH || !months[SL_MONTH]) SL_MONTH = cur.m;
   document.querySelector('#sl-m-table tbody').innerHTML = list.slice().reverse().map(function(x, i, arr) {
     var p = arr[i + 1];
-    return '<tr' + (x.partial ? ' class="hl"' : '') + '><td>' + lab(x.m) + (x.partial ? ' <span class="sl-pill live">so far</span>' : '') + '</td><td class="num">' + x.o + '</td><td class="num">' + (p && !x.partial ? slDelta_(x.o, p.o) : '—') + '</td><td class="num">' + slGbp_(x.r) + '</td><td class="num">' + (p && !x.partial ? slDelta_(x.r, p.r) : '—') + '</td><td class="num">' + slGbp_(x.o ? x.r / x.o : 0, 2) + '</td><td class="num">' + x.td + '</td><td class="num">' + (x.daysIn ? (x.o / x.daysIn).toFixed(1) : '—') + '</td><td>' + slBar_(x.o, mmax) + '</td></tr>'; }).join('');
+    return '<tr class="pick' + (x.m === SL_MONTH ? ' hl' : '') + '" data-m="' + x.m + '"><td>' + lab(x.m) + (x.partial ? ' <span class="sl-pill live">so far</span>' : '') + '</td><td class="num">' + x.o + '</td><td class="num">' + (p && !x.partial ? slDelta_(x.o, p.o) : '—') + '</td><td class="num">' + slGbp_(x.r) + '</td><td class="num">' + (p && !x.partial ? slDelta_(x.r, p.r) : '—') + '</td><td class="num">' + slGbp_(x.o ? x.r / x.o : 0, 2) + '</td><td class="num">' + x.td + '</td><td class="num">' + (x.daysIn ? (x.o / x.daysIn).toFixed(1) : '—') + '</td><td>' + slBar_(x.o, mmax) + '</td></tr>'; }).join('');
+  var sm = months[SL_MONTH] || cur;
+  slSitesTable_(S, 'sl-m-sites', sm.m + '-01', sm.m + '-31', lab(sm.m) + (sm.partial ? ' (so far)' : ''));
 }
 
 (function() {
@@ -9924,7 +9986,20 @@ function slMonthly_(S, days, map, asof) {
     var step = function(n) { var i = sel.selectedIndex + n; if (i < 0 || i >= sel.options.length) return; sel.selectedIndex = i; sel.dispatchEvent(new Event('change')); };
     document.getElementById('sl-dprev').addEventListener('click', function() { step(1); });
     document.getElementById('sl-dnext').addEventListener('click', function() { step(-1); });
+    document.querySelector('#sl-d-table tbody').addEventListener('click', function(e) {
+      var tr = e.target.closest('tr[data-day]'); if (!tr) return; sel.value = tr.dataset.day; sel.dispatchEvent(new Event('change'));
+    });
   }
+  var wt = document.querySelector('#sl-w-table tbody');
+  if (wt) wt.addEventListener('click', function(e) {
+    var tr = e.target.closest('tr[data-wc]'); if (!tr) return; SL_WEEK = tr.dataset.wc;
+    try { var S = slerpData_(); slWeekly_(S, slSortedDays_(S), slDayMap_(S), S.asof); } catch (err) { console.error('slerp week pick', err); }
+  });
+  var mt = document.querySelector('#sl-m-table tbody');
+  if (mt) mt.addEventListener('click', function(e) {
+    var tr = e.target.closest('tr[data-m]'); if (!tr) return; SL_MONTH = tr.dataset.m;
+    try { var S = slerpData_(); slMonthly_(S, slSortedDays_(S), slDayMap_(S), S.asof); } catch (err) { console.error('slerp month pick', err); }
+  });
 })();
 </script>
 
