@@ -1504,8 +1504,8 @@
   <div class="metric-toggle">
     <span class="metric-toggle-label">View tiles by:</span>
     <div class="metric-chip active" data-metric="sales">Sales vs Target</div>
-    <div class="metric-chip" data-metric="wage">Wage % <span class="metric-target">(target ≤21%)</span></div>
-    <div class="metric-chip" data-metric="food">Food Cost % <span class="metric-target">(target ≤25%)</span></div>
+    <div class="metric-chip" data-metric="wage">Wage % <span class="metric-target">(≤22%, amber to 24%)</span></div>
+    <div class="metric-chip" data-metric="food">Food Cost % <span class="metric-target">(&lt;24%, amber to 25%)</span></div>
     <div class="metric-chip" data-metric="foodVar">Food Variance <span class="metric-target">(target ±5%)</span></div>
     <div class="metric-chip" data-metric="drinksVar">Drinks Variance <span class="metric-target">(target ±5%)</span></div>
     <div class="metric-chip" data-metric="rating">Lifetime Rating <span class="metric-target">(target ≥4.7★)</span></div>
@@ -3821,17 +3821,20 @@ function colorClass(rag) { return rag; }
 function deltaClass(v) { if (v < -25) return 'red'; if (v < 0) return 'amber'; return 'green'; }
 
 // Per-metric RAG status
+// Unified RAG table (20/10/2026): wage green to 22.00%, amber 22.01 to 24.00%, Red Light above 24%.
 function wageRag(w) {
   if (w == null) return 'na';
-  if (w <= 21) return 'green';
-  if (w <= 23) return 'amber';
+  w = Math.round(w * 100) / 100;
+  if (w <= 22) return 'green';
+  if (w <= 24) return 'amber';
   return 'red';
 }
 function foodRag(f) {
-  // food = actual food cost % (target ≤25%)
+  // Unified RAG table (20/10/2026, Rory x Mike 13/10): green below 24.00%, amber 24.00 to 24.99%, Red Light at 25.00% and above.
   if (f == null) return 'na';
-  if (f <= 25) return 'green';
-  if (f <= 28) return 'amber';
+  f = Math.round(f * 100) / 100;
+  if (f < 24) return 'green';
+  if (f < 25) return 'amber';
   return 'red';
 }
 function foodVarRag(v) {
@@ -3839,7 +3842,7 @@ function foodVarRag(v) {
   if (v == null) return 'na';
   const a = Math.abs(v);
   if (a <= 5) return 'green';
-  if (a <= 8) return 'amber';
+  if (a <= 7.5) return 'amber';
   return 'red';
 }
 function ratingRag(r) {
@@ -3940,16 +3943,17 @@ function efficiencyScore(s) {
   return Math.max(0, Math.min(100, Math.round(parts.reduce((a, c) => a + c.v * c.w, 0) / totalW)));
 }
 function efficiencyRag(score) {
+  // Unified RAG table (20/10/2026): green 90 and above, amber 85 to 89.99, red below 85 (same as the Site CC).
   if (score == null) return 'na';
-  if (score >= 95) return 'green';
-  if (score >= 80) return 'amber';
+  if (score >= 90) return 'green';
+  if (score >= 85) return 'amber';
   return 'red';
 }
 function salesRag(v) {
-  // Covers vs target: green at/above target, amber within 5% below target,
-  // bright (deep) red for anything more than 5% below target.
+  // Sales vs target: green at/above target, amber under target down to -9.99%,
+  // bright (deep) red at -10% or worse (the Red Light line, unified RAG table 20/10/2026).
   if (v >= 0) return 'green';
-  if (v >= -5) return 'amber';
+  if (v > -10) return 'amber';
   return 'deep-red';
 }
 function combinedRag(s) {
@@ -4332,13 +4336,13 @@ function openSite(code) {
       <div class="kpi-grid">
         ${salesCell(s)}
         <div class="kpi">
-          <div class="kpi-label">Wage % (tgt ≤21%)</div>
+          <div class="kpi-label">Wage % (≤22%, amber to 24%)</div>
           <div class="kpi-value ${wageRag((METRICS[s.code]||{}).wage)}">${(METRICS[s.code]||{}).wage == null ? 'N/A' : (METRICS[s.code]).wage.toFixed(2) + '%'}</div>
           <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).wage, 'down-is-good', '#4f46e5')}</div>
           <div class="kpi-trend">${wowChip(((METRICS[s.code]||{}).wageActual != null && window.PREV_WEEK.wage[s.code] != null) ? (METRICS[s.code]).wageActual - window.PREV_WEEK.wage[s.code] : null, 'down-is-good', 'pp')}</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Food Cost % (tgt ≤25%)</div>
+          <div class="kpi-label">Food Cost % (&lt;24%, amber to 25%)</div>
           <div class="kpi-value ${foodRag((METRICS[s.code]||{}).food)}">${(METRICS[s.code]||{}).food == null ? 'N/A' : (METRICS[s.code]).food.toFixed(2) + '%'}</div>
           <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).food, 'down-is-good', '#4f46e5')}</div>
           <div class="kpi-trend">${wowChip(((METRICS[s.code]||{}).foodActual != null && window.PREV_WEEK.food[s.code] != null) ? (METRICS[s.code]).foodActual - window.PREV_WEEK.food[s.code] : null, 'down-is-good', 'pp')}</div>
@@ -4459,7 +4463,7 @@ document.addEventListener('keydown', e => {
 
 // Compute stats
 const stats = SITES.reduce((acc, s) => {
-  if (s.rag === 'deep-red' || s.rag === 'red' || s.vsTarget < -5) acc.red++;
+  if (s.rag === 'deep-red' || s.rag === 'red' || s.vsTarget <= -10) acc.red++;
   else if (s.rag === 'amber' || s.vsTarget < 0) acc.amber++;
   else acc.green++;
   acc.issues += s.issues.length;
@@ -5139,7 +5143,7 @@ function regionAggregate(id) {
   };
 }
 
-// Site sub-rows keep the SITE bands (efficiencyRag: >=95 green, >=80 amber) so a
+// Site sub-rows keep the SITE bands (efficiencyRag: >=90 green, >=85 amber) so a
 // site never shows one colour here and a different one in the Site League Table.
 function effRagCls(score) {
   const r = efficiencyRag(score);
@@ -5294,7 +5298,7 @@ function renderPeopleBoard() {
             <div class="pb-score ${effRagCls(eff)}" style="font-size:14px;padding:5px 6px;">${eff == null ? 'N/A' : eff}</div>
           </div>`;
       }).join('');
-      panels += `<div class="pb-panel"><div class="pb-panel-title">${a.head} · ${a.dam} — ${a.siteCount} sites, worst first. Site scores are coloured on the SITE bands (≥95 green · ≥80 amber), same as the Site League Table below — not the person bands. Click a site for full detail.</div>${subs}</div>`;
+      panels += `<div class="pb-panel"><div class="pb-panel-title">${a.head} · ${a.dam} — ${a.siteCount} sites, worst first. Site scores are coloured on the SITE bands (≥90 green · ≥85 amber), same as the Site League Table below — not the person bands. Click a site for full detail.</div>${subs}</div>`;
     }
     return row + panels;
   }).join('');
@@ -5837,7 +5841,7 @@ function repaintAll(){
   // Header stat counters
   try {
     const stats = SITES.reduce((acc, s) => {
-      if (s.rag === 'deep-red' || s.rag === 'red' || s.vsTarget < -5) acc.red++;
+      if (s.rag === 'deep-red' || s.rag === 'red' || s.vsTarget <= -10) acc.red++;
       else if (s.rag === 'amber' || s.vsTarget < 0) acc.amber++;
       else acc.green++;
       acc.issues += (s.issues || []).length;
@@ -6179,11 +6183,11 @@ const MEETING_RISK = {
       .then(function (j) { ROO = (j && j.d) ? j : null; return ROO; })
       .catch(function () { ROO = null; return null; });
   }
-  // Binary Red Light for Deliveroo ops, no amber: prep above 15.00 min (the Red Light rule), or any restaurant error
-  // cancellation or rejection that day. 'm' = no figures.
+  // Binary Red Light for Deliveroo ops, no amber: prep above 15.00 min (the Red Light rule), or any issue that day:
+  // missing items, restaurant error cancellation or rejection (Michael 14/10/2026, same rule as the Site CC Daily tab). 'm' = no figures.
   function rooRag(q) {
     if (!q || q[1] == null) return 'm';
-    return (q[7] === 1 || q[4] > 0 || q[6] > 0) ? 'r' : 'g';
+    return (q[7] === 1 || q[3] > 0 || q[4] > 0 || q[6] > 0) ? 'r' : 'g';
   }
   function rooIss(q) {
     var iss = [];
@@ -6365,8 +6369,8 @@ const MEETING_RISK = {
       { weekday: 'short', day: '2-digit', month: 'short' });
   };
 
-  // Wage % thresholds carried over unchanged from the previous Daily tab.
-  var ragWage = function (w) { return w == null ? 'dly-m' : (w <= 25 ? 'dly-g' : (w <= 30 ? 'dly-a' : 'dly-r')); };
+  // Daily labour % on the unified wage bands (20/10/2026): green to 22.00%, amber to 24.00%, red above 24%.
+  var ragWage = function (w) { if (w == null) return 'dly-m'; w = Math.round(w * 100) / 100; return w <= 22 ? 'dly-g' : (w <= 24 ? 'dly-a' : 'dly-r'); };
   // Unallocated labour: shifts worked but never assigned to FOH or BOH in the
   // rota system. Anything past 5% of a site's labour cost is a real reporting fault.
   var ragUnal = function (p) {
@@ -6376,9 +6380,8 @@ const MEETING_RISK = {
   };
 
   // ---- Google reviews (Pipe 8b) --------------------------------------
-  // RAG on the 7-day average. 4.5 is the fleet's working expectation; below 4.0
-  // is a site with a real problem, not noise.
-  var ragStars = function (a) { return a == null ? 'dly-m' : (a >= 4.5 ? 'dly-g' : (a >= 4.0 ? 'dly-a' : 'dly-r')); };
+  // RAG on the 7-day average, unified Google rating bands (20/10/2026): green 4.70+, amber 4.50 to 4.69, red below 4.50.
+  var ragStars = function (a) { return a == null ? 'dly-m' : (a >= 4.7 ? 'dly-g' : (a >= 4.5 ? 'dly-a' : 'dly-r')); };
   var starStr = function (n) { return '\u2605'.repeat(n) + '\u2606'.repeat(5 - n); };
   var plural = function (n, w) { return n + ' ' + w + (n === 1 ? '' : 's'); };
 
@@ -6724,7 +6727,7 @@ const MEETING_RISK = {
       + 'FOH and BOH are actual completed shifts, shown in £ and as a share of the final total labour cost. '
       + 'Wage % is total labour ÷ sales. Grouped by region, then sales highest first. '
       + 'Source: Auto Cash Up workbook, <b>Raw Data 2</b>. Refreshed daily at 12:15 Dubai.'
-      + (ROO ? '<br><b>Deliveroo</b> is the day\'s orders delivered, estimated prep time (red above 15.00 min, the Red Light rule) and any missing items %, restaurant error cancellations or rejections, from the Deliveroo Daily Master sheet (Deliveroo\'s morning CSV drops, ingested hourly), latest day ' + shortDate(ROO.to) + '. Red Light when prep is above 15.00 min or there is any restaurant error cancellation or rejection. Click a cell for the last 7 days and the weekly figures. A dot means no Deliveroo row for that site and day.' : '')
+      + (ROO ? '<br><b>Deliveroo</b> is the day\'s orders delivered, estimated prep time (red above 15.00 min, the Red Light rule) and any missing items %, restaurant error cancellations or rejections, from the Deliveroo Daily Master sheet (Deliveroo\'s morning CSV drops, ingested hourly), latest day ' + shortDate(ROO.to) + '. Red Light when prep is above 15.00 min or there is any issue (missing items, restaurant error cancellation or rejection). Click a cell for the last 7 days and the weekly figures. A dot means no Deliveroo row for that site and day.' : '')
       + (rv
         ? '<br><b>Google reviews</b> lead on the rolling <b>7 days</b> to ' + shortDate(rv.window_to)
           + ' \u2014 about 65 reviews a day arrive across 19 sites, too few to judge a site on one day. '

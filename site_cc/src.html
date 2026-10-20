@@ -458,7 +458,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
         <thead><tr><th>Day</th><th class="r">Sales</th><th class="r">Target</th><th class="r">Var</th><th class="r">Delivery</th><th class="r" title="Deliveroo orders delivered that day and estimated prep time (red above 15.00 min); any missing items, rejections or restaurant error cancellations are listed underneath">Deliveroo</th><th class="r">Covers</th><th class="r">SPH</th><th class="r" title="FOH share of total labour cost (FOH + BOH = 100%)">FOH %</th><th class="r" title="BOH share of total labour cost (FOH + BOH = 100%)">BOH %</th><th class="r">Labour %</th><th class="r">Google</th><th>Broth</th></tr></thead>
         <tbody id="dailyRows"></tbody>
       </table></div>
-      <div class="small" style="margin-top:8px">Delivery is every platform as cashed up. The Deliveroo column (orders · prep, issues underneath) comes from the Deliveroo daily ops feed (Deliveroo Daily Master, from the morning CSV drops); prep is red above 15.00 min; issues are missing items %, restaurant error cancellations and rejections. The 7 day total shows the weekly Tax Invoice sales when the 7 days are a full Monday to Sunday week. vs LY rows compare with the same weekdays 52 weeks earlier (sales, delivery, covers and spend per head). Google: reviews received that day and their average; red below 4.7★.</div>
+      <div class="small" style="margin-top:8px">Delivery is every platform as cashed up. The Deliveroo column (orders · prep, issues underneath) comes from the Deliveroo daily ops feed (Deliveroo Daily Master, from the morning CSV drops); prep is red above 15.00 min; issues are missing items %, restaurant error cancellations and rejections. The 7 day total shows the weekly Tax Invoice sales when the 7 days are a full Monday to Sunday week. vs LY rows compare with the same weekdays 52 weeks earlier (sales, delivery, covers and spend per head). Google: reviews received that day and their average; green 4.70★ and above, amber 4.50 to 4.69, red below.</div>
     </div>
     <div class="card" id="rooCard"><div class="ch"><div><h3>Deliveroo · weekly and daily</h3><div class="small">Same ten columns, thresholds and tints as the Control Centre Deliveroo panel. Weekly rows are the week of the latest Deliveroo drop (week to date) and the week before; daily rows are the latest 7 posted days. Not tied to the week picker.</div></div><span class="tag t-auto">AUTO</span></div><div id="rooOps"></div></div>
     <div class="card">
@@ -832,9 +832,9 @@ function wk(wc){return WK[idx(wc)]}
 function prevW(wc){var i=idx(wc);return i>0?WK[i-1]:null}
 
 /* ---------- metric definitions: target, direction, RAG ---------- */
-/* Binary Red Light: no amber. Green unless the Red Light line is crossed. */
-function band(v,g,a,hi){if(v==null)return 'n';return hi?(v>=g?'g':'r'):(v<=g?'g':'r')}
-/* Wage is the one three band measure: green up to 22.00%, amber 22.01% to 24.00%, Red Light above 24%. */
+/* Unified RAG table (20/10/2026, same bands as the AM Control Centre): green at target, amber in the warning band, red at the Red Light line. band() honours the amber threshold; a measure with no amber band passes a==null. */
+function band(v,g,a,hi){if(v==null)return 'n';if(a==null)return hi?(v>=g?'g':'r'):(v<=g?'g':'r');return hi?(v>=g?'g':v>=a?'a':'r'):(v<=g?'g':v<=a?'a':'r')}
+/* Wage: green up to 22.00%, amber 22.01% to 24.00%, Red Light above 24%. */
 /* Efficiency: green 90 and above, amber 85 to 89.99, red below 85. */
 function effRag(v){if(v==null)return 'n';return v>=90?'g':v>=85?'a':'r'}
 function wageRag(v){if(v==null)return 'n';v=Math.round(v*100)/100;return v<=22?'g':v<=24?'a':'r'}
@@ -842,20 +842,20 @@ function wageRag(v){if(v==null)return 'n';v=Math.round(v*100)/100;return v<=22?'
 function foodRag(v){if(v==null)return 'n';v=Math.round(v*100)/100;return v<24?'g':v<25?'a':'r'}
 var M=[
  {k:'sales',lab:'Sales',src:'Mona Lisa',f:function(w){return w.sales},fmt:gbp,dir:1,tgt:function(w){return w.target},tl:function(w){return w.target?gbp(w.target):null},
-  rag:function(v,w){if(v==null||!w.target)return 'n';var p=(v-w.target)/w.target*100;return p>=0?'g':'r'},gap:function(v,w){return w.target?pctS((v-w.target)/w.target*100):''},chg:'pct'},
+  rag:function(v,w){if(v==null||!w.target)return 'n';var p=(v-w.target)/w.target*100;return p>=0?'g':p>-10?'a':'r'},gap:function(v,w){return w.target?pctS((v-w.target)/w.target*100):''},chg:'pct'},
  {k:'del',lab:'Delivery sales',src:'Auto Cash Up',f:function(w){return w.del},fmt:gbp,dir:1,tgt:function(w){return w.delT},tl:function(w){return w.delT?gbp(w.delT):null},
   rag:function(v,w){if(v==null||!w.delT)return 'n';return v>=w.delT?'g':'r'},gap:function(v,w){return w.delT?pctS((v-w.delT)/w.delT*100):''},chg:'pct'},
  {k:'covers',lab:'Covers',src:'Mona Lisa',f:function(w){return w.covers},fmt:function(v){return v==null?NA:v.toLocaleString('en-GB')},dir:1,tgt:function(w){return lyCovers(w.wc)},tl:function(w){var t=w.wc?lyCovers(w.wc):null;return t==null?null:t.toLocaleString('en-GB')+' LY'},rag:function(v,w){var t=w.wc?lyCovers(w.wc):null;return v==null||t==null?'n':v>=t?'g':'r'},gap:function(v,w){var t=lyCovers(w.wc);return t?pctS((v-t)/t*100)+' vs LY':''},chg:'pct',note:'vs LY from w/c 16/11'},
- {k:'sph',lab:'Spend per head',src:'Mona Lisa',f:function(w){return w.sph},fmt:function(v){return v==null?NA:'£'+v.toFixed(2)},dir:1,tgt:function(){return SITE.sph},tl:function(){return '≥ £'+SITE.sph.toFixed(2)},rag:function(v){return band(v,SITE.sph,SITE.sph-1.1,true)},gap:function(v){var d=sgn(v-22,2,'');return d.charAt(0)==='-'?'-£'+d.slice(1):'+£'+d.replace('+','')},chg:'abs2'},
+ {k:'sph',lab:'Spend per head',src:'Mona Lisa',f:function(w){return w.sph},fmt:function(v){return v==null?NA:'£'+v.toFixed(2)},dir:1,tgt:function(){return SITE.sph},tl:function(){return '≥ £'+SITE.sph.toFixed(2)},rag:function(v){return band(v,SITE.sph,SITE.sph-2,true)},gap:function(v){var d=sgn(v-22,2,'');return d.charAt(0)==='-'?'-£'+d.slice(1):'+£'+d.replace('+','')},chg:'abs2'},
  {k:'wage',lab:'Wage %',src:'Mona Lisa',f:function(w){return w.wage},fmt:pct1,dir:-1,tgt:function(){return 22},tl:function(){return '≤ 22.0%'},rag:function(v){return wageRag(v)},gap:function(v){return v<=22?sgn(v-22,1,'pp'):v<=24?sgn(v-24,1,'pp')+' to Red Light':sgn(v-24,1,'pp')+' over'},chg:'pp',sub:'Amber 22 to 24%'},
  {k:'food',lab:'Food cost %',src:'Mona Lisa',f:function(w){return w.food},fmt:pct2,dir:-1,tgt:function(){return 25},tl:function(){return '< 25.0%'},rag:function(v){return foodRag(v)},gap:function(v){return v<24?sgn(v-25,2,'pp'):v<25?sgn(v-25,2,'pp')+' to Red Light':sgn(v-25,2,'pp')+' over'},chg:'pp',sub:'Amber 24 to 25%'},
  {k:'fv',lab:'Food variance',src:'Stock-take',f:function(w){return w.fv},fmt:function(v){return v==null?NA:sgn(v,1,'%')},dir:0,tgt:function(){return 5},tl:function(){return '± 5%'},rag:function(v){return v==null?'n':band(Math.abs(v),5,7.5,false)},gap:function(v){return Math.abs(v)<=5?'in band':sgn(Math.abs(v)-5,1,'pp')+' out'},chg:'abs'},
  {k:'dv',lab:'Drinks variance',src:'Stock-take',f:function(w){return w.dv},fmt:function(v){return v==null?NA:sgn(v,1,'%')},dir:0,tgt:function(){return 5},tl:function(){return '± 5%'},rag:function(v){return v==null?'n':band(Math.abs(v),5,7.5,false)},gap:function(v){return Math.abs(v)<=5?'in band':sgn(Math.abs(v)-5,1,'pp')+' out'},chg:'abs'},
- {k:'rating',lab:'Google rating',src:'Reviews',f:function(w){return w.rev?w.rating:null},fmt:function(v){return v==null?'<span style="color:var(--red-ink)">0 reviews</span>':v.toFixed(2)+'★'},dir:1,tgt:function(){return 4.7},tl:function(){return '≥ 4.70★'},rag:function(v,w){if(w&&w.rev===0)return 'r';return band(v,4.7,4.3,true)},gap:function(v){return sgn(v-4.7,2,'')},chg:'abs2',sub:function(w){return w.rev?w.rev+' new reviews':'Reviews'}},
+ {k:'rating',lab:'Google rating',src:'Reviews',f:function(w){return w.rev?w.rating:null},fmt:function(v){return v==null?'<span style="color:var(--red-ink)">0 reviews</span>':v.toFixed(2)+'★'},dir:1,tgt:function(){return 4.7},tl:function(){return '≥ 4.70★'},rag:function(v,w){if(w&&w.rev===0)return 'r';return band(v,4.7,4.5,true)},gap:function(v){return sgn(v-4.7,2,'')},chg:'abs2',sub:function(w){return w.rev?w.rev+' new reviews':'Reviews'}},
  {k:'dr',lab:'Deliveroo rating',src:'Deliveroo',f:function(w){return w.d.r},fmt:function(v){return v==null?NA:v.toFixed(2)+'★'},dir:1,tgt:function(){return 4.7},tl:function(){return '≥ 4.70★'},rag:function(v){return band(v,4.7,4.0,true)},gap:function(v){return sgn(v-4.7,2,'')},chg:'abs2'},
  {k:'dprep',lab:'Deliveroo prep time',src:'Deliveroo',f:function(w){return w.d.prep},fmt:function(v){return v==null?NA:v.toFixed(1)+' min'},dir:-1,tgt:function(){return 15},tl:function(){return '≤ 15.0 min'},rag:function(v){return band(v,15,18,false)},gap:function(v){return sgn(v-15,1,' min')},chg:'abs'},
  {k:'loy',lab:'Loyalty member bills',src:'Ramen Royalty',f:function(w){return w.loyB},fmt:function(v){return v==null?NA:v.toLocaleString('en-GB')},dir:1,tgt:function(){return null},tl:function(){return null},rag:function(){return 'n'},gap:function(){return ''},chg:'pct',sub:function(w){return w.loyDays==null?'Ramen Royalty':w.loyDays===0?'Launched 18/08/2026':w.loyDays<7?'Launch week, '+w.loyDays+' days':(w.loyM==null?'':w.loyM.toLocaleString('en-GB')+' members')}},
- {k:'loyshare',lab:'Member share of covers',src:'Ramen Royalty',f:function(w){return w.loyShare},fmt:pct1,dir:1,tgt:function(){return 25},tl:function(){return '≥ 25.0%'},rag:function(v){return band(v,25,15,true)},gap:function(v){return sgn(v-25,1,'pp')},chg:'pp',sub:'Programme target 25%'},
+ {k:'loyshare',lab:'Member share of covers',src:'Ramen Royalty',f:function(w){return w.loyShare},fmt:pct1,dir:1,tgt:function(){return 25},tl:function(){return '≥ 25.0%'},rag:function(v){return band(v,25,null,true)},gap:function(v){return sgn(v-25,1,'pp')},chg:'pp',sub:'Programme target 25%'},
  {k:'loyspend',lab:'Member spend',src:'Ramen Royalty',f:function(w){return w.loyS},fmt:gbp,dir:1,tgt:function(){return null},tl:function(){return null},rag:function(){return 'n'},gap:function(){return ''},chg:'pct',sub:function(w){return w.loyS!=null&&w.sales?pct1(w.loyS/w.sales*100)+' of sales':'Ramen Royalty'}},
  {k:'eff',lab:'Efficiency score',src:'Control Centre',f:function(w){return w.eff},fmt:function(v){return v==null?NA:Math.round(v)+''},dir:1,tgt:function(){return 90},tl:function(){return '≥ 90'},rag:function(v){return effRag(v)},gap:function(v){return sgn(v-90,0,'')},chg:'abs0'}
 ];
@@ -917,7 +917,7 @@ function renderHero(){
 function heroKeys(w,pw){
   var fr=foodRag(w.food),ws=lastN(w.wc,4),gw=ws.filter(function(x){return x.rev&&x.rating!=null});
   var n=gw.reduce(function(t,x){return t+x.rev},0),g=n?gw.reduce(function(t,x){return t+x.rating*x.rev},0)/n:null,neg=ws.reduce(function(t,x){return t+(x.neg||0)},0);
-  var dr=mean(ws.map(function(x){return x.d.r})),gr=band(g,4.7,4.3,true),drr=band(dr,4.7,4.0,true),rr=[gr,drr].indexOf('r')>-1?'r':[gr,drr].indexOf('a')>-1?'a':'g';
+  var dr=mean(ws.map(function(x){return x.d.r})),gr=band(g,4.7,4.5,true),drr=band(dr,4.7,4.0,true),rr=[gr,drr].indexOf('r')>-1?'r':[gr,drr].indexOf('a')>-1?'a':'g';
   var pws=pw?lastN(pw.wc,4).filter(function(x){return x.rev&&x.rating!=null}):[],pn=pws.reduce(function(t,x){return t+x.rev},0),pg=pn?pws.reduce(function(t,x){return t+x.rating*x.rev},0)/pn:null;
   function ic(r){return '<span class="ic ic-'+(r==='n'?'a':r)+'">'+(r==='g'?'✓':r==='r'?'✕':'!')+'</span>'}
   var mt=foodMtd(w.wc);var food='<div class="hitem">'+ic(fr)+'<div><b>Food cost: '+pct2(w.food).replace(/<[^>]+>/g,'')+'</b><small>Red Light above 25%, amber from 24%'+(w.food!=null?' · '+sgn(w.food-25,2,'pp'):'')+(pw&&pw.food!=null?' · last week '+pct2(pw.food):'')+(mt.v!=null?' · '+mLabel(mt.ym)+' to date '+pct2(mt.v)+' ('+mt.n+' wk'+(mt.n===1?'':'s')+')':'')+'</small></div></div>';
@@ -1040,9 +1040,9 @@ function renderComparison(){if(!$('#cmpTiles'))return;cvCtl();var c=cvS(),ms=CM.
   h+=mrow('Labour hours',a.hours,b?b.hours:null,function(v){return Math.round(v).toLocaleString('en-GB')+' h'},'pct',0,undefined,'','',true);
   h+='<tr class="sechd"><td colspan="6">KPIs</td></tr>';
   h+=mrow('Google reviews',a.rev||null,b?(b.rev||null):null,fC,'pct',1,undefined,'','',true);
-  h+=mrow('Google rating',a.rating,b?b.rating:null,function(v){return v.toFixed(2)+'★'},'star',1,undefined,a.rating==null?'':' c-'+(a.rating>=4.7?'g':'r'),'red below 4.70');
-  if(!NODEL){h+=mrow('Deliveroo rating',a.d.r,b?b.d.r:null,function(v){return v.toFixed(2)+'★'},'star',1,undefined,a.d.r==null?'':' c-'+(a.d.r>=4.7?'g':'r'));
-    h+=mrow('Deliveroo prep',a.d.prep,b?b.d.prep:null,function(v){return v.toFixed(1)+' min'},'min',-1,undefined,a.d.prep==null?'':' c-'+(a.d.prep>15?'r':'g'),'red above 15.00 min')}
+  h+=mrow('Google rating',a.rating,b?b.rating:null,function(v){return v.toFixed(2)+'★'},'star',1,undefined,a.rating==null?'':' c-'+band(a.rating,4.7,4.5,true),'green 4.70+, amber 4.50 to 4.69');
+  if(!NODEL){h+=mrow('Deliveroo rating',a.d.r,b?b.d.r:null,function(v){return v.toFixed(2)+'★'},'star',1,undefined,a.d.r==null?'':' c-'+band(a.d.r,4.7,4.0,true),'green 4.70+, amber 4.00 to 4.69');
+    h+=mrow('Deliveroo prep',a.d.prep,b?b.d.prep:null,function(v){return v.toFixed(1)+' min'},'min',-1,undefined,a.d.prep==null?'':' c-'+band(a.d.prep,15,18,false),'green to 15.00 min, amber to 18.00')}
   h+=mrow('Efficiency score',a.eff,b?b.eff:null,function(v){return v.toFixed(1)},'n',1,undefined,a.eff==null?'':' c-'+(a.eff>=90?'g':a.eff>=85?'a':'r'),'green 90+, amber 85 to 89');
   h+=mrow('Red Light weeks',a.red,b?b.red:null,function(v){return String(v)},'n',-1,undefined,a.red?' c-r':' c-g',partial?'of '+a.ws.length+' week'+(a.ws.length===1?'':'s')+' so far':'');
   $('#cmpMonth').innerHTML=h+'</tbody>';
@@ -1062,7 +1062,7 @@ function qLab(q){var n=+q.slice(6);return 'Q'+n+' '+q.slice(0,4)+' ('+MON3[(n-1)
 function kqList(){var o=[];WK.forEach(function(w){var q=qOf(w.wc);if(o.indexOf(q)<0)o.push(q)});return o}
 function wkVt(w){return w&&w.target&&w.sales!=null?(w.sales-w.target)/w.target*100:null}
 function vtRag(v){return v==null?'n':v>=0?'g':v>-10?'a':'r'}
-function ratRag(w){if(!w||w.rev==null)return 'n';if(!w.rev)return 'r';return w.rating==null?'n':w.rating>=4.7?'g':'r'}
+function ratRag(w){if(!w||w.rev==null)return 'n';if(!w.rev)return 'r';return band(w.rating,4.7,4.5,true)}
 function kqCmp(wc){var rv=revIn(wc,addD(wc,6)),ng=rv.filter(function(r){return r.i&&r.i.length}),c={};ng.forEach(function(r){var seen={};r.i.forEach(function(x){var t=REV.tax[x[0]],l=t?t.l:x[0];if(seen[l])return;seen[l]=1;c[l]=(c[l]||0)+1})});
   var top=Object.keys(c).sort(function(a,b){return c[b]-c[a]})[0];return {n:ng.length,of:rv.length,top:top?[top,c[top]]:null}}
 function kqRoo(w){var d=w&&w.d||{},r=0,a=0,n=0;DM.forEach(function(m){var b=rooBand(d[m.k],m.g,m.a,m.hi);if(b){n++;if(b==='r')r++;if(b==='a')a++}});return {r:r,a:a,n:n,rt:d.r,rag:!n?'n':r?'r':a?'a':'g'}}
@@ -1079,7 +1079,7 @@ var KQM=[{k:'sales',lab:'Sales',f:function(v){return gbp(v)},kind:'pct',up:1},{k
   {k:'sph',lab:'SPH',f:function(v){return v==null?NA:'£'+v.toFixed(2)},kind:'gbp',up:1},{k:'wage',lab:'Wage %',f:function(v){return pct1(v)},kind:'pp',up:0,rag:wageRag},{k:'food',lab:'Food %',f:function(v){return pct1(v)},kind:'pp',up:0,rag:foodRag},
   {k:'eff',lab:'Score',f:function(v){return v==null?NA:Math.round(v)},kind:'pts',up:1,rag:effRag},{k:'rating',lab:'Google rating',f:function(v){return v==null?NA:v.toFixed(2)+'★'},kind:'star',up:1}];
 function kqV(w,k){if(!w)return null;return k==='vt'?wkVt(w):w[k]}
-function kqBands(k){return k==='wage'?[[22,'green to 22%'],[24,'red above 24%']]:k==='food'?[[24,'green below 24%'],[25,'Red Light 25%']]:k==='eff'?[[90,'green 90'],[85,'amber 85']]:k==='rating'?[[4.7,'Red Light below 4.70']]:k==='vt'?[[0,'on target'],[-10,'Red Light at -10%']]:k==='sph'?[[22,'£22.00']]:[]}
+function kqBands(k){return k==='wage'?[[22,'green to 22%'],[24,'red above 24%']]:k==='food'?[[24,'green below 24%'],[25,'Red Light 25%']]:k==='eff'?[[90,'green 90'],[85,'amber 85']]:k==='rating'?[[4.7,'green 4.70'],[4.5,'amber 4.50']]:k==='vt'?[[0,'on target'],[-10,'Red Light at -10%']]:k==='sph'?[[22,'£22.00']]:[]}
 function kqChart(q,mons,k){var m=KQM.filter(function(x){return x.k===k})[0],W=900,H=230,L=46,R=10,T=18,B=34,bw=(W-L-R)/mons.length,vals=mons.map(function(mo){var w=wk(mo);return w&&!w.open?kqV(w,k):null});
   var pts=vals.filter(function(v){return v!=null}),bands=kqBands(k),all=pts.concat(bands.map(function(b){return b[0]})),tg=k==='sales'?mons.map(function(mo){var w=wk(mo);return w&&w.target?w.target:null}):[];all=all.concat(tg.filter(function(v){return v!=null}));
   if(!pts.length)return '<div class="small">No closed weeks in '+qLab(q)+' yet.</div>';
@@ -1089,7 +1089,7 @@ function kqChart(q,mons,k){var m=KQM.filter(function(x){return x.k===k})[0],W=90
   bands.forEach(function(b){var yy=y(b[0]);o+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="#0f172a" stroke-dasharray="4 4" opacity=".5"/><text x="'+(W-R)+'" y="'+(yy-4)+'" font-size="10" text-anchor="end" fill="#475569">'+esc(b[1])+'</text>'});
   mons.forEach(function(mo,i){var v=vals[i],x=L+i*bw+bw*0.18,bwid=bw*0.64,w=wk(mo);o+='<text x="'+(L+i*bw+bw/2)+'" y="'+(H-B+16)+'" font-size="10" text-anchor="middle" fill="'+(mo===gwc()?'#C43E12':'#8491a5')+'" font-weight="'+(mo===gwc()?'800':'500')+'">'+dm(mo)+'</text>';
     if(v==null){o+='<text x="'+(L+i*bw+bw/2)+'" y="'+(base-6)+'" font-size="10" text-anchor="middle" fill="#cbd5e1">'+(w&&w.open?'open':mo>NOWD?'':'n/a')+'</text>';return}
-    var rg=m.rag?m.rag(v):k==='rating'?(v>=4.7?'g':'r'):null,col=rg==='g'?'#059669':rg==='a'?'#d97706':rg==='r'?'#dc2626':'#E94E1B',y1=y(v),top=Math.min(y1,base),hh=Math.max(2,Math.abs(base-y1));
+    var rg=m.rag?m.rag(v):k==='rating'?band(v,4.7,4.5,true):null,col=rg==='g'?'#059669':rg==='a'?'#d97706':rg==='r'?'#dc2626':'#E94E1B',y1=y(v),top=Math.min(y1,base),hh=Math.max(2,Math.abs(base-y1));
     o+='<rect x="'+x+'" y="'+top+'" width="'+bwid+'" height="'+hh+'" rx="3" fill="'+col+'" opacity=".85"><title>w/c '+dmy(mo)+': '+m.f(v).replace(/<[^>]+>/g,'')+'</title></rect><text x="'+(x+bwid/2)+'" y="'+(v>=(k==='vt'?0:lo)?top-4:top+hh+11)+'" font-size="10" font-weight="700" text-anchor="middle" fill="#0f172a">'+(k==='sales'?'£'+(v/1000).toFixed(1)+'k':m.f(v).replace(/<[^>]+>/g,''))+'</text>';
     if(tg[i]!=null){var ty=y(tg[i]);o+='<line x1="'+(x-3)+'" x2="'+(x+bwid+3)+'" y1="'+ty+'" y2="'+ty+'" stroke="#0f172a" stroke-width="2"><title>Target '+gbp(tg[i]).replace(/<[^>]+>/g,'')+'</title></line>'}});
   return o+'</svg>'}
@@ -1219,13 +1219,14 @@ function renderKpi(){
 
 /* ---------- Deliveroo ---------- */
 var DM=[
- {k:'r',lab:'Rating',g:4.7,a:4.0,hi:true,min:3,max:5,fmt:function(v){return v.toFixed(2)+'★'},tl:'Red Light below 4.70★',dp:2,u:''},
- {k:'open',lab:'Open hours',g:98,a:95,hi:true,min:85,max:100,fmt:function(v){return v.toFixed(1)+'%'},tl:'Red Light below 98%',dp:1,u:'pp'},
- {k:'prep',lab:'Avg prep time',g:15,a:18,hi:false,min:8,max:22,fmt:function(v){return v.toFixed(1)+' min'},tl:'Red Light above 15.00 min',dp:1,u:' min'},
- {k:'inacc',lab:'Inaccurate orders',g:2,a:3,hi:false,min:0,max:10,fmt:function(v){return v.toFixed(1)+'%'},tl:'Red Light above 2%',dp:1,u:'pp'},
- {k:'rider',lab:'Rider wait over 5 min',g:2,a:4,hi:false,min:0,max:16,fmt:function(v){return v.toFixed(1)+'%'},tl:'Red Light above 2%',dp:1,u:'pp'}
+ {k:'r',lab:'Rating',g:4.7,a:4.0,hi:true,min:3,max:5,fmt:function(v){return v.toFixed(2)+'★'},tl:'Green 4.70★+, amber to 4.00, red below (Red Light trigger below 4.70★)',dp:2,u:''},
+ {k:'open',lab:'Open hours',g:98,a:95,hi:true,min:85,max:100,fmt:function(v){return v.toFixed(1)+'%'},tl:'Green 98%+, amber to 95%, red below',dp:1,u:'pp'},
+ {k:'prep',lab:'Avg prep time',g:15,a:18,hi:false,min:8,max:22,fmt:function(v){return v.toFixed(1)+' min'},tl:'Green to 15.00 min, amber to 18.00, red above (Red Light trigger above 15.00)',dp:1,u:' min'},
+ {k:'inacc',lab:'Inaccurate orders',g:2,a:3,hi:false,min:0,max:10,fmt:function(v){return v.toFixed(1)+'%'},tl:'Green to 2%, amber to 3%, red above',dp:1,u:'pp'},
+ {k:'rider',lab:'Rider wait over 5 min',g:2,a:4,hi:false,min:0,max:16,fmt:function(v){return v.toFixed(1)+'%'},tl:'Green to 2%, amber to 4%, red above',dp:1,u:'pp'}
 ];
-function drooRag(d){var rs=DM.map(function(m){return d[m.k]==null?'n':band(d[m.k],m.g,m.a,m.hi)});if(rs.indexOf('r')>-1)return 'r';if(rs.every(function(r){return r==='n'}))return 'n';return 'g'}
+/* Weekly Overall = AM Control Centre Deliveroo RAG rule: red if any metric red, green only if all five green, otherwise amber (a missing metric counts as amber). */
+function drooRag(d){var rs=DM.map(function(m){return d[m.k]==null?'n':band(d[m.k],m.g,m.a,m.hi)});if(rs.indexOf('r')>-1)return 'r';if(rs.every(function(r){return r==='n'}))return 'n';if(rs.every(function(r){return r==='g'}))return 'g';return 'a'}
 function gauge(m,v){
   var span=m.max-m.min,pos=function(x){return Math.max(0,Math.min(100,(x-m.min)/span*100))},z;
   if(m.hi)z=[['var(--red)',pos(m.a)],['var(--amber)',pos(m.g)-pos(m.a)],['var(--green)',100-pos(m.g)]];
@@ -1333,7 +1334,7 @@ function renderDaily(){renderFold();
   var lastDay=Object.keys(DAY).filter(function(k){var r=DAY[k];return r&&r[0]!=null}).sort().pop(),anchor=lastDay||addD(NOWD,-1);  /* 14/10/2026 (Michael): Daily always shows the latest posted day, whatever week the picker is on */
   var cur=[anchor],prv=[];for(var j=7;j>=1;j--)prv.push(addD(anchor,-j));
   var f=function(n){return n==null?'<span class="ph">·</span>':'£'+Math.round(n).toLocaleString('en-GB')},pc=function(n,s){return n==null||!s?'<span class="ph">·</span>':(n/s*100).toFixed(1)+'%'},sp=function(a,b){return a==null||b==null?null:a+b};
-  function gcell(rv){if(!rv.length)return '<td class="r ph">0</td>';var av=rv.reduce(function(t,y){return t+y.s},0)/rv.length;return '<td class="r c-'+(av>=4.7?'g':'r')+'" title="'+rv.map(function(y){return y.s+'★ '+esc(y.a)}).join(', ')+'">'+rv.length+' · '+av.toFixed(1)+'★</td>'}
+  function gcell(rv){if(!rv.length)return '<td class="r ph">0</td>';var av=rv.reduce(function(t,y){return t+y.s},0)/rv.length;return '<td class="r c-'+band(av,4.7,4.5,true)+'" title="'+rv.map(function(y){return y.s+'★ '+esc(y.a)}).join(', ')+'">'+rv.length+' · '+av.toFixed(1)+'★</td>'}
   function row(dt){var r=DAY[dt],bs=BST[brothSt(dt)],gc=gcell(revIn(dt,dt)),bc='<td><span class="pill '+bs[0]+'">'+bs[1]+'</span></td>',lab='<td><b>'+dayName(dt)+'</b> '+dm(dt)+'</td>';
     if(!r)return '<tr>'+lab+Array(5).join('<td class="r ph">·</td>')+rooCells(dt)+Array(6).join('<td class="r ph">·</td>')+gc+bc+'</tr>';
     var v=r[1]?(r[0]-r[1])/r[1]*100:null;
@@ -1437,7 +1438,7 @@ function foodMtd(wc){var ym=wc.slice(0,7),a=agg(ym),n=a.ws.filter(function(x){re
 function gmNote(){var sel=$('#weekSel').value;return sel&&sel!==S.wc?' <span class="small" style="font-weight:500;color:var(--ink-2)">last completed week · w/c '+dmy(sel)+' is '+(sel===OPEN?'still in progress':'closing, final figures Tuesday')+'</span>':''}
 function renderStock(){renderBudget();
   var w=wk(S.wc),mt=foodMtd(S.wc);var _sh=$('#stockTiles').previousElementSibling;if(_sh&&_sh.querySelector('h2'))_sh.querySelector('h2').innerHTML='Stock &amp; cost control · w/c '+dmy(S.wc)+gmNote();
-  $('#stockTiles').innerHTML=tile('Food cost %',pct2(w.food),'Red Light above 25%, amber from 24%',foodRag(w.food))+
+  $('#stockTiles').innerHTML=tile('Food cost %',pct2(w.food),'Green below 24%, amber 24 to 24.99%, Red Light at 25%',foodRag(w.food))+
     tile('Food cost · '+mLabel(mt.ym),pct2(mt.v),(mt.n?mt.n+' of '+mt.of+' weeks closed, sales weighted':'No closed week with food cost yet')+' · same bands',foodRag(mt.v))+
     tile('Food variance',w.fv==null?NA:sgn(w.fv,1,'%'),'Target ± 5%',w.fv==null?'n':band(Math.abs(w.fv),5,7.5,false))+
     tile('Drinks variance',w.dv==null?NA:sgn(w.dv,1,'%'),'Target ± 5%',w.dv==null?'n':band(Math.abs(w.dv),5,7.5,false))+
@@ -1524,7 +1525,7 @@ function renderMarketing(){
   var w=wk(S.wc)||{},pw=WK[idx(S.wc)-1],lt=$('#mkLoyTiles');
   $('#mkLoyH').textContent='Loyalty · Ramen Royalty · w/c '+dmy(S.wc);
   if(!SITE.has.loyalty||!LOY.launch){lt.innerHTML='<div class="small" style="grid-column:span 12">No Ramen Royalty venue on file for this site.</div>';$('#mkLoyTL').innerHTML=TL('n','No feed');$('#mkLoyChart').innerHTML='';$('#mkLoyDays').innerHTML='';$('#mkLoyTable').innerHTML='';$('#mkLoyFoot').textContent='';return}
-  var sr=w.loyShare==null?'n':band(w.loyShare,25,15,true);
+  var sr=w.loyShare==null?'n':band(w.loyShare,25,null,true);
   $('#mkLoyTL').innerHTML=w.loyB==null?TL('n','Before launch'):TL(sr,sr==='g'?'On target':'Below 25%');
   var chg=function(a,b,fmt){if(a==null||b==null||!b)return '';var d=(a-b)/b*100;return ' <span class="chg flat">'+(d>0?'▲ +':d<0?'▼ ':'● ')+d.toFixed(0)+'% vs last week</span>'};
   lt.innerHTML=tile('Member bills this week',w.loyB==null?NA:w.loyB.toLocaleString('en-GB'),(w.loyDays==null||w.loyDays===0?'Launched '+dmy(LOY.launch):w.loyDays<7?w.loyDays+' days of the week since launch':(w.loyM!=null?w.loyM.toLocaleString('en-GB')+' different members':''))+chg(w.loyB,pw&&pw.loyB),null,'<span class="tag t-auto">RAMEN ROYALTY</span>')+
@@ -1537,7 +1538,7 @@ function renderMarketing(){
   $('#mkLoyDays').innerHTML='<thead><tr><th>Day</th><th class="r">Bills</th><th class="r">Members</th><th class="r">Spend</th></tr></thead><tbody>'+dk.map(function(k){var r=LOYD[k];return '<tr><td><b>'+['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][new Date(k+'T00:00:00Z').getUTCDay()]+' '+dm(k)+'</b></td><td class="r">'+r[0]+'</td><td class="r">'+r[1]+'</td><td class="r">'+gbp(r[2])+'</td></tr>'}).join('')+'</tbody>';
   var t8=lastN(S.wc,8).slice().reverse();
   $('#mkLoyTable').innerHTML='<thead><tr><th>w/c</th><th class="r">Member bills</th><th class="r">Members</th><th class="r">Covers</th><th class="r">Share of covers</th><th class="r">Member spend</th><th class="r">% of sales</th></tr></thead><tbody><tr class="tgtrow"><td>Target</td><td class="r">·</td><td class="r">·</td><td class="r">·</td><td class="r">≥ 25%</td><td class="r">·</td><td class="r">·</td></tr>'+
-    t8.map(function(x){var s=x.loyShare==null?'':' c-'+band(x.loyShare,25,15,true);return '<tr'+(x.wc===S.wc?' class="sel"':'')+'><td><b>'+dm(x.wc)+'</b>'+(x.open?'<small style="display:block;color:var(--ink-3)">week to date</small>':x.loyDays>0&&x.loyDays<7?'<small style="display:block;color:var(--ink-3)">launch week, '+x.loyDays+' days</small>':'')+'</td><td class="r">'+(x.loyB==null?NA:x.loyB.toLocaleString('en-GB'))+'</td><td class="r">'+(x.loyM==null?NA:x.loyM.toLocaleString('en-GB'))+'</td><td class="r">'+(x.covers==null?NA:x.covers.toLocaleString('en-GB'))+'</td><td class="r'+s+'">'+pct1(x.loyShare)+'</td><td class="r">'+gbp(x.loyS)+'</td><td class="r">'+(x.loyS!=null&&x.sales?pct1(x.loyS/x.sales*100):NA)+'</td></tr>'}).join('')+'</tbody>';
+    t8.map(function(x){var s=x.loyShare==null?'':' c-'+band(x.loyShare,25,null,true);return '<tr'+(x.wc===S.wc?' class="sel"':'')+'><td><b>'+dm(x.wc)+'</b>'+(x.open?'<small style="display:block;color:var(--ink-3)">week to date</small>':x.loyDays>0&&x.loyDays<7?'<small style="display:block;color:var(--ink-3)">launch week, '+x.loyDays+' days</small>':'')+'</td><td class="r">'+(x.loyB==null?NA:x.loyB.toLocaleString('en-GB'))+'</td><td class="r">'+(x.loyM==null?NA:x.loyM.toLocaleString('en-GB'))+'</td><td class="r">'+(x.covers==null?NA:x.covers.toLocaleString('en-GB'))+'</td><td class="r'+s+'">'+pct1(x.loyShare)+'</td><td class="r">'+gbp(x.loyS)+'</td><td class="r">'+(x.loyS!=null&&x.sales?pct1(x.loyS/x.sales*100):NA)+'</td></tr>'}).join('')+'</tbody>';
   var a=agg(S.wc.slice(0,7));
   $('#mkLoyFoot').innerHTML='Source: '+esc(LOY.src||'Ramen Royalty')+', to '+dmy(LOY.to)+'. '+mLabel(a.ym)+' to date: '+(a.loyB==null?'n/a':a.loyB.toLocaleString('en-GB')+' member bills, '+pct1(a.loyShare)+' of covers, '+gbp(a.loyS)+' member spend')+(lastZero?' '+dm(LOY.to)+' shows no member bills yet: Trifft posts bills through the day after, so treat the latest day as still filling.':'')+'. Site sign ups are not attributable (Trifft has no venue on a sign up), so members here = members who have paid a bill at this site.';
 }
@@ -1671,7 +1672,7 @@ function renderMonth(){
       '<td class="r">'+w.covers.toLocaleString('en-GB')+'</td><td class="r'+cc(w.sph,band(w.sph,22,20.9,true))+'">£'+w.sph.toFixed(2)+'</td>'+
       '<td class="r'+cc(w.wage,wageRag(w.wage))+'">'+pct1(w.wage)+'</td><td class="r'+cc(w.food,foodRag(w.food))+'">'+pct2(w.food)+'</td>'+
       '<td class="r'+cc(w.fv,w.fv==null?'':band(Math.abs(w.fv),5,7.5,false))+'">'+(w.fv==null?NA:sgn(w.fv,1,'%'))+'</td><td class="r'+cc(w.dv,w.dv==null?'':band(Math.abs(w.dv),5,7.5,false))+'">'+(w.dv==null?NA:sgn(w.dv,1,'%'))+'</td>'+
-      '<td class="r'+(w.rev===0?' c-r':w.rev&&w.rating!=null?' c-'+band(w.rating,4.7,4.3,true):'')+'">'+(w.rev&&w.rating!=null?w.rating.toFixed(2):NA)+'<div style="font-size:11px;font-weight:600">'+w.rev+' new</div></td>'+
+      '<td class="r'+(w.rev===0?' c-r':w.rev&&w.rating!=null?' c-'+band(w.rating,4.7,4.5,true):'')+'">'+(w.rev&&w.rating!=null?w.rating.toFixed(2):NA)+'<div style="font-size:11px;font-weight:600">'+w.rev+' new</div></td>'+
       '<td class="r'+(w.d.r==null?'':' c-'+band(w.d.r,4.7,4,true))+'">'+(w.d.r==null?NA:w.d.r.toFixed(2))+'</td><td class="r'+(w.d.prep==null?'':' c-'+band(w.d.prep,15,18,false))+'">'+(w.d.prep==null?NA:w.d.prep.toFixed(1))+'</td>'+
       '<td class="r'+cc(w.eff,effRag(w.eff))+'">'+w.eff+'</td><td>'+(w.rl==='red'?'<span class="pill p-r">✕ Red</span>':'<span class="pill p-g">✓ Green</span>')+'</td></tr>'}).join('');
   h+='<div class="card"><div class="ch"><div><div class="eyebrow">Week by week</div><h3 style="margin-top:2px">Every week against its targets</h3></div><div class="legend"><span class="pill p-g">On target</span><span class="pill p-r">Red Light</span></div></div><div class="tscroll"><table>'+
@@ -1686,7 +1687,7 @@ function renderMonth(){
     '<tr class="tot"><td>Month</td>'+DM.map(function(m){var v=a.d[m.k];return '<td class="r">'+(v==null?NA:m.fmt(v))+'</td>'}).join('')+'<td class="r">'+gbp(a.d.sales)+'</td><td class="r">'+(a.d.orders==null?NA:a.d.orders)+'</td><td></td></tr></tbody></table></div></div>';
   h+='<div class="card"><div class="ch"><h3>Weekly sales since June · '+mLabel(S.month)+' in orange</h3><span class="tag t-auto">AUTO</span></div><div class="tscroll">'+barChart(WK.filter(function(w){return w.sales!=null}),a.ms,function(w){return w.sales},null,YMAX,'k',[{v:TGTW,c:'#0f172a',l:'Target £'+Math.round(TGTW/1000)+'k'}])+'</div></div>';
   var trows=MONTHS.map(function(m){var x=agg(m),on=m===S.month,sv=x.sales!=null?(x.sales-x.target)/x.target*100:null;
-    return '<tr'+(on?' class="sel"':'')+'><td><b>'+mLabel(m)+'</b></td><td class="r">'+x.ws.length+'/'+x.ms.length+'</td><td class="r'+(sv==null?'':' c-'+(sv>=0?'g':sv>-10?'a':'r'))+'">'+gbp(x.sales)+(sv==null?'':'<div style="font-size:11px;font-weight:600">'+pctS(sv)+'</div>')+'</td><td class="r">'+Math.round(x.coversPW).toLocaleString('en-GB')+'</td><td class="r c-'+band(x.sph,22,20.9,true)+'">£'+x.sph.toFixed(2)+'</td><td class="r'+(x.wage==null?'':' c-'+wageRag(x.wage))+'">'+pct1(x.wage)+'</td><td class="r'+(x.food==null?'':' c-'+foodRag(x.food))+'">'+pct2(x.food)+'</td><td class="r'+(x.rating==null?'':' c-'+band(x.rating,4.7,4.3,true))+'">'+(x.rating==null?NA:x.rating.toFixed(2))+'</td><td class="r'+(x.d.r==null?'':' c-'+band(x.d.r,4.7,4,true))+'">'+(x.d.r==null?NA:x.d.r.toFixed(2))+'</td><td class="r">'+x.red+'</td><td class="r">'+(on?'<span class="small">Showing</span>':'<button type="button" class="btn sm" data-month="'+m+'">View</button>')+'</td></tr>'}).join('');
+    return '<tr'+(on?' class="sel"':'')+'><td><b>'+mLabel(m)+'</b></td><td class="r">'+x.ws.length+'/'+x.ms.length+'</td><td class="r'+(sv==null?'':' c-'+(sv>=0?'g':sv>-10?'a':'r'))+'">'+gbp(x.sales)+(sv==null?'':'<div style="font-size:11px;font-weight:600">'+pctS(sv)+'</div>')+'</td><td class="r">'+Math.round(x.coversPW).toLocaleString('en-GB')+'</td><td class="r c-'+band(x.sph,22,20.9,true)+'">£'+x.sph.toFixed(2)+'</td><td class="r'+(x.wage==null?'':' c-'+wageRag(x.wage))+'">'+pct1(x.wage)+'</td><td class="r'+(x.food==null?'':' c-'+foodRag(x.food))+'">'+pct2(x.food)+'</td><td class="r'+(x.rating==null?'':' c-'+band(x.rating,4.7,4.5,true))+'">'+(x.rating==null?NA:x.rating.toFixed(2))+'</td><td class="r'+(x.d.r==null?'':' c-'+band(x.d.r,4.7,4,true))+'">'+(x.d.r==null?NA:x.d.r.toFixed(2))+'</td><td class="r">'+x.red+'</td><td class="r">'+(on?'<span class="small">Showing</span>':'<button type="button" class="btn sm" data-month="'+m+'">View</button>')+'</td></tr>'}).join('');
   h+='<div class="card"><div class="ch"><div><div class="eyebrow">History</div><h3 style="margin-top:2px">Month on month</h3></div></div><div class="tscroll"><table><thead><tr><th>Month</th><th class="r">Weeks</th><th class="r">Sales</th><th class="r">Covers / wk</th><th class="r">SPH</th><th class="r">Wage %</th><th class="r">Food %</th><th class="r">Google ★</th><th class="r">Roo ★</th><th class="r">Red wks</th><th></th></tr></thead><tbody>'+
     '<tr class="tgtrow"><td>🎯 Target</td><td class="r">·</td><td class="r">'+gbp(TGTW)+' / wk</td><td class="r">·</td><td class="r">≥ £22.00</td><td class="r">≤ 22.0%</td><td class="r">< 25.0%</td><td class="r">≥ 4.70</td><td class="r">≥ 4.70</td><td class="r">0</td><td></td></tr>'+trows+'</tbody></table></div><div class="small">History starts May 2026, the first stored weekly build. Earlier months need a Mona Lisa backfill.</div></div>';
   $('#monthPane').innerHTML=h;
