@@ -116,6 +116,12 @@ dly=J('daily.json');cov=J('covers.json');dlv=J('delivery.json') if SC.get('deliv
 DD=JD('droo_daily.json',{'src':'Deliveroo daily not pulled yet','to':None,'d':{},'w':{}}) if SC.get('delivery',True)!=False else {'src':'Deliveroo daily: no delivery at this site','to':None,'d':{},'w':{}}  # pull_deliveroo_daily.py
 br=J('broth.json');rv=J('reviews.json');loy=J('loyalty.json')
 BUD=JD('budget.json',{'src':'Budget burn not pulled yet','pulled':None,'as_at':None,'cap':None,'ledger':{},'wk':{}});PRM=JD('promos.json',{'src':'Marketing calendar not pulled yet','pulled':None,'items':[]})  # 20/10/2026 (Michael): Budget burn on Stock & Cost, Marketing tab
+# 21/10/2026 (Michael): promo briefs from the marketing Drive, matched to this site; the page shows only those in play, click for the full brief
+try:
+    _pb=json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'pipeline','promo_briefs.json'),encoding='utf-8'))
+    PRM['briefs']=[x for x in _pb.get('items',[]) if x.get('sites') and ('ALL' in x['sites'] or CODE in x['sites'])];PRM['briefs_read']=_pb.get('read')
+except Exception as _e:
+    print('promo briefs not read:',_e);PRM['briefs']=[]
 # 13/10/2026 (Rory, M7): broth spec comes from sites.json sources.broth_spec (green range plus an amber band), pending EC sign off; the feed file's own spec is not used
 _bs=SJ['sources'].get('broth_spec')
 if _bs:br['spec']={'tk':_bs['tk']['g'],'tp':_bs['tp']['g'],'tka':_bs['tk'].get('a'),'tpa':_bs['tp'].get('a')}
