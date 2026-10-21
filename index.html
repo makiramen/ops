@@ -1486,7 +1486,7 @@
   <div class="section-head">
     <div>
       <h2>Regional Accountability Board</h2>
-      <div class="hint">The same league table, rolled up to the <strong>people accountable</strong>. £ and % columns are true regional totals (region sales vs region target; region wage £ &divide; region sales £), so a small good site cannot mask a big bad one. Score /100 is the average of that region's site efficiency scores. Bands are absolute: <strong>&ge;85 green &middot; 70&ndash;84 amber &middot; under 70 red</strong>. Click a row to expand the sites behind the number; click the Roo pill for the region-weighted Deliveroo roll-up.</div>
+      <div class="hint">The same league table, rolled up to the <strong>people accountable</strong>. £ and % columns are true regional totals (region sales vs region target; region wage £ &divide; region sales £), so a small good site cannot mask a big bad one. Score /100 is the average of that region's site efficiency scores. Bands are absolute: <strong>&ge;90 green &middot; 75&ndash;89 amber &middot; under 75 red</strong>, the same bands as the sites. Click a row to expand the sites behind the number; click the Roo pill for the region-weighted Deliveroo roll-up.</div>
     </div>
   </div>
 
@@ -3943,10 +3943,10 @@ function efficiencyScore(s) {
   return Math.max(0, Math.min(100, Math.round(parts.reduce((a, c) => a + c.v * c.w, 0) / totalW)));
 }
 function efficiencyRag(score) {
-  // Unified RAG table (20/10/2026): green 90 and above, amber 85 to 89.99, red below 85 (same as the Site CC).
+  // Unified RAG table (21/10/2026, Michael): green 90 and above, amber 75 to 89.99, red below 75. Same for sites, people and the Site CC.
   if (score == null) return 'na';
   if (score >= 90) return 'green';
-  if (score >= 85) return 'amber';
+  if (score >= 75) return 'amber';
   return 'red';
 }
 function salesRag(v) {
@@ -4982,7 +4982,7 @@ function fmtFoodVar(st){
 //     region wage £ ÷ region sales £), NOT the mean of site percentages.
 //   • Score /100 = the average of that region's site efficiency scores, so it
 //     ties back to the Site League Table below.
-//   • Bands are ABSOLUTE: >=85 green, 70-84 amber, <70 red. They do not move
+//   • Bands are ABSOLUTE: >=90 green, 75-89 amber, <75 red. They do not move
 //     when the fleet moves — a region cannot be green just by being least bad.
 //   • Missing KPIs renormalise (same as the site score) but the row carries a
 //     data-completeness %, so a thin score cannot pass as a full one.
@@ -5143,17 +5143,17 @@ function regionAggregate(id) {
   };
 }
 
-// Site sub-rows keep the SITE bands (efficiencyRag: >=90 green, >=85 amber) so a
+// Site sub-rows use the same bands as everything else (efficiencyRag: >=90 green, >=75 amber) so a
 // site never shows one colour here and a different one in the Site League Table.
 function effRagCls(score) {
   const r = efficiencyRag(score);
   return r === 'green' ? 'green' : (r === 'amber' ? 'amber' : (r === 'na' ? 'na' : 'red'));
 }
-// ABSOLUTE bands, locked 20/08/2026. >=85 green, 70-84 amber, <70 red.
+// ABSOLUTE bands, standardised 21/10/2026 (Michael): >=90 green, 75-89 amber, <75 red. Same as the site bands.
 function personRag(score) {
   if (score == null) return 'na';
-  if (score >= 85) return 'green';
-  if (score >= 70) return 'amber';
+  if (score >= 90) return 'green';
+  if (score >= 75) return 'amber';
   return 'red';
 }
 function pbGBP(v) {
@@ -5298,7 +5298,7 @@ function renderPeopleBoard() {
             <div class="pb-score ${effRagCls(eff)}" style="font-size:14px;padding:5px 6px;">${eff == null ? 'N/A' : eff}</div>
           </div>`;
       }).join('');
-      panels += `<div class="pb-panel"><div class="pb-panel-title">${a.head} · ${a.dam} — ${a.siteCount} sites, worst first. Site scores are coloured on the SITE bands (≥90 green · ≥85 amber), same as the Site League Table below — not the person bands. Click a site for full detail.</div>${subs}</div>`;
+      panels += `<div class="pb-panel"><div class="pb-panel-title">${a.head} · ${a.dam} — ${a.siteCount} sites, worst first. Site scores use the same bands as the people rows (≥90 green · 75 to 89 amber · under 75 red). Click a site for full detail.</div>${subs}</div>`;
     }
     return row + panels;
   }).join('');
@@ -5307,7 +5307,7 @@ function renderPeopleBoard() {
   const spread = (scored.length >= 2)
     ? `Spread between best and worst region: <strong>${scored[0].score - scored[scored.length - 1].score} points</strong>.`
     : '';
-  const foot = `<div class="pb-foot">Bands are absolute — <strong>≥85 green · 70–84 amber · under 70 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. ${SITES.length}-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>${scoreExemptCodes().length ? ' <strong>' + scoreExemptCodes().join(', ') + '</strong> ' + (scoreExemptCodes().length > 1 ? 'are' : 'is') + ' exempt from the score this week and excluded from both the regional and the fleet average.' : ''} ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
+  const foot = `<div class="pb-foot">Bands are absolute and the same for people and sites: <strong>≥90 green · 75 to 89 amber · under 75 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. ${SITES.length}-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>${scoreExemptCodes().length ? ' <strong>' + scoreExemptCodes().join(', ') + '</strong> ' + (scoreExemptCodes().length > 1 ? 'are' : 'is') + ' exempt from the score this week and excluded from both the regional and the fleet average.' : ''} ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
 
   wrap.innerHTML = header + body + foot;
 }

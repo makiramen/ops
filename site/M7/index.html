@@ -438,7 +438,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
       </div>
       <div class="card s4">
         <div class="ch"><h3 id="effHead">Efficiency score</h3><span class="tag t-auto">AUTO</span></div>
-        <div class="small">Official weekly score from the Control Centre build. Green 90+, amber 85 to 89. Missing inputs drop out and the rest reweights.</div>
+        <div class="small">Official weekly score from the Control Centre build. Green 90+, amber 75 to 89. Missing inputs drop out and the rest reweights.</div>
         <div id="effRows" style="display:flex;flex-direction:column;gap:9px"></div>
         <div class="small" id="effDrag"></div>
       </div>
@@ -847,8 +847,8 @@ function prevW(wc){var i=idx(wc);return i>0?WK[i-1]:null}
 function loyRag(v){return band(v,10,6,true)}
 function band(v,g,a,hi){if(v==null)return 'n';if(a==null)return hi?(v>=g?'g':'r'):(v<=g?'g':'r');return hi?(v>=g?'g':v>=a?'a':'r'):(v<=g?'g':v<=a?'a':'r')}
 /* Wage: green up to 22.00%, amber 22.01% to 24.00%, Red Light above 24%. */
-/* Efficiency: green 90 and above, amber 85 to 89.99, red below 85. */
-function effRag(v){if(v==null)return 'n';return v>=90?'g':v>=85?'a':'r'}
+/* Efficiency (21/10/2026, Michael): green 90 and above, amber 75 to 89.99, red below 75. */
+function effRag(v){if(v==null)return 'n';return v>=90?'g':v>=75?'a':'r'}
 function wageRag(v){if(v==null)return 'n';v=Math.round(v*100)/100;return v<=22?'g':v<=24?'a':'r'}
 /* Food cost (13/10/2026, Rory x Mike): green below 24.00%, amber 24.00% to 24.99%, Red Light at 25.00% and above. The Red Light trigger itself is unchanged (above 25%). */
 function foodRag(v){if(v==null)return 'n';v=Math.round(v*100)/100;return v<24?'g':v<25?'a':'r'}
@@ -1055,7 +1055,7 @@ function renderComparison(){if(!$('#cmpTiles'))return;cvCtl();var c=cvS(),ms=CM.
   h+=mrow('Google rating',a.rating,b?b.rating:null,function(v){return v.toFixed(2)+'★'},'star',1,undefined,a.rating==null?'':' c-'+band(a.rating,4.7,4.5,true),'green 4.70+, amber 4.50 to 4.69');
   if(!NODEL){h+=mrow('Deliveroo rating',a.d.r,b?b.d.r:null,function(v){return v.toFixed(2)+'★'},'star',1,undefined,a.d.r==null?'':' c-'+band(a.d.r,4.7,4.0,true),'green 4.70+, amber 4.00 to 4.69');
     h+=mrow('Deliveroo prep',a.d.prep,b?b.d.prep:null,function(v){return v.toFixed(1)+' min'},'min',-1,undefined,a.d.prep==null?'':' c-'+band(a.d.prep,15,18,false),'green to 15.00 min, amber to 18.00')}
-  h+=mrow('Efficiency score',a.eff,b?b.eff:null,function(v){return v.toFixed(1)},'n',1,undefined,a.eff==null?'':' c-'+(a.eff>=90?'g':a.eff>=85?'a':'r'),'green 90+, amber 85 to 89');
+  h+=mrow('Efficiency score',a.eff,b?b.eff:null,function(v){return v.toFixed(1)},'n',1,undefined,a.eff==null?'':' c-'+(a.eff>=90?'g':a.eff>=75?'a':'r'),'green 90+, amber 75 to 89');
   h+=mrow('Red Light weeks',a.red,b?b.red:null,function(v){return String(v)},'n',-1,undefined,a.red?' c-r':' c-g',partial?'of '+a.ws.length+' week'+(a.ws.length===1?'':'s')+' so far':'');
   $('#cmpMonth').innerHTML=h+'</tbody>';
   $('#cmpMonFoot').textContent=mlab(ym)+' = '+a.ws.length+' week'+(a.ws.length===1?'':'s')+' whose Monday falls in the month ('+closed+' closed'+(pend?', '+pend+' closing':'')+(openN?', this week to date':'')+'). Revenue, covers and SPH from the weekly cash up; last year is the same weekdays 364 days earlier over the '+mdays.length+' cashed up days ('+mly.n+' had a cash up last year). Wages and food are sales weighted over the weeks with a figure. '+(b?mlab(pm)+' is the full month'+(partial?'; month on month for revenue, covers, delivery, hours and reviews is the per trading day run rate ('+nA+' days vs '+nB+') while '+mlab(ym)+' is in progress':'')+'.':'No earlier month on the page.');
