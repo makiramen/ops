@@ -5399,8 +5399,14 @@ function fillRooCellFromDailies(s){
     const tag = `<span style="font-weight:600;color:${part ? 'var(--amber)' : 'var(--ink-3)'};font-size:10px;"> · dailies${part ? ' (' + Math.min(a.sDays, a.oDays) + '/7 days)' : ''}</span>`;
     const gmv = a.sales == null ? 'N/A' : '£' + Number(a.sales).toLocaleString('en-GB', {maximumFractionDigits:0});
     const ord = a.orders == null ? 'orders n/a' : a.orders.toLocaleString() + ' orders';
+    // Delivery Target (Michael 21/10/2026): sum of the daily Delivery Target over the days with sales.
+    let tgtLine = '';
+    if (a.target != null && a.sales != null) {
+      const vp = (a.sales / a.target - 1) * 100, hit = a.sales >= a.target;
+      tgtLine = `<div class="kpi-trend" style="margin-top:6px;font-weight:700;color:${hit ? 'var(--green)' : 'var(--red)'};">${hit ? '▲' : '▼'} ${Math.abs(vp).toFixed(1)}% vs £${Number(a.target).toLocaleString('en-GB', {maximumFractionDigits:0})} delivery target${a.tDays < 7 ? ' (' + a.tDays + '/7 days)' : ''}</div>`;
+    }
     el.innerHTML = `<div class="kpi" ${click}><div class="kpi-label">Deliveroo Sales (wk)${tag}${hint}</div>`+
-      `<div class="kpi-value">${gmv}</div>`+
+      `<div class="kpi-value">${gmv}</div>`+ tgtLine +
       `<div class="kpi-trend" style="margin-top:6px;">${ord} · delivery £ from cash up</div></div>`;
   });
 }
@@ -5419,19 +5425,22 @@ function rooDailyWeekAgg(s, monday){
   const p = Promise.all([rooPanelDaily()].concat(days.map(rooDayFile))).then(res => {
     const daily = res[0], files = res.slice(1);
     const iO = (daily && daily.k) ? daily.k.indexOf('orders') : 0;
-    let sales = 0, sDays = 0, orders = 0, oDays = 0;
+    let sales = 0, sDays = 0, orders = 0, oDays = 0, target = 0, tDays = 0;
     days.forEach((day, i) => {
       const f = files[i], ss = f && f.sites;
       const x = ss && (ss[jc] || ss[s.code]);
       const v = (x && x.sales) ? x.sales.delivery : null;
       if (v != null && !isNaN(v)) { sales += Number(v); sDays++; }
+      const tv = (x && x.sales) ? x.sales.target_delivery : null;
+      if (tv != null && !isNaN(tv) && Number(tv) > 0) { target += Number(tv); tDays++; }
       const dd = daily && daily.d && daily.d[day];
       const q = dd && (dd[jc] || dd[s.code]);
       if (q && iO >= 0 && q[iO] != null) { orders += Number(q[iO]); oDays++; }
     });
     // No Deliveroo orders all week and zero delivery £ = no storefront (e.g. Maki Nori), not a real £0 week.
-    if (!oDays && Math.abs(sales) < 0.005) return { sales: null, sDays: 0, orders: null, oDays: 0 };
-    return { sales: sDays ? Math.round(sales * 100) / 100 : null, sDays, orders: oDays ? orders : null, oDays };
+    if (!oDays && Math.abs(sales) < 0.005 && !tDays) return { sales: null, sDays: 0, orders: null, oDays: 0, target: null, tDays: 0 };
+    return { sales: sDays ? Math.round(sales * 100) / 100 : null, sDays, orders: oDays ? orders : null, oDays,
+             target: tDays ? Math.round(target * 100) / 100 : null, tDays };
   }).catch(() => null);
   ROO_AGG_CACHE[key] = p;
   return p;
@@ -5605,6 +5614,7 @@ function rooPanelHtml(s, d, monday, jsonCode, prevWk, daily, rooRev, agg, prevAg
   }
   h += `<div class="kpi-grid" style="grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap:8px; margin-bottom:14px;">
     ${tile(useA ? 'Delivery £ (dailies)' : 'Revenue', revHtml, null, revWow)}
+    ${(useA && agg.target != null) ? tile('Delivery target', num(agg.target, 0, '£'), null, (agg.sales != null ? `<span style="color:${agg.sales >= agg.target ? 'var(--green)' : 'var(--red)'}; font-size:10px; font-weight:700;">${agg.sales >= agg.target ? '▲' : '▼'} ${Math.abs((agg.sales / agg.target - 1) * 100).toFixed(1)}% vs target</span>` : '')) : ''}
     ${tile(useA ? 'Orders (dailies)' : 'Orders' + (d.orders_estimated ? ' (est.)' : ''), ordHtml, null, ordWow)}
     ${tile('AOV', num(d.aov, 2, '£'), null, dlt('aov', 'up-is-good', '', 2))}
     ${tile('Rating (tgt ≥4.7)', num(d.rating, 1, '', '★'), band('rating', d.rating), dlt('rating', 'up-is-good', '', 1))}
@@ -6516,6 +6526,9 @@ const MEETING_RISK = {
   function siteRow(p, code, rv) {
     var s = p.sites[code], l = s.labour;
     var deliv = s.sales.delivery ? fmtG(s.sales.delivery) + ' delivery' : 'no delivery';
+    // Delivery Target on its own (Michael 21/10/2026): delivery £ read against it, green if hit.
+    var tdl = s.sales.target_delivery;
+    if (tdl) deliv += ' <span class="' + (Number(s.sales.delivery || 0) >= tdl ? 'dly-g' : 'dly-r') + '" title="Delivery Target ' + fmtG(tdl) + '">vs ' + fmtG(tdl) + ' tgt</span>';
     var foh = l.foh == null
       ? '<span class="dly-m">—</span>'
       : '<span class="dly-fohv">' + fmtG(l.foh) + '</span><span class="sub dly-fohv">' + fmtP(l.foh_pct) + '</span>';

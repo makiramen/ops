@@ -493,6 +493,10 @@ def main():
                 "delivery": num(row[IDX_DELIVERY]),
                 "tips": num(row[IDX_TIPS]),
                 "target": target,
+                # Split of the target (Michael 21/10/2026): the Delivery Target on its own,
+                # so delivery £ can be read against it on the Daily tab and the site popup.
+                "target_sit_in": t_sit,
+                "target_delivery": t_del,
                 "vs_target_pct": (round((sales / target - 1) * 100.0, 2)
                                   if target else None),
             },
