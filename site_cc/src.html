@@ -230,6 +230,8 @@ details.review>summary{list-style:none;cursor:pointer;display:flex;flex-directio
 .ibar .n{font-size:12px;color:var(--ink-2);white-space:nowrap}.ibar .n b{color:var(--ink);font-size:13px}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .subs{margin:2px 0 6px 22px;display:flex;flex-direction:column;gap:2px}
+.ibrev{display:flex;flex-direction:column;gap:6px;margin-top:4px}
+.ibrev .review{border-left:4px solid var(--maki-orange)}
 .subs .ibar{grid-template-columns:minmax(120px,170px) 1fr auto;font-size:12.5px}
 .ev{border-left:3px solid var(--line);padding:2px 0 2px 8px;color:var(--ink-2);font-size:12.5px}
 .ev b{color:var(--ink);font-weight:700}
@@ -522,10 +524,6 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
         <div class="ch" style="margin-top:8px"><h3>Dishes</h3></div>
         <div id="rvDishes" class="small"></div>
       </div>
-    </div>
-    <div class="card" id="rvNoteCard">
-      <div class="ch"><h3 id="rvNoteHead">Control Centre write up</h3><span class="tag t-auto">REVIEWS PASS</span></div>
-      <div class="anote" id="rvNote"></div>
     </div>
     <div class="card">
       <div class="ch"><h3 id="rvFeedHead">Reviews</h3><div class="rvtools"><div class="seg" role="group" aria-label="Sort"><button type="button" data-ro="new">Newest</button><button type="button" data-ro="low">Lowest stars</button></div><button type="button" class="btn sm" data-rvall="1" data-rvbox="rvFeed">Expand all</button><button type="button" class="btn sm" data-rvall="0" data-rvbox="rvFeed">Collapse all</button></div></div>
@@ -1924,7 +1922,7 @@ function renderMapal(){
 /* ---------- Reviews tab: Reviews Intelligence, interactive (05/10/2026) ---------- */
 /* RI.r = [id, date, stars, author, text, issues[[cat,sub,evidence]], praise[], staff[[name,sent]], dishes[[name,sent]], summary] */
 var RI=__RI__,RIR=RI.r||[],RTAX=RI.tax||{},RPR=RI.praise||{};
-var RCOL={food:'#c2410c',service:'#1d4ed8',speed:'#b45309',value:'#6d28d9',cleanliness_ambience:'#0f766e',accuracy:'#be185d',hours_access:'#374151',availability:'#065f46',digital_payment:'#0369a1'};
+var RCOL={food:'#c2410c',service:'#1d4ed8',speed:'#b45309',value:'#6d28d9',cleanliness_ambience:'#0f766e',accuracy:'#a16207',hours_access:'#374151',availability:'#065f46',digital_payment:'#0369a1'};
 function rvS(){var d={per:'4w',show:'neg',stars:[],cat:null,sub:null,who:null,dish:null,q:'',from:'',to:'',ord:'new',open:null};S.rv=S.rv&&typeof S.rv==='object'?S.rv:{};for(var k in d)if(!(k in S.rv))S.rv[k]=d[k];return S.rv}
 function catLab(c){return (RTAX[c]&&RTAX[c].l)||c}
 function subLab(c,s){var t=RTAX[c];return (t&&t.s&&t.s[s])||s}
@@ -1959,6 +1957,9 @@ function rvCard(r){
     (r[9]&&rvNeg(r)?'<div style="font-weight:700">'+rvHi(r[9])+'</div>':'')+
     '<div>'+(r[4]?rvHi(r[4]):'<span class="ph">Star rating only, no comment</span>')+'</div>'+iss+
     ((pr||who||ds)?'<div class="chips">'+who+pr+ds+'</div>':'')+'</details>'}
+/* 21/10/2026 (Michael): clicking an issue (or its sub reason) shows the full reviews right there */
+function rvInline(pool,c,sub){var L=pool.filter(function(r){return r[5].some(function(i){return i[0]===c&&(!sub||i[1]===sub)})}).sort(function(a,b){return b[1].localeCompare(a[1])});
+  if(!L.length)return '';return '<div class="ibrev"><div class="small" style="font-weight:700;margin:6px 0 4px">'+L.length+' review'+(L.length>1?'s':'')+(sub?' · '+esc(subLab(c,sub)):' · '+esc(catLab(c)))+'</div>'+L.slice(0,25).map(function(r){return rvCard(r).replace('<details class="review"','<details open class="review"')}).join('')+(L.length>25?'<div class="small">Showing 25 of '+L.length+'. The full list is in the feed below.</div>':'')+'</div>'}
 function rvSet(k,v){var s=rvS();s[k]=v;if(k==='cat')s.sub=null;save();renderReviews()}
 function renderReviews(){
   if(!$('#rvFeed'))return;var v=rvS(),g=rvRange(),base=rvBase();
@@ -1985,11 +1986,11 @@ function renderReviews(){
   pool.forEach(function(r){var seen={};r[5].forEach(function(i){var c=cats[i[0]]||(cats[i[0]]={r:0,m:0,subs:{}});c.m++;tot++;if(!seen[i[0]]){c.r++;seen[i[0]]=1}var s=c.subs[i[1]]||(c.subs[i[1]]={r:0,m:0,seen:{}});s.m++;if(!s.seen[r[0]]){s.r++;s.seen[r[0]]=1}})});
   var cl=Object.keys(cats).sort(function(a,b){return cats[b].r-cats[a].r||cats[b].m-cats[a].m}),mx=cl.length?cats[cl[0]].r:1;
   $('#rvIssN').textContent=pool.filter(function(r){return r[5].length}).length+' reviews with an issue, '+tot+' mentions';
-  var q=cats.food?cats.food.m:0,sv=cats.service?cats.service.m:0,ot=tot-q-sv;
-  $('#rvStack').innerHTML=tot?[['food',q,'quality'],['service',sv,'service'],[null,ot,'other']].filter(function(x){return x[1]}).map(function(x){var p=x[1]/tot*100;return '<div data-rc="'+(x[0]||'')+'" title="'+x[1]+' mentions" style="width:'+p+'%;background:'+(x[0]?catCol(x[0]):'#94a3b8')+'">'+(p>=12?Math.round(p)+'% '+x[2]:'')+'</div>'}).join(''):'<div style="width:100%;background:var(--green);font-style:normal">No complaints in this slice</div>';
+  /* 21/10/2026 (Michael): no anonymous 'other' slice; every issue type is its own named segment, click one to open it */
+  $('#rvStack').innerHTML=tot?cl.map(function(c){var p=cats[c].m/tot*100;return '<div data-rc="'+c+'" title="'+esc(catLab(c))+': '+cats[c].m+' mentions, '+cats[c].r+' reviews" style="cursor:pointer;width:'+p+'%;background:'+catCol(c)+(v.cat&&v.cat!==c?';opacity:.45':'')+'">'+(p>=12?Math.round(p)+'% '+esc(catLab(c).toLowerCase()):'')+'</div>'}).join(''):'<div style="width:100%;background:var(--green);font-style:normal">No complaints in this slice</div>';
   $('#rvBars').innerHTML=cl.map(function(c){var x=cats[c],on=v.cat===c;
     var h='<div class="ibar'+(on?' on':'')+'" data-rc="'+c+'" title="'+x.r+' reviews mention '+esc(catLab(c).toLowerCase())+', '+x.m+' distinct complaints"><div><span class="dot" style="background:'+catCol(c)+'"></span>'+esc(catLab(c))+'</div><div class="tr"><i style="width:'+(x.r/mx*100)+'%;background:'+catCol(c)+'"></i></div><div class="n"><b>'+x.r+'</b> rev · '+x.m+' mentions</div></div>';
-    if(on){var sl=Object.keys(x.subs).sort(function(a,b){return x.subs[b].r-x.subs[a].r});h+='<div class="subs">'+sl.map(function(s){var y=x.subs[s];return '<div class="ibar'+(v.sub===s?' on':'')+'" data-rsub="'+s+'"><div>'+esc(subLab(c,s))+'</div><div class="tr"><i style="width:'+(y.r/x.r*100)+'%;background:'+catCol(c)+';opacity:.7"></i></div><div class="n"><b>'+y.r+'</b> rev</div></div>'}).join('')+'<div class="small">Owner: '+esc((RTAX[c]&&RTAX[c].o)||'')+'</div></div>'}
+    if(on){var sl=Object.keys(x.subs).sort(function(a,b){return x.subs[b].r-x.subs[a].r});h+='<div class="subs">'+sl.map(function(s){var y=x.subs[s];return '<div class="ibar'+(v.sub===s?' on':'')+'" data-rsub="'+s+'"><div>'+esc(subLab(c,s))+'</div><div class="tr"><i style="width:'+(y.r/x.r*100)+'%;background:'+catCol(c)+';opacity:.7"></i></div><div class="n"><b>'+y.r+'</b> rev</div></div>'}).join('')+'<div class="small">Owner: '+esc((RTAX[c]&&RTAX[c].o)||'')+'</div>'+rvInline(pool,c,v.sub)+'</div>'}
     return h}).join('')||'<div class="small">No complaints in this slice.</div>';
   /* week trend: last 12 weeks to the period end */
   var wks=[];for(var i=11;i>=0;i--){var m0=addD(g.b>'2099'?(RIR.length?RIR[RIR.length-1][1]:nowIso()):g.b,-7*i);m0=addD(m0,-((new Date(m0+'T00:00:00Z').getUTCDay()+6)%7));wks.push(m0)}
@@ -2014,12 +2015,6 @@ function renderReviews(){
       (r[5].length?r[5].map(function(i){return '<div class="ev"><span class="dot" style="background:'+catCol(i[0])+'"></span><b>'+esc(subLab(i[0],i[1]))+'</b>'+(i[2]?': "'+esc(i[2])+'"':'')+'</div>'}).join(''):'<div class="small">No issue labelled: read the full text.</div>')+
       (who.length?'<div class="chips"><span class="small">Named:</span> '+who.map(function(x){return rvWho(x[0],x[1])}).join(' ')+'</div>':'')+
       '<details><summary class="small" style="cursor:pointer">Full review</summary><div style="margin-top:4px">'+esc(r[4]||'No comment')+'</div></details></div>'}).join(''):'<div class="banner ok"><span>No 1★ or 2★ reviews in this slice.</span></div>';
-  /* write up: the AM CC reviews pass, best match for the period */
-  var ann=RI.ann||{},key=null,mo=g.b.slice(0,7),qq=g.b.slice(0,4)+'-Q'+(Math.floor((+g.b.slice(5,7)-1)/3)+1);
-  if(v.per==='wk')key='week|'+S.wc+'|site|'+SCODE;else if(v.per==='q')key='quarter|'+qq+'|site|'+SCODE;else key='month|'+(v.per==='all'||g.b>'2099'?'':mo)+'|site|'+SCODE;
-  if(!ann[key]){var ks=Object.keys(ann).filter(function(k){return k.indexOf(v.per==='wk'?'week|':v.per==='q'?'quarter|':'month|')===0}).sort();key=ks.length?ks[ks.length-1]:Object.keys(ann).sort().pop()}
-  var A2=key&&ann[key];$('#rvNoteCard').hidden=!A2;
-  if(A2){var kp=key.split('|');$('#rvNoteHead').textContent='Control Centre write up · '+(kp[0]==='week'?'w/c '+dmy(kp[1]):kp[0]==='month'?mLabel(kp[1]):kp[1].replace('-',' '))+(A2.w?' · written '+dmy(A2.w):'');$('#rvNote').textContent=A2.t}
   /* feed */
   var feed=base.filter(function(r){return rvMatch(r)});feed.sort(v.ord==='low'?function(a,b){return a[2]-b[2]||b[1].localeCompare(a[1])}:function(a,b){return b[1].localeCompare(a[1])});
   $('#rvFeedHead').textContent=(v.show==='neg'?'Complaints':v.show==='pos'?'Praise':'All reviews')+' · '+feed.length+' of '+n;
