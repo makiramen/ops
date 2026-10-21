@@ -3030,13 +3030,18 @@ function isScoreExempt(code){ return scoreExemptCodes().indexOf(code) !== -1; }
 // WEEK_TARGETS: week-scoped green-light overrides, keyed by Monday.
 // 21/10/2026, Michael: for w/c 12/10 only, M14 Meadowhall, M16 Nottingham, M18 Soho and
 // M19 Shoreditch get an SPH (avg spend) green light of GBP 15.00 and a wage green light of 25%.
-// Feeds the RAG chips, the Red Light and the efficiency score. Every other week and site is unchanged.
+// 21/10/2026 16:21, Michael: extend to every site for w/c 12/10 EXCEPT M9 Manchester and IKI2.
+// Maki Nori also kept on its normal targets (GBP 35 SPH) pending Michael's call.
+// Feeds the RAG chips, the Red Light and the efficiency score. Every other week is unchanged.
 const WEEK_TARGETS = {
-  "2026-10-12": { sites: ["M14", "M16", "M18", "M19"], sph: 15, wage: 25 }
+  "2026-10-12": { sites: ["*"], except: ["M9", "IKI2", "Maki Nori"], sph: 15, wage: 25 }
 };
 function weekTarget(code, key){
   const o = WEEK_TARGETS[window.currentWeekKey];
-  if (!o || code == null || o.sites.indexOf(String(code)) === -1) return null;
+  if (!o || code == null) return null;
+  const c = String(code);
+  if ((o.except || []).indexOf(c) !== -1) return null;
+  if (o.sites.indexOf('*') === -1 && o.sites.indexOf(c) === -1) return null;
   return o[key] != null ? o[key] : null;
 }
 function wageTarget(code){ const w = weekTarget(code, 'wage'); return w != null ? w : 22; }
