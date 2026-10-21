@@ -4736,8 +4736,9 @@ function _delivBuildRows(siteEntries){
       // source as the tiles (incl. the fallback path).
       const metrics = {};
       DELIV_METRIC_DEFS.forEach(m => { metrics[m[0]] = (d[m[0]] == null ? null : d[m[0]]); });
+      const cl = s.cluster || ((typeof SITES !== 'undefined' && SITES.find(x => x.code === s.code)) || {}).cluster || null;
       return { code: s.code, name: s.name, rag: r.rag, drivers: r.drivers, metrics,
-               handKeyed: !!d.ops_hand_keyed };
+               handKeyed: !!d.ops_hand_keyed, cluster: cl };
     });
   const order = { red:0, amber:1, green:2 };
   rows.sort((a, b) => order[a.rag] - order[b.rag] || a.code.localeCompare(b.code, undefined, { numeric:true }));
@@ -4746,11 +4747,12 @@ function _delivBuildRows(siteEntries){
 // Paint the RAG heatmap + summary into `host`. `wkLabel` heads the banner.
 // `fallbackNote` (optional HTML string) is prepended above the banner when the
 // shown week is NOT the active week.
+const _delivFrBadge = (r) => r.franchise ? ` <span title="Franchise site${r.frWeek ? ', figures from ' + r.frWeek : ''}" style="display:inline-block; margin-left:4px; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:800; letter-spacing:.03em; background:var(--maki-orange-bg,#FFF1EA); color:var(--maki-orange,#E94E1B); border:1px solid var(--maki-orange-ring,#E94E1B33);">FRANCHISE${r.frWeek ? ' · ' + r.frWeek : ''}</span>` : '';
 function _delivPaintRows(host, rows, wkLabel, fallbackNote, opts){
   opts = opts || {};
   const tile = (s) => `<div class="tile ${s.rag}">
     <div class="tile-issues-badge">${s.rag.toUpperCase()}</div>
-    <div><div class="tile-code">${s.code}</div><div class="tile-name">${s.name}</div></div>
+    <div><div class="tile-code">${s.code}</div><div class="tile-name">${s.name}${_delivFrBadge(s)}</div></div>
     <div><div class="tile-meta">${s.drivers}</div></div></div>`;
   const counts = rows.reduce((a, r) => { a[r.rag]++; return a; }, { red:0, amber:0, green:0 });
 
@@ -4788,19 +4790,48 @@ function _delivPaintRows(host, rows, wkLabel, fallbackNote, opts){
     const cells = DELIV_METRIC_DEFS.map(d => cell(d[0], d[2], d[3], d[4])).join('');
     const pill = `<span style="display:inline-block; min-width:52px; padding:2px 8px; border-radius:999px; font-size:10px; font-weight:800; letter-spacing:.04em; ${bandStyle[r.rag]}">${r.rag.toUpperCase()}</span>`;
     return `<tr>
-      <td style="padding:6px 8px; border:0.5px solid var(--line,#e3e3e3); text-align:left; font-size:12px; white-space:normal; overflow:hidden;"><strong>${r.code}</strong> <span style="color:var(--ink-soft,#888); font-weight:500;">${r.name}</span>${r.handKeyed ? ' <span title="Hand-keyed from the Deliveroo RAG sheet — this site is in no Deliveroo export this week. Unverified." style="display:inline-block; margin-left:4px; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:800; letter-spacing:.03em; background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd;">HAND-KEYED</span>' : ''}</td>
+      <td style="padding:6px 8px; border:0.5px solid var(--line,#e3e3e3); text-align:left; font-size:12px; white-space:normal; overflow:hidden;"><strong>${r.code}</strong> <span style="color:var(--ink-soft,#888); font-weight:500;">${r.name}</span>${_delivFrBadge(r)}${r.handKeyed ? ' <span title="Hand-keyed from the Deliveroo RAG sheet — this site is in no Deliveroo export this week. Unverified." style="display:inline-block; margin-left:4px; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:800; letter-spacing:.03em; background:#ede9fe; color:#5b21b6; border:1px solid #c4b5fd;">HAND-KEYED</span>' : ''}</td>
       ${cells}
       <td style="padding:6px 8px; border:0.5px solid var(--line,#e3e3e3); text-align:center;">${pill}</td>
     </tr>`;
   };
-  const matrix = `
+  const matrixFor = (rs) => `
     <div style="overflow-x:auto; margin-bottom:12px;">
       <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
         <colgroup><col style="width:26%"><col style="width:11.2%"><col style="width:11.2%"><col style="width:11.2%"><col style="width:11.2%"><col style="width:11.2%"><col style="width:18%"></colgroup>
         <thead>${tableHead}</thead>
-        <tbody>${rows.map(tableRow).join('')}</tbody>
+        <tbody>${rs.map(tableRow).join('')}</tbody>
       </table>
     </div>`;
+  const matrix = matrixFor(rows);
+  // Split by region (CLUSTER_DEFS order), franchise sites sit inside their region.
+  let body;
+  if (opts.byRegion && typeof CLUSTER_DEFS !== 'undefined'){
+    const groups = CLUSTER_DEFS.map(c => ({ c, rs: rows.filter(r => r.cluster === c.id) }));
+    const other = rows.filter(r => !CLUSTER_DEFS.some(c => c.id === r.cluster));
+    if (other.length) groups.push({ c:{ id:'other', name:'Unassigned', am:'' }, rs: other });
+    body = groups.filter(g => g.rs.length).map(g => {
+      const k = g.rs.reduce((a, r) => { a[r.rag]++; return a; }, { red:0, amber:0, green:0 });
+      const nFr = g.rs.filter(r => r.franchise).length;
+      return `<div class="deliv-region" style="margin-bottom:18px;">
+        <div style="display:flex; flex-wrap:wrap; align-items:baseline; gap:8px 12px; margin:0 0 10px; padding-bottom:6px; border-bottom:2px solid var(--maki-orange,#E94E1B);">
+          <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--maki-orange,#E94E1B);">${g.c.name}</h3>
+          ${g.c.am ? `<span style="font-size:11px; color:var(--ink-soft,#777);">${g.c.am}</span>` : ''}
+          <span style="margin-left:auto; font-size:12px; font-weight:700; color:var(--ink-soft,#555);">${k.red} red · ${k.amber} amber · ${k.green} green · ${g.rs.length} sites${nFr ? ' (' + nFr + ' franchise)' : ''}</span>
+        </div>
+        <div class="heatmap" style="margin-bottom:12px;">${g.rs.map(tile).join('')}</div>
+        ${matrixFor(g.rs)}
+      </div>`;
+    }).join('');
+  } else {
+    body = `
+    <div class="heatmap" style="margin-bottom:12px;">
+      ${rows.map(tile).join('')}
+    </div>
+    ${matrix}`;
+  }
+  const nCorp = rows.filter(r => !r.franchise).length;
+  const corpCounts = rows.filter(r => !r.franchise).reduce((a, r) => { a[r.rag]++; return a; }, { red:0, amber:0, green:0 });
 
   const banner = `
     <div style="border:1px dashed var(--amber-ring,#d97706); border-radius:10px; padding:9px 12px; margin-bottom:12px; font-size:12px; font-weight:700; background:#fffbeb; color:#92400e;">
@@ -4817,13 +4848,9 @@ function _delivPaintRows(host, rows, wkLabel, fallbackNote, opts){
     </div>`;
     return;
   }
-  host.innerHTML = (fallbackNote || '') + banner + `
-    <div class="heatmap" style="margin-bottom:12px;">
-      ${rows.map(tile).join('')}
-    </div>
-    ${matrix}
+  host.innerHTML = (fallbackNote || '') + banner + body + `
     <div style="font-size:12px; color:var(--ink-soft,#555); padding:0 2px;">
-      <strong>${counts.red} red · ${counts.amber} amber · ${counts.green} green</strong> across ${rows.length} sites on Deliveroo this week.
+      <strong>${corpCounts.red} red · ${corpCounts.amber} amber · ${corpCounts.green} green</strong> across ${nCorp} corporate sites on Deliveroo this week${rows.length > nCorp ? ' (franchise sites shown in their regions, not counted here)' : ''}.
       Thresholds — rating ≥4.7/≥4.0 · open-hrs ≥98/≥95 · prep ≤15/≤18 · inaccuracy ≤2/≤3 · rider-wait ≤2/≤4. RED if any metric red; GREEN if all five green; a missing metric ⇒ AMBER.
       <div style="margin-top:7px; padding-top:7px; border-top:1px dotted var(--line,#e3e3e3); color:var(--ink-soft,#777);">
         <strong>Note — these are our bands, not Deliveroo's.</strong> Deliveroo's own RAG key (the &ldquo;Deliveroo RAG&rdquo; sheet) is harsher on rating (red at ≤4.50, not below 4.0) and on open hours (green needs ≥99), and far softer on rider wait (green under 5%, red above 10%). Sites can therefore show a different colour here than in that sheet — for w/c 27/07 that was M3, M8, M12 and M17 (amber here, red there) and M6 (red here, amber there). A colour clash is a difference of key, not a data fault. Ours are the canonical AM bands, locked 23/06.
@@ -4882,8 +4909,8 @@ async function findLatestDeliverooWeek(){
 
 // ---------- FRANCHISE (MAF1 / MAF2 / MAF3) on the Deliveroo board ----------
 // Source: data/deliveroo_franchise.json, built by builders/build_deliveroo_franchise.py from the
-// same Deliveroo CSV RAG REPORT. Storefronts: Glasgow = MAF1, High Street = MAF2, The O2 = MAF3
-// (Michael, 21/10/2026). Shown in its own block, never mixed into the corporate counts.
+// same Deliveroo CSV RAG REPORT. Storefronts: Glasgow = MAF1, High Street = MAF2 (Northern Quarter), The O2 = MAF3
+// (Michael, 21/10/2026). Shown inside their regions, never counted in the corporate totals.
 let _delivFranchiseCache = null;
 async function _delivLoadFranchise(){
   if (_delivFranchiseCache) return _delivFranchiseCache;
@@ -4894,41 +4921,28 @@ async function _delivLoadFranchise(){
   return _delivFranchiseCache;
 }
 function _delivFmtWk(k){ const p = String(k).split('-'); return p.length === 3 ? ('w/c ' + p[2] + '/' + p[1] + '/' + p[0]) : k; }
-async function _delivRenderFranchise(host, weekKey){
-  const tok = (_delivRenderFranchise._tok = (_delivRenderFranchise._tok || 0) + 1);
+// Franchise rows for a week, placed in their region. MAF1 Glasgow = Scotland, MAF2 Northern Quarter
+// (Manchester) = North, MAF3 The O2 = South (Michael, 21/10/2026). If the week has no franchise data
+// yet, the latest earlier week is used and the row badge names that week.
+const DELIV_FRANCHISE_CLUSTER = { MAF1:'scotland', MAF2:'north', MAF3:'south' };
+async function _delivFranchiseRows(weekKey){
   const data = await _delivLoadFranchise();
-  if (tok !== _delivRenderFranchise._tok) return;   // a newer repaint superseded this one
-  const old = host.querySelector('#rl-deliveroo-franchise'); if (old) old.remove();
-  const box = document.createElement('div');
-  box.id = 'rl-deliveroo-franchise';
-  box.style.cssText = 'margin-top:22px; padding-top:14px; border-top:2px solid var(--maki-orange,#F26B21);';
-  host.appendChild(box);
   const weeks = (data && data.weeks) || {};
   const keys = Object.keys(weeks).sort().reverse();
-  let key = (weekKey && weeks[weekKey]) ? weekKey : null;
-  let note = '';
-  if (!key){
-    key = keys.find(k => !weekKey || k <= weekKey) || keys[0] || null;
-    if (key) note = `<div style="border:1px solid var(--line,#e3e3e3); border-radius:10px; padding:9px 12px; margin-bottom:10px; font-size:12px; font-weight:600; background:#f4f6f8; color:var(--ink-soft,#555);">No franchise Deliveroo data for this week yet, showing latest available: ${_delivFmtWk(key)}.</div>`;
-  }
-  const head = `<div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px;">
-      <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--maki-orange,#F26B21);">Franchise sites</h3>
-      <span style="font-size:12px; color:var(--ink-soft,#666);">MAF1 West End · MAF2 High Street · MAF3 The O2${key ? ' · ' + _delivFmtWk(key) : ''}</span></div>`;
-  if (!key){
-    box.innerHTML = head + `<div style="padding:14px; border:1px dashed var(--line,#e3e3e3); border-radius:10px; color:var(--ink-soft,#666); font-size:13px; text-align:center;">No franchise Deliveroo data yet.</div>`;
-    return;
-  }
-  const order = { red:0, amber:1, green:2 };
-  const rows = (weeks[key] || []).map(d => {
+  let key = (weekKey && weeks[weekKey]) ? weekKey : (keys.find(k => !weekKey || k <= weekKey) || null);
+  if (!key) return [];
+  const frWeek = (key !== weekKey) ? _delivFmtWk(key) : '';
+  return (weeks[key] || []).map(d => {
     const r = _delivRollup(d);
     const metrics = {};
     DELIV_METRIC_DEFS.forEach(m => { metrics[m[0]] = (d[m[0]] == null ? null : d[m[0]]); });
-    return { code: d.code, name: d.name, rag: r.rag, drivers: r.drivers, metrics, handKeyed:false };
-  }).sort((a, b) => order[a.rag] - order[b.rag] || a.code.localeCompare(b.code, undefined, { numeric:true }));
-  const inner = document.createElement('div');
-  box.innerHTML = head;
-  box.appendChild(inner);
-  _delivPaintRows(inner, rows, _delivFmtWk(key), note, { franchise:true });
+    return { code: d.code, name: d.name, rag: r.rag, drivers: r.drivers, metrics, handKeyed:false,
+             franchise:true, frWeek, cluster: DELIV_FRANCHISE_CLUSTER[d.code] || null };
+  });
+}
+function _delivMerge(corp, fr){
+  const order = { red:0, amber:1, green:2 };
+  return corp.concat(fr).sort((a, b) => order[a.rag] - order[b.rag] || a.code.localeCompare(b.code, undefined, { numeric:true }));
 }
 
 async function renderDeliverooRag(){
@@ -4948,12 +4962,14 @@ async function renderDeliverooRag(){
   const setHeading = (lbl) => { if (_sh) _sh.textContent = lbl ? ('Deliveroo RAG — ' + lbl) : 'Deliveroo RAG'; };
   setHeading(wkLabel);
 
+  const tok = (renderDeliverooRag._tok = (renderDeliverooRag._tok || 0) + 1);
   // Active-week rows from the already-loaded SITES overlay.
   const rows = _delivBuildRows(SITES);
 
   if (rows.length){
-    _delivPaintRows(host, rows, wkLabel, '');
-    await _delivRenderFranchise(host, window.currentWeekKey || null);
+    const fr = await _delivFranchiseRows(window.currentWeekKey || null);
+    if (tok !== renderDeliverooRag._tok) return;   // superseded by a newer repaint
+    _delivPaintRows(host, _delivMerge(rows, fr), wkLabel, '', { byRegion:true });
     return;
   }
 
@@ -4966,8 +4982,9 @@ async function renderDeliverooRag(){
       <div style="border:1px solid var(--line,#e3e3e3); border-radius:10px; padding:9px 12px; margin-bottom:10px; font-size:12px; font-weight:600; background:#f4f6f8; color:var(--ink-soft,#555);">
         ${wkLabel || 'Current week'} has no Deliveroo ops data yet — showing latest available: ${fb.label}.
       </div>`;
-    _delivPaintRows(host, fb.rows, fb.label, note);
-    await _delivRenderFranchise(host, fb.key || null);
+    const fr = await _delivFranchiseRows(fb.key || null);
+    if (tok !== renderDeliverooRag._tok) return;
+    _delivPaintRows(host, _delivMerge(fb.rows, fr), fb.label, note, { byRegion:true });
     return;
   }
 

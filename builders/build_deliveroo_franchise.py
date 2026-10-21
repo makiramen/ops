@@ -6,7 +6,7 @@ the same file the corporate Deliveroo ops overlay reads. Trading week = the `Dat
 
 Storefront -> code (Michael, 21/10/2026):
   Maki & Ramen - Glasgow     -> MAF1 (West End, Byres Road)
-  Maki & Ramen - High Street -> MAF2
+  Maki & Ramen - High Street -> MAF2 (Northern Quarter, Manchester)
   Maki & Ramen - The O2      -> MAF3
 
 Usage: build_deliveroo_franchise.py RAG.csv [RAG.csv ...]   (merges into data/deliveroo_franchise.json)
@@ -16,7 +16,7 @@ import csv, json, os, sys
 
 STORE_MAP = {
     "Maki & Ramen - Glasgow":     ("MAF1", "West End (Glasgow)"),
-    "Maki & Ramen - High Street": ("MAF2", "High Street"),
+    "Maki & Ramen - High Street": ("MAF2", "Northern Quarter (Manchester)"),
     "Maki & Ramen - The O2":      ("MAF3", "The O2 (London)"),
 }
 COLS = {
