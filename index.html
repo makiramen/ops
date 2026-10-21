@@ -1505,7 +1505,7 @@
     <span class="metric-toggle-label">View tiles by:</span>
     <div class="metric-chip active" data-metric="sales">Sales vs Target</div>
     <div class="metric-chip" data-metric="wage">Wage % <span class="metric-target">(≤22%, amber to 24%)</span></div>
-    <div class="metric-chip" data-metric="food">Food Cost % <span class="metric-target">(&lt;24%, amber to 25%)</span></div>
+    <div class="metric-chip" data-metric="food">Food Cost % <span class="metric-target">(&lt;25%, amber to 26.5%)</span></div>
     <div class="metric-chip" data-metric="foodVar">Food Variance <span class="metric-target">(target ±5%)</span></div>
     <div class="metric-chip" data-metric="drinksVar">Drinks Variance <span class="metric-target">(target ±5%)</span></div>
     <div class="metric-chip" data-metric="rating">Lifetime Rating <span class="metric-target">(target ≥4.7★)</span></div>
@@ -1818,7 +1818,7 @@
   </div>
   <div style="overflow-x:auto"><table class="tbl" id="budgetBurnTbl">
     <thead><tr><th>Site</th><th class="num">Food % last wk</th><th class="num">Spent Yesterday £</th><th class="num">Weekly Spend £</th><th class="num">Weekly Budget £</th><th style="min-width:130px">Week Usage</th><th class="num">Monthly Spend £</th><th class="num">Month Cap £</th><th style="min-width:130px">Month Pace</th></tr></thead><tbody></tbody></table></div>
-  <div class="section-intro" style="margin-top:10px"><strong>Food % last wk</strong> = actual food cost as a share of actual revenue for the previous trading week, from that week’s KPI (stock-adjusted), against the 25% target (red over 25% · amber over 23%). Cluster totals are sales-weighted; a site with no settled KPI shows —. Week Usage = spend Sun→selected day vs the HC weekly budget (red &gt;100% · amber &gt;85%). Month Pace = monthly spend vs the month cap (interim: 23% × Mar–May avg revenue; M19, M20, M21 and Maki Nori have no Mar–May history, so their caps are the weekly budget in force × 52/12 — set 25 Aug 2026, reprice when official caps are issued) pro-rated to the selected day (red &gt;110% · amber &gt;100%). Only filed reports count — the ledger starts 9 Jun 2026.</div>
+  <div class="section-intro" style="margin-top:10px"><strong>Food % last wk</strong> = actual food cost as a share of actual revenue for the previous trading week, from that week’s KPI (stock-adjusted), against the 25% target (green under 25% · amber from 25% · red from 26.5%). Cluster totals are sales-weighted; a site with no settled KPI shows —. Week Usage = spend Sun→selected day vs the HC weekly budget (red &gt;100% · amber &gt;85%). Month Pace = monthly spend vs the month cap (interim: 23% × Mar–May avg revenue; M19, M20, M21 and Maki Nori have no Mar–May history, so their caps are the weekly budget in force × 52/12 — set 25 Aug 2026, reprice when official caps are issued) pro-rated to the selected day (red &gt;110% · amber &gt;100%). Only filed reports count — the ledger starts 9 Jun 2026.</div>
   <div class="delivery-tile" id="dailySpendTile" style="border-top-color:#1F8A4C">
     <h2>Daily Spend Skim · BOH food spend vs budget</h2>
     <div class="tile-sub">From the Mapal <strong>Head Chef Daily Report</strong> emails, parsed each morning. Figures and filing status refresh live from the ledger sheet on every load. <span class="source-chip manual">Mapal Compliance emails</span></div>
@@ -3852,11 +3852,11 @@ function wageRag(w, code) {
   return 'red';
 }
 function foodRag(f) {
-  // Unified RAG table (20/10/2026, Rory x Mike 13/10): green below 24.00%, amber 24.00 to 24.99%, Red Light at 25.00% and above.
+  // Michael's ruling 21/10/2026: green below 25.00%, amber 25.00 to 26.49%, Red Light at 26.50% and above.
   if (f == null) return 'na';
   f = Math.round(f * 100) / 100;
-  if (f < 24) return 'green';
-  if (f < 25) return 'amber';
+  if (f < 25) return 'green';
+  if (f < 26.5) return 'amber';
   return 'red';
 }
 function foodVarRag(v) {
@@ -4365,7 +4365,7 @@ function openSite(code) {
           <div class="kpi-trend">${wowChip(((METRICS[s.code]||{}).wageActual != null && window.PREV_WEEK.wage[s.code] != null) ? (METRICS[s.code]).wageActual - window.PREV_WEEK.wage[s.code] : null, 'down-is-good', 'pp')}</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Food Cost % (&lt;24%, amber to 25%)</div>
+          <div class="kpi-label">Food Cost % (&lt;25%, amber to 26.5%)</div>
           <div class="kpi-value ${foodRag((METRICS[s.code]||{}).food)}">${(METRICS[s.code]||{}).food == null ? 'N/A' : (METRICS[s.code]).food.toFixed(2) + '%'}</div>
           <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).food, 'down-is-good', '#4f46e5')}</div>
           <div class="kpi-trend">${wowChip(((METRICS[s.code]||{}).foodActual != null && window.PREV_WEEK.food[s.code] != null) ? (METRICS[s.code]).foodActual - window.PREV_WEEK.food[s.code] : null, 'down-is-good', 'pp')}</div>
@@ -7400,7 +7400,7 @@ function lwfFor(mon,code){
 }
 function lwfCell(v){
   if(!v) return '<td class="num"><span style="color:var(--maki-muted)">\u2014</span></td>';
-  const col=v.pct>25?"var(--rag-red)":v.pct>23?"var(--amber-ink)":"var(--rag-green)";
+  const col=v.pct>=26.5?"var(--rag-red)":v.pct>=25?"var(--amber-ink)":"var(--rag-green)";
   return `<td class="num"><strong style="color:${col}">${v.pct.toFixed(1)}%</strong></td>`;
 }
 // ---- /LAST WEEK ACTUAL FOOD % ----
