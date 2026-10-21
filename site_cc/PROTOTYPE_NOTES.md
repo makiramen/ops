@@ -10,6 +10,6 @@
 - Drive vs calendar disagreements found 21/10 (for marketing to settle): Slerp M16 wave 1 vs wave 3; wave 4/5 site lists; Great Brands Oct Leeds (tracker FALSE) and GLC M8 (tracker TRUE, calendar silent); Nov Aberdeen; matchas exclude M1, M6, Leith; Christmas dishes 05/11 vs 01/11; cookbook pre-order 01/10 vs 10/10 and launch 15/11 vs 12/11; Halloween 26 to 31/10 vs 31/10 only.
 
 ## Food cost RAG bands re-ruled (21/10/2026 18:35, Michael)
-- Food cost: green below 25.00%, amber 25.00% to 26.49%, red (Red Light) at 26.50% and above. Supersedes the 13/10 Rory x Mike bands (24 / 25) shipped 20/10 in 4bcf48f.
-- Applied in both shells: AM Control Centre index.html (foodRag, chip and tile labels, Budget Burn "Food % last wk" column and its intro text) and site_cc/src.html (foodRag, KPI sheet gap text, Overview headline, Red Light trigger and tripwire row at 26.5, kqBands, Stock & Cost tile, food chart red line at 26.5).
+- Food cost: green below 25.00%, amber 25.00% to 26.00%, red above 26.00%. Red Light trigger unchanged at above 25% (Michael corrected the first 26.5 ruling at 18:42; c2ff9ab briefly had red and Red Light at 26.5). Supersedes the 13/10 Rory x Mike bands (24 / 25) shipped 20/10 in 4bcf48f.
+- Applied in both shells: AM Control Centre index.html (foodRag, chip and tile labels, Budget Burn "Food % last wk" column and its intro text) and site_cc/src.html (foodRag, KPI sheet gap text, Overview headline, kqBands, Stock & Cost tile; Red Light trigger, tripwire row and chart line stay at 25).
 - Food is the only band changed; wage, variance, sales, SPH, Google, efficiency and Deliveroo bands unchanged from the 20/10 unified table.
