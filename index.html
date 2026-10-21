@@ -4746,7 +4746,8 @@ function _delivBuildRows(siteEntries){
 // Paint the RAG heatmap + summary into `host`. `wkLabel` heads the banner.
 // `fallbackNote` (optional HTML string) is prepended above the banner when the
 // shown week is NOT the active week.
-function _delivPaintRows(host, rows, wkLabel, fallbackNote){
+function _delivPaintRows(host, rows, wkLabel, fallbackNote, opts){
+  opts = opts || {};
   const tile = (s) => `<div class="tile ${s.rag}">
     <div class="tile-issues-badge">${s.rag.toUpperCase()}</div>
     <div><div class="tile-code">${s.code}</div><div class="tile-name">${s.name}</div></div>
@@ -4805,6 +4806,17 @@ function _delivPaintRows(host, rows, wkLabel, fallbackNote){
     <div style="border:1px dashed var(--amber-ring,#d97706); border-radius:10px; padding:9px 12px; margin-bottom:12px; font-size:12px; font-weight:700; background:#fffbeb; color:#92400e;">
       ⚠ Deliveroo RAG — ${wkLabel}. 5-metric greens roll-up from the Deliveroo Weekly Summary ops report. Informational only — site rag / Red Light status decisions stay with Lincoln.
     </div>`;
+  if (opts.franchise){
+    host.innerHTML = (fallbackNote || '') + `
+    <div class="heatmap" style="margin-bottom:12px;">
+      ${rows.map(tile).join('')}
+    </div>
+    ${matrix}
+    <div style="font-size:12px; color:var(--ink-soft,#555); padding:0 2px;">
+      <strong>${counts.red} red · ${counts.amber} amber · ${counts.green} green</strong> across ${rows.length} franchise sites. Same thresholds as above. Not included in the corporate counts.
+    </div>`;
+    return;
+  }
   host.innerHTML = (fallbackNote || '') + banner + `
     <div class="heatmap" style="margin-bottom:12px;">
       ${rows.map(tile).join('')}
@@ -4868,6 +4880,57 @@ async function findLatestDeliverooWeek(){
   return _delivFallbackCache;
 }
 
+// ---------- FRANCHISE (MAF1 / MAF2 / MAF3) on the Deliveroo board ----------
+// Source: data/deliveroo_franchise.json, built by builders/build_deliveroo_franchise.py from the
+// same Deliveroo CSV RAG REPORT. Storefronts: Glasgow = MAF1, High Street = MAF2, The O2 = MAF3
+// (Michael, 21/10/2026). Shown in its own block, never mixed into the corporate counts.
+let _delivFranchiseCache = null;
+async function _delivLoadFranchise(){
+  if (_delivFranchiseCache) return _delivFranchiseCache;
+  try {
+    const r = await fetch(DATA_DIR + "deliveroo_franchise.json", {cache:"no-store"});
+    _delivFranchiseCache = r.ok ? await r.json() : { weeks:{} };
+  } catch(e){ _delivFranchiseCache = { weeks:{} }; }
+  return _delivFranchiseCache;
+}
+function _delivFmtWk(k){ const p = String(k).split('-'); return p.length === 3 ? ('w/c ' + p[2] + '/' + p[1] + '/' + p[0]) : k; }
+async function _delivRenderFranchise(host, weekKey){
+  const tok = (_delivRenderFranchise._tok = (_delivRenderFranchise._tok || 0) + 1);
+  const data = await _delivLoadFranchise();
+  if (tok !== _delivRenderFranchise._tok) return;   // a newer repaint superseded this one
+  const old = host.querySelector('#rl-deliveroo-franchise'); if (old) old.remove();
+  const box = document.createElement('div');
+  box.id = 'rl-deliveroo-franchise';
+  box.style.cssText = 'margin-top:22px; padding-top:14px; border-top:2px solid var(--maki-orange,#F26B21);';
+  host.appendChild(box);
+  const weeks = (data && data.weeks) || {};
+  const keys = Object.keys(weeks).sort().reverse();
+  let key = (weekKey && weeks[weekKey]) ? weekKey : null;
+  let note = '';
+  if (!key){
+    key = keys.find(k => !weekKey || k <= weekKey) || keys[0] || null;
+    if (key) note = `<div style="border:1px solid var(--line,#e3e3e3); border-radius:10px; padding:9px 12px; margin-bottom:10px; font-size:12px; font-weight:600; background:#f4f6f8; color:var(--ink-soft,#555);">No franchise Deliveroo data for this week yet, showing latest available: ${_delivFmtWk(key)}.</div>`;
+  }
+  const head = `<div style="display:flex; align-items:baseline; gap:10px; margin-bottom:10px;">
+      <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--maki-orange,#F26B21);">Franchise sites</h3>
+      <span style="font-size:12px; color:var(--ink-soft,#666);">MAF1 West End · MAF2 High Street · MAF3 The O2${key ? ' · ' + _delivFmtWk(key) : ''}</span></div>`;
+  if (!key){
+    box.innerHTML = head + `<div style="padding:14px; border:1px dashed var(--line,#e3e3e3); border-radius:10px; color:var(--ink-soft,#666); font-size:13px; text-align:center;">No franchise Deliveroo data yet.</div>`;
+    return;
+  }
+  const order = { red:0, amber:1, green:2 };
+  const rows = (weeks[key] || []).map(d => {
+    const r = _delivRollup(d);
+    const metrics = {};
+    DELIV_METRIC_DEFS.forEach(m => { metrics[m[0]] = (d[m[0]] == null ? null : d[m[0]]); });
+    return { code: d.code, name: d.name, rag: r.rag, drivers: r.drivers, metrics, handKeyed:false };
+  }).sort((a, b) => order[a.rag] - order[b.rag] || a.code.localeCompare(b.code, undefined, { numeric:true }));
+  const inner = document.createElement('div');
+  box.innerHTML = head;
+  box.appendChild(inner);
+  _delivPaintRows(inner, rows, _delivFmtWk(key), note, { franchise:true });
+}
+
 async function renderDeliverooRag(){
   const host = document.getElementById('rl-deliveroo');
   if (!host) return;
@@ -4890,6 +4953,7 @@ async function renderDeliverooRag(){
 
   if (rows.length){
     _delivPaintRows(host, rows, wkLabel, '');
+    await _delivRenderFranchise(host, window.currentWeekKey || null);
     return;
   }
 
@@ -4903,6 +4967,7 @@ async function renderDeliverooRag(){
         ${wkLabel || 'Current week'} has no Deliveroo ops data yet — showing latest available: ${fb.label}.
       </div>`;
     _delivPaintRows(host, fb.rows, fb.label, note);
+    await _delivRenderFranchise(host, fb.key || null);
     return;
   }
 
