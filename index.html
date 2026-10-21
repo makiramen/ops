@@ -3027,6 +3027,21 @@ function scoreExemptCodes(){
 }
 function isScoreExempt(code){ return scoreExemptCodes().indexOf(code) !== -1; }
 
+// WEEK_TARGETS: week-scoped green-light overrides, keyed by Monday.
+// 21/10/2026, Michael: for w/c 12/10 only, M14 Meadowhall, M16 Nottingham, M18 Soho and
+// M19 Shoreditch get an SPH (avg spend) green light of GBP 15.00 and a wage green light of 25%.
+// Feeds the RAG chips, the Red Light and the efficiency score. Every other week and site is unchanged.
+const WEEK_TARGETS = {
+  "2026-10-12": { sites: ["M14", "M16", "M18", "M19"], sph: 15, wage: 25 }
+};
+function weekTarget(code, key){
+  const o = WEEK_TARGETS[window.currentWeekKey];
+  if (!o || code == null || o.sites.indexOf(String(code)) === -1) return null;
+  return o[key] != null ? o[key] : null;
+}
+function wageTarget(code){ const w = weekTarget(code, 'wage'); return w != null ? w : 22; }
+function wageScoreTarget(code){ const w = weekTarget(code, 'wage'); return w != null ? w : 21; }
+
 const THEMES = [
   {
     "severity": "warn",
@@ -3822,11 +3837,12 @@ function deltaClass(v) { if (v < -25) return 'red'; if (v < 0) return 'amber'; r
 
 // Per-metric RAG status
 // Unified RAG table (20/10/2026): wage green to 22.00%, amber 22.01 to 24.00%, Red Light above 24%.
-function wageRag(w) {
+function wageRag(w, code) {
   if (w == null) return 'na';
   w = Math.round(w * 100) / 100;
-  if (w <= 22) return 'green';
-  if (w <= 24) return 'amber';
+  const g = wageTarget(code);   // 22 unless a WEEK_TARGETS override applies
+  if (w <= g) return 'green';
+  if (w <= g + 2) return 'amber';
   return 'red';
 }
 function foodRag(f) {
@@ -3876,6 +3892,7 @@ function weeklyRatingRag(wr) {
 // Codes are the display codes used in METRICS / SITES (e.g. 'M1', 'IKI2', 'MAF-NQ').
 function sphTarget(code) {
   if (code == null) return 22;
+  const ov = weekTarget(code, 'sph'); if (ov != null) return ov;   // WEEK_TARGETS override
   const c = String(code);
   if (/nori/i.test(c) || c === 'MAF-NQ') return 35;
   if (c === 'IKI2') return 21;
@@ -3914,7 +3931,7 @@ function efficiencyScore(s) {
   // Food cost 30% — 100 at 25% target, -8 per pp over
   if (m.food != null) parts.push({ w: 30, v: Math.max(0, Math.min(100, 100 - Math.max(0, m.food - 25) * 8)) });
   // Wage 30% — 100 at 21% target, -15 per pp over
-  if (m.wage != null) parts.push({ w: 30, v: Math.max(0, Math.min(100, 100 - Math.max(0, m.wage - 21) * 15)) });
+  if (m.wage != null) parts.push({ w: 30, v: Math.max(0, Math.min(100, 100 - Math.max(0, m.wage - wageScoreTarget(s.code)) * 15)) });
   // SPH 15% — blend 0.7 · level + 0.3 · WoW momentum (level only if no WoW data).
   // level: 100 at sphTarget; -100/6 per £ below; 0 at £6 under target.
   // momentum: 50 + sphWowPct·10, clamped 0..100 (50 = flat WoW, ±5% spans full range).
@@ -3958,7 +3975,7 @@ function salesRag(v) {
 }
 function combinedRag(s) {
   const m = METRICS[s.code] || {};
-  const rags = [salesRag(s.vsTarget), wageRag(m.wage), foodRag(m.food), foodVarRag(m.foodVar)];
+  const rags = [salesRag(s.vsTarget), wageRag(m.wage, s.code), foodRag(m.food), foodVarRag(m.foodVar)];
   const real = rags.filter(r => r !== 'na');
   if (real.some(r => r === 'red' || r === 'deep-red')) return 'red';
   if (real.some(r => r === 'amber')) return 'amber';
@@ -3969,7 +3986,7 @@ function metricRagFor(s, metric) {
   const m = METRICS[s.code] || {};
   const r = REVIEWS[s.code] || {};
   if (metric === 'sales')   return s.rag === 'deep-red' ? 'deep-red' : salesRag(s.vsTarget);
-  if (metric === 'wage')    return wageRag(m.wage);
+  if (metric === 'wage')    return wageRag(m.wage, s.code);
   if (metric === 'food')    return foodRag(m.food);
   if (metric === 'foodVar') return varBandClass(m.foodVar);
   if (metric === 'drinksVar') return varBandClass(m.drinksVar);
@@ -4027,7 +4044,7 @@ function metricValueFor(s, metric) {
   if (metric === 'efficiency')   { const e = efficiencyScore(s); return { value: e == null ? 'N/A' : e.toString(), label: 'site efficiency', arrow: '' }; }
   // combined
   const m2 = METRICS[s.code] || {};
-  const rags = [salesRag(s.vsTarget), wageRag(m2.wage), foodRag(m2.food), foodVarRag(m2.foodVar)];
+  const rags = [salesRag(s.vsTarget), wageRag(m2.wage, s.code), foodRag(m2.food), foodVarRag(m2.foodVar)];
   const green = rags.filter(r => r === 'green').length;
   const real = rags.filter(r => r !== 'na').length;
   return { value: green + '/' + real, label: 'KPIs on target', arrow: '' };
@@ -4094,7 +4111,7 @@ function tileHTML(s) {
         <div class="tile-metrics">
           <div class="tile-metric ${salesRag(s.vsTarget) === 'green' ? 'good' : (salesRag(s.vsTarget) === 'amber' ? 'warn' : 'bad')}">S<br>${salesTxt}</div>
           <div class="tile-metric ${vClass(sphCls)}" title="${sphTipTxt}">SPH<br>${sphTileTxt}</div>
-          <div class="tile-metric ${wageRag(m.wage) === 'na' ? 'na' : (wageRag(m.wage) === 'green' ? 'good' : (wageRag(m.wage) === 'amber' ? 'warn' : 'bad'))}">W<br>${wageTxt}</div>
+          <div class="tile-metric ${wageRag(m.wage, s.code) === 'na' ? 'na' : (wageRag(m.wage, s.code) === 'green' ? 'good' : (wageRag(m.wage, s.code) === 'amber' ? 'warn' : 'bad'))}">W<br>${wageTxt}</div>
           <div class="tile-metric ${foodRag(m.food) === 'na' ? 'na' : (foodRag(m.food) === 'green' ? 'good' : (foodRag(m.food) === 'amber' ? 'warn' : 'bad'))}">F<br>${foodTxt}</div>
           <div class="tile-metric ${vClass(fvCls)}">FV<br>${fvTxt}</div>
           <div class="tile-metric ${vClass(dvCls)}">DV<br>${dvTxt}</div>
@@ -4216,7 +4233,7 @@ function renderScorecard() {
     const wr = weeklyRating(r);
     const eff = efficiencyScore(s);
     const sRag = salesRag(s.vsTarget);
-    const wRag = wageRag(m.wage);
+    const wRag = wageRag(m.wage, s.code);
     const fRag = foodRag(m.food);
     const vRag = varBandClass(m.foodVar);
     const dvRag = varBandClass(m.drinksVar);
@@ -4337,7 +4354,7 @@ function openSite(code) {
         ${salesCell(s)}
         <div class="kpi">
           <div class="kpi-label">Wage % (≤22%, amber to 24%)</div>
-          <div class="kpi-value ${wageRag((METRICS[s.code]||{}).wage)}">${(METRICS[s.code]||{}).wage == null ? 'N/A' : (METRICS[s.code]).wage.toFixed(2) + '%'}</div>
+          <div class="kpi-value ${wageRag((METRICS[s.code]||{}).wage, s.code)}">${(METRICS[s.code]||{}).wage == null ? 'N/A' : (METRICS[s.code]).wage.toFixed(2) + '%'}</div>
           <div class="kpi-spark">${sparkline((HISTORY[s.code]||{}).wage, 'down-is-good', '#4f46e5')}</div>
           <div class="kpi-trend">${wowChip(((METRICS[s.code]||{}).wageActual != null && window.PREV_WEEK.wage[s.code] != null) ? (METRICS[s.code]).wageActual - window.PREV_WEEK.wage[s.code] : null, 'down-is-good', 'pp')}</div>
         </div>
@@ -5287,7 +5304,7 @@ function renderPeopleBoard() {
             <div class="pb-sub-name"><strong>${s.code}</strong><span>${s.name}</span></div>
             <div class="sc-chip ${s.vsTarget == null ? 'na' : salesRag(s.vsTarget)}">${s.vsTarget == null ? 'N/A' : (s.vsTarget >= 0 ? '+' : '') + s.vsTarget.toFixed(1) + '%'}</div>
             <div class="sc-chip ${sphRag(m.sph, s.code)}">${m.sph == null ? 'N/A' : '£' + m.sph.toFixed(2)}</div>
-            <div class="sc-chip ${wageRag(m.wage)}">${pbNum(m.wage, 1, '%')}</div>
+            <div class="sc-chip ${wageRag(m.wage, s.code)}">${pbNum(m.wage, 1, '%')}</div>
             <div class="sc-chip ${foodRag(m.food)}">${pbNum(m.food, 1, '%')}</div>
             <div class="sc-chip ${varBandClass(m.foodVar)}">${fmtVar(m.foodVar)}</div>
             <div class="sc-chip ${varBandClass(m.drinksVar)}">${fmtVar(m.drinksVar)}</div>
