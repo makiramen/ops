@@ -13,18 +13,18 @@ SITES = {
     "Maki Bath St":           ("M6",   "Bath St, Glasgow",      "scotland"),
     "Maki SJQ Ltd":           ("M7",   "St James Quarter",      "scotland"),
     "Renfield Good Food Ltd": ("M8",   "Renfield St, Glasgow",  "scotland"),
-    "Maki Newcastle Ltd":     ("M12",  "Newcastle Eldon Sq",    "scotland"),
+    "Maki NE1 Ltd":           ("M12",  "Newcastle Eldon Sq",    "scotland"),  # Michael 22/10/2026: NE1 Ltd = Maki Newcastle = M12
+    "Maki Newcastle Ltd":     ("M12",  "Newcastle Eldon Sq",    "scotland"),  # old Mapal location, merged into NE1 Ltd (see LOC_ALIAS)
     "Maki Aberdeen Ltd":      ("M13",  "Aberdeen",              "scotland"),
     "Maki METRO":             ("M15",  "Metrocentre",           "scotland"),
+    "Maki Braehead":          (None,   "Braehead",              "scotland"),  # Michael 22/10/2026: Scotland & Newcastle (no M-code ruled)
     "Maki Manchester LTD":    ("M9",   "Manchester",            "midlands"),
     "Maki Leeds Ltd":         ("M10",  "Leeds",                 "midlands"),
     "Maki Leicester Ltd":     ("M11",  "Leicester",             "midlands"),
     "Maki Meadowhall":        ("M14",  "Meadowhall",            "midlands"),
     "Maki Nottingham Ltd":    ("M16",  "Nottingham",            "midlands"),
-    # Birmingham sits under South England. Confirmed by Michael 27 Aug 26
-    # (geography says Midlands, the org does not: its Head Chef reporting ran
-    # through the South DEC from opening).
-    "Maki Birmingham Ltd":    ("M21",  "Birmingham",            "midlands"),  # 14/10/2026 moved to North & Midlands
+    # Birmingham = M21, North England & Midlands. Michael 14/10/2026, reconfirmed 22/10/2026.
+    "Maki Birmingham Ltd":    ("M21",  "Birmingham",            "midlands"),
     "Maki Lakeside":          ("M17",  "Lakeside",              "south"),
     "Maki Soho":              ("M18",  "Soho",                  "south"),
     "Maki Shoreditch":        ("M19",  "Shoreditch",            "south"),
@@ -32,6 +32,13 @@ SITES = {
     "Maki O2 Arena":          ("MAF3", "O2 London",             "franchise"),
 }
 UNCONFIRMED = {}
+
+# Mapal renamed Newcastle's location from "Maki Newcastle Ltd" to "Maki NE1 Ltd" in w/c 05/10/2026.
+# Both are M12: the old name is folded into the new one so M12 is ONE series, not two.
+LOC_ALIAS = {"Maki Newcastle Ltd": "Maki NE1 Ltd"}
+
+def canon(legal_name):
+    return LOC_ALIAS.get(legal_name, legal_name)
 
 def resolve(legal_name):
     if legal_name in SITES:

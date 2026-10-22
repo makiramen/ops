@@ -16,7 +16,7 @@ Sites   <- live_matrix.txt    (Mapal public API, Chicken/Tonkotsu Broth Check)
 Factory <- factory_matrix.txt (deanops batching form Sheet, column F)
 """
 import json, os, statistics, sys
-from regions import REGIONS, resolve
+from regions import REGIONS, resolve, canon
 
 SPEC = {"chicken": (4.0, 5.0), "pork": (6.0, 7.0)}     # site spec, after water
 #   chicken corrected 4.0-5.0 by Michael 27 Aug 26 (he first said 5-7, then 4-5)
@@ -50,7 +50,14 @@ def read_matrix(path, window=None):
         if line.startswith("DEV:"): break
         k, v = line.split(":", 1)
         if k == "DAYS": days = v.split(",")
-        else: kv[k] = v.split(",")
+        else:
+            vals = v.split(",")
+            if "~" in k:                               # site series: fold aliased locations together
+                _l, _kd = k.split("~", 1)
+                k = canon(_l) + "~" + _kd
+                if k in kv:                            # keep whichever has the reading that day
+                    vals = [a if a.strip() else b for a, b in zip(kv[k], vals)]
+            kv[k] = vals
     if _ARG_DAYS and days and window is None:
         keepix = [i for i, d in enumerate(days) if d in _ARG_DAYS]
         days = [days[i] for i in keepix]
@@ -131,6 +138,7 @@ devs = []
 for l in open("live_matrix.txt", encoding="utf-8").read().split("DEV:")[1].strip().split("\n"):
     if not l.strip(): continue
     loc, kind, d, v, state = l.split("|")
+    loc = canon(loc)
     if loc in EXCLUDE: continue
     devs.append({"loc": loc, "kind": kind, "d": d, "v": None if v == "MISS" else float(v),
                  "state": "Closed" if state == "closed" else "Open", "open": state == "open",
