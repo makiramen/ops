@@ -324,6 +324,9 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
 .torii{font-family:"Noto Sans JP","Plus Jakarta Sans",sans-serif;font-weight:900;font-size:64px;line-height:1;color:#E94E1B;text-shadow:0 0 30px rgba(233,78,27,.55);margin-bottom:6px}
 .gate-title{font-size:13px;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#f8e9df}
 .gate-sub{font-size:12.5px;color:#b9a99c;margin:6px 0 22px}
+/* 22/10/2026 (Michael): delivery sites only, big Deliverect reminder on the gate. */
+.gate-roo{margin:0 0 18px;padding:14px 12px;border-radius:12px;background:#E94E1B;color:#fff;font-size:19px;font-weight:900;line-height:1.25;letter-spacing:.02em;text-transform:uppercase;box-shadow:0 0 28px rgba(233,78,27,.45)}
+.gate-roo small{display:block;font-size:11px;font-weight:700;letter-spacing:.18em;opacity:.85;margin-bottom:4px}
 .gate-input{width:100%;font:inherit;font-size:16px;text-align:center;letter-spacing:.04em;padding:13px 14px;border-radius:12px;border:1px solid #4a3a2f;background:#14100c;color:#fff;outline:none;appearance:auto;margin-bottom:10px}
 .gate-input:focus{border-color:#E94E1B;box-shadow:0 0 0 3px rgba(233,78,27,.25)}
 .gate-btn{margin-top:2px;width:100%;font:inherit;font-weight:800;font-size:14px;letter-spacing:.06em;padding:12px;border:0;border-radius:12px;background:#E94E1B;color:#fff;cursor:pointer}.gate-btn:hover{background:#d4430f}
@@ -339,6 +342,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
     <div class="torii">門</div>
     <div class="gate-title" id="gateTitle">Site Control Centre</div>
     <div class="gate-sub" id="gateSub">Pick your position to enter</div>
+    <div class="gate-roo" id="gateRoo" hidden><small>Important</small>Turn on your OOS items on Deliverect</div>
     <select id="gpos" class="gate-input" aria-label="Position"><option value="">Who are you?</option><option>GM</option><option>AGM</option><option>HC</option><option>K-Supervisor</option><option>F-Supervisor</option><option>AM</option><option>EC</option></select>
     <button class="gate-btn" id="gbtn" type="button">Enter</button>
     <div class="gate-err" id="gerr"></div>
@@ -768,6 +772,7 @@ var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8}
 var SITE=__SITE__,SCODE=SITE.code;
 /* Sites with no delivery (sites.json delivery:false, e.g. M7 SJQ): no delivery sales, Deliveroo rating, prep or Deliveroo tab. */
 var NODEL=SITE.has.delivery===false;
+if(!NODEL){var gRoo=document.getElementById('gateRoo');if(gRoo)gRoo.hidden=false}
 /* 13/10/2026 (Michael): the week in progress is on the page as "this week" (week to date from the daily cash up) and opens by default; the last closed week is "last week" and keeps the KPI sheet and sign off. */
 /* 14/10/2026 (Michael): GM facing tabs anchor on the LAST COMPLETED week. A closed week only counts as completed from the Tuesday after it (food cost and stock take land Tuesday); on Monday it is "closing". The page opens on the last completed week; the picker still reaches this week and history. */
 var NOWD=(function(){try{var d=new Date();var k=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);return k>='__TODAY__'?k:'__TODAY__'}catch(e){return '__TODAY__'}})();
