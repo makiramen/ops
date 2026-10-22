@@ -1,7 +1,7 @@
 name: KPI sheet automation (Kobas pulls)
 
 # Pulls Kobas straight (keyline bot user), no email skim, no Mac. Outputs are a short-lived run artifact,
-# nothing is committed. mode=probe finds routes, mode=pull does the October reconciliation pull.
+# nothing is committed. Results also go to the KPI Auto sheet (to_sheet.py). mode=probe finds routes, mode=pull does the October reconciliation pull.
 on:
   workflow_dispatch:
     inputs:
@@ -28,7 +28,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install --quiet requests
+      - run: pip install --quiet requests google-auth google-api-python-client
       - name: Run
         env:
           TZ: Europe/London
@@ -38,6 +38,13 @@ jobs:
           DATE_FROM: ${{ inputs.date_from }}
           DATE_TO: ${{ inputs.date_to }}
         run: python3 kpi_auto/${{ inputs.mode }}.py /tmp/kpi_out
+      - name: Write to the KPI Auto sheet
+        if: always()
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+          DATE_FROM: ${{ inputs.date_from }}
+          DATE_TO: ${{ inputs.date_to }}
+        run: python3 kpi_auto/to_sheet.py /tmp/kpi_out
       - uses: actions/upload-artifact@v4
         if: always()
         with:
