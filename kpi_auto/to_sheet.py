@@ -3,7 +3,8 @@ downloading the run artifact. Service account from GOOGLE_SERVICE_ACCOUNT_JSON (
 the sheet must be shared with that account as Editor.
 Tabs written (each fully rewritten every run):
   Items_All    date, site, mode, then every column of the Kobas All Item Sales export (all sites, all days, mode 'all' only)
-  Cat_Totals   date, site, mode, category, qty, value (summed from Items_All on the category column it finds)
+  Cat_Totals   date, site, mode, category, qty, gross, net (item rows only: TOTAL and 'of which' modifier rows excluded)
+  Day_Totals   date, site, mode, the report's own TOTAL gross/net, the item-row sums, and the difference (must be 0)
   M14_Items    M14 item list over the whole range, per mode
   Probe        log.json, report keys, labour / cash log routes and any labour export text, one line per row
   Meta         run time, range, headers seen, files that failed to parse"""
@@ -50,21 +51,36 @@ for day, site, mode, h, l in rows:
         l = [l[h.index(c)] if c in h and h.index(c) < len(l) else '' for c in main_h]
     items.append([day, site, mode] + l)
 ci = col(main_h, 'category', 'group')
-qi = col(main_h, 'qty', 'quantity', 'sold', 'count')
-vi = col(main_h, 'net', 'gross', 'value', 'sales', 'total', avoid=('%', 'qty', 'quantity'))
+qi = col(main_h, 'items sold', 'qty', 'quantity', 'sold', 'count')
+gi = col(main_h, 'gross sales', 'gross')
+vi = col(main_h, 'net sales', 'net', 'value', 'sales', 'total', avoid=('%', 'qty', 'quantity', 'potential'))
+ni = col(main_h, 'item', 'name', 'product')
+# 'of which ...' lines are modifier breakdowns already inside their parent item (Kobas trap 1): never sum them.
+def is_item(l):
+    nm = l[ni].strip().lower() if ni is not None else ''
+    return nm and nm != 'total' and not nm.startswith('of which ')
+day = {}
 for r in items[1:]:
     l = r[3:]
     if ci is None or vi is None: break
-    if not l[ci].strip() or 'total' in ' '.join(l[:2]).lower(): continue
-    k = (r[0], r[1], r[2], l[ci].strip())
-    c = cat.setdefault(k, [0.0, 0.0])
+    nm = l[ni].strip().lower() if ni is not None else ''
+    dk = (r[0], r[1], r[2]); d = day.setdefault(dk, [0.0, 0.0, 0.0, 0.0])
+    if nm == 'total':                       # the report's own per-lead-type TOTAL rows
+        d[0] += (num(l[gi]) or 0) if gi is not None else 0; d[1] += num(l[vi]) or 0; continue
+    if not is_item(l): continue
+    d[2] += (num(l[gi]) or 0) if gi is not None else 0; d[3] += num(l[vi]) or 0
+    k = dk + (l[ci].strip(),)
+    c = cat.setdefault(k, [0.0, 0.0, 0.0])
     c[0] += (num(l[qi]) or 0) if qi is not None else 0
-    c[1] += num(l[vi]) or 0
-cats = [['date', 'site', 'mode', 'category', 'qty', 'value']] + [list(k) + [round(v[0], 2), round(v[1], 2)] for k, v in sorted(cat.items())]
+    c[1] += (num(l[gi]) or 0) if gi is not None else 0
+    c[2] += num(l[vi]) or 0
+cats = [['date', 'site', 'mode', 'category', 'qty', 'gross', 'net']] + [list(k) + [round(v[0], 2), round(v[1], 2), round(v[2], 2)] for k, v in sorted(cat.items())]
+days = [['date', 'site', 'mode', 'total_gross', 'total_net', 'items_gross', 'items_net', 'diff_gross', 'diff_net']] + \
+       [list(k) + [round(v[0], 2), round(v[1], 2), round(v[2], 2), round(v[3], 2), round(v[2] - v[0], 2), round(v[3] - v[1], 2)]
+        for k, v in sorted(day.items())]
 
 # M14 item list over the range
 m14 = {}
-ni = col(main_h, 'item', 'name', 'product')
 for r in items[1:]:
     if r[1] != 'M14' or ni is None: continue
     l = r[3:]
@@ -82,11 +98,11 @@ for f in sorted(glob.glob(os.path.join(out, '*.json')) + glob.glob(os.path.join(
     if name.startswith('page_'): txt = txt.split('\n--html\n')[0]   # routes only, not the page html
     for line in txt.splitlines()[:3000]: probe.append([name, line[:45000]])
 
-meta = [['key', 'value'], ['written', datetime.datetime.utcnow().isoformat() + 'Z'],
+meta = [['key', 'value'], ['written', datetime.datetime.now(datetime.timezone.utc).isoformat()],
         ['range', f"{os.environ.get('DATE_FROM')} to {os.environ.get('DATE_TO')}"],
         ['item files', sum(len(v) for v in headers.values())], ['item rows', len(items) - 1],
         ['category col', main_h[ci] if ci is not None else 'NOT FOUND'], ['qty col', main_h[qi] if qi is not None else 'NOT FOUND'],
-        ['value col', main_h[vi] if vi is not None else 'NOT FOUND'], ['item col', main_h[ni] if ni is not None else 'NOT FOUND']]
+        ['net col', main_h[vi] if vi is not None else 'NOT FOUND'], ['gross col', main_h[gi] if gi is not None else 'NOT FOUND'], ['item col', main_h[ni] if ni is not None else 'NOT FOUND']]
 for h, fs in headers.items(): meta.append(['header (%d files)' % len(fs), ' | '.join(h)])
 for b in bad: meta.append(['bad file'] + b)
 
@@ -115,4 +131,4 @@ def put(tab, data):
 if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
-put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('M14_Items', m14r)
+put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days); put('M14_Items', m14r)

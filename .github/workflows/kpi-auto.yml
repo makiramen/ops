@@ -12,6 +12,12 @@ on:
         default: '2026-09-28'
       date_to:
         default: '2026-10-21'
+      write_mode:
+        description: 'writer: plan (writes nothing to site sheets, only Layout/Write_Plan to KPI Auto) or apply'
+        default: 'plan'
+      apply_fields:
+        description: 'apply only: comma list of fields allowed to be filled, e.g. Actual (empty = none)'
+        default: ''
 
 permissions:
   contents: read
@@ -44,12 +50,15 @@ jobs:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
           DATE_FROM: ${{ inputs.date_from }}
           DATE_TO: ${{ inputs.date_to }}
+          WRITE_MODE: ${{ inputs.write_mode }}
+          APPLY_FIELDS: ${{ inputs.apply_fields }}
         run: |
           rc=0
           python3 kpi_auto/to_sheet.py /tmp/kpi_out > /tmp/to_sheet.log 2>&1 || rc=1
           python3 kpi_auto/kpi_sheets.py > /tmp/kpi_sheets.log 2>&1 || rc=1
-          cat /tmp/to_sheet.log /tmp/kpi_sheets.log
-          python3 kpi_auto/log_to_sheet.py /tmp/to_sheet.log /tmp/kpi_sheets.log
+          python3 kpi_auto/writer.py > /tmp/writer.log 2>&1 || rc=1
+          cat /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log
+          python3 kpi_auto/log_to_sheet.py /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log
           exit $rc
       - uses: actions/upload-artifact@v4
         if: always()
