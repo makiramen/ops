@@ -31,7 +31,9 @@ for site, sid in SITES.items():
     try:
         tabs = [s['properties']['title'] for s in svc.get(spreadsheetId=sid, fields='sheets.properties.title').execute()['sheets']]
     except Exception as e:
-        for k in out: out[k].append([site, 'NO ACCESS', '', str(e)[:300]]); continue
+        for k in out: out[k].append([site, 'NO ACCESS', '', str(e)[:300]])
+        print(site, 'NO ACCESS', str(e)[:200], flush=True)
+        continue
     for want in out:
         t = next((x for x in tabs if x.strip().lower() == want.lower()), None) or next((x for x in tabs if x.lower().startswith(want.lower())), None)
         if not t: out[want].append([site, 'TAB MISSING', '', ' | '.join(tabs)[:2000]]); continue
