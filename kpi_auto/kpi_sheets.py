@@ -35,7 +35,10 @@ for site, sid in SITES.items():
     for want in out:
         t = next((x for x in tabs if x.strip().lower() == want.lower()), None) or next((x for x in tabs if x.lower().startswith(want.lower())), None)
         if not t: out[want].append([site, 'TAB MISSING', '', ' | '.join(tabs)[:2000]]); continue
-        rows = svc.values().get(spreadsheetId=sid, range=f"'{t}'", valueRenderOption='FORMATTED_VALUE').execute().get('values', [])
+        try:
+            rows = svc.values().get(spreadsheetId=sid, range=f"'{t}'", valueRenderOption='FORMATTED_VALUE').execute().get('values', [])
+        except Exception as e:
+            out[want].append([site, 'READ FAILED', '', str(e)[:300]]); continue
         for i, r in enumerate(rows):
             keep = i < 4 or any((d := pdate(c)) and d0 <= d <= d1 for c in r[:4])
             if keep: out[want].append([site, t, i + 1] + [str(c)[:500] for c in r])

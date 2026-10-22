@@ -45,8 +45,12 @@ jobs:
           DATE_FROM: ${{ inputs.date_from }}
           DATE_TO: ${{ inputs.date_to }}
         run: |
-          python3 kpi_auto/to_sheet.py /tmp/kpi_out
-          python3 kpi_auto/kpi_sheets.py
+          rc=0
+          python3 kpi_auto/to_sheet.py /tmp/kpi_out > /tmp/to_sheet.log 2>&1 || rc=1
+          python3 kpi_auto/kpi_sheets.py > /tmp/kpi_sheets.log 2>&1 || rc=1
+          cat /tmp/to_sheet.log /tmp/kpi_sheets.log
+          python3 kpi_auto/log_to_sheet.py /tmp/to_sheet.log /tmp/kpi_sheets.log
+          exit $rc
       - uses: actions/upload-artifact@v4
         if: always()
         with:
