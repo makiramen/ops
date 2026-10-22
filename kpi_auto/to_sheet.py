@@ -111,4 +111,8 @@ def put(tab, data):
                             body={'values': data[i:i + 8000]}).execute()
     print('wrote', tab, len(data), 'rows', flush=True)
 
-put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('M14_Items', m14r); put('Items_All', [items[0]] + [r for r in items[1:] if r[2] == 'all'])
+# Items_All (70k+ rows) made the workbook too big to read back through Drive; drop it and keep the compact tabs.
+if 'Items_All' in have:
+    sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
+    svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
+put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('M14_Items', m14r)
