@@ -3,6 +3,10 @@ name: KPI sheet automation (Kobas pulls)
 # Pulls Kobas straight (keyline bot user), no email skim, no Mac. Outputs are a short-lived run artifact,
 # nothing is committed. Results also go to the KPI Auto sheet (to_sheet.py). mode=probe finds routes, mode=pull does the October reconciliation pull.
 on:
+  schedule:
+    # Daily 04:10 UTC (Michael approved 23/10/2026): pulls yesterday straight after Kobas sends the Daily Headline Revenue
+    # report (04:00 UK) and freezes it into Kobas_Daily. Plan only: nothing is written to site sheets.
+    - cron: '10 4 * * *'
   workflow_dispatch:
     inputs:
       mode:
@@ -38,23 +42,24 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install --quiet requests google-auth google-api-python-client
+      - name: Dates (scheduled run = yesterday, UK)
+        run: |
+          F="${{ inputs.date_from }}"; T="${{ inputs.date_to }}"; LF="${{ inputs.labour_fresh }}"
+          if [ "${{ github.event_name }}" = "schedule" ]; then F=$(TZ=Europe/London date -d yesterday +%F); T=$F; LF=1; fi
+          echo "DATE_FROM=${F:-2026-09-28}" >> $GITHUB_ENV; echo "DATE_TO=${T:-2026-10-21}" >> $GITHUB_ENV; echo "LABOUR_FRESH=${LF:-0}" >> $GITHUB_ENV
+          M="${{ inputs.mode }}"; W="${{ inputs.write_mode }}"
+          echo "MODE=${M:-pull}" >> $GITHUB_ENV; echo "WRITE_MODE=${W:-plan}" >> $GITHUB_ENV
       - name: Run
         env:
           TZ: Europe/London
           KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
           KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
           KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
-          DATE_FROM: ${{ inputs.date_from }}
-          DATE_TO: ${{ inputs.date_to }}
-          LABOUR_FRESH: ${{ inputs.labour_fresh }}
-        run: python3 kpi_auto/${{ inputs.mode }}.py /tmp/kpi_out
+        run: python3 kpi_auto/$MODE.py /tmp/kpi_out
       - name: Write to the KPI Auto sheet
         if: always()
         env:
           GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
-          DATE_FROM: ${{ inputs.date_from }}
-          DATE_TO: ${{ inputs.date_to }}
-          WRITE_MODE: ${{ inputs.write_mode }}
           APPLY_FIELDS: ${{ inputs.apply_fields }}
         run: |
           rc=0

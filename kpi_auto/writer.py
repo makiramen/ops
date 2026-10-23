@@ -45,7 +45,7 @@ d1 = datetime.date.fromisoformat(os.environ.get('DATE_TO') or '2026-10-21')
 # Script Data is the tab the email skim fills today, so it is the one the automation replaces.
 # Every Script Data field, sourced from the Kobas_Daily tab (kobas_daily.py, Kobas direct, Headline Revenue shape), 23/10/2026.
 KD_FIELDS = ['Sit in', 'Delivery', 'Tips', 'Actual', 'Declared Rev', 'Hours work Cost', 'Hours Used', 'Food Cost Actual', 'Cost of Waste',
-             'Cost of Comp', 'Cost of Directors', 'Potential Gross Revenue Lost Due To Comp/Waste/Dir', 'Wet Sales']
+             'Cost of Comp', 'Cost of Directors', 'Wet Sales']   # Potential Gross Revenue Lost dropped 23/10
 TARGETS = [('Script Data', {f: f for f in KD_FIELDS})]
 
 cred = service_account.Credentials.from_service_account_info(json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON']),

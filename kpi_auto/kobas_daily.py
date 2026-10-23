@@ -13,7 +13,7 @@ Field rules (proved 23/10 against 408/408 Script Data cells and the Headline rep
                 hours 0 on a day with no sales (the Headline blanks them)
   Food Cost Actual = total of supplier orders delivered that day and confirmed (last modified) before the morning cut-off
   Cost of Waste / Comp / Directors = Stock Usage report net cost by usage type
-  Potential Gross Revenue Lost = not yet rebuilt (left blank)"""
+  Potential Gross Revenue Lost: dropped (Michael, 23/10/2026, not needed)"""
 import os, sys, csv, io, json, re, glob, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from google.oauth2 import service_account
@@ -75,7 +75,7 @@ try:
 except Exception: pass
 SNAME = {v: k for k, v in VNAME.items()}
 head = ['date', 'site', 'Sit in', 'Delivery', 'Tips', 'Actual', 'Declared Rev', 'Hours work Cost', 'Hours Used', 'Food Cost Actual', 'Cost of Waste',
-        'Cost of Comp', 'Cost of Directors', 'Potential Gross Revenue Lost Due To Comp/Waste/Dir', 'Wet Sales', 'pulled_at', 'labour_report']
+        'Cost of Comp', 'Cost of Directors', 'Wet Sales', 'pulled_at', 'labour_report']
 rows = []
 pulled = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%MZ')
 d = d0
@@ -92,7 +92,7 @@ while d <= d1:
         tr = traded(s, ds)
         rows.append([ds, s, r2((e + t) * 1.2), r2(dl * 1.2), r2(tips), r2((e + t + dl) * 1.2), r2(g(s, ds, 'declaredPayments:Declared Payments') - tips),
                      r2(hwc), (r2(hrs) if tr else 0.0) if hrs is not None else None, r2(food), r2(SU.get((ven, ds, 'waste'), 0.0)), r2(SU.get((ven, ds, 'comp'), 0.0)),
-                     r2(SU.get((ven, ds, 'director'), 0.0)), '', r2(g(s, ds, 'expectedNetPaymentsLeads:of which Wet sales')), pulled,
+                     r2(SU.get((ven, ds, 'director'), 0.0)), r2(g(s, ds, 'expectedNetPaymentsLeads:of which Wet sales')), pulled,
                      ','.join(os.path.basename(f)[11:].split('_')[0] for f in glob.glob(os.path.join(out, 'labour_snap', f'{ds}_*.csv')))])
     d += datetime.timedelta(1)
 cred = service_account.Credentials.from_service_account_info(json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON']), scopes=['https://www.googleapis.com/auth/spreadsheets'])

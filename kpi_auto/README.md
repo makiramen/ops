@@ -20,7 +20,7 @@ Script Data cells, 28/09 to 21/10. The report ran ~08:00 UK until 22/10 and 04:0
 | Hours work Cost / Hours Used | Labour Costs report (queue key `labour_costs_report`, export `/data/reports/labour-costs/{id}/export`) Hours Worked Cost (incl. employer NI) / Hours Worked | must be the morning-after report; hours 0 when no sales |
 | Food Cost Actual | stock orders `/data/v2/stock/order` total, delivered_date = day, last modified before the morning cut-off | list per venue ordered by id (log_date offset paging skips rows) |
 | Cost of Waste / Comp / Directors | Stock Usage report (queue key `stock_usage_report`, storage_format csv, export `/data/reports/stock-usage/{id}/export`) net cost by usage type | all waste logged by pull time |
-| Potential Gross Revenue Lost | not rebuilt yet | needs EPoS item list prices |
+| Potential Gross Revenue Lost | dropped (Michael, 23/10/2026) | |
 
 ## Why history cannot all match today
 Kobas data changes after the morning report (late clock fixes, orders confirmed or edited late, waste logged late, tips
