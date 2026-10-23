@@ -33,37 +33,90 @@ try:
                 p = k.s.get(BASE + path, timeout=120)
                 save(f'labour/{rid}_{path.rsplit("/",1)[-1]}.txt', f'{p.status_code}\n{json.dumps(x)}\n' + p.text)
 except Exception as e: log.append({'queue_err': str(e)})
-# ---- route discovery v3 (23/10): cash log JSON, labour report export. Text dumps go to the Probe tab ----
+# ---- KPI sources beyond items (23/10): cash log report, labour costs report, deliveries ----
 def chunk(t, n=400): return '\n'.join(t[i:i + n] for i in range(0, len(t), n))
-def grab(name, path, n=60000):
+def getj(path, params=None, tries=4):
+    last = None
+    for i in range(tries):
+        try:
+            r = k.s.get(BASE + path, params=params, timeout=180)
+            if r.status_code in (200, 201): return r
+            last = r
+        except Exception as e: last = e
+        time.sleep(3 * (i + 1))
+    return last
+VIDS = sorted(V.values())
+# 1) cash log report, one call per venue (the payload is keyed by date; venue id is not guaranteed inside it)
+os.makedirs(out + '/cashlog', exist_ok=True)
+for fmt in ('%Y-%m-%d',):
+    for site, vid in V.items():
+        r = getj('/data/reports/cash-log', [('venueIds[]', str(vid)), ('fromDate', d0.strftime(fmt)), ('toDate', d1.strftime(fmt))])
+        txt = getattr(r, 'text', str(r))
+        open(f'{out}/cashlog/{site}.json', 'w').write(txt)
+        if site == 'M1': save('probe_cashlog_report_M1.txt', f'{getattr(r, "status_code", "ERR")}\n' + chunk(txt[:30000]))
+# 2) labour costs report: queue a fresh one per Monday in range, wait, export; fall back to the newest existing
+mondays = sorted({(d0 + datetime.timedelta(i) - datetime.timedelta((d0 + datetime.timedelta(i)).weekday())).isoformat() for i in range((d1 - d0).days + 1)})
+queued = {}
+for m in mondays:
+    data = [('reportQueue[report_key]', 'labour_costs_report'), ('reportQueue[filters][date]', m)] + [('reportQueue[filters][venue_ids][]', str(v)) for v in VIDS]
     try:
-        p = k.s.get(path if path.startswith('http') else BASE + path, timeout=90)
-        save(f'probe_{name}.txt', f'{p.status_code} {p.url} {p.headers.get("content-type","")}\n' + chunk(p.text[:n]))
-        return p
-    except Exception as e:
-        save(f'probe_{name}.txt', 'ERR ' + str(e)); return None
-cl = k.s.get(BASE + '/daily/cashlog/edit/18270', timeout=90).text
-save('probe_cashlog_fields.txt', '\n'.join(sorted(set(re.findall(r'cashlog\.data\[date\][\w\.\[\]\'+ ]{0,80}', cl)))) + '\n--\n' +
-     '\n'.join(sorted(set(re.findall(r'(?:ng-init|data-[\w-]+)="[^"]{0,300}"', cl)))))
-for u in sorted(set(re.findall(r'<script[^>]+src="([^"]+)"', cl))):
-    if re.search(r'cash|report|daily', u):
-        grab('js_' + re.sub(r'\W+', '_', u.rsplit('/', 1)[-1])[:40], ('https:' + u) if u.startswith('//') else u, 30000)
-for name, path in [('hist1', '/data/cashlog/historical/'), ('hist2', '/data/cashlog/historical/18270'),
-                   ('hist3', '/data/cashlog/historical/?venue_id=3&date=2026-09-28'), ('hist4', '/data/cashlog/historical/3/2026-09-28'),
-                   ('hist5', '/data/cashlog/historical/?venueId=3&from=2026-09-28&to=2026-09-28'), ('hist6', '/data/cashlog/18270/historical')]:
-    grab(name, path, 20000)
-# labour costs report: existing generated reports per Monday, export the newest that covers every venue
-try:
-    q = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': 'labour_costs_report'}, timeout=60).json()
-    save('probe_labour_queue.txt', chunk(json.dumps([{kk: x.get(kk) for kk in ('id', 'filters', 'generated', 'generation_end', 'staff_name')} for x in q])[:30000]))
-    best = {}
+        r = k.s.post(BASE + '/data/report-queue', data=data, timeout=60)
+        save(f'probe_labour_queue_{m}.txt', f'{r.status_code}\n{r.text[:2000]}')
+        if r.status_code == 201: queued[m] = r.json()['id']
+    except Exception as e: save(f'probe_labour_queue_{m}.txt', 'ERR ' + str(e))
+t0 = time.time(); done = {}
+while queued and time.time() - t0 < 15 * 60 and len(done) < len(queued):
+    time.sleep(30)
+    try: q = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': 'labour_costs_report'}, timeout=60).json()
+    except Exception: continue
     for x in q:
-        dt = (x.get('filters') or {}).get('date')
-        if x.get('generated') and dt and (dt not in best or len(x['filters'].get('venue_ids', [])) >= len(best[dt]['filters'].get('venue_ids', []))): best[dt] = x
-    for dt, x in sorted(best.items())[-6:]:
-        for suf in ('/export', ''):
-            grab(f'labour_{dt}{suf.replace("/", "_")}', f'/data/reports/labour-costs/{x["id"]}{suf}', 60000)
-except Exception as e: save('probe_labour_queue.txt', 'ERR ' + str(e))
+        for m, rid in queued.items():
+            if x.get('id') == rid and x.get('generated'): done[m] = rid
+if len(done) < len(mondays):
+    q = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': 'labour_costs_report'}, timeout=60).json()
+    for m in mondays:
+        if m in done: continue
+        c = [x for x in q if x.get('generated') and (x.get('filters') or {}).get('date') == m]
+        if c: done[m] = max(c, key=lambda x: x.get('generation_end') or '')['id']
+os.makedirs(out + '/labour', exist_ok=True)
+for m, rid in done.items():
+    r = getj(f'/data/reports/labour-costs/{rid}/export')
+    open(f'{out}/labour/{m}_{rid}.csv', 'w').write(getattr(r, 'text', ''))
+log.append({'labour_reports': done, 'labour_fresh': sorted(set(done) & set(queued))})
+# 3) deliveries received (food cost), venue from the parent stock order
+since = (d0 - datetime.timedelta(60)).isoformat()
+omap = {}; off = 0
+while True:
+    r = getj('/data/v2/stock/order', {'limit': 100, 'offset': off, 'orderBy[log_date]': 'DESC', 'filterBy[log_date][gte]': since})
+    j = r.json() if hasattr(r, 'json') else []
+    for o in j: omap[o['id']] = (o.get('to_venue_id'), o.get('from_supplier_name'), o.get('type'))
+    if len(j) < 100: break
+    off += 100
+dels = []; off = 0
+while True:
+    r = getj('/data/v2/stock/order/delivery', {'limit': 100, 'offset': off, 'orderBy[log_date]': 'ASC',
+             'filterBy[log_date][gte]': d0.isoformat(), 'filterBy[log_date][lte]': d1.isoformat()})
+    j = r.json() if hasattr(r, 'json') else []
+    dels += j
+    if len(j) < 100: break
+    off += 100
+miss = [d['stock_order_id'] for d in dels if d['stock_order_id'] not in omap]
+for oid in sorted(set(miss)):
+    try:
+        o = k.gj(f'/data/v2/stock/order/{oid}'); omap[oid] = (o.get('to_venue_id'), o.get('from_supplier_name'), o.get('type'))
+    except Exception: pass
+with open(f'{out}/deliveries.json', 'w') as f:
+    json.dump([dict(d, to_venue_id=omap.get(d['stock_order_id'], (None,))[0], supplier=omap.get(d['stock_order_id'], (None, None))[1]) for d in dels], f)
+log.append({'deliveries': len(dels), 'orders_mapped': len(omap)})
+# 4) probe the eat-in consumption mode spelling (eat-in returned header-only)
+for mode in ('eatin', 'eat_in', 'dine-in', 'dine_in', 'sit-in', 'Eat In', 'eat in', 'EAT_IN', 'dinein', 'table'):
+    try:
+        p = k.s.post(BASE + '/data/reports/item-by-sales/export', data=[('venueIds[]', '3'), ('from', '2026-10-01'), ('to', '2026-10-01'), ('piscMode', ''),
+                     ('filterByTill', 'false'), ('seatingArea', ''), ('consumptionMode', mode)], timeout=120,
+                     headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        tot = [l for l in p.text.splitlines() if l.lower().startswith('total') or l.lower().startswith('"total')]
+        save(f'probe_mode_{re.sub(chr(32), "_", mode)}.txt', f'{p.status_code} lines={len(p.text.splitlines())}\n' + '\n'.join(tot))
+    except Exception as e: save(f'probe_mode_{mode}.txt', 'ERR ' + str(e))
 # ---- item sales per venue per day per consumption mode ----
 jobs = []
 d = d0

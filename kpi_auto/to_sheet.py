@@ -91,9 +91,67 @@ for r in items[1:]:
     c[1] += (num(l[vi]) or 0) if vi is not None else 0
 m14r = [['mode', 'category', 'item', 'qty', 'value']] + [list(k) + [round(v[0], 2), round(v[1], 2)] for k, v in sorted(m14.items())]
 
+# ---- report TOTAL rows per lead type (food / wet / controllables), every numeric column ----
+li = col(main_h, 'lead type')
+numcols = [i for i, c in enumerate(main_h) if c not in ('Item', 'Lead Type', 'Category')]
+lead = [['date', 'site', 'mode', 'lead'] + [main_h[i] for i in numcols]]
+for r in items[1:]:
+    l = r[3:]
+    if ni is not None and l[ni].strip().lower() == 'total':
+        lead.append(r[:3] + [l[li] if li is not None else ''] + [num(l[i]) if i < len(l) else None for i in numcols])
+
+# ---- cash log report per site: flatten every numeric leaf to (site, date, key, value) ----
+from zoneinfo import ZoneInfo
+UK = ZoneInfo('Europe/London')
+def flat(o, pre=''):
+    if isinstance(o, dict):
+        for kk, v in o.items(): yield from flat(v, f'{pre}.{kk}' if pre else str(kk))
+    elif isinstance(o, list):
+        for i, v in enumerate(o): yield from flat(v, f'{pre}[{i}]')
+    else:
+        v = num(o) if not isinstance(o, bool) else None
+        if v is not None: yield pre, v
+        elif isinstance(o, str) and o and len(o) < 200: yield pre, o
+def keydate(kk):
+    kk = str(kk)
+    if kk.isdigit() and len(kk) >= 9: return datetime.datetime.fromtimestamp(int(kk), UK).date().isoformat()
+    m = re.match(r'(\d{4}-\d{2}-\d{2})', kk)
+    return m.group(1) if m else None
+cash = [['site', 'date', 'key', 'value']]
+for f in sorted(glob.glob(os.path.join(out, 'cashlog', '*.json'))):
+    site = os.path.basename(f)[:-5]
+    try: j = json.load(open(f))
+    except Exception as e: cash.append([site, '', 'PARSE ERROR', str(e)[:200]]); continue
+    body = j.get('data', j) if isinstance(j, dict) else j
+    if isinstance(body, dict) and any(keydate(x) for x in body):
+        for kk, v in body.items():
+            d = keydate(kk)
+            for path, val in flat(v): cash.append([site, d or kk, path, val])
+    else:
+        for path, val in flat(body): cash.append([site, '', path, val])
+
+# ---- labour costs report CSVs ----
+lab = [['week', 'venue', 'information', 'date', 'value']]
+for f in sorted(glob.glob(os.path.join(out, 'labour', '*.csv'))):
+    wk = os.path.basename(f)[:10]
+    ls = list(csv.reader(io.StringIO(open(f, encoding='utf-8-sig').read())))
+    if not ls: continue
+    h = ls[0]
+    for l in ls[1:]:
+        for i in range(2, min(len(h), len(l))):
+            lab.append([wk, l[0], l[1], h[i], num(l[i])])
+
+# ---- deliveries ----
+delv = [['id', 'to_venue_id', 'supplier', 'log_date', 'net', 'gross', 'total', 'note_number', 'staff']]
+try:
+    for d in json.load(open(os.path.join(out, 'deliveries.json'))):
+        delv.append([d.get('id'), d.get('to_venue_id'), d.get('supplier'), d.get('log_date'), d.get('delivery_note_net_total'),
+                     d.get('delivery_note_gross_total'), d.get('total'), d.get('delivery_note_number'), d.get('staff_name')])
+except Exception as e: delv.append(['ERR', str(e)])
+
 # probe dump
 probe = [['file', 'line']]
-for f in sorted(glob.glob(os.path.join(out, '*.json')) + glob.glob(os.path.join(out, '*.txt')) + glob.glob(os.path.join(out, 'labour', '*'))):
+for f in sorted([x for x in glob.glob(os.path.join(out, '*.json')) if not x.endswith('deliveries.json')] + glob.glob(os.path.join(out, '*.txt'))):
     txt = open(f, encoding='utf-8', errors='replace').read()
     name = os.path.relpath(f, out)
     if name.startswith('page_'): txt = txt.split('\n--html\n')[0]   # routes only, not the page html
@@ -133,3 +191,4 @@ if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
 put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days); put('M14_Items', m14r)
+put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv)
