@@ -14,6 +14,7 @@ out = sys.argv[1]
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import gretry  # noqa: retries 429/5xx
 cred = service_account.Credentials.from_service_account_info(json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON']),
                                                              scopes=['https://www.googleapis.com/auth/spreadsheets'])
 svc = build('sheets', 'v4', credentials=cred, cache_discovery=False).spreadsheets()

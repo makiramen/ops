@@ -33,46 +33,37 @@ try:
                 p = k.s.get(BASE + path, timeout=120)
                 save(f'labour/{rid}_{path.rsplit("/",1)[-1]}.txt', f'{p.status_code}\n{json.dumps(x)}\n' + p.text)
 except Exception as e: log.append({'queue_err': str(e)})
-# ---- route discovery v2 (23/10): cash log, labour, Z read, deliveries, covers. Text dumps go to the Probe tab ----
-def strip(h):
-    h = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', h)
-    return re.sub(r'[ \t\r\f\v]+', ' ', re.sub(r'(?s)<[^>]+>', ' ', h)).replace('\n ', '\n')
-def grab(name, path, n=40000, text=True):
+# ---- route discovery v3 (23/10): cash log JSON, labour report export. Text dumps go to the Probe tab ----
+def chunk(t, n=400): return '\n'.join(t[i:i + n] for i in range(0, len(t), n))
+def grab(name, path, n=60000):
     try:
-        p = k.s.get(BASE + path, timeout=90)
-        body = p.text
-        save(f'probe_{name}.txt', f'{p.status_code} {p.url} {p.headers.get("content-type","")}\n' + (strip(body) if text and '<html' in body[:500].lower() else body)[:n])
+        p = k.s.get(path if path.startswith('http') else BASE + path, timeout=90)
+        save(f'probe_{name}.txt', f'{p.status_code} {p.url} {p.headers.get("content-type","")}\n' + chunk(p.text[:n]))
         return p
     except Exception as e:
         save(f'probe_{name}.txt', 'ERR ' + str(e)); return None
-pl = grab('reports_list_raw', '/reports/list/', 1, text=False)
-if pl is not None:
-    hrefs = sorted(set(re.findall(r'href="([^"#]{2,200})"', pl.text)))
-    save('probe_reports_hrefs.txt', '\n'.join(hrefs))
-cl = grab('cashlog_18270', '/daily/cashlog/edit/18270', 60000)
-if cl is not None:
-    save('probe_cashlog_routes.txt', '\n'.join(sorted(set(re.findall(r"""['"](/[a-z0-9_\-/]{3,120}(?:\?[^'"\s<>]{0,120})?)['"]""", cl.text)))))
-    js = sorted(set(re.findall(r'<script[^>]+src="([^"]+)"', cl.text + (pl.text if pl is not None else ''))))
-    hits = []
-    for u in js:
-        if u.startswith('//'): u = 'https:' + u
-        if u.startswith('/'): u = BASE + u
-        try: t = k.s.get(u, timeout=90).text
-        except Exception as e: hits.append(f'ERR {u} {e}'); continue
-        hits.append(f'== {u} {len(t)}')
-        for m in sorted(set(re.findall(r"""report_?[kK]ey['"]?\s*[:=]\s*['"]([a-z0-9_]+)['"]""", t))): hits.append('KEY ' + m)
-        for m in sorted(set(re.findall(r"""['"`](/data/[^'"`\s]{2,140})['"`]""", t))):
-            if re.search(r'cash|labour|labor|z.?read|headline|tax|cover|tip|gratuit|deliver|purchase|daily|sales|hours|rota', m, re.I): hits.append('ROUTE ' + m)
-    save('probe_js_hits.txt', '\n'.join(hits))
-for name, path in [('cashlog_json1', '/data/cashlog/18270'), ('cashlog_json2', '/data/cash-log/18270'), ('cashlog_json3', '/data/daily/cashlog/18270'),
-                   ('cashlog_json4', '/data/v2/cashlog/18270'), ('cashlog_json5', '/data/v2/cash-log/18270'), ('cashlog_list', '/data/v2/cash-log?limit=3'),
-                   ('delivery_list', '/data/v2/stock/order/delivery?limit=3&orderBy[log_date]=DESC'),
-                   ('labour_page', '/reports/labour-costs/'),
-                   ('rq_labour1', '/data/report-queue?filterBy[report_key][eq]=labour_costs_report'),
-                   ('rq_labour2', '/data/report-queue?filterBy[report_key][eq]=labour_costs'),
-                   ('rq_labour3', '/data/report-queue?filterBy[report_key][eq]=labour_cost_report'),
-                   ('rq_hours', '/data/report-queue?filterBy[report_key][eq]=hours_export')]:
+cl = k.s.get(BASE + '/daily/cashlog/edit/18270', timeout=90).text
+save('probe_cashlog_fields.txt', '\n'.join(sorted(set(re.findall(r'cashlog\.data\[date\][\w\.\[\]\'+ ]{0,80}', cl)))) + '\n--\n' +
+     '\n'.join(sorted(set(re.findall(r'(?:ng-init|data-[\w-]+)="[^"]{0,300}"', cl)))))
+for u in sorted(set(re.findall(r'<script[^>]+src="([^"]+)"', cl))):
+    if re.search(r'cash|report|daily', u):
+        grab('js_' + re.sub(r'\W+', '_', u.rsplit('/', 1)[-1])[:40], ('https:' + u) if u.startswith('//') else u, 30000)
+for name, path in [('hist1', '/data/cashlog/historical/'), ('hist2', '/data/cashlog/historical/18270'),
+                   ('hist3', '/data/cashlog/historical/?venue_id=3&date=2026-09-28'), ('hist4', '/data/cashlog/historical/3/2026-09-28'),
+                   ('hist5', '/data/cashlog/historical/?venueId=3&from=2026-09-28&to=2026-09-28'), ('hist6', '/data/cashlog/18270/historical')]:
     grab(name, path, 20000)
+# labour costs report: existing generated reports per Monday, export the newest that covers every venue
+try:
+    q = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': 'labour_costs_report'}, timeout=60).json()
+    save('probe_labour_queue.txt', chunk(json.dumps([{kk: x.get(kk) for kk in ('id', 'filters', 'generated', 'generation_end', 'staff_name')} for x in q])[:30000]))
+    best = {}
+    for x in q:
+        dt = (x.get('filters') or {}).get('date')
+        if x.get('generated') and dt and (dt not in best or len(x['filters'].get('venue_ids', [])) >= len(best[dt]['filters'].get('venue_ids', []))): best[dt] = x
+    for dt, x in sorted(best.items())[-6:]:
+        for suf in ('/export', ''):
+            grab(f'labour_{dt}{suf.replace("/", "_")}', f'/data/reports/labour-costs/{x["id"]}{suf}', 60000)
+except Exception as e: save('probe_labour_queue.txt', 'ERR ' + str(e))
 # ---- item sales per venue per day per consumption mode ----
 jobs = []
 d = d0

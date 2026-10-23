@@ -27,6 +27,7 @@ quota problem), renamed '<tab> from dd-mm-yyyy', and its Date column is re-dated
 import os, re, json, datetime
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import gretry  # noqa: retries 429/5xx
 import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sites import SITES
 

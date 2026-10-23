@@ -4,6 +4,7 @@ a site sheet not shared with it is listed as NO ACCESS. Tabs written: KPI_Script
 import os, re, json, datetime
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import sys as _s, os as _o; _s.path.insert(0, _o.path.dirname(_o.path.abspath(__file__))); import gretry  # noqa: retries 429/5xx
 SHEET = os.environ.get('KPI_AUTO_SHEET', '14_rQMgMu7TaHagGkgHYe-7mNar_QWyy-3yUgRoW4H8Y')
 import sys; sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from sites import SITES
