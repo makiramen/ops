@@ -1,6 +1,6 @@
 {
  "day": "2026-10-22",
- "run_at": "2026-10-23T09:30:53+00:00",
+ "run_at": "2026-10-23T09:47:50+00:00",
  "warnings": [],
  "cashup": {
   "mirror_sha": "643ff45916945841",
@@ -12,19 +12,113 @@
     "why": "Maki 21 (Birmingham) closed after a fire. Last trading day in the mirror 10/10/2026. Dated, NOT a VENUE_IGNORE entry: every day from 21/08/2026 to 10/10/2026 still counts 20 live sites. Set until to the day BEFORE it trades again; if it trades while this is open the reopen tripwire includes it and shouts."
    }
   },
-  "D_buildable": false,
-  "D_gate": "fleet avg spend \u00a319.87 outside \u00a320-26 on 22/10/2026 (covers still filling?)",
+  "D_buildable": true,
+  "D_gate": "ok",
   "D_fleet_avg_spend": 19.87,
   "covers_suspect": {},
   "builder_log": [
+   "[daily] WARN 2026-10-22 M9: FOH \u00a31,016.41/51.24% and BOH \u00a3983.64/100.0% do not resolve against total labour \u00a32,226.50 - looks like projected, not actual - split rejected",
+   "[daily] WARN 2026-10-22 M11: FOH \u00a3418.25/50.25% and BOH \u00a3414.08/49.75% do not resolve against total labour \u00a3701.94 - looks like projected, not actual - split rejected",
    "[daily] WARN 2026-10-20 M13: FOH \u00a3632.95 + BOH \u00a3699.72 exceeds total labour \u00a31,302.67 - split rejected",
    "[daily] WARN 2026-10-21 M14: FOH \u00a3574.01 + BOH \u00a3607.38 exceeds total labour \u00a31,074.05 - split rejected",
    "[daily] WARN 2026-10-20 M16: FOH \u00a3694.15 + BOH \u00a3663.71 exceeds total labour \u00a31,191.20 - split rejected",
-   "[daily] WARN 2026-10-20 M17: FOH \u00a3104.63 + BOH \u00a3294.15 exceeds total labour \u00a3395.64 - split rejected"
+   "[daily] WARN 2026-10-20 M17: FOH \u00a3104.63 + BOH \u00a3294.15 exceeds total labour \u00a3395.64 - split rejected",
+   "[daily] WARN 2026-10-22 M17: FOH \u00a3195.50/29.02% and BOH \u00a3478.25/70.98% do not resolve against total labour \u00a3771.10 - looks like projected, not actual - split rejected"
   ],
   "built": [
    "2026-10-20",
-   "2026-10-21"
+   "2026-10-21",
+   "2026-10-22"
+  ],
+  "D_totals": {
+   "sales": 90115.42,
+   "target": 89150.0,
+   "vs_target_pct": 1.1,
+   "covers": 4536,
+   "avg_spend": 19.87,
+   "wage_pct": 24.49,
+   "sites": "19/19",
+   "splits": "15/19"
+  },
+  "D_gaps": {
+   "no_sales": [],
+   "no_foh_boh_split": [
+    "M11",
+    "M17",
+    "M19",
+    "M9"
+   ],
+   "warnings": [
+    "2026-10-22 M9: FOH \u00a31,016.41/51.24% and BOH \u00a3983.64/100.0% do not resolve against total labour \u00a32,226.50 - looks like projected, not actual - split rejected",
+    "2026-10-22 M11: FOH \u00a3418.25/50.25% and BOH \u00a3414.08/49.75% do not resolve against total labour \u00a3701.94 - looks like projected, not actual - split rejected",
+    "2026-10-22 M17: FOH \u00a3195.50/29.02% and BOH \u00a3478.25/70.98% do not resolve against total labour \u00a3771.10 - looks like projected, not actual - split rejected"
+   ]
+  },
+  "D_worst": [
+   [
+    "MakiNori",
+    -58.31
+   ],
+   [
+    "M15",
+    -23.53
+   ],
+   [
+    "M19",
+    -22.44
+   ]
+  ],
+  "D_best": [
+   [
+    "M10",
+    44.13
+   ],
+   [
+    "M13",
+    43.53
+   ],
+   [
+    "M18",
+    33.4
+   ]
+  ],
+  "D_wage_over_25": [
+   [
+    "MakiNori",
+    44.91
+   ],
+   [
+    "M16",
+    36.95
+   ],
+   [
+    "M20",
+    29.48
+   ],
+   [
+    "M19",
+    28.42
+   ],
+   [
+    "M15",
+    27.99
+   ],
+   [
+    "M17",
+    25.94
+   ],
+   [
+    "M18",
+    25.47
+   ],
+   [
+    "M8",
+    25.31
+   ],
+   [
+    "M12",
+    25.06
+   ]
   ]
  },
  "reviews": {
@@ -47,6 +141,13 @@
     "neg": 2,
     "window_n": 459,
     "window_neg": 17
+   },
+   {
+    "day": "2026-10-22",
+    "n": 72,
+    "neg": 6,
+    "window_n": 446,
+    "window_neg": 20
    }
   ]
  },
@@ -72,15 +173,20 @@
   "badge_week": "2026-10-12",
   "badge_reviews": 539
  },
- "shipped": [],
+ "shipped": [
+  "data/daily/daily_index.json",
+  "data/daily/daily_reviews_index.json",
+  "data/marketing_monthly.json",
+  "data/daily/daily_2026-10-22.json",
+  "data/daily/daily_reviews_2026-10-22.json"
+ ],
  "commit": null,
  "pushed": false,
- "marketing_monthly": "wrote data/marketing_monthly.json: 6 months, 87 daily, 25 weekly, through 2026-10-21",
+ "marketing_monthly": "wrote data/marketing_monthly.json: 6 months, 88 daily, 25 weekly, through 2026-10-22",
  "index": {
-  "cashup_latest": "2026-10-21",
-  "cashup_days": 87,
-  "reviews_latest": "2026-10-21",
-  "reviews_days": 87
- },
- "result": "nothing changed \u2014 live is current"
+  "cashup_latest": "2026-10-22",
+  "cashup_days": 88,
+  "reviews_latest": "2026-10-22",
+  "reviews_days": 88
+ }
 }
