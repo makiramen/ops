@@ -210,19 +210,26 @@ try:
             rr = getj(path)
             open(f'{out}/stock_usage_{path.rsplit("/", 1)[-1]}.txt', 'w').write(getattr(rr, 'text', str(rr)))
 except Exception as e: save('probe_usage_err.txt', repr(e))
-# 3d3) sales value of waste / comp / director (Headline 'Potential Gross Revenue Lost'): look inside the sales-breakdown bundle
+# 3d3) sales value of waste / comp / director (Headline 'Potential Gross Revenue Lost'): item report modes + EPoS price routes
 try:
-    ph = k.s.get(BASE + '/reporting/sales-breakdown', timeout=60)
-    for u in re.findall(r'<script[^>]+src="([^"]+bundle[^"]+)"', ph.text):
-        u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
-        t = k.s.get(u, timeout=60).text
-        snips = [t[max(0, m.start() - 3000): m.end() + 3000] for m in re.finditer(r'group-sales', t)]
-        snips += [t[max(0, m.start() - 400): m.end() + 400] for m in re.finditer(r'(?i)reportIndex|reports\s*:\s*\[|"Waste|"Comp|Director', t)][:25]
-        save('probe_groupsales_js.txt', chunk('\n=====\n'.join(snips)[:40000]))
-    for path in [f'/data/report/group-sales/{i}?start_date={d1}&end_date={d1}&venue_id=3' for i in range(0, 14)]:
-        r = k.s.get(BASE + path, timeout=90)
-        save('probe_gs_' + re.sub(r'\W+', '_', path)[:50] + '.txt', f'{r.status_code}\n' + chunk(r.text[:6000]))
-except Exception as e: save('probe_groupsales_err.txt', repr(e))
+    hits = []
+    for pg in ('/reports/item-by-sales', '/epos/items/', '/epos/', '/admin/epos/items/', '/menus/', '/epos/menu/'):
+        ph = k.s.get(BASE + pg, timeout=60)
+        hits.append(f'PAGE {pg} {ph.status_code} {ph.url}')
+        for u in re.findall(r'<script[^>]+src="([^"]+)"', ph.text):
+            u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
+            if 'vendor' in u: continue
+            t = k.s.get(u, timeout=60).text
+            rts = sorted(set(re.findall(r"""['"`](/data/[^'"`\s]{2,140})['"`]""", t)))
+            if rts: hits.append(f'JS {u.rsplit("/", 1)[-1]} ' + ' '.join(rts))
+            for m in re.finditer(r'piscMode|consumptionMode|wasteMode|showWaste', t):
+                hits.append('CTX ' + t[max(0, m.start() - 300): m.end() + 300])
+    save('probe_price_routes.txt', chunk('\n'.join(hits)[:60000]))
+    for mode in ('waste', 'comp', 'director', 'w', 'c', 'd', '1', '2', '3'):
+        p = k.s.post(BASE + '/data/reports/item-by-sales/export', data=[('venueIds[]', '3'), ('from', '2026-10-20'), ('to', '2026-10-20'), ('piscMode', mode),
+                     ('filterByTill', 'false'), ('seatingArea', ''), ('consumptionMode', '')], timeout=120, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+        save(f'probe_pisc_{mode}.txt', f'{p.status_code}\n' + chunk(p.text[:3000]))
+except Exception as e: save('probe_price_err.txt', repr(e))
 # 3e) unit cost / price reference: one All Item Sales export per site for the whole range (cost(E) and average gross per item)
 os.makedirs(out + '/items_range', exist_ok=True)
 def rng(item):
