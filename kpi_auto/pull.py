@@ -92,15 +92,18 @@ while True:
     for o in j: omap[o['id']] = (o.get('to_venue_id'), o.get('from_supplier_name'), o.get('type'))
     if len(j) < 100: break
     off += 100
-olist = []
-off = 0
-while True:
-    r = getj('/data/v2/stock/order', {'limit': 100, 'offset': off, 'orderBy[log_date]': 'DESC', 'filterBy[log_date][gte]': (d0 - datetime.timedelta(7)).isoformat(), 'filterBy[log_date][lte]': (d1 + datetime.timedelta(7)).isoformat()})
-    j = r.json() if hasattr(r, 'json') else []
-    olist += j
-    if len(j) < 100: break
-    off += 100
-json.dump(olist, open(f'{out}/orders.json', 'w'))
+# orders per venue, stable id ordering (log_date ordering with offset paging skipped and duplicated rows), wide log_date window
+oseen = {}
+for vid in VIDS + [11]:
+    off = 0
+    while True:
+        r = getj('/data/v2/stock/order', {'limit': 100, 'offset': off, 'orderBy[id]': 'ASC', 'filterBy[to_venue_id][eq]': vid,
+                 'filterBy[log_date][gte]': (d0 - datetime.timedelta(30)).isoformat(), 'filterBy[log_date][lte]': (d1 + datetime.timedelta(10)).isoformat()})
+        j = r.json() if hasattr(r, 'json') else []
+        for o in j: oseen[o['id']] = o
+        if len(j) < 100: break
+        off += 100
+json.dump(list(oseen.values()), open(f'{out}/orders.json', 'w'))
 dels = []; off = 0
 while True:
     r = getj('/data/v2/stock/order/delivery', {'limit': 100, 'offset': off, 'orderBy[log_date]': 'ASC',
@@ -163,7 +166,7 @@ def dent(dv):
 import collections
 try:
     dl = json.load(open(f'{out}/deliveries.json'))
-    with ThreadPoolExecutor(6) as ex_: dents = list(ex_.map(dent, dl))
+    dents = [] if os.environ.get('DELIV_ENTRIES') != '1' else list(ThreadPoolExecutor(6).map(dent, dl))
     json.dump(dents, open(f'{out}/delivery_entries.json', 'w'))
 except Exception as e: save('probe_dent_err.txt', repr(e))
 # 3d) key oracle for the on-demand reports behind the remaining Headline fields, stock usage (waste) routes, EPoS item prices
@@ -190,16 +193,18 @@ for name, path in [('usage_reasons', '/data/v2/stock/usage/reasons'),
     except Exception as e: save(f'probe_{name}.txt', 'ERR ' + str(e))
 # 3d2) stock usage report (waste / comp / director usage at cost), queued fresh for the whole range, csv
 try:
-    data = [('reportQueue[report_key]', 'stock_usage_report'), ('reportQueue[filters][from]', d0.isoformat()), ('reportQueue[filters][to]', d1.isoformat()),
+    data = [('reportQueue[report_key]', 'stock_usage_report'), ('reportQueue[storage_format]', 'csv'), ('reportQueue[filters][from]', d0.isoformat()), ('reportQueue[filters][to]', d1.isoformat()),
             ('reportQueue[filters][usage_type]', '')] + [('reportQueue[filters][venue_ids][]', str(v)) for v in VIDS]
     r = k.s.post(BASE + '/data/report-queue', data=data, timeout=60)
     save('probe_usage_queue.txt', f'{r.status_code} {r.text[:1500]}')
     rid = r.json().get('id') if r.status_code == 201 else None
     t0 = time.time()
-    while rid and time.time() - t0 < 600:
+    while rid and time.time() - t0 < 900:
         time.sleep(20)
         q = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': 'stock_usage_report'}, timeout=60).json()
-        if any(x.get('id') == rid and x.get('generated') for x in q): break
+        st = [x for x in q if x.get('id') == rid]
+        save('probe_usage_status.txt', json.dumps(st)[:2000] + f' after {int(time.time() - t0)}s')
+        if any(x.get('generated') for x in st): break
     if rid:
         for path in (f'/data/reports/stock-usage/{rid}/export', f'/data/reports/stock-usage/{rid}'):
             rr = getj(path)
@@ -216,7 +221,8 @@ def rng(item):
             p = k.s.post(BASE + '/data/reports/item-by-sales/export', data=data, timeout=180, headers={'Content-Type': 'application/x-www-form-urlencoded'})
             if p.status_code == 200: open(f'{out}/items_range/{site}.csv', 'w').write(p.text); return
         except Exception: time.sleep(3)
-with ThreadPoolExecutor(5) as ex_: list(ex_.map(rng, V.items()))
+if os.environ.get('ITEM_RANGE') == '1':
+    with ThreadPoolExecutor(5) as ex_: list(ex_.map(rng, V.items()))
 # ---- item sales per venue per day per consumption mode ----
 jobs = []
 d = d0
