@@ -13,7 +13,10 @@ Field rules (proved 23/10 against 408/408 Script Data cells and the Headline rep
                 hours 0 on a day with no sales (the Headline blanks them)
   Food Cost Actual = total of supplier orders delivered that day and confirmed (last modified) before the morning cut-off
   Cost of Waste / Comp / Directors = Stock Usage report net cost by usage type
-  Potential Gross Revenue Lost: dropped (Michael, 23/10/2026, not needed)"""
+  Potential Gross Revenue Lost: dropped (Michael, 23/10/2026, not needed)
+DAY (Input) fields, Michael's rulings 23/10/2026 (one rule for every site):
+  Covers      = Kobas covers only (Cash Log report)
+  Drinks % / Sushi % / Sides % = category sales incl. VAT / total sales incl. VAT (All Item Sales report, every menu incl. delivery)"""
 import os, sys, csv, io, json, re, glob, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from google.oauth2 import service_account
@@ -73,9 +76,29 @@ try:
         if ut in ('waste', 'comp', 'director'):
             kk = (l[hx['Venue']].strip(), dt, ut); SU[kk] = SU.get(kk, 0.0) + (num(l[hx['Net Cost']]) or 0.0)
 except Exception: pass
+# All Item Sales per site/day (mode all): category gross and the report's TOTAL gross
+RX = {'drinks': r'drink|tea|beer|wine|cocktail|mocktail|spirit|sake|shot|alcohol', 'sushi': r'sushi|maki roll|nigiri|sashimi|hosomaki|hand roll|chef',
+      'sides': r'^sides'}
+PCT = {}
+for f in glob.glob(os.path.join(out, 'items', '*_all.csv')):
+    site, day, _ = os.path.basename(f)[:-4].rsplit('_', 2)
+    ls = [l for l in csv.reader(io.StringIO(open(f, encoding='utf-8-sig').read())) if any(c.strip() for c in l)]
+    if not ls: continue
+    h = [c.strip() for c in ls[0]]
+    try: ii, ci, gi = h.index('Item'), h.index('Category'), h.index('Gross Sales')
+    except ValueError: continue
+    tot, grp = 0.0, {k: 0.0 for k in RX}
+    for l in ls[1:]:
+        if len(l) <= max(ii, ci, gi): continue
+        nm = l[ii].strip().lower(); gv = num(l[gi]) or 0.0
+        if nm == 'total': tot += gv; continue
+        if not nm or nm.startswith('of which '): continue
+        for k, rx in RX.items():
+            if re.search(rx, l[ci].strip(), re.I): grp[k] += gv
+    PCT[(site, day)] = {k: (round(100 * v / tot, 2) if tot > 0 else None) for k, v in grp.items()}
 SNAME = {v: k for k, v in VNAME.items()}
 head = ['date', 'site', 'Sit in', 'Delivery', 'Tips', 'Actual', 'Declared Rev', 'Hours work Cost', 'Hours Used', 'Food Cost Actual', 'Cost of Waste',
-        'Cost of Comp', 'Cost of Directors', 'Wet Sales', 'pulled_at', 'labour_report']
+        'Cost of Comp', 'Cost of Directors', 'Wet Sales', 'Covers', 'Drinks %', 'Sushi %', 'Sides %', 'pulled_at', 'labour_report']
 rows = []
 pulled = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%MZ')
 d = d0
@@ -92,7 +115,8 @@ while d <= d1:
         tr = traded(s, ds)
         rows.append([ds, s, r2((e + t) * 1.2), r2(dl * 1.2), r2(tips), r2((e + t + dl) * 1.2), r2(g(s, ds, 'declaredPayments:Declared Payments') - tips),
                      r2(hwc), (r2(hrs) if tr else 0.0) if hrs is not None else None, r2(food), r2(SU.get((ven, ds, 'waste'), 0.0)), r2(SU.get((ven, ds, 'comp'), 0.0)),
-                     r2(SU.get((ven, ds, 'director'), 0.0)), r2(g(s, ds, 'expectedNetPaymentsLeads:of which Wet sales')), pulled,
+                     r2(SU.get((ven, ds, 'director'), 0.0)), r2(g(s, ds, 'expectedNetPaymentsLeads:of which Wet sales')),
+                     CL.get((s, ds, 'covers:Covers')), (PCT.get((s, ds)) or {}).get('drinks'), (PCT.get((s, ds)) or {}).get('sushi'), (PCT.get((s, ds)) or {}).get('sides'), pulled,
                      ','.join(os.path.basename(f)[11:].split('_')[0] for f in glob.glob(os.path.join(out, 'labour_snap', f'{ds}_*.csv')))])
     d += datetime.timedelta(1)
 cred = service_account.Credentials.from_service_account_info(json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON']), scopes=['https://www.googleapis.com/auth/spreadsheets'])
