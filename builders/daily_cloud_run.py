@@ -20,7 +20,7 @@ Exit codes (the report JSON on stdout always says why):
 Rules of the house baked in (standing_rules.md):
   * D = YESTERDAY (Europe/London). Never build today.
   * SALES COMPLETE != DAY BUILDABLE: every live venue present, no blank Actual, fleet avg spend
-    £20-26 AND every site inside its own band (£15-40 ramen, £30-50 Nori). If D is not buildable
+    £0-26 (floor lowered from £20 on 23/10/2026) AND every site inside its own band (£15-40 ramen, £30-50 Nori). If D is not buildable
     we STILL back-fill D-2/D-1 (splits and reviews land late) and say so; we never ship a D file.
   * Cash-up and reviews for the same day ship in the SAME commit. Reviews are built for D-2, D-1, D.
   * A rebuild that differs only in _generated_at / rows_scanned / built_at / pulledAt is not a deploy.
@@ -170,7 +170,9 @@ def main():
                 sp = sales[v] / covers[v]; code = PC.VENUE_TO_CODE[v]
                 lo, hi = (30, 50) if code in NORI else (ramen_lo(dt), 40)
                 if not (lo <= sp <= hi): flags.append(f"{code} £{sp:.2f}/head (band £{lo}-{hi})")
-            if not (20 <= fleet <= 26): return False, f"fleet avg spend £{fleet:.2f} outside £20-26 on {dt} (covers still filling?)", fleet, flags
+            # 23/10/2026: Michael ruled the fleet avg spend floor down from £20 to £0. The 22/10 day sat unshipped
+            # because the fleet came in under £20; only the £26 ceiling (doubled-sales guard) still holds the day.
+            if not (0 <= fleet <= 26): return False, f"fleet avg spend £{fleet:.2f} outside £0-26 on {dt} (covers still filling?)", fleet, flags
             # 04/09/2026: a per-site spend outside its band no longer holds the WHOLE fleet day back.
             # 02/09 sat unshipped for two days because M8 (372 covers on £4,021) and M19 (250 on £3,183)
             # had doubled covers at source. The day now ships with THAT SITE's covers and avg spend
