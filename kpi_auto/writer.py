@@ -49,7 +49,7 @@ KD_FIELDS = ['Sit in', 'Delivery', 'Tips', 'Actual', 'Declared Rev', 'Hours work
 # DAY (Input), the fields managers type today (Michael's rulings 23/10/2026): Covers = Kobas covers; Drinks/Sushi/Sides % = category
 # sales incl. VAT over total sales incl. VAT. Kobas_Daily holds the % as a number (12.34 = 12.34%). Header text varies a little by
 # site, so each field carries a regex matched against the header row (first match wins).
-DAY_FIELDS = {'Covers': r'customers|covers', 'Drinks %': r'^drinks', 'Sushi %': r'^sushi', 'Sides %': r'^sides'}
+DAY_FIELDS = {'Covers': r'customers|^covers(?!.*stripe)', 'Drinks %': r'^drinks', 'Sushi %': r'^sushi', 'Sides %': r'^sides'}
 PCT_FIELDS = {'drinks %', 'sushi %', 'sides %'}
 # Every target tab found in a site sheet is planned (both tabs live in the same spreadsheet).
 TARGETS = [('Script Data', {f: (f, re.escape(f.lower())) for f in KD_FIELDS}), ('DAY (Input)', {f: (f, rx) for f, rx in DAY_FIELDS.items()})]
@@ -114,7 +114,7 @@ for site, sid in SITES.items():
             j = next((j for j, c in enumerate(r[:4]) if str(c).strip().lower() == 'date'), None)
             if j is not None: hr, dc = i, j; break
         if hr is None:
-            layout.append([site, tab, 'NO HEADER', '', '', '', '', '', '', '']); continue
+            layout.append([site, tab, 'NO HEADER', '', '', '', '', '', ' | '.join(','.join(str(c)[:20] for c in r[:8]) for r in vals[:8]), '']); continue
         head = [str(c).strip().lower() for c in vals[hr]]
         rowof = {}
         for i, r in enumerate(vals[hr + 1:], start=hr + 1):
