@@ -141,6 +141,15 @@ for f in sorted(glob.glob(os.path.join(out, 'labour', '*.csv'))):
         for i in range(2, min(len(h), len(l))):
             lab.append([wk, l[0], l[1], h[i], num(l[i])])
 
+# ---- labour snapshots (report generated the morning after each day), only the snapshot day's column ----
+snap = [['day', 'report_id', 'generated', 'venue', 'information', 'value']]
+for f in sorted(glob.glob(os.path.join(out, 'labour_snap', '*.csv'))):
+    day, rid, gen = os.path.basename(f)[:-4].split('_', 2)
+    ls = list(csv.reader(io.StringIO(open(f, encoding='utf-8-sig').read())))
+    if not ls or day not in ls[0]: continue
+    i = ls[0].index(day)
+    for l in ls[1:]:
+        if len(l) > i: snap.append([day, rid, gen, l[0], l[1], num(l[i])])
 # ---- deliveries ----
 delv = [['id', 'to_venue_id', 'supplier', 'log_date', 'net', 'gross', 'total', 'note_number', 'staff']]
 try:
@@ -191,4 +200,4 @@ if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
 put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days); put('M14_Items', m14r)
-put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv)
+put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap)

@@ -108,6 +108,56 @@ for oid in sorted(set(miss)):
 with open(f'{out}/deliveries.json', 'w') as f:
     json.dump([dict(d, to_venue_id=omap.get(d['stock_order_id'], (None,))[0], supplier=omap.get(d['stock_order_id'], (None, None))[1]) for d in dels], f)
 log.append({'deliveries': len(dels), 'orders_mapped': len(omap)})
+# 3b) labour SNAPSHOTS: the KPI sheet carries the labour figure as it stood the morning after (proved on M1 29/09 against the
+#     Kobas closing email: 25.53h / 376.16 then, 40.28h now after late clock fixes). Every labour report anyone generated is kept in
+#     the queue, so for each day D export the first one generated between D+1 00:00 and D+1 12:00 UK that covers D's week.
+try:
+    allq = []; off = 0
+    while True:
+        r = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': 'labour_costs_report', 'limit': 200, 'offset': off}, timeout=90)
+        j = r.json() if r.status_code == 200 else []
+        allq += j
+        if len(j) < 200 or off > 4000: break
+        off += 200
+    save('probe_labour_queue_all.txt', f'{len(allq)} entries, generation_end span ' + str(min((x.get('generation_end') or 'z') for x in allq)) + ' .. ' + str(max((x.get('generation_end') or '') for x in allq)))
+    os.makedirs(out + '/labour_snap', exist_ok=True)
+    snaps = {}
+    d = d0
+    while d <= d1:
+        mon = (d - datetime.timedelta(d.weekday())).isoformat()
+        lo, hi = f'{d + datetime.timedelta(1)} 00:00', f'{d + datetime.timedelta(1)} 12:00'
+        c = sorted([x for x in allq if x.get('generated') and (x.get('filters') or {}).get('date') == mon and lo <= (x.get('generation_end') or '') <= hi],
+                   key=lambda x: x['generation_end'])
+        if c:
+            x = c[0]; rr = getj(f'/data/reports/labour-costs/{x["id"]}/export')
+            open(f'{out}/labour_snap/{d}_{x["id"]}_{x["generation_end"].replace(" ", "T").replace(":", "")}.csv', 'w').write(getattr(rr, 'text', ''))
+            snaps[d.isoformat()] = [x['id'], x['generation_end'], len(c)]
+        d += datetime.timedelta(1)
+    log.append({'labour_snaps': snaps})
+except Exception as e: log.append({'labour_snap_err': repr(e)})
+# 3c) route harvest: every /data/ route in the JS of the main back-office pages (waste, comps, purchases, covers)
+hits = []; seen_js = set()
+for pg in ('/reports/list/', '/stock/', '/stock/waste/', '/stock/wastage/', '/stock/orders/', '/stock/deliveries/', '/stock/invoices/',
+           '/reports/index.php?m=CORE_Reports_DailySalesByOrder', '/reporting/sales-breakdown', '/reports/waste/', '/reports/comps/'):
+    try: ph = k.s.get(BASE + pg, timeout=60)
+    except Exception as e: hits.append(f'PAGE {pg} ERR'); continue
+    hits.append(f'PAGE {pg} {ph.status_code} {ph.url}')
+    for u in re.findall(r'<script[^>]+src="([^"]+)"', ph.text):
+        u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
+        if u in seen_js or 'vendor' in u: continue
+        seen_js.add(u)
+        try: t = k.s.get(u, timeout=60).text
+        except Exception: continue
+        rts = sorted(set(re.findall(r"""['"`](/(?:data|reports|stock|reporting)/[^'"`\s]{2,140})['"`]""", t)))
+        hits.append(f'JS {u.rsplit("/", 1)[-1]} ' + ' '.join(rts))
+save('probe_routes_all.txt', '\n'.join(hits))
+# 3d) delivery detail for M1 29/09 and 20/10 (food cost check)
+try:
+    dl = json.load(open(f'{out}/deliveries.json'))
+    for dd in [x for x in dl if x.get('to_venue_id') == 3 and x.get('log_date') in ('2026-09-29', '2026-10-20', '2026-09-28')]:
+        rr = getj(f'/data/v2/stock/order/delivery/{dd["id"]}')
+        save(f'probe_deliv_{dd["log_date"]}_{dd["id"]}.txt', chunk(getattr(rr, 'text', '')[:12000]))
+except Exception as e: save('probe_deliv_err.txt', repr(e))
 # 4) probe the eat-in consumption mode spelling (eat-in returned header-only)
 for mode in ('eatin', 'eat_in', 'dine-in', 'dine_in', 'sit-in', 'Eat In', 'eat in', 'EAT_IN', 'dinein', 'table'):
     try:
