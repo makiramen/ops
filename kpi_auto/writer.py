@@ -36,7 +36,7 @@ MODE = os.environ.get('WRITE_MODE', 'plan').strip().lower()
 OVERWRITE = os.environ.get('OVERWRITE') == '1'
 APPLY_FIELDS = {f.strip().lower() for f in os.environ.get('APPLY_FIELDS', '').split(',') if f.strip()}
 TOL = float(os.environ.get('TOL', '0.005'))   # to the penny; Hours Used is held to 1 dp in the sheet
-FIELD_TOL = {'hours used': 0.051}
+FIELD_TOL = {'hours used': 0.051, 'covers': 0.5, 'drinks %': 0.5, 'sushi %': 0.5, 'sides %': 0.5}   # % held to 0.5 pt
 TEMPLATE = json.loads(os.environ.get('ROLLOVER_TEMPLATE') or '{}')
 d0 = datetime.date.fromisoformat(os.environ.get('DATE_FROM') or '2026-09-28')
 d1 = datetime.date.fromisoformat(os.environ.get('DATE_TO') or '2026-10-21')
@@ -46,7 +46,14 @@ d1 = datetime.date.fromisoformat(os.environ.get('DATE_TO') or '2026-10-21')
 # Every Script Data field, sourced from the Kobas_Daily tab (kobas_daily.py, Kobas direct, Headline Revenue shape), 23/10/2026.
 KD_FIELDS = ['Sit in', 'Delivery', 'Tips', 'Actual', 'Declared Rev', 'Hours work Cost', 'Hours Used', 'Food Cost Actual', 'Cost of Waste',
              'Cost of Comp', 'Cost of Directors', 'Wet Sales']   # Potential Gross Revenue Lost dropped 23/10
-TARGETS = [('Script Data', {f: f for f in KD_FIELDS})]
+# DAY (Input), the fields managers type today (Michael's rulings 23/10/2026): Covers = Kobas covers; Drinks/Sushi/Sides % = category
+# sales incl. VAT over total sales incl. VAT. Kobas_Daily holds the % as a number (12.34 = 12.34%). Header text varies a little by
+# site, so each field carries a regex matched against the header row (first match wins).
+DAY_FIELDS = {'Covers': r'customers|covers', 'Drinks %': r'^drinks', 'Sushi %': r'^sushi', 'Sides %': r'^sides'}
+PCT_FIELDS = {'drinks %', 'sushi %', 'sides %'}
+# Every target tab found in a site sheet is planned (both tabs live in the same spreadsheet).
+TARGETS = [('Script Data', {f: (f, re.escape(f.lower())) for f in KD_FIELDS}), ('DAY (Input)', {f: (f, rx) for f, rx in DAY_FIELDS.items()})]
+PLAN_OUT = os.environ.get('PLAN_OUT', '/tmp/kpi_out')
 
 cred = service_account.Credentials.from_service_account_info(json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON']),
                                                              scopes=['https://www.googleapis.com/auth/spreadsheets'])
@@ -91,65 +98,71 @@ for site, sid in SITES.items():
     except Exception as e:
         layout.append([site, 'NO ACCESS', '', '', '', '', '', '', str(e)[:200], '']); continue
     names = [t['title'] for t in tabs]
-    tab = fields = None
-    for want, f in TARGETS:
-        tab = next((x for x in names if x.strip().lower() == want.lower()), None)
-        if tab: fields = f; break
-    if not tab:
+    found = [(next((x for x in names if x.strip().lower() == want.lower()), None), f) for want, f in TARGETS]
+    found = [(t, f) for t, f in found if t]
+    if not found:
         layout.append([site, 'NO TARGET TAB', '', '', '', '', '', '', ' | '.join(names)[:1500], '']); continue
-    vals = svc.values().get(spreadsheetId=sid, range=f"'{tab}'", valueRenderOption='FORMATTED_VALUE').execute().get('values', [])
-    hr = next((i for i, r in enumerate(vals[:10]) if r and str(r[0]).strip().lower() == 'date'), None)
-    if hr is None:
-        layout.append([site, tab, 'NO HEADER', '', '', '', '', '', '', '']); continue
-    head = [str(c).strip().lower() for c in vals[hr]]
-    rowof = {}
-    for i, r in enumerate(vals[hr + 1:], start=hr + 1):
-        d = pdate(r[0]) if r else None
-        if d: rowof.setdefault(d, i)
-    first, last = (min(rowof), max(rowof)) if rowof else (None, None)
-    inr = sorted(i for d, i in rowof.items() if d0 <= d <= d1)
-    fcols, icols = set(), set()
-    form = {}
-    if inr:
-        lo, hi = inr[0], inr[-1]
-        fr = svc.values().get(spreadsheetId=sid, range=f"'{tab}'!A{lo + 1}:{a1col(len(head) - 1)}{hi + 1}",
-                              valueRenderOption='FORMULA').execute().get('values', [])
-        for j, r in enumerate(fr):
-            for c, v in enumerate(r):
-                isf = isinstance(v, str) and v.startswith('=')
-                form[(lo + j, c)] = isf
-                (fcols if isf else icols).add(c)
-    headroom = (last - d1).days if last else ''
-    need = not last or last < d1
-    layout.append([site, tab, hr + 1, first.isoformat() if first else '', last.isoformat() if last else '',
-                   max(rowof.values()) + 1 if rowof else '', headroom, 'ROLLOVER NEEDED' if need else '',
-                   ', '.join(vals[hr][c].strip() for c in sorted(icols) if c < len(vals[hr])),
-                   ', '.join(vals[hr][c].strip() for c in sorted(fcols - icols) if c < len(vals[hr]))])
-    if need: rollovers.append((site, sid, tab, tabs, last))
-    for field, src in fields.items():
-        c = next((i for i, h in enumerate(head) if h == field.lower().strip()), None)
-        if c is None:
-            plan.append([site, tab, '', '', field, '', 'COLUMN NOT FOUND', '', '', 'NO COLUMN']); continue
-        d = d0
-        while d <= d1:
-            k = kobas(site, d.isoformat(), src)
-            i = rowof.get(d)
-            if i is None:
-                plan.append([site, tab, '', d.isoformat(), field, '', '', k, '', 'NO ROW']); d += datetime.timedelta(1); continue
-            cur = vals[i][c] if c < len(vals[i]) else ''
-            cv = num(cur)
-            cell = f'{a1col(c)}{i + 1}'
-            if k is None: act = 'NO KOBAS'
-            elif form.get((i, c)): act = 'FORMULA'
-            elif cv is not None and abs(cv - k) <= FIELD_TOL.get(field.lower(), TOL): act = 'MATCH'
-            elif cv is None or cv == 0: act = 'FILL'
-            else: act = 'DIFFERS'
-            plan.append([site, tab, i + 1, d.isoformat(), field, cell, cur, k,
-                         round(k - cv, 2) if k is not None and cv is not None else '', act])
-            if MODE == 'apply' and k is not None and field.lower() in APPLY_FIELDS and \
-                    (act == 'FILL' or (act == 'DIFFERS' and OVERWRITE)):
-                writes.setdefault(sid, []).append({'range': f"'{tab}'!{cell}", 'values': [[k]]})
-            d += datetime.timedelta(1)
+    for tab, fields in found:
+        vals = svc.values().get(spreadsheetId=sid, range=f"'{tab}'", valueRenderOption='FORMATTED_VALUE').execute().get('values', [])
+        hr = next((i for i, r in enumerate(vals[:10]) if r and str(r[0]).strip().lower() == 'date'), None)
+        if hr is None:
+            layout.append([site, tab, 'NO HEADER', '', '', '', '', '', '', '']); continue
+        head = [str(c).strip().lower() for c in vals[hr]]
+        rowof = {}
+        for i, r in enumerate(vals[hr + 1:], start=hr + 1):
+            d = pdate(r[0]) if r else None
+            if d: rowof.setdefault(d, i)
+        first, last = (min(rowof), max(rowof)) if rowof else (None, None)
+        inr = sorted(i for d, i in rowof.items() if d0 <= d <= d1)
+        fcols, icols = set(), set()
+        form = {}
+        if inr:
+            lo, hi = inr[0], inr[-1]
+            fr = svc.values().get(spreadsheetId=sid, range=f"'{tab}'!A{lo + 1}:{a1col(len(head) - 1)}{hi + 1}",
+                                  valueRenderOption='FORMULA').execute().get('values', [])
+            for j, r in enumerate(fr):
+                for c, v in enumerate(r):
+                    isf = isinstance(v, str) and v.startswith('=')
+                    form[(lo + j, c)] = isf
+                    (fcols if isf else icols).add(c)
+        headroom = (last - d1).days if last else ''
+        need = not last or last < d1
+        layout.append([site, tab, hr + 1, first.isoformat() if first else '', last.isoformat() if last else '',
+                       max(rowof.values()) + 1 if rowof else '', headroom, 'ROLLOVER NEEDED' if need else '',
+                       ', '.join(vals[hr][c].strip() for c in sorted(icols) if c < len(vals[hr])),
+                       ', '.join(vals[hr][c].strip() for c in sorted(fcols - icols) if c < len(vals[hr]))])
+        if need: rollovers.append((site, sid, tab, tabs, last))
+        for field, (src, rx) in fields.items():
+            c = next((i for i, h in enumerate(head) if re.search(rx, h)), None)
+            if c is None:
+                plan.append([site, tab, '', '', field, '', 'COLUMN NOT FOUND', '', '', 'NO COLUMN']); continue
+            fl = field.lower()
+            pct = fl in PCT_FIELDS
+            # how managers typed this % column: '12.5%' (percent-formatted cell) or a plain number. Default percent.
+            typed = [str(r[c]) for r in vals[hr + 1:] if c < len(r) and num(r[c]) not in (None, 0)]
+            pct_style = pct and (not typed or any('%' in t for t in typed))
+            d = d0
+            while d <= d1:
+                k = kobas(site, d.isoformat(), src)
+                i = rowof.get(d)
+                if i is None:
+                    plan.append([site, tab, '', d.isoformat(), field, '', '', k, '', 'NO ROW']); d += datetime.timedelta(1); continue
+                cur = vals[i][c] if c < len(vals[i]) else ''
+                cv = num(cur)
+                if pct and cv is not None and '%' not in str(cur) and abs(cv) <= 1 and cv != 0: cv = cv * 100   # 0.125 typed as a fraction
+                cell = f'{a1col(c)}{i + 1}'
+                if k is None: act = 'NO KOBAS'
+                elif form.get((i, c)): act = 'FORMULA'
+                elif cv is not None and abs(cv - k) <= FIELD_TOL.get(fl, TOL): act = 'MATCH'
+                elif cv is None or cv == 0: act = 'FILL'
+                else: act = 'DIFFERS'
+                plan.append([site, tab, i + 1, d.isoformat(), field, cell, cur, k,
+                             round(k - cv, 2) if k is not None and cv is not None else '', act])
+                if MODE == 'apply' and k is not None and fl in APPLY_FIELDS and \
+                        (act == 'FILL' or (act == 'DIFFERS' and OVERWRITE)):
+                    wv = f'{k}%' if pct_style else (int(round(k)) if fl == 'covers' else k)
+                    writes.setdefault(sid, []).append({'range': f"'{tab}'!{cell}", 'values': [[wv]]})
+                d += datetime.timedelta(1)
 
 # ---- apply ----
 done = [['site sheet', 'cells written']]
@@ -176,6 +189,30 @@ if MODE == 'apply':
             svc.values().update(spreadsheetId=sid, range=f"'{name}'!A{hr + 2}", valueInputOption='USER_ENTERED',
                                 body={'values': dates}).execute()
         done.append([site, f'rollover tab {name} created, {n} rows dated from {start:%d/%m/%Y}'])
+
+# ---- DAY (Input) plan: compact CSV (one row per site/date, sheet vs Kobas per field) + console summary ----
+try:
+    import csv as _csv
+    os.makedirs(PLAN_OUT, exist_ok=True)
+    byk = {}
+    for r in plan[1:]:
+        if r[1] == 'DAY (Input)' and r[3]: byk.setdefault((r[0], r[3]), {})[r[4]] = (r[6], r[7], r[9])
+    with open(os.path.join(PLAN_OUT, 'day_plan.csv'), 'w', newline='') as fh:
+        w = _csv.writer(fh); w.writerow(['site', 'date'] + [f'{f} {x}' for f in DAY_FIELDS for x in ('sheet', 'kobas', 'action')])
+        for (st, dt), fs in sorted(byk.items()):
+            w.writerow([st, dt] + [v for f in DAY_FIELDS for v in fs.get(f, ('', '', 'NO COLUMN'))])
+    agg = {}
+    for r in plan[1:]:
+        if r[1] != 'DAY (Input)' or not r[3]: continue
+        a = agg.setdefault((r[0], r[4]), {}); a[r[9]] = a.get(r[9], 0) + 1
+        if r[9] in ('MATCH', 'DIFFERS') and r[8] != '': a.setdefault('diffs', []).append(abs(float(r[8])))
+    print('DAY (Input) plan', d0, '..', d1, 'mode', MODE)
+    for (st, f), a in sorted(agg.items()):
+        ds = a.pop('diffs', [])
+        print(f"  {st:5} {f:9} " + ' '.join(f'{k}={v}' for k, v in sorted(a.items())) +
+              (f"  mean|diff|={sum(ds)/len(ds):.2f} max={max(ds):.2f}" if ds else ''), flush=True)
+except Exception as e:
+    print('day plan summary failed', e, flush=True)
 
 # ---- write the plan to the KPI Auto sheet ----
 have = {s['properties']['title']: s['properties'] for s in svc.get(spreadsheetId=AUTO, fields='sheets.properties').execute()['sheets']}

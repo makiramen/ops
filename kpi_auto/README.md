@@ -27,9 +27,14 @@ Kobas data changes after the morning report (late clock fixes, orders confirmed 
 reclassified, recipe costs revalued). The sheet holds the morning value. A daily pull just after the Headline report
 (~04:10 UK) freezes the same values; 22/10 pulled the same morning matched every field except 3 cells changed after 04:00.
 
-## DAY (Input) fields typed by managers
-Covers, drinks %, sushi %, sides % follow no single Kobas rule across sites (see KPI_Oct_Reconciliation, Manager-typed tab).
-Need a ruling before automating.
+## DAY (Input) fields typed by managers (LIVE from the 24/10/2026 04:10 run)
+Michael's rulings 23/10/2026, one rule for every site: Covers = Kobas covers (Cash Log report); Drinks % / Sushi % / Sides % =
+category gross (incl. VAT) over total gross (incl. VAT) from All Item Sales, every menu incl. delivery. Built in `kobas_daily.py`
+(Kobas_Daily columns Covers, Drinks %, Sushi %, Sides %), planned and written by `writer.py` into the `DAY (Input)` tab of each
+site sheet (headers matched by regex: customers|covers, ^drinks, ^sushi, ^sides). The scheduled run is `write_mode=apply` with
+`apply_fields=Covers,Drinks %,Sushi %,Sides %`: blank or zero cells only, a figure a manager typed is never overwritten, a formula
+never written, no rows appended. % is written as '12.34%' when the column is percent-formatted, plain otherwise. Script Data stays
+plan-only. Dispatch with `plan_to_repo=1` to commit the compact plan (`kpi_auto/plan/day_plan_<from>_<to>.csv` + writer log).
 
 ## Sales forecast push to Kobas (`forecast_push.py`, 23/10/2026)
 Daily in the 04:10 UTC run (schedule = apply; dispatch input `forecast` = plan / apply / skip). Rolling 28 days from today (UK).
