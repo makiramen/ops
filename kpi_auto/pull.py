@@ -138,7 +138,7 @@ try:
     while d <= d1:
         mon = (d - datetime.timedelta(d.weekday())).isoformat()
         # closest to 08:00 the morning after (the Headline Revenue report lands ~08:00), never before 02:00 (late closers)
-        lo, hi, tgt = f'{d + datetime.timedelta(1)} 02:00', f'{d + datetime.timedelta(2)} 00:00', datetime.datetime.combine(d + datetime.timedelta(1), datetime.time(8))
+        lo, hi, tgt = f'{d + datetime.timedelta(1)} 02:00', f'{d + datetime.timedelta(9)} 00:00', datetime.datetime.combine(d + datetime.timedelta(1), datetime.time(8))
         c = sorted([x for x in allq if x.get('generated') and (x.get('filters') or {}).get('date') == mon and lo <= (x.get('generation_end') or '') <= hi],
                    key=lambda x: abs((datetime.datetime.fromisoformat(x['generation_end']) - tgt).total_seconds()))
         if c:
