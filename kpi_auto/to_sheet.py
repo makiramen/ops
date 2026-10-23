@@ -186,9 +186,22 @@ for f in sorted(glob.glob(os.path.join(out, 'items_range', '*.csv'))):
         nm = l2[ni].strip().lower() if ni is not None else ''
         if nm and nm != 'total' and not nm.startswith('of which '): iref.append([site] + [num(x) if num(x) is not None else x for x in l2])
 
+# ---- orders (stock_order headers) and the stock usage report export ----
+ords = [['id', 'to_venue_id', 'from_supplier_name', 'type', 'status', 'log_date', 'c_date', 'total', 'json']]
+try:
+    for o in json.load(open(os.path.join(out, 'orders.json'))):
+        ords.append([o.get('id'), o.get('to_venue_id'), o.get('from_supplier_name'), o.get('type'), o.get('status'), o.get('log_date'),
+                     o.get('c_date'), o.get('total'), json.dumps({kk: v for kk, v in o.items() if isinstance(v, (int, float)) or kk.endswith('date')})[:1500]])
+except Exception as ex: ords.append(['ERR', str(ex)])
+susage = [['line']]
+try:
+    for l in csv.reader(io.StringIO(open(os.path.join(out, 'stock_usage_export.txt'), encoding='utf-8-sig', errors='replace').read())):
+        susage.append(l)
+except Exception as ex: susage.append(['ERR', str(ex)])
+
 # probe dump
 probe = [['file', 'line']]
-for f in sorted([x for x in glob.glob(os.path.join(out, '*.json')) if not x.endswith('deliveries.json')] + glob.glob(os.path.join(out, '*.txt'))):
+for f in sorted([x for x in glob.glob(os.path.join(out, '*.json')) if os.path.basename(x) not in ('deliveries.json', 'delivery_entries.json', 'orders.json')] + [x for x in glob.glob(os.path.join(out, '*.txt')) if not os.path.basename(x).startswith('stock_usage_export')]):
     txt = open(f, encoding='utf-8', errors='replace').read()
     name = os.path.relpath(f, out)
     if name.startswith('page_'): txt = txt.split('\n--html\n')[0]   # routes only, not the page html
@@ -228,4 +241,4 @@ if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
 put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days); put('M14_Items', m14r)
-put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap); put('Items_WCD', wcd); put('Deliv_Entries', dentr); put('Item_Ref', iref)
+put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap); put('Items_WCD', wcd); put('Deliv_Entries', dentr); put('Item_Ref', iref); put('Orders', ords); put('Stock_Usage', susage)

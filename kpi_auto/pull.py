@@ -92,6 +92,15 @@ while True:
     for o in j: omap[o['id']] = (o.get('to_venue_id'), o.get('from_supplier_name'), o.get('type'))
     if len(j) < 100: break
     off += 100
+olist = []
+off = 0
+while True:
+    r = getj('/data/v2/stock/order', {'limit': 100, 'offset': off, 'orderBy[log_date]': 'DESC', 'filterBy[log_date][gte]': (d0 - datetime.timedelta(7)).isoformat(), 'filterBy[log_date][lte]': (d1 + datetime.timedelta(7)).isoformat()})
+    j = r.json() if hasattr(r, 'json') else []
+    olist += j
+    if len(j) < 100: break
+    off += 100
+json.dump(olist, open(f'{out}/orders.json', 'w'))
 dels = []; off = 0
 while True:
     r = getj('/data/v2/stock/order/delivery', {'limit': 100, 'offset': off, 'orderBy[log_date]': 'ASC',
@@ -142,12 +151,14 @@ def dent(dv):
     try: j = rr.json()
     except Exception: return [dv['id'], 'ERR']
     ent = j.get('stock_order_delivery_entries') or []
-    ex = sum((e.get('pack_price') or 0) * (e.get('units') or 0) for e in ent)
-    inc = sum((e.get('pack_price') or 0) * (e.get('units') or 0) * (((e.get('stock_ingredient') or {}).get('custom_stock_ingredient_interval') or {}).get('stock_ingredient_tax_rate') or 1) for e in ent)
-    comp = sum((e.get('pack_price') or 0) * (e.get('units') or 0) for e in ent if e.get('complementary'))
+    def ci(e): return ((e.get('stock_ingredient') or {}).get('custom_stock_ingredient_interval') or {})
+    def val(e): return (e.get('pack_price') or 0) * (e.get('units') or 0) / (ci(e).get('pack_size') or 1)
+    ex = sum(val(e) for e in ent)
+    inc = sum(val(e) * (ci(e).get('stock_ingredient_tax_rate') or 1) for e in ent)
+    comp = sum(val(e) for e in ent if e.get('complementary'))
     cats = collections.Counter()
     for e in ent:
-        cats[(((e.get('stock_ingredient') or {}).get('parent') or {}).get('stock_ingredient_category_name') or '?')] += (e.get('pack_price') or 0) * (e.get('units') or 0)
+        cats[(((e.get('stock_ingredient') or {}).get('parent') or {}).get('stock_ingredient_category_name') or '?')] += val(e)
     return [dv['id'], round(ex, 4), round(inc, 4), round(comp, 4), len(ent), json.dumps({kk: round(v, 2) for kk, v in cats.items()}), j.get('c_date') or j.get('log_date')]
 import collections
 try:
@@ -177,6 +188,23 @@ for name, path in [('usage_reasons', '/data/v2/stock/usage/reasons'),
         if name == 'ssd_page': t = '\n'.join(sorted(set(re.findall(r'[\w-]*(?:key|report)[\w-]*="[^"]{1,120}"', t))))
         save(f'probe_{name}.txt', f'{r.status_code} {r.headers.get("content-type","")}\n' + chunk(t[:20000]))
     except Exception as e: save(f'probe_{name}.txt', 'ERR ' + str(e))
+# 3d2) stock usage report (waste / comp / director usage at cost), queued fresh for the whole range, csv
+try:
+    data = [('reportQueue[report_key]', 'stock_usage_report'), ('reportQueue[filters][from]', d0.isoformat()), ('reportQueue[filters][to]', d1.isoformat()),
+            ('reportQueue[filters][usage_type]', '')] + [('reportQueue[filters][venue_ids][]', str(v)) for v in VIDS]
+    r = k.s.post(BASE + '/data/report-queue', data=data, timeout=60)
+    save('probe_usage_queue.txt', f'{r.status_code} {r.text[:1500]}')
+    rid = r.json().get('id') if r.status_code == 201 else None
+    t0 = time.time()
+    while rid and time.time() - t0 < 600:
+        time.sleep(20)
+        q = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': 'stock_usage_report'}, timeout=60).json()
+        if any(x.get('id') == rid and x.get('generated') for x in q): break
+    if rid:
+        for path in (f'/data/reports/stock-usage/{rid}/export', f'/data/reports/stock-usage/{rid}'):
+            rr = getj(path)
+            open(f'{out}/stock_usage_{path.rsplit("/", 1)[-1]}.txt', 'w').write(getattr(rr, 'text', str(rr)))
+except Exception as e: save('probe_usage_err.txt', repr(e))
 # 3e) unit cost / price reference: one All Item Sales export per site for the whole range (cost(E) and average gross per item)
 os.makedirs(out + '/items_range', exist_ok=True)
 def rng(item):
