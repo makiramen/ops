@@ -98,7 +98,11 @@ for site, sid in SITES.items():
     except Exception as e:
         layout.append([site, 'NO ACCESS', '', '', '', '', '', '', str(e)[:200], '']); continue
     names = [t['title'] for t in tabs]
-    found = [(next((x for x in names if x.strip().lower() == want.lower()), None), f) for want, f in TARGETS]
+    def find_tab(want):
+        w = want.lower(); low = [(x, x.strip().lower()) for x in names]
+        return next((x for x, l in low if l == w), None) or next((x for x, l in low if l.startswith(w)), None) \
+            or next((x for x, l in low if all(t in l for t in re.findall(r'[a-z]+', w))), None)
+    found = [(find_tab(want), f) for want, f in TARGETS]
     found = [(t, f) for t, f in found if t]
     if not found:
         layout.append([site, 'NO TARGET TAB', '', '', '', '', '', '', ' | '.join(names)[:1500], '']); continue
@@ -197,6 +201,7 @@ try:
     byk = {}
     for r in plan[1:]:
         if r[1] == 'DAY (Input)' and r[3]: byk.setdefault((r[0], r[3]), {})[r[4]] = (r[6], r[7], r[9])
+    with open(os.path.join(PLAN_OUT, 'layout.csv'), 'w', newline='') as fh: _csv.writer(fh).writerows(layout)
     with open(os.path.join(PLAN_OUT, 'day_plan.csv'), 'w', newline='') as fh:
         w = _csv.writer(fh); w.writerow(['site', 'date'] + [f'{f} {x}' for f in DAY_FIELDS for x in ('sheet', 'kobas', 'action')])
         for (st, dt), fs in sorted(byk.items()):

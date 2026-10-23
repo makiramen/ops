@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'probe or pull'
+        description: 'probe, pull, or skip (no Kobas pull: writer plans from the Kobas_Daily already in the sheet)'
         default: 'pull'
       date_from:
         default: '2026-09-28'
@@ -70,7 +70,7 @@ jobs:
           KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
           KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
           KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
-        run: python3 kpi_auto/$MODE.py /tmp/kpi_out
+        run: mkdir -p /tmp/kpi_out; [ "$MODE" = skip ] || python3 kpi_auto/$MODE.py /tmp/kpi_out
       - name: Push sales forecast to Kobas (rolling 28 days, Rotas > Sales Budgets)
         if: always()
         env:
@@ -93,8 +93,9 @@ jobs:
           PLAN_OUT: /tmp/kpi_out
         run: |
           rc=0
+          if [ "$MODE" = skip ]; then echo 'mode skip: Kobas_Daily left as is' > /tmp/to_sheet.log; else
           python3 kpi_auto/to_sheet.py /tmp/kpi_out > /tmp/to_sheet.log 2>&1 || rc=1
-          python3 kpi_auto/kobas_daily.py /tmp/kpi_out >> /tmp/to_sheet.log 2>&1 || rc=1
+          python3 kpi_auto/kobas_daily.py /tmp/kpi_out >> /tmp/to_sheet.log 2>&1 || rc=1; fi
           python3 kpi_auto/kpi_sheets.py > /tmp/kpi_sheets.log 2>&1 || rc=1
           python3 kpi_auto/writer.py > /tmp/writer.log 2>&1 || rc=1
           cat /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log
@@ -106,6 +107,7 @@ jobs:
           [ -f /tmp/kpi_out/day_plan.csv ] || { echo 'no day_plan.csv'; exit 0; }
           mkdir -p kpi_auto/plan && cp /tmp/kpi_out/day_plan.csv "kpi_auto/plan/day_plan_${DATE_FROM}_${DATE_TO}.csv"
           cp /tmp/writer.log "kpi_auto/plan/writer_${DATE_FROM}_${DATE_TO}.log" || true
+          cp /tmp/kpi_out/layout.csv "kpi_auto/plan/layout_${DATE_FROM}_${DATE_TO}.csv" || true
           git config user.name 'kpi-auto bot'; git config user.email 'ops@makiramen.com'
           git add kpi_auto/plan && git commit -m "kpi_auto: DAY (Input) plan ${DATE_FROM}..${DATE_TO} (${WRITE_MODE})" || exit 0
           git pull --rebase https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} main
