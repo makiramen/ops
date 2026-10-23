@@ -136,25 +136,59 @@ try:
         d += datetime.timedelta(1)
     log.append({'labour_snaps': snaps})
 except Exception as e: log.append({'labour_snap_err': repr(e)})
-# 3c) route harvest for the reports that carry the remaining Headline Revenue fields (food cost, waste/comp/director cost)
-hits = []; seen_js = set()
-for pg in ('/reports/supplier-stock-deliveries', '/reports/operational-profitability', '/reports/stock-transfers',
-           '/reports/index.php?m=CORE_Reports_UsageComparison', '/reports/stock-usage', '/reports/stock-ingredient-movements/'):
-    try: ph = k.s.get(BASE + pg, timeout=60)
-    except Exception as e: hits.append(f'PAGE {pg} ERR'); continue
-    hits.append(f'PAGE {pg} {ph.status_code} {ph.url}')
-    hits.append('FORMS ' + ' | '.join(sorted(set(re.findall(r'<(?:form|input|select)[^>]{0,200}>', ph.text)))[:60]))
-    hits.append('INLINE ' + ' '.join(sorted(set(re.findall(r"""['"`](/(?:data|reports|stock|reporting|index\.php)[^'"`\s]{2,160})['"`]""", ph.text)))))
-    for u in re.findall(r'<script[^>]+src="([^"]+)"', ph.text):
-        u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
-        if u in seen_js or 'vendor' in u: continue
-        seen_js.add(u)
-        try: t = k.s.get(u, timeout=60).text
-        except Exception: continue
-        rts = sorted(set(re.findall(r"""['"`](/(?:data|reports|stock|reporting)/[^'"`\s]{2,160})['"`]""", t)))
-        if rts: hits.append(f'JS {u.rsplit("/", 1)[-1]} ' + ' '.join(rts))
-        if re.search(r'deliver|usage|profitab|supplier', u, re.I): save('probe_js_' + re.sub(r'\W+', '_', u.rsplit('/', 1)[-1])[:40] + '.txt', chunk(t[:40000]))
-save('probe_routes_all.txt', '\n'.join(hits))
+# 3c) delivery entries (Headline 'Cost of Stock Received from Suppliers' looks line-based, not the header total)
+def dent(dv):
+    rr = getj(f'/data/v2/stock/order/delivery/{dv["id"]}')
+    try: j = rr.json()
+    except Exception: return [dv['id'], 'ERR']
+    ent = j.get('stock_order_delivery_entries') or []
+    ex = sum((e.get('pack_price') or 0) * (e.get('units') or 0) for e in ent)
+    inc = sum((e.get('pack_price') or 0) * (e.get('units') or 0) * (((e.get('stock_ingredient') or {}).get('custom_stock_ingredient_interval') or {}).get('stock_ingredient_tax_rate') or 1) for e in ent)
+    comp = sum((e.get('pack_price') or 0) * (e.get('units') or 0) for e in ent if e.get('complementary'))
+    cats = collections.Counter()
+    for e in ent:
+        cats[(((e.get('stock_ingredient') or {}).get('parent') or {}).get('stock_ingredient_category_name') or '?')] += (e.get('pack_price') or 0) * (e.get('units') or 0)
+    return [dv['id'], round(ex, 4), round(inc, 4), round(comp, 4), len(ent), json.dumps({kk: round(v, 2) for kk, v in cats.items()}), j.get('c_date') or j.get('log_date')]
+import collections
+try:
+    dl = json.load(open(f'{out}/deliveries.json'))
+    with ThreadPoolExecutor(6) as ex_: dents = list(ex_.map(dent, dl))
+    json.dump(dents, open(f'{out}/delivery_entries.json', 'w'))
+except Exception as e: save('probe_dent_err.txt', repr(e))
+# 3d) key oracle for the on-demand reports behind the remaining Headline fields, stock usage (waste) routes, EPoS item prices
+ok = []
+for kk in ['supplier_stock_deliveries', 'supplier_stock_deliveries_report', 'supplier_deliveries', 'stock_deliveries', 'operational_profitability',
+           'operational_profitability_report', 'stock_usage', 'stock_usage_report', 'stock_transfers', 'stock_transfers_report', 'stock_usage_history']:
+    try:
+        r = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': kk, 'limit': 2}, timeout=60)
+        if 'Invalid report key' not in r.text: ok.append(f'{kk} {r.status_code} {r.text[:800]}')
+    except Exception as e: ok.append(f'{kk} ERR {e}')
+save('probe_report_keys2.txt', '\n'.join(ok) or 'none valid')
+for name, path in [('usage_reasons', '/data/v2/stock/usage/reasons'),
+                   ('usage_m7', '/data/v2/stock/usage?venue_id=9&from=2026-09-28&to=2026-09-28'),
+                   ('usage_m7b', '/data/v2/stock/usage?limit=50&filterBy[venue_id][eq]=9&filterBy[log_date][gte]=2026-09-28&filterBy[log_date][lte]=2026-09-28'),
+                   ('usage_brk', '/data/v2/stock/usage/breakdown?venue_id=9&from=2026-09-28&to=2026-09-28'),
+                   ('usage_list', '/data/v2/stock/usage?limit=5'),
+                   ('epos_items', '/data/v2/epos/item?limit=3'), ('epos_items2', '/data/epos/item?limit=3'), ('epos_items3', '/data/v2/epos/items?limit=3'),
+                   ('price_band', '/data/price-band'), ('ssd_page', '/reports/supplier-stock-deliveries/')]:
+    try:
+        r = k.s.get(BASE + path, timeout=60)
+        t = r.text
+        if name == 'ssd_page': t = '\n'.join(sorted(set(re.findall(r'[\w-]*(?:key|report)[\w-]*="[^"]{1,120}"', t))))
+        save(f'probe_{name}.txt', f'{r.status_code} {r.headers.get("content-type","")}\n' + chunk(t[:20000]))
+    except Exception as e: save(f'probe_{name}.txt', 'ERR ' + str(e))
+# 3e) unit cost / price reference: one All Item Sales export per site for the whole range (cost(E) and average gross per item)
+os.makedirs(out + '/items_range', exist_ok=True)
+def rng(item):
+    site, vid = item
+    data = [('venueIds[]', str(vid)), ('from', (d0 - datetime.timedelta(56)).isoformat()), ('to', d1.isoformat()), ('piscMode', ''),
+            ('filterByTill', 'false'), ('seatingArea', ''), ('consumptionMode', '')]
+    for i in range(3):
+        try:
+            p = k.s.post(BASE + '/data/reports/item-by-sales/export', data=data, timeout=180, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            if p.status_code == 200: open(f'{out}/items_range/{site}.csv', 'w').write(p.text); return
+        except Exception: time.sleep(3)
+with ThreadPoolExecutor(5) as ex_: list(ex_.map(rng, V.items()))
 # ---- item sales per venue per day per consumption mode ----
 jobs = []
 d = d0

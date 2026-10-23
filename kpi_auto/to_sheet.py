@@ -166,6 +166,26 @@ try:
                      d.get('delivery_note_gross_total'), d.get('total'), d.get('delivery_note_number'), d.get('staff_name')])
 except Exception as e: delv.append(['ERR', str(e)])
 
+# ---- delivery entries joined to deliveries ----
+dentr = [['id', 'to_venue_id', 'supplier', 'log_date', 'header_total', 'entries_ex', 'entries_inc_tax', 'entries_complementary', 'n_entries', 'categories', 'c_date']]
+try:
+    hdr = {d['id']: d for d in json.load(open(os.path.join(out, 'deliveries.json')))}
+    for e in json.load(open(os.path.join(out, 'delivery_entries.json'))):
+        d = hdr.get(e[0], {})
+        dentr.append([e[0], d.get('to_venue_id'), d.get('supplier'), d.get('log_date'), d.get('total')] + list(e[1:]))
+except Exception as ex: dentr.append(['ERR', str(ex)])
+# ---- item reference (unit cost / price) over the long range per site ----
+iref = [['site'] + list(main_h)]
+for f in sorted(glob.glob(os.path.join(out, 'items_range', '*.csv'))):
+    site = os.path.basename(f)[:-4]
+    ls = [l for l in csv.reader(io.StringIO(open(f, encoding='utf-8-sig').read())) if any(c.strip() for c in l)]
+    if not ls: continue
+    h = tuple(c.strip() for c in ls[0])
+    for l in ls[1:]:
+        l2 = [l[h.index(c)] if c in h and h.index(c) < len(l) else '' for c in main_h]
+        nm = l2[ni].strip().lower() if ni is not None else ''
+        if nm and nm != 'total' and not nm.startswith('of which '): iref.append([site] + [num(x) if num(x) is not None else x for x in l2])
+
 # probe dump
 probe = [['file', 'line']]
 for f in sorted([x for x in glob.glob(os.path.join(out, '*.json')) if not x.endswith('deliveries.json')] + glob.glob(os.path.join(out, '*.txt'))):
@@ -208,4 +228,4 @@ if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
 put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days); put('M14_Items', m14r)
-put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap); put('Items_WCD', wcd)
+put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap); put('Items_WCD', wcd); put('Deliv_Entries', dentr); put('Item_Ref', iref)
