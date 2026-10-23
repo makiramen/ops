@@ -100,6 +100,14 @@ for r in items[1:]:
     if ni is not None and l[ni].strip().lower() == 'total':
         lead.append(r[:3] + [l[li] if li is not None else ''] + [num(l[i]) if i < len(l) else None for i in numcols])
 
+# ---- item rows carrying waste / comp / director units (to rebuild the Headline Revenue cost columns) ----
+wi = [main_h.index(c) if c in main_h else None for c in ('Waste', 'Comp', 'Director')]
+wcd = [['date', 'site', 'mode'] + list(main_h)]
+for r in items[1:]:
+    l = r[3:]
+    if r[2] == 'all' and is_item(l) and any(i is not None and i < len(l) and (num(l[i]) or 0) != 0 for i in wi):
+        wcd.append(r[:3] + [num(x) if num(x) is not None else x for x in l])
+
 # ---- cash log report per site: flatten every numeric leaf to (site, date, key, value) ----
 from zoneinfo import ZoneInfo
 UK = ZoneInfo('Europe/London')
@@ -200,4 +208,4 @@ if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
 put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days); put('M14_Items', m14r)
-put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap)
+put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap); put('Items_WCD', wcd)

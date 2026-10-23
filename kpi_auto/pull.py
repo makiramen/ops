@@ -136,60 +136,25 @@ try:
         d += datetime.timedelta(1)
     log.append({'labour_snaps': snaps})
 except Exception as e: log.append({'labour_snap_err': repr(e)})
-# 3c) route harvest: every /data/ route in the JS of the main back-office pages (waste, comps, purchases, covers)
+# 3c) route harvest for the reports that carry the remaining Headline Revenue fields (food cost, waste/comp/director cost)
 hits = []; seen_js = set()
-for pg in ('/reports/list/', '/stock/', '/stock/waste/', '/stock/wastage/', '/stock/orders/', '/stock/deliveries/', '/stock/invoices/',
-           '/reports/index.php?m=CORE_Reports_DailySalesByOrder', '/reporting/sales-breakdown', '/reports/waste/', '/reports/comps/'):
+for pg in ('/reports/supplier-stock-deliveries', '/reports/operational-profitability', '/reports/stock-transfers',
+           '/reports/index.php?m=CORE_Reports_UsageComparison', '/reports/stock-usage', '/reports/stock-ingredient-movements/'):
     try: ph = k.s.get(BASE + pg, timeout=60)
     except Exception as e: hits.append(f'PAGE {pg} ERR'); continue
     hits.append(f'PAGE {pg} {ph.status_code} {ph.url}')
+    hits.append('FORMS ' + ' | '.join(sorted(set(re.findall(r'<(?:form|input|select)[^>]{0,200}>', ph.text)))[:60]))
+    hits.append('INLINE ' + ' '.join(sorted(set(re.findall(r"""['"`](/(?:data|reports|stock|reporting|index\.php)[^'"`\s]{2,160})['"`]""", ph.text)))))
     for u in re.findall(r'<script[^>]+src="([^"]+)"', ph.text):
         u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
         if u in seen_js or 'vendor' in u: continue
         seen_js.add(u)
         try: t = k.s.get(u, timeout=60).text
         except Exception: continue
-        rts = sorted(set(re.findall(r"""['"`](/(?:data|reports|stock|reporting)/[^'"`\s]{2,140})['"`]""", t)))
-        hits.append(f'JS {u.rsplit("/", 1)[-1]} ' + ' '.join(rts))
+        rts = sorted(set(re.findall(r"""['"`](/(?:data|reports|stock|reporting)/[^'"`\s]{2,160})['"`]""", t)))
+        if rts: hits.append(f'JS {u.rsplit("/", 1)[-1]} ' + ' '.join(rts))
+        if re.search(r'deliver|usage|profitab|supplier', u, re.I): save('probe_js_' + re.sub(r'\W+', '_', u.rsplit('/', 1)[-1])[:40] + '.txt', chunk(t[:40000]))
 save('probe_routes_all.txt', '\n'.join(hits))
-# 3e) find Kobas's own Daily Headline Revenue report (the KPI sheet's Script Data is a copy of it, 408/408 fields to the penny).
-#     The report queue answers 'Invalid report key.' for a bad key, so it doubles as a key oracle.
-keys = ['headline_revenue', 'headline_revenue_report', 'daily_headline_revenue', 'daily_headline_revenue_report', 'headline',
-        'revenue_headline', 'headline_report', 'group_headline_revenue', 'daily_sales_with_tax', 'sales_with_tax', 'daily_sales_with_tax_in_period',
-        'sales_with_tax_in_period', 'z_read', 'daily_z_read', 'zread', 'zread_report', 'cash_log', 'cash_log_report', 'headline_revenue_daily',
-        'daily_revenue', 'revenue_report', 'venue_headline_revenue', 'kpi', 'daily_kpi', 'labour_costs_report', 'hours_export',
-        'stock_current_position_report', 'waste_report', 'stock_waste_report', 'comps_report', 'purchases_report', 'stock_purchases_report',
-        'headline_revenue_v2', 'daily_headline', 'revenue_headlines', 'headlines']
-ok = []
-for kk in keys:
-    try:
-        r = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': kk, 'limit': 3}, timeout=60)
-        if 'Invalid report key' not in r.text: ok.append(f'{kk} {r.status_code} {r.text[:600]}')
-    except Exception as e: ok.append(f'{kk} ERR {e}')
-save('probe_report_keys.txt', '\n'.join(ok))
-for name, path in [('report_system', '/data/report/system'), ('report_engine1', '/data/report-engine'), ('report_engine2', '/data/scheduled-report'),
-                   ('report_engine3', '/data/report/scheduled'), ('report_engine4', '/data/report-schedule'), ('report_list', '/data/report/list'),
-                   ('report_engine5', '/data/report-engine/schedule'), ('report_engine6', '/data/report-engine/reports')]:
-    try:
-        r = k.s.get(BASE + path, timeout=60)
-        save(f'probe_{name}.txt', f'{r.status_code} {r.headers.get("content-type","")}\n' + chunk(r.text[:40000]))
-    except Exception as e: save(f'probe_{name}.txt', 'ERR ' + str(e))
-# 3d) delivery detail for M1 29/09 and 20/10 (food cost check)
-try:
-    dl = json.load(open(f'{out}/deliveries.json'))
-    for dd in [x for x in dl if x.get('to_venue_id') == 3 and x.get('log_date') in ('2026-09-29', '2026-10-20', '2026-09-28')]:
-        rr = getj(f'/data/v2/stock/order/delivery/{dd["id"]}')
-        save(f'probe_deliv_{dd["log_date"]}_{dd["id"]}.txt', chunk(getattr(rr, 'text', '')[:12000]))
-except Exception as e: save('probe_deliv_err.txt', repr(e))
-# 4) probe the eat-in consumption mode spelling (eat-in returned header-only)
-for mode in ('eatin', 'eat_in', 'dine-in', 'dine_in', 'sit-in', 'Eat In', 'eat in', 'EAT_IN', 'dinein', 'table'):
-    try:
-        p = k.s.post(BASE + '/data/reports/item-by-sales/export', data=[('venueIds[]', '3'), ('from', '2026-10-01'), ('to', '2026-10-01'), ('piscMode', ''),
-                     ('filterByTill', 'false'), ('seatingArea', ''), ('consumptionMode', mode)], timeout=120,
-                     headers={'Content-Type': 'application/x-www-form-urlencoded'})
-        tot = [l for l in p.text.splitlines() if l.lower().startswith('total') or l.lower().startswith('"total')]
-        save(f'probe_mode_{re.sub(chr(32), "_", mode)}.txt', f'{p.status_code} lines={len(p.text.splitlines())}\n' + '\n'.join(tot))
-    except Exception as e: save(f'probe_mode_{mode}.txt', 'ERR ' + str(e))
 # ---- item sales per venue per day per consumption mode ----
 jobs = []
 d = d0
