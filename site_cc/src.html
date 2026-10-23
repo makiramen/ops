@@ -772,7 +772,9 @@ var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8}
 var SITE=__SITE__,SCODE=SITE.code;
 /* Sites with no delivery (sites.json delivery:false, e.g. M7 SJQ): no delivery sales, Deliveroo rating, prep or Deliveroo tab. */
 var NODEL=SITE.has.delivery===false;
-if(!NODEL){var gRoo=document.getElementById('gateRoo');if(gRoo)gRoo.hidden=false}
+/* 23/10/2026 (Michael): the Deliverect OOS banner shows at M10 and M16 only. */
+var OOS_SITES=['M10','M16'];
+if(!NODEL&&OOS_SITES.indexOf(SCODE)>=0){var gRoo=document.getElementById('gateRoo');if(gRoo)gRoo.hidden=false}
 /* 13/10/2026 (Michael): the week in progress is on the page as "this week" (week to date from the daily cash up) and opens by default; the last closed week is "last week" and keeps the KPI sheet and sign off. */
 /* 14/10/2026 (Michael): GM facing tabs anchor on the LAST COMPLETED week. A closed week only counts as completed from the Tuesday after it (food cost and stock take land Tuesday); on Monday it is "closing". The page opens on the last completed week; the picker still reaches this week and history. */
 var NOWD=(function(){try{var d=new Date();var k=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);return k>='__TODAY__'?k:'__TODAY__'}catch(e){return '__TODAY__'}})();
