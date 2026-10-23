@@ -18,6 +18,9 @@ on:
       apply_fields:
         description: 'apply only: comma list of fields allowed to be filled, e.g. Actual (empty = none)'
         default: ''
+      labour_fresh:
+        description: '1 = queue a fresh Labour Costs report per week in range (the morning snapshot)'
+        default: '0'
 
 permissions:
   contents: read
@@ -43,6 +46,7 @@ jobs:
           KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
           DATE_FROM: ${{ inputs.date_from }}
           DATE_TO: ${{ inputs.date_to }}
+          LABOUR_FRESH: ${{ inputs.labour_fresh }}
         run: python3 kpi_auto/${{ inputs.mode }}.py /tmp/kpi_out
       - name: Write to the KPI Auto sheet
         if: always()

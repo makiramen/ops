@@ -210,6 +210,20 @@ try:
             rr = getj(path)
             open(f'{out}/stock_usage_{path.rsplit("/", 1)[-1]}.txt', 'w').write(getattr(rr, 'text', str(rr)))
 except Exception as e: save('probe_usage_err.txt', repr(e))
+# 3d3) sales value of waste / comp / director (Headline 'Potential Gross Revenue Lost'): look inside the sales-breakdown bundle
+try:
+    ph = k.s.get(BASE + '/reporting/sales-breakdown', timeout=60)
+    for u in re.findall(r'<script[^>]+src="([^"]+bundle[^"]+)"', ph.text):
+        u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
+        t = k.s.get(u, timeout=60).text
+        snips = [t[max(0, m.start() - 700): m.end() + 900] for m in re.finditer(r'group-sales', t)]
+        snips += [t[max(0, m.start() - 300): m.end() + 300] for m in re.finditer(r'(?i)wastage|comps?Value|director', t)][:15]
+        save('probe_groupsales_js.txt', chunk('\n=====\n'.join(snips)[:40000]))
+    for path in ['/data/report/group-sales/?from=2026-10-01&to=2026-10-01&venueIds[]=3', '/data/report/group-sales/3?from=2026-10-01&to=2026-10-01',
+                 '/data/report/group-sales/?startDate=2026-10-01&endDate=2026-10-01&venues[]=3']:
+        r = k.s.get(BASE + path, timeout=90)
+        save('probe_gs_' + re.sub(r'\W+', '_', path)[:50] + '.txt', f'{r.status_code}\n' + chunk(r.text[:6000]))
+except Exception as e: save('probe_groupsales_err.txt', repr(e))
 # 3e) unit cost / price reference: one All Item Sales export per site for the whole range (cost(E) and average gross per item)
 os.makedirs(out + '/items_range', exist_ok=True)
 def rng(item):
