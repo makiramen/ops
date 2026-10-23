@@ -216,11 +216,10 @@ try:
     for u in re.findall(r'<script[^>]+src="([^"]+bundle[^"]+)"', ph.text):
         u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
         t = k.s.get(u, timeout=60).text
-        snips = [t[max(0, m.start() - 700): m.end() + 900] for m in re.finditer(r'group-sales', t)]
-        snips += [t[max(0, m.start() - 300): m.end() + 300] for m in re.finditer(r'(?i)wastage|comps?Value|director', t)][:15]
+        snips = [t[max(0, m.start() - 3000): m.end() + 3000] for m in re.finditer(r'group-sales', t)]
+        snips += [t[max(0, m.start() - 400): m.end() + 400] for m in re.finditer(r'(?i)reportIndex|reports\s*:\s*\[|"Waste|"Comp|Director', t)][:25]
         save('probe_groupsales_js.txt', chunk('\n=====\n'.join(snips)[:40000]))
-    for path in ['/data/report/group-sales/?from=2026-10-01&to=2026-10-01&venueIds[]=3', '/data/report/group-sales/3?from=2026-10-01&to=2026-10-01',
-                 '/data/report/group-sales/?startDate=2026-10-01&endDate=2026-10-01&venues[]=3']:
+    for path in [f'/data/report/group-sales/{i}?start_date={d1}&end_date={d1}&venue_id=3' for i in range(0, 14)]:
         r = k.s.get(BASE + path, timeout=90)
         save('probe_gs_' + re.sub(r'\W+', '_', path)[:50] + '.txt', f'{r.status_code}\n' + chunk(r.text[:6000]))
 except Exception as e: save('probe_groupsales_err.txt', repr(e))
