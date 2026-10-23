@@ -113,6 +113,9 @@ for site, sid in SITES.items():
         for i, r in enumerate(vals[:15]):
             j = next((j for j, c in enumerate(r[:4]) if str(c).strip().lower() == 'date'), None)
             if j is not None: hr, dc = i, j; break
+        if hr is None:   # M17: the 'Date' label is missing, 'Day' sits in column B and the dates in A
+            hr = next((i for i, r in enumerate(vals[:15]) if len(r) > 1 and str(r[1]).strip().lower() == 'day' and pdate(vals[i + 1][0] if i + 1 < len(vals) and vals[i + 1] else '')), None)
+            dc = 0
         if hr is None:
             layout.append([site, tab, 'NO HEADER', '', '', '', '', '', ' | '.join(','.join(str(c)[:20] for c in r[:8]) for r in vals[:8]), '']); continue
         head = [str(c).strip().lower() for c in vals[hr]]
