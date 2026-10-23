@@ -1,5 +1,5 @@
-"""KPI sheet writer (22/10/2026, Michael). Fills the site KPI sheets from the Kobas pull. Runs after to_sheet.py (reads its
-Day_Totals tab) in the same workflow step.
+"""KPI sheet writer (22/10/2026, Michael). Fills the site KPI sheets from the Kobas pull. Runs after kobas_daily.py (reads its
+Kobas_Daily tab) in the same workflow step.
 
 Rules (Michael, 22/10/2026):
   * NEVER appends. A value only goes into a row that already exists in the site sheet and carries that date in its Date column.
@@ -35,14 +35,18 @@ AUTO = os.environ.get('KPI_AUTO_SHEET', '14_rQMgMu7TaHagGkgHYe-7mNar_QWyy-3yUgRo
 MODE = os.environ.get('WRITE_MODE', 'plan').strip().lower()
 OVERWRITE = os.environ.get('OVERWRITE') == '1'
 APPLY_FIELDS = {f.strip().lower() for f in os.environ.get('APPLY_FIELDS', '').split(',') if f.strip()}
-TOL = float(os.environ.get('TOL', '1.00'))
+TOL = float(os.environ.get('TOL', '0.005'))   # to the penny; Hours Used is held to 1 dp in the sheet
+FIELD_TOL = {'hours used': 0.051}
 TEMPLATE = json.loads(os.environ.get('ROLLOVER_TEMPLATE') or '{}')
 d0 = datetime.date.fromisoformat(os.environ.get('DATE_FROM') or '2026-09-28')
 d1 = datetime.date.fromisoformat(os.environ.get('DATE_TO') or '2026-10-21')
 
-# Target tab (first one found wins) and field -> Kobas source. Sources are sums of Day_Totals total_gross by mode.
+# Target tab (first one found wins) and field -> Kobas_Daily column.
 # Script Data is the tab the email skim fills today, so it is the one the automation replaces.
-TARGETS = [('Script Data', {'Actual': ['all'], 'Sit in': ['eat-in', 'takeaway'], 'Delivery': ['delivery']})]
+# Every Script Data field, sourced from the Kobas_Daily tab (kobas_daily.py, Kobas direct, Headline Revenue shape), 23/10/2026.
+KD_FIELDS = ['Sit in', 'Delivery', 'Tips', 'Actual', 'Declared Rev', 'Hours work Cost', 'Hours Used', 'Food Cost Actual', 'Cost of Waste',
+             'Cost of Comp', 'Cost of Directors', 'Potential Gross Revenue Lost Due To Comp/Waste/Dir', 'Wet Sales']
+TARGETS = [('Script Data', {f: f for f in KD_FIELDS})]
 
 cred = service_account.Credentials.from_service_account_info(json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON']),
                                                              scopes=['https://www.googleapis.com/auth/spreadsheets'])
@@ -67,13 +71,15 @@ def a1col(i):
     while i: i, r = divmod(i - 1, 26); s = chr(65 + r) + s
     return s
 
-# ---- Kobas side: Day_Totals written by to_sheet.py this run ----
+# ---- Kobas side: Kobas_Daily (kobas_daily.py), one row per date and site ----
 kob = {}
-for r in svc.values().get(spreadsheetId=AUTO, range="'Day_Totals'").execute().get('values', [])[1:]:
-    if len(r) >= 4 and num(r[3]) is not None: kob[(r[1], r[0], r[2])] = num(r[3])
-def kobas(site, day, modes):
-    v = [kob.get((site, day, m)) for m in modes]
-    return None if all(x is None for x in v) else round(sum(x or 0 for x in v), 2)
+_kd = svc.values().get(spreadsheetId=AUTO, range="'Kobas_Daily'").execute().get('values', [])
+for r in _kd[1:]:
+    for i, h in enumerate(_kd[0]):
+        if i >= 2 and i < len(r) and num(r[i]) is not None: kob[(r[1], r[0], h)] = num(r[i])
+def kobas(site, day, field):
+    v = kob.get((site, day, field))
+    return None if v is None else round(v, 2)
 
 layout = [['site', 'tab', 'header row', 'first date', 'last pre-dated date', 'last row', 'days of headroom after DATE_TO',
            'rollover', 'input cols (in range)', 'formula cols (in range)']]
@@ -120,13 +126,13 @@ for site, sid in SITES.items():
                    ', '.join(vals[hr][c].strip() for c in sorted(icols) if c < len(vals[hr])),
                    ', '.join(vals[hr][c].strip() for c in sorted(fcols - icols) if c < len(vals[hr]))])
     if need: rollovers.append((site, sid, tab, tabs, last))
-    for field, modes in fields.items():
-        c = next((i for i, h in enumerate(head) if h == field.lower()), None)
+    for field, src in fields.items():
+        c = next((i for i, h in enumerate(head) if h == field.lower().strip()), None)
         if c is None:
             plan.append([site, tab, '', '', field, '', 'COLUMN NOT FOUND', '', '', 'NO COLUMN']); continue
         d = d0
         while d <= d1:
-            k = kobas(site, d.isoformat(), modes)
+            k = kobas(site, d.isoformat(), src)
             i = rowof.get(d)
             if i is None:
                 plan.append([site, tab, '', d.isoformat(), field, '', '', k, '', 'NO ROW']); d += datetime.timedelta(1); continue
@@ -135,7 +141,7 @@ for site, sid in SITES.items():
             cell = f'{a1col(c)}{i + 1}'
             if k is None: act = 'NO KOBAS'
             elif form.get((i, c)): act = 'FORMULA'
-            elif cv is not None and abs(cv - k) <= TOL: act = 'MATCH'
+            elif cv is not None and abs(cv - k) <= FIELD_TOL.get(field.lower(), TOL): act = 'MATCH'
             elif cv is None or cv == 0: act = 'FILL'
             else: act = 'DIFFERS'
             plan.append([site, tab, i + 1, d.isoformat(), field, cell, cur, k,
