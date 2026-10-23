@@ -108,13 +108,17 @@ for site, sid in SITES.items():
         layout.append([site, 'NO TARGET TAB', '', '', '', '', '', '', ' | '.join(names)[:1500], '']); continue
     for tab, fields in found:
         vals = svc.values().get(spreadsheetId=sid, range=f"'{tab}'", valueRenderOption='FORMATTED_VALUE').execute().get('values', [])
-        hr = next((i for i, r in enumerate(vals[:10]) if r and str(r[0]).strip().lower() == 'date'), None)
+        # header row = first row (top 15) with a 'Date' cell in columns A..D; that cell's column is the date column
+        hr = dc = None
+        for i, r in enumerate(vals[:15]):
+            j = next((j for j, c in enumerate(r[:4]) if str(c).strip().lower() == 'date'), None)
+            if j is not None: hr, dc = i, j; break
         if hr is None:
             layout.append([site, tab, 'NO HEADER', '', '', '', '', '', '', '']); continue
         head = [str(c).strip().lower() for c in vals[hr]]
         rowof = {}
         for i, r in enumerate(vals[hr + 1:], start=hr + 1):
-            d = pdate(r[0]) if r else None
+            d = pdate(r[dc]) if len(r) > dc else None
             if d: rowof.setdefault(d, i)
         first, last = (min(rowof), max(rowof)) if rowof else (None, None)
         inr = sorted(i for d, i in rowof.items() if d0 <= d <= d1)
@@ -200,7 +204,7 @@ try:
     os.makedirs(PLAN_OUT, exist_ok=True)
     byk = {}
     for r in plan[1:]:
-        if r[1] == 'DAY (Input)' and r[3]: byk.setdefault((r[0], r[3]), {})[r[4]] = (r[6], r[7], r[9])
+        if str(r[1]).lower().startswith('day') and r[3]: byk.setdefault((r[0], r[3]), {})[r[4]] = (r[6], r[7], r[9])
     with open(os.path.join(PLAN_OUT, 'layout.csv'), 'w', newline='') as fh: _csv.writer(fh).writerows(layout)
     with open(os.path.join(PLAN_OUT, 'day_plan.csv'), 'w', newline='') as fh:
         w = _csv.writer(fh); w.writerow(['site', 'date'] + [f'{f} {x}' for f in DAY_FIELDS for x in ('sheet', 'kobas', 'action')])
@@ -208,7 +212,7 @@ try:
             w.writerow([st, dt] + [v for f in DAY_FIELDS for v in fs.get(f, ('', '', 'NO COLUMN'))])
     agg = {}
     for r in plan[1:]:
-        if r[1] != 'DAY (Input)' or not r[3]: continue
+        if not str(r[1]).lower().startswith('day') or not r[3]: continue
         a = agg.setdefault((r[0], r[4]), {}); a[r[9]] = a.get(r[9], 0) + 1
         if r[9] in ('MATCH', 'DIFFERS') and r[8] != '': a.setdefault('diffs', []).append(abs(float(r[8])))
     print('DAY (Input) plan', d0, '..', d1, 'mode', MODE)
