@@ -33,6 +33,46 @@ try:
                 p = k.s.get(BASE + path, timeout=120)
                 save(f'labour/{rid}_{path.rsplit("/",1)[-1]}.txt', f'{p.status_code}\n{json.dumps(x)}\n' + p.text)
 except Exception as e: log.append({'queue_err': str(e)})
+# ---- route discovery v2 (23/10): cash log, labour, Z read, deliveries, covers. Text dumps go to the Probe tab ----
+def strip(h):
+    h = re.sub(r'(?is)<(script|style)[^>]*>.*?</\1>', ' ', h)
+    return re.sub(r'[ \t\r\f\v]+', ' ', re.sub(r'(?s)<[^>]+>', ' ', h)).replace('\n ', '\n')
+def grab(name, path, n=40000, text=True):
+    try:
+        p = k.s.get(BASE + path, timeout=90)
+        body = p.text
+        save(f'probe_{name}.txt', f'{p.status_code} {p.url} {p.headers.get("content-type","")}\n' + (strip(body) if text and '<html' in body[:500].lower() else body)[:n])
+        return p
+    except Exception as e:
+        save(f'probe_{name}.txt', 'ERR ' + str(e)); return None
+pl = grab('reports_list_raw', '/reports/list/', 1, text=False)
+if pl is not None:
+    hrefs = sorted(set(re.findall(r'href="([^"#]{2,200})"', pl.text)))
+    save('probe_reports_hrefs.txt', '\n'.join(hrefs))
+cl = grab('cashlog_18270', '/daily/cashlog/edit/18270', 60000)
+if cl is not None:
+    save('probe_cashlog_routes.txt', '\n'.join(sorted(set(re.findall(r"""['"](/[a-z0-9_\-/]{3,120}(?:\?[^'"\s<>]{0,120})?)['"]""", cl.text)))))
+    js = sorted(set(re.findall(r'<script[^>]+src="([^"]+)"', cl.text + (pl.text if pl is not None else ''))))
+    hits = []
+    for u in js:
+        if u.startswith('//'): u = 'https:' + u
+        if u.startswith('/'): u = BASE + u
+        try: t = k.s.get(u, timeout=90).text
+        except Exception as e: hits.append(f'ERR {u} {e}'); continue
+        hits.append(f'== {u} {len(t)}')
+        for m in sorted(set(re.findall(r"""report_?[kK]ey['"]?\s*[:=]\s*['"]([a-z0-9_]+)['"]""", t))): hits.append('KEY ' + m)
+        for m in sorted(set(re.findall(r"""['"`](/data/[^'"`\s]{2,140})['"`]""", t))):
+            if re.search(r'cash|labour|labor|z.?read|headline|tax|cover|tip|gratuit|deliver|purchase|daily|sales|hours|rota', m, re.I): hits.append('ROUTE ' + m)
+    save('probe_js_hits.txt', '\n'.join(hits))
+for name, path in [('cashlog_json1', '/data/cashlog/18270'), ('cashlog_json2', '/data/cash-log/18270'), ('cashlog_json3', '/data/daily/cashlog/18270'),
+                   ('cashlog_json4', '/data/v2/cashlog/18270'), ('cashlog_json5', '/data/v2/cash-log/18270'), ('cashlog_list', '/data/v2/cash-log?limit=3'),
+                   ('delivery_list', '/data/v2/stock/order/delivery?limit=3&orderBy[log_date]=DESC'),
+                   ('labour_page', '/reports/labour-costs/'),
+                   ('rq_labour1', '/data/report-queue?filterBy[report_key][eq]=labour_costs_report'),
+                   ('rq_labour2', '/data/report-queue?filterBy[report_key][eq]=labour_costs'),
+                   ('rq_labour3', '/data/report-queue?filterBy[report_key][eq]=labour_cost_report'),
+                   ('rq_hours', '/data/report-queue?filterBy[report_key][eq]=hours_export')]:
+    grab(name, path, 20000)
 # ---- item sales per venue per day per consumption mode ----
 jobs = []
 d = d0
