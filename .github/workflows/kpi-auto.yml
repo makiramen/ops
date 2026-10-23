@@ -6,6 +6,7 @@ on:
   schedule:
     # Daily 04:10 UTC (Michael approved 23/10/2026): pulls yesterday straight after Kobas sends the Daily Headline Revenue
     # report (04:00 UK) and freezes it into Kobas_Daily. Plan only: nothing is written to site sheets.
+    # Same run pushes the KPI sheet targets (Sit In + Delivery) into Kobas Sales Budgets for the next 28 days (25 Dec skipped).
     - cron: '10 4 * * *'
   workflow_dispatch:
     inputs:
@@ -25,6 +26,12 @@ on:
       labour_fresh:
         description: '1 = queue a fresh Labour Costs report per week in range (the morning snapshot)'
         default: '0'
+      forecast:
+        description: 'Kobas sales forecast push, rolling 28 days from the KPI sheets: plan, apply or skip (schedule = apply)'
+        default: 'plan'
+      forecast_sites:
+        description: 'forecast push: comma list of sites (empty = all 20)'
+        default: ''
 
 permissions:
   contents: read
@@ -56,6 +63,21 @@ jobs:
           KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
           KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
         run: python3 kpi_auto/$MODE.py /tmp/kpi_out
+      - name: Push sales forecast to Kobas (rolling 28 days, Rotas > Sales Budgets)
+        if: always()
+        env:
+          TZ: Europe/London
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+          FORECAST_SITES: ${{ inputs.forecast_sites }}
+        run: |
+          FM="${{ inputs.forecast }}"; [ "${{ github.event_name }}" = "schedule" ] && FM=apply
+          echo "forecast mode ${FM:-plan}" > /tmp/forecast.log
+          if [ "${FM:-plan}" = "skip" ]; then exit 0; fi
+          rc=0; FORECAST_MODE=${FM:-plan} python3 kpi_auto/forecast_push.py >> /tmp/forecast.log 2>&1 || rc=$?
+          cat /tmp/forecast.log; exit $rc
       - name: Write to the KPI Auto sheet
         if: always()
         env:
@@ -68,7 +90,7 @@ jobs:
           python3 kpi_auto/kpi_sheets.py > /tmp/kpi_sheets.log 2>&1 || rc=1
           python3 kpi_auto/writer.py > /tmp/writer.log 2>&1 || rc=1
           cat /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log
-          python3 kpi_auto/log_to_sheet.py /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log
+          python3 kpi_auto/log_to_sheet.py /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log /tmp/forecast.log
           exit $rc
       - uses: actions/upload-artifact@v4
         if: always()

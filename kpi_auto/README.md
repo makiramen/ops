@@ -30,3 +30,13 @@ reclassified, recipe costs revalued). The sheet holds the morning value. A daily
 ## DAY (Input) fields typed by managers
 Covers, drinks %, sushi %, sides % follow no single Kobas rule across sites (see KPI_Oct_Reconciliation, Manager-typed tab).
 Need a ruling before automating.
+
+## Sales forecast push to Kobas (`forecast_push.py`, 23/10/2026)
+Daily in the 04:10 UTC run (schedule = apply; dispatch input `forecast` = plan / apply / skip). Rolling 28 days from today (UK).
+- Source: site KPI sheet `DAY (Input)`, target = Sit In target (col C) + Delivery Gross target (col D). Sheets are filled to 31/12/2026 (M6 to 06/12).
+- Kobas screen: Rotas > Sales Budgets (`/admin/budgets/`), one row per venue per week Mon..Sun.
+  New week: CSV upload `POST /admin/budgets/index.php` (multipart `budgetfile`, `m=save`). Re-uploading an existing week is ignored by Kobas.
+  Existing week: `PUT /admin/budgets/getupdatesbudget.php` (id, mon..sun), returns the saved row.
+- Days before today and after the window keep the Kobas value. 25 Dec is never written (Michael): Kobas stores 0 for that blank day on a new week.
+- Every in-window day is read back and verified; the plan/result is written to the `Forecast_Push` tab of KPI Auto.
+- Proved by hand 23/10/2026 on M9 (venue 2) W/C 26/10: upload, PUT change and PUT back all landed.
