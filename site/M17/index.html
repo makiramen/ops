@@ -780,7 +780,9 @@ var ADS={from:'2025-03-09',we:'2026-09-27',net:{roas:7.15,spend:2808.61,sites:8}
 var SITE={"code":"M17","name":"Lakeside","label":"Maki 17","cluster":"South England","am":"Ziang Lin","dam":"Kaitlin Docherty","tier":"Ōmori 大盛り","tiers":{"Ōmori 大盛り":["M17","M9","M15","M8","M16","M7","M21"],"Chūmori 中盛り":["M19","M3","M14","M13","M10","M11","M18","M20","M12"],"Kobachi 小鉢":["IKI2","M6","M1"]},"dec":"Srawut \"O\" Chairipu","sph":22,"gm":"Kei Cannon","tierSites":["M17","M9","M15","M8","M16","M7","M21"],"compTab":null,"has":{"delivery":true,"loyalty":true,"mapal":true,"broth":true,"comp":false},"sites":[],"asana":{"hook":"https://script.google.com/macros/s/AKfycbx-hFjHkT3MATPGV0J65gjOl0VKv4xRukLvoJ-atyLNrwNXx3dDhrPilUFhuwDGiIqmig/exec","on":true},"greply":null},SCODE=SITE.code;
 /* Sites with no delivery (sites.json delivery:false, e.g. M7 SJQ): no delivery sales, Deliveroo rating, prep or Deliveroo tab. */
 var NODEL=SITE.has.delivery===false;
-if(!NODEL){var gRoo=document.getElementById('gateRoo');if(gRoo)gRoo.hidden=false}
+/* 23/10/2026 (Michael): the Deliverect OOS banner shows at M10 and M16 only. */
+var OOS_SITES=['M10','M16'];
+if(!NODEL&&OOS_SITES.indexOf(SCODE)>=0){var gRoo=document.getElementById('gateRoo');if(gRoo)gRoo.hidden=false}
 /* 13/10/2026 (Michael): the week in progress is on the page as "this week" (week to date from the daily cash up) and opens by default; the last closed week is "last week" and keeps the KPI sheet and sign off. */
 /* 14/10/2026 (Michael): GM facing tabs anchor on the LAST COMPLETED week. A closed week only counts as completed from the Tuesday after it (food cost and stock take land Tuesday); on Monday it is "closing". The page opens on the last completed week; the picker still reaches this week and history. */
 var NOWD=(function(){try{var d=new Date();var k=new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);return k>='2026-10-23'?k:'2026-10-23'}catch(e){return '2026-10-23'}})();
