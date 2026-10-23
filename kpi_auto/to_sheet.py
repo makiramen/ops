@@ -218,27 +218,30 @@ for b in bad: meta.append(['bad file'] + b)
 # ---- write ----
 have = {s['properties']['title'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties.title').execute()['sheets']}
 def put(tab, data):
+    """Rewrite a tab at exactly the size of its data (shrinks too, so the workbook stays under the 10M cell limit)."""
     w = max(len(r) for r in data)
     data = [[('' if c is None else c) for c in r] + [''] * (w - len(r)) for r in data]
-    if tab not in have:
-        svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'addSheet': {'properties': {'title': tab,
-            'gridProperties': {'rowCount': len(data) + 10, 'columnCount': max(w, 5)}}}}]}).execute()
-    else:
-        sid = [s['properties'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == tab][0]
-        g = sid['gridProperties']
-        if g['rowCount'] < len(data) + 10 or g['columnCount'] < w:
-            svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'updateSheetProperties': {'properties': {'sheetId': sid['sheetId'],
-                'gridProperties': {'rowCount': max(g['rowCount'], len(data) + 10), 'columnCount': max(g['columnCount'], w)}},
-                'fields': 'gridProperties(rowCount,columnCount)'}}]}).execute()
+    props = {s['properties']['title']: s['properties'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets']}
+    reqs = []
+    if tab in props:
+        reqs.append({'updateSheetProperties': {'properties': {'sheetId': props[tab]['sheetId'], 'gridProperties': {'rowCount': len(data) + 5, 'columnCount': max(w, 2)}},
+                     'fields': 'gridProperties(rowCount,columnCount)'}})
         svc.values().clear(spreadsheetId=SHEET, range=f"'{tab}'").execute()
+    else:
+        reqs.append({'addSheet': {'properties': {'title': tab, 'gridProperties': {'rowCount': len(data) + 5, 'columnCount': max(w, 2)}}}})
+    svc.batchUpdate(spreadsheetId=SHEET, body={'requests': reqs}).execute()
     for i in range(0, len(data), 8000):
         svc.values().update(spreadsheetId=SHEET, range=f"'{tab}'!A{i + 1}", valueInputOption='RAW',
                             body={'values': data[i:i + 8000]}).execute()
     print('wrote', tab, len(data), 'rows', flush=True)
 
+for gone in ('M14_Items', 'Deliv_Entries', 'Item_Ref', 'Deliveries', 'Stock_Usage', 'Sheet1'):
+    if gone in have:
+        gid = [x['properties']['sheetId'] for x in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if x['properties']['title'] == gone][0]
+        svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': gid}}]}).execute(); have.discard(gone)
 # Items_All (70k+ rows) made the workbook too big to read back through Drive; drop it and keep the compact tabs.
 if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
-put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days); put('M14_Items', m14r)
-put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Deliveries', delv); put('Labour_Snap', snap); put('Items_WCD', wcd); put('Deliv_Entries', dentr); put('Item_Ref', iref); put('Orders', ords); put('Stock_Usage', susage)
+put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days)
+put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Labour_Snap', snap); put('Items_WCD', wcd); put('Orders', ords); put('Stock_Usage', susage)
