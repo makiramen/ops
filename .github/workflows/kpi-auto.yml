@@ -59,6 +59,7 @@ jobs:
         run: |
           rc=0
           python3 kpi_auto/to_sheet.py /tmp/kpi_out > /tmp/to_sheet.log 2>&1 || rc=1
+          python3 kpi_auto/kobas_daily.py /tmp/kpi_out >> /tmp/to_sheet.log 2>&1 || rc=1
           python3 kpi_auto/kpi_sheets.py > /tmp/kpi_sheets.log 2>&1 || rc=1
           python3 kpi_auto/writer.py > /tmp/writer.log 2>&1 || rc=1
           cat /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log
