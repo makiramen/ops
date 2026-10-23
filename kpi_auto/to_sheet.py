@@ -195,10 +195,21 @@ try:
         ords.append([o.get('id'), o.get('to_venue_id'), o.get('from_supplier_name'), o.get('type'), o.get('status'), o.get('log_date'),
                      o.get('c_date'), o.get('total'), o.get('delivered_date'), o.get('m_date')])
 except Exception as ex: ords.append(['ERR', str(ex)])
-susage = [['line']]
+# stock usage aggregated per site / day / usage type / item type / source (the raw file is 100k+ 'sold' rows)
+susage = [['venue', 'date', 'usage_type', 'type', 'source', 'net_cost', 'rows']]
 try:
-    for l in csv.reader(io.StringIO(open(os.path.join(out, 'stock_usage_export.txt'), encoding='utf-8-sig', errors='replace').read())):
-        if len(susage) < 20000: susage.append(l)
+    agg_su = {}
+    rd = csv.reader(io.StringIO(open(os.path.join(out, 'stock_usage_export.txt'), encoding='utf-8-sig', errors='replace').read()))
+    hh = next(rd); hx = {c.strip(): i for i, c in enumerate(hh)}
+    for l in rd:
+        if len(l) < len(hh): continue
+        try: dt = datetime.datetime.strptime(' '.join(l[hx['Date']].split()[:3]).replace('Sept', 'Sep'), '%d %b %Y').date().isoformat()
+        except Exception: dt = l[hx['Date']]
+        ut = l[hx['Usage Type']].strip()
+        src = 'Cloud' if l[hx['Source']].strip() == 'Cloud' else ('blank' if not l[hx['Source']].strip() else 'Till')
+        kk = (l[hx['Venue']].strip(), dt, ut, l[hx['Type']].strip(), src)
+        a = agg_su.setdefault(kk, [0.0, 0]); a[0] += num(l[hx['Net Cost']]) or 0; a[1] += 1
+    for kk, v in sorted(agg_su.items()): susage.append(list(kk) + [round(v[0], 4), v[1]])
 except Exception as ex: susage.append(['ERR', str(ex)])
 
 # probe dump
