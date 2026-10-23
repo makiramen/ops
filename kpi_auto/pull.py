@@ -211,8 +211,9 @@ try:
             open(f'{out}/stock_usage_{path.rsplit("/", 1)[-1]}.txt', 'w').write(getattr(rr, 'text', str(rr)))
 except Exception as e: save('probe_usage_err.txt', repr(e))
 # 3d3) EPoS item price list (Headline 'Potential Gross Revenue Lost' = units of comp/waste/director x item price)
-for name, path in [('item1', '/data/item?limit=3'), ('item2', '/data/item/?limit=3'), ('item3', '/data/item/category'), ('item4', '/data/v2/item?limit=3'),
-                   ('item5', '/data/item?venue_id=3&limit=3'), ('tillmenu', '/data/till-menu/'), ('itemcat', '/data/item/category/?limit=2')]:
+for name, path in [('ic6', '/data/item/category/6'), ('ic6i', '/data/item/category/6/item'), ('ic6is', '/data/item/category/6/items'),
+                   ('ii', '/data/item/category/item?category_id=6'), ('it1', '/data/item/1'), ('itq', '/data/items?category_id=6'),
+                   ('tm', '/data/till-menu/1'), ('tp', '/data/till-page/1'), ('ti', '/data/till/all'), ('pbu', '/data/price-band/usage/13')]:
     try:
         r = k.s.get(BASE + path, timeout=90)
         save(f'probe_{name}.txt', f'{r.status_code} {r.headers.get("content-type","")} len={len(r.text)}\n' + chunk(r.text[:5000]))
