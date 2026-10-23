@@ -57,7 +57,7 @@ for fmt in ('%Y-%m-%d',):
 # 2) labour costs report: queue a fresh one per Monday in range, wait, export; fall back to the newest existing
 mondays = sorted({(d0 + datetime.timedelta(i) - datetime.timedelta((d0 + datetime.timedelta(i)).weekday())).isoformat() for i in range((d1 - d0).days + 1)})
 queued = {}
-for m in mondays:
+for m in (mondays if os.environ.get('LABOUR_FRESH') == '1' else []):
     data = [('reportQueue[report_key]', 'labour_costs_report'), ('reportQueue[filters][date]', m)] + [('reportQueue[filters][venue_ids][]', str(v)) for v in VIDS]
     try:
         r = k.s.post(BASE + '/data/report-queue', data=data, timeout=60)
@@ -125,9 +125,10 @@ try:
     d = d0
     while d <= d1:
         mon = (d - datetime.timedelta(d.weekday())).isoformat()
-        lo, hi = f'{d + datetime.timedelta(1)} 00:00', f'{d + datetime.timedelta(1)} 12:00'
+        # closest to 08:00 the morning after (the Headline Revenue report lands ~08:00), never before 02:00 (late closers)
+        lo, hi, tgt = f'{d + datetime.timedelta(1)} 02:00', f'{d + datetime.timedelta(2)} 00:00', datetime.datetime.combine(d + datetime.timedelta(1), datetime.time(8))
         c = sorted([x for x in allq if x.get('generated') and (x.get('filters') or {}).get('date') == mon and lo <= (x.get('generation_end') or '') <= hi],
-                   key=lambda x: x['generation_end'])
+                   key=lambda x: abs((datetime.datetime.fromisoformat(x['generation_end']) - tgt).total_seconds()))
         if c:
             x = c[0]; rr = getj(f'/data/reports/labour-costs/{x["id"]}/export')
             open(f'{out}/labour_snap/{d}_{x["id"]}_{x["generation_end"].replace(" ", "T").replace(":", "")}.csv', 'w').write(getattr(rr, 'text', ''))
@@ -151,6 +152,28 @@ for pg in ('/reports/list/', '/stock/', '/stock/waste/', '/stock/wastage/', '/st
         rts = sorted(set(re.findall(r"""['"`](/(?:data|reports|stock|reporting)/[^'"`\s]{2,140})['"`]""", t)))
         hits.append(f'JS {u.rsplit("/", 1)[-1]} ' + ' '.join(rts))
 save('probe_routes_all.txt', '\n'.join(hits))
+# 3e) find Kobas's own Daily Headline Revenue report (the KPI sheet's Script Data is a copy of it, 408/408 fields to the penny).
+#     The report queue answers 'Invalid report key.' for a bad key, so it doubles as a key oracle.
+keys = ['headline_revenue', 'headline_revenue_report', 'daily_headline_revenue', 'daily_headline_revenue_report', 'headline',
+        'revenue_headline', 'headline_report', 'group_headline_revenue', 'daily_sales_with_tax', 'sales_with_tax', 'daily_sales_with_tax_in_period',
+        'sales_with_tax_in_period', 'z_read', 'daily_z_read', 'zread', 'zread_report', 'cash_log', 'cash_log_report', 'headline_revenue_daily',
+        'daily_revenue', 'revenue_report', 'venue_headline_revenue', 'kpi', 'daily_kpi', 'labour_costs_report', 'hours_export',
+        'stock_current_position_report', 'waste_report', 'stock_waste_report', 'comps_report', 'purchases_report', 'stock_purchases_report',
+        'headline_revenue_v2', 'daily_headline', 'revenue_headlines', 'headlines']
+ok = []
+for kk in keys:
+    try:
+        r = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': kk, 'limit': 3}, timeout=60)
+        if 'Invalid report key' not in r.text: ok.append(f'{kk} {r.status_code} {r.text[:600]}')
+    except Exception as e: ok.append(f'{kk} ERR {e}')
+save('probe_report_keys.txt', '\n'.join(ok))
+for name, path in [('report_system', '/data/report/system'), ('report_engine1', '/data/report-engine'), ('report_engine2', '/data/scheduled-report'),
+                   ('report_engine3', '/data/report/scheduled'), ('report_engine4', '/data/report-schedule'), ('report_list', '/data/report/list'),
+                   ('report_engine5', '/data/report-engine/schedule'), ('report_engine6', '/data/report-engine/reports')]:
+    try:
+        r = k.s.get(BASE + path, timeout=60)
+        save(f'probe_{name}.txt', f'{r.status_code} {r.headers.get("content-type","")}\n' + chunk(r.text[:40000]))
+    except Exception as e: save(f'probe_{name}.txt', 'ERR ' + str(e))
 # 3d) delivery detail for M1 29/09 and 20/10 (food cost check)
 try:
     dl = json.load(open(f'{out}/deliveries.json'))
