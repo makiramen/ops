@@ -69,16 +69,24 @@ for site in want_sites:
                                 dateTimeRenderOption='FORMATTED_STRING').execute().get('values', [])
     except Exception as e:
         notes.append([site, 'READ FAILED ' + str(e)[:200]]); continue
-    hdr = next((i for i, r in enumerate(rows[:10]) if r and str(r[0]).strip().lower() == 'date'), None)
-    if hdr is None or len(rows[hdr]) < 4 or 'sit in' not in str(rows[hdr][2]).lower() or 'delivery' not in str(rows[hdr][3]).lower():
+    # header row: col C 'Sit In' (target), col D 'Delivery Gross' or blank (M7 has no delivery target). Col A may be blank (M17).
+    hdr = next((i for i, r in enumerate(rows[:10]) if len(r) > 2 and 'sit in' in str(r[2]).lower()), None)
+    if hdr is None or (len(rows[hdr]) > 3 and str(rows[hdr][3]).strip() and 'delivery' not in str(rows[hdr][3]).lower()):
         notes.append([site, 'HEADER NOT AS EXPECTED: ' + ' | '.join(map(str, rows[hdr] if hdr is not None else rows[:3]))[:300]]); continue
-    t = {}
+    t = {}; prev = None; inferred = []
     for r in rows[hdr + 1:]:
         d = pdate(r[0]) if r else None
-        if not d or d < w0 - datetime.timedelta(7) or d > w1 + datetime.timedelta(7): continue
+        if d and d.year < 2020: d = None
+        if d is None and prev and len(r) > 2 and str(r[2]).strip():
+            d = prev + datetime.timedelta(1); inferred.append(d)  # broken date cell (IKI2 from 01/11/2026): rows run daily
+        if d is None: continue
+        prev = d
+        if d < w0 - datetime.timedelta(7) or d > w1 + datetime.timedelta(7): continue
         a, b = (num(r[2]) if len(r) > 2 else None), (num(r[3]) if len(r) > 3 else None)
         if a is None and b is None: continue
         t[d] = round((a or 0) + (b or 0), 2)
+    if inferred:
+        notes.append([site, f'DATE CELLS BROKEN IN SHEET from {inferred[0]} ({len(inferred)} rows): dates taken as previous row + 1'])
     target[site] = t
     print(site, tab, 'targets in window', sum(1 for d in t if w0 <= d <= w1), flush=True)
 
@@ -172,7 +180,7 @@ if MODE == 'apply':
     errors += bad
 
 # ---------- 5) Forecast_Push tab ----------
-rows = [['run', datetime.datetime.utcnow().isoformat() + 'Z', 'mode', MODE, 'window', f'{w0}..{w1}', '', '', '']] + \
+rows = [['run', datetime.datetime.now(datetime.timezone.utc).isoformat(), 'mode', MODE, 'window', f'{w0}..{w1}', '', '', '']] + \
        [['NOTE'] + n + [''] * 7 for n in notes] + log
 have_tabs = {s['properties']['title']: s['properties'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets']}
 if 'Forecast_Push' not in have_tabs:
