@@ -210,26 +210,13 @@ try:
             rr = getj(path)
             open(f'{out}/stock_usage_{path.rsplit("/", 1)[-1]}.txt', 'w').write(getattr(rr, 'text', str(rr)))
 except Exception as e: save('probe_usage_err.txt', repr(e))
-# 3d3) sales value of waste / comp / director (Headline 'Potential Gross Revenue Lost'): item report modes + EPoS price routes
-try:
-    hits = []
-    for pg in ('/reports/item-by-sales', '/epos/items/', '/epos/', '/admin/epos/items/', '/menus/', '/epos/menu/'):
-        ph = k.s.get(BASE + pg, timeout=60)
-        hits.append(f'PAGE {pg} {ph.status_code} {ph.url}')
-        for u in re.findall(r'<script[^>]+src="([^"]+)"', ph.text):
-            u = ('https:' + u) if u.startswith('//') else (BASE + u if u.startswith('/') else u)
-            if 'vendor' in u: continue
-            t = k.s.get(u, timeout=60).text
-            rts = sorted(set(re.findall(r"""['"`](/data/[^'"`\s]{2,140})['"`]""", t)))
-            if rts: hits.append(f'JS {u.rsplit("/", 1)[-1]} ' + ' '.join(rts))
-            for m in re.finditer(r'piscMode|consumptionMode|wasteMode|showWaste', t):
-                hits.append('CTX ' + t[max(0, m.start() - 300): m.end() + 300])
-    save('probe_price_routes.txt', chunk('\n'.join(hits)[:60000]))
-    for mode in ('waste', 'comp', 'director', 'w', 'c', 'd', '1', '2', '3'):
-        p = k.s.post(BASE + '/data/reports/item-by-sales/export', data=[('venueIds[]', '3'), ('from', '2026-10-20'), ('to', '2026-10-20'), ('piscMode', mode),
-                     ('filterByTill', 'false'), ('seatingArea', ''), ('consumptionMode', '')], timeout=120, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-        save(f'probe_pisc_{mode}.txt', f'{p.status_code}\n' + chunk(p.text[:3000]))
-except Exception as e: save('probe_price_err.txt', repr(e))
+# 3d3) EPoS item price list (Headline 'Potential Gross Revenue Lost' = units of comp/waste/director x item price)
+for name, path in [('item1', '/data/item?limit=3'), ('item2', '/data/item/?limit=3'), ('item3', '/data/item/category'), ('item4', '/data/v2/item?limit=3'),
+                   ('item5', '/data/item?venue_id=3&limit=3'), ('tillmenu', '/data/till-menu/'), ('itemcat', '/data/item/category/?limit=2')]:
+    try:
+        r = k.s.get(BASE + path, timeout=90)
+        save(f'probe_{name}.txt', f'{r.status_code} {r.headers.get("content-type","")} len={len(r.text)}\n' + chunk(r.text[:5000]))
+    except Exception as e: save(f'probe_{name}.txt', 'ERR ' + str(e))
 # 3e) unit cost / price reference: one All Item Sales export per site for the whole range (cost(E) and average gross per item)
 os.makedirs(out + '/items_range', exist_ok=True)
 def rng(item):
