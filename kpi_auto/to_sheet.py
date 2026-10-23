@@ -75,7 +75,7 @@ for r in items[1:]:
     c[0] += (num(l[qi]) or 0) if qi is not None else 0
     c[1] += (num(l[gi]) or 0) if gi is not None else 0
     c[2] += num(l[vi]) or 0
-cats = [['date', 'site', 'mode', 'category', 'qty', 'gross', 'net']] + [list(k) + [round(v[0], 2), round(v[1], 2), round(v[2], 2)] for k, v in sorted(cat.items())]
+cats = [['date', 'site', 'mode', 'category', 'qty', 'gross', 'net']] + [list(k) + [round(v[0], 2), round(v[1], 2), round(v[2], 2)] for k, v in sorted(cat.items()) if k[2] == 'all']
 days = [['date', 'site', 'mode', 'total_gross', 'total_net', 'items_gross', 'items_net', 'diff_gross', 'diff_net']] + \
        [list(k) + [round(v[0], 2), round(v[1], 2), round(v[2], 2), round(v[3], 2), round(v[2] - v[0], 2), round(v[3] - v[1], 2)]
         for k, v in sorted(day.items())]
@@ -136,7 +136,9 @@ for f in sorted(glob.glob(os.path.join(out, 'cashlog', '*.json'))):
             d = keydate(kk)
             for path, val in flat(v): cash.append([site, d or kk, path, val])
     else:
-        for path, val in flat(body): cash.append([site, '', path, val])
+        for path, val in flat(body):
+            if re.search(r'(venues\[0\]\.name$|data\.\w+\[\d+\]\.(name|\d{4}-\d{2}-\d{2})$)', path) and 'otherPaymentTypes' not in path:
+                cash.append([site, '', path, val])
 
 # ---- labour costs report CSVs ----
 lab = [['week', 'venue', 'information', 'date', 'value']]
@@ -187,16 +189,16 @@ for f in sorted(glob.glob(os.path.join(out, 'items_range', '*.csv'))):
         if nm and nm != 'total' and not nm.startswith('of which '): iref.append([site] + [num(x) if num(x) is not None else x for x in l2])
 
 # ---- orders (stock_order headers) and the stock usage report export ----
-ords = [['id', 'to_venue_id', 'from_supplier_name', 'type', 'status', 'log_date', 'c_date', 'total', 'json']]
+ords = [['id', 'to_venue_id', 'from_supplier_name', 'type', 'status', 'log_date', 'c_date', 'total', 'delivered_date', 'm_date']]
 try:
     for o in json.load(open(os.path.join(out, 'orders.json'))):
         ords.append([o.get('id'), o.get('to_venue_id'), o.get('from_supplier_name'), o.get('type'), o.get('status'), o.get('log_date'),
-                     o.get('c_date'), o.get('total'), json.dumps({kk: v for kk, v in o.items() if isinstance(v, (int, float)) or kk.endswith('date')})[:1500]])
+                     o.get('c_date'), o.get('total'), o.get('delivered_date'), o.get('m_date')])
 except Exception as ex: ords.append(['ERR', str(ex)])
 susage = [['line']]
 try:
     for l in csv.reader(io.StringIO(open(os.path.join(out, 'stock_usage_export.txt'), encoding='utf-8-sig', errors='replace').read())):
-        susage.append(l)
+        if len(susage) < 20000: susage.append(l)
 except Exception as ex: susage.append(['ERR', str(ex)])
 
 # probe dump
@@ -235,7 +237,7 @@ def put(tab, data):
                             body={'values': data[i:i + 8000]}).execute()
     print('wrote', tab, len(data), 'rows', flush=True)
 
-for gone in ('M14_Items', 'Deliv_Entries', 'Item_Ref', 'Deliveries', 'Stock_Usage', 'Sheet1'):
+for gone in ('M14_Items', 'Deliv_Entries', 'Item_Ref', 'Deliveries', 'Stock_Usage', 'Sheet1', 'Labour', 'Orders', 'Cash_Log', 'Probe'):
     if gone in have:
         gid = [x['properties']['sheetId'] for x in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if x['properties']['title'] == gone][0]
         svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': gid}}]}).execute(); have.discard(gone)
@@ -244,4 +246,4 @@ if 'Items_All' in have:
     sid = [s['properties']['sheetId'] for s in svc.get(spreadsheetId=SHEET, fields='sheets.properties').execute()['sheets'] if s['properties']['title'] == 'Items_All'][0]
     svc.batchUpdate(spreadsheetId=SHEET, body={'requests': [{'deleteSheet': {'sheetId': sid}}]}).execute(); have.discard('Items_All')
 put('Meta', meta); put('Probe', probe); put('Cat_Totals', cats); put('Day_Totals', days)
-put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour', lab); put('Labour_Snap', snap); put('Items_WCD', wcd); put('Orders', ords); put('Stock_Usage', susage)
+put('Lead_Totals', lead); put('Cash_Log', cash); put('Labour_Snap', snap); put('Items_WCD', wcd); put('Orders', ords); put('Stock_Usage', susage)
