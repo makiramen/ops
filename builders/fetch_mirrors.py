@@ -199,7 +199,14 @@ def main():
     open(os.path.join(a.out, "reviews_source.txt"), "w").write(route + "\n")
 
     gate(cb, "cashup", D, "mirror:drive-export")
-    gate(rb, "reviews", D, route)
+    # 26/10/2026: a stale REVIEWS source must not block the cash-up. daily_cloud_run.py already holds
+    # reviews back (loudly) when D has 0 rows, so the gate here only needs to shout, not exit. The
+    # maki-nori/google-reviews nightly pull failed 24-26/10 and this exit(5) stopped FOUR cash-up runs.
+    try:
+        gate(rb, "reviews", D, route)
+    except SystemExit as e:
+        if e.code != 5: raise
+        log("!!   REVIEWS gate failed (stale source): continuing so the CASH-UP still ships; reviews are held by the builder.")
     print("ok " + route)
 
 
