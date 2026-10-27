@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-26",
-  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "generated_at": "2026-10-27",
+  "source": "build_site_json.py — per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
-    "label": "Week of 2026-10-19 \u2013 2026-10-25",
+    "label": "Week of 2026-10-19 – 2026-10-25",
     "commencing": "2026-10-19",
     "ending": "2026-10-25"
   },
@@ -18,11 +18,11 @@
       "kpis": {
         "sales": {
           "actual": 78560.74,
-          "target": 73000.0,
+          "target": 73000,
           "var_pct": 7.62,
           "prev": 79355.75,
           "wow_abs": -795.01,
-          "wow_pct": -1.0
+          "wow_pct": -1
         },
         "covers": {
           "actual": 4916,
@@ -42,15 +42,15 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
-          "target": 23.0,
+          "actual": 37.06,
+          "target": 23,
           "gated": false
         },
         "labour_hours": {
-          "actual": 1144.0
+          "actual": 1144
         },
         "waste": {
-          "actual": 0.0
+          "actual": 0
         }
       },
       "labour_split": {
@@ -62,21 +62,21 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
-          "target": "\u00b15%",
-          "within_band": null
+          "variance_pct": 0.1,
+          "target": "±5%",
+          "within_band": true
         },
         "food": {
           "variance_pct": 2.1,
-          "target": "\u00b15%",
+          "target": "±5%",
           "within_band": true
         },
         "week_commencing": "2026-10-19"
       },
       "efficiency_score": {
-        "score": 81,
-        "rag": "amber",
-        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "score": 58,
+        "rag": "red",
+        "scale": "0–100, 100 = at target; bands: green ≥95, amber ≥80, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
@@ -88,13 +88,18 @@
         "components": {
           "sales": {
             "weight": 10,
-            "value": 100.0,
-            "basis": "70% (100+7.62) + 30% (\u00a3gap +5561 vs \u00b1\u00a350k cal)"
+            "value": 100,
+            "basis": "70% (100+7.62) + 30% (£gap +5561 vs ±£50k cal)"
           },
           "sph": {
             "weight": 15,
             "value": 15.45,
-            "basis": "\u00a313.79 vs \u00a322 tgt \u2014 level 0, WoW +0.15% \u2192 mom 52"
+            "basis": "£13.79 vs £22 tgt — level 0, WoW +0.15% → mom 52"
+          },
+          "food": {
+            "weight": 30,
+            "value": 3.52,
+            "basis": "37.06% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -103,24 +108,24 @@
           },
           "weekly_star": {
             "weight": 10,
-            "value": 100.0,
-            "basis": "4.73\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "value": 100,
+            "basis": "4.73★ vs 4.7★ OKR (0 at 4.0★)"
           },
           "food_var": {
             "weight": 5,
             "value": 100,
-            "basis": "2.10% inside \u00b15% band"
+            "basis": "2.10% inside ±5% band"
           }
         },
-        "components_dropped": [
-          "food"
-        ],
-        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 — SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime★ excluded"
       },
       "red_light": {
-        "status": "green",
-        "triggers": [],
-        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+        "status": "red",
+        "triggers": [
+          "food 37.1%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target ≤ -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
         "week_avg_rating": 4.7297,
@@ -137,7 +142,7 @@
           {
             "stars": 3,
             "author": "Iman Butt",
-            "text": "The food was delicious, the broth was rich and flavourful, the noodles were perfectly cooked and the steak was tender. Only reason why I didn\u2019t give it a 5 star is due to the unwelcoming staff. As we went in a member of staff came to sit us down after a 5 mins wait and didn\u2019t say hi or anything just asked if we had any allergies. We sat down with the menus and 20 mins later no one had come to us to ask if we had ordered or attempted to take our order. Flagging the servers down was basically impossible even though it was not that busy, as they all just avoid eye contact and just stood chatting to each other or slowly cleaning tables. But the food was good so we tried ignoring all that. In the end, after finishing our food a server came and took our dishes and asked if that was all or if we wanted to order anything else. We said no we\u2019re done that\u2019s all. We thought that was enough and she would come back with the card machine to take our payments like we had seen her do for other tables. But she just left us there for another 10 minutes till we flagged her down and payed. Why was it so hard for us just to pay for our food and get going.",
+            "text": "The food was delicious, the broth was rich and flavourful, the noodles were perfectly cooked and the steak was tender. Only reason why I didn’t give it a 5 star is due to the unwelcoming staff. As we went in a member of staff came to sit us down after a 5 mins wait and didn’t say hi or anything just asked if we had any allergies. We sat down with the menus and 20 mins later no one had come to us to ask if we had ordered or attempted to take our order. Flagging the servers down was basically impossible even though it was not that busy, as they all just avoid eye contact and just stood chatting to each other or slowly cleaning tables. But the food was good so we tried ignoring all that. In the end, after finishing our food a server came and took our dishes and asked if that was all or if we wanted to order anything else. We said no we’re done that’s all. We thought that was enough and she would come back with the card machine to take our payments like we had seen her do for other tables. But she just left us there for another 10 minutes till we flagged her down and payed. Why was it so hard for us just to pay for our food and get going.",
             "date": "2026-10-20",
             "url": null
           }
@@ -145,8 +150,8 @@
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
-        "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-19..2026-10-25 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-26."
+        "response_rate_note": "No automated source — left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-19..2026-10-25 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-27."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-19.json (AGMM Task List Status). Open items only.",
@@ -157,7 +162,7 @@
         "note": "0 outstanding"
       },
       "issues_solutions": {
-        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "source": "GM KPI meeting notes — email pull not built.",
         "status": "pending",
         "live": false,
         "items": [],
@@ -175,7 +180,7 @@
         "rating": 4.91,
         "open_hours_pct": 99.7,
         "avg_prep_min": 13.5,
-        "rejection_pct": 0.0,
+        "rejection_pct": 0,
         "inaccuracy_pct": 3.2,
         "rider_wait_5min_pct": 2.1,
         "conversion_pct": 8.4,
@@ -187,12 +192,10 @@
         },
         "gmv_vs_4wk_pct": 0.8,
         "gmv_vs_ly_pct": -1.4,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
-        "busy_mode_pct": 0.0
+        "source": "Deliveroo_Master_Consolidation.xlsx — Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0
       },
-      "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [],
         "actions": [],

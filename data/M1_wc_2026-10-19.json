@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-26",
-  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "generated_at": "2026-10-27",
+  "source": "build_site_json.py — per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
-    "label": "Week of 2026-10-19 \u2013 2026-10-25",
+    "label": "Week of 2026-10-19 – 2026-10-25",
     "commencing": "2026-10-19",
     "ending": "2026-10-25"
   },
@@ -18,7 +18,7 @@
       "kpis": {
         "sales": {
           "actual": 24435.36,
-          "target": 21000.0,
+          "target": 21000,
           "var_pct": 16.36,
           "prev": 23616.84,
           "wow_abs": 818.52,
@@ -42,15 +42,15 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
-          "target": 23.0,
+          "actual": 21.01,
+          "target": 23,
           "gated": false
         },
         "labour_hours": {
           "actual": 331.9
         },
         "waste": {
-          "actual": 0.0
+          "actual": 0
         }
       },
       "labour_split": {
@@ -62,21 +62,21 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
-          "target": "\u00b15%",
-          "within_band": null
+          "variance_pct": -1.5,
+          "target": "±5%",
+          "within_band": true
         },
         "food": {
-          "variance_pct": null,
-          "target": "\u00b15%",
-          "within_band": null
+          "variance_pct": -0.9,
+          "target": "±5%",
+          "within_band": true
         },
         "week_commencing": "2026-10-19"
       },
       "efficiency_score": {
-        "score": 81,
+        "score": 87,
         "rag": "amber",
-        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "scale": "0–100, 100 = at target; bands: green ≥95, amber ≥80, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
@@ -88,35 +88,42 @@
         "components": {
           "sales": {
             "weight": 10,
-            "value": 100.0,
-            "basis": "70% (100+16.36) + 30% (\u00a3gap +3435 vs \u00b1\u00a350k cal)"
+            "value": 100,
+            "basis": "70% (100+16.36) + 30% (£gap +3435 vs ±£50k cal)"
           },
           "sph": {
             "weight": 15,
             "value": 51.23,
-            "basis": "\u00a317.82 vs \u00a322 tgt \u2014 level 30, WoW +15.41% \u2192 mom 100"
+            "basis": "£17.82 vs £22 tgt — level 30, WoW +15.41% → mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100,
+            "basis": "21.01% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
-            "value": 100.0,
+            "value": 100,
             "basis": "19.83% vs 21% target, -15/pp over"
           },
           "weekly_star": {
             "weight": 10,
             "value": 47.61,
-            "basis": "4.33\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "basis": "4.33★ vs 4.7★ OKR (0 at 4.0★)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-0.90% inside ±5% band"
           }
         },
-        "components_dropped": [
-          "food",
-          "food_var"
-        ],
-        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 — SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime★ excluded"
       },
       "red_light": {
         "status": "green",
         "triggers": [],
-        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+        "basis": "computed from the dashboard's own KPIs (sales vs target ≤ -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
         "week_avg_rating": 4.3333,
@@ -133,8 +140,8 @@
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
-        "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-19..2026-10-25 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-26."
+        "response_rate_note": "No automated source — left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-19..2026-10-25 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-27."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-19.json (AGMM Task List Status). Open items only.",
@@ -144,7 +151,7 @@
         "tasks": [
           {
             "task": "Paint needing touched up in all Scotland/Newcastle sites",
-            "priority": "\u2014",
+            "priority": "—",
             "logged_week": "Ongoing",
             "owner": "Kris/Rafal",
             "status": "open"
@@ -153,7 +160,7 @@
         "note": "1 open item(s)"
       },
       "issues_solutions": {
-        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "source": "GM KPI meeting notes — email pull not built.",
         "status": "pending",
         "live": false,
         "items": [],
@@ -171,9 +178,9 @@
         "rating": 4.15,
         "open_hours_pct": 99.6,
         "avg_prep_min": 16.3,
-        "rejection_pct": 0.0,
+        "rejection_pct": 0,
         "inaccuracy_pct": 2.6,
-        "rider_wait_5min_pct": 3.0,
+        "rider_wait_5min_pct": 3,
         "conversion_pct": 11.6,
         "wow": {
           "gmv_pct": 12.2,
@@ -183,13 +190,10 @@
         },
         "gmv_vs_4wk_pct": 6.9,
         "gmv_vs_ly_pct": -27.4,
-        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "source": "Deliveroo_Master_Consolidation.xlsx — Weekly Summary. + ops from Weekly Summary sheet",
         "busy_mode_pct": 0.8
       },
-      "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week",
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [],
         "actions": [],

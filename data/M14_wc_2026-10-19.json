@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-10-26",
-  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "generated_at": "2026-10-27",
+  "source": "build_site_json.py — per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
-    "label": "Week of 2026-10-19 \u2013 2026-10-25",
+    "label": "Week of 2026-10-19 – 2026-10-25",
     "commencing": "2026-10-19",
     "ending": "2026-10-25"
   },
@@ -18,7 +18,7 @@
       "kpis": {
         "sales": {
           "actual": 41544.86,
-          "target": 43000.0,
+          "target": 43000,
           "var_pct": -3.38,
           "prev": 36167.63,
           "wow_abs": 5377.23,
@@ -33,7 +33,7 @@
         "sph": {
           "actual": 21.12,
           "prev": 20.12,
-          "wow_abs": 1.0,
+          "wow_abs": 1,
           "wow_pct": 4.97,
           "label": "Spend Per Head (covers-weighted Avg Spend)"
         },
@@ -42,8 +42,8 @@
           "target": null
         },
         "food_pct": {
-          "actual": null,
-          "target": 23.0,
+          "actual": 24.34,
+          "target": 23,
           "gated": false
         },
         "labour_hours": {
@@ -63,20 +63,20 @@
       "stock_take": {
         "drinks": {
           "variance_pct": null,
-          "target": "\u00b15%",
+          "target": "±5%",
           "within_band": null
         },
         "food": {
           "variance_pct": 3.4,
-          "target": "\u00b15%",
+          "target": "±5%",
           "within_band": true
         },
         "week_commencing": "2026-10-19"
       },
       "efficiency_score": {
-        "score": 92,
+        "score": 94,
         "rag": "amber",
-        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "scale": "0–100, 100 = at target; bands: green ≥95, amber ≥80, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
@@ -89,12 +89,17 @@
           "sales": {
             "weight": 10,
             "value": 96.76,
-            "basis": "70% (100-3.38) + 30% (\u00a3gap -1455 vs \u00b1\u00a350k cal)"
+            "basis": "70% (100-3.38) + 30% (£gap -1455 vs ±£50k cal)"
           },
           "sph": {
             "weight": 15,
             "value": 89.64,
-            "basis": "\u00a321.12 vs \u00a322 tgt \u2014 level 85, WoW +4.97% \u2192 mom 100"
+            "basis": "£21.12 vs £22 tgt — level 85, WoW +4.97% → mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100,
+            "basis": "24.34% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -103,24 +108,22 @@
           },
           "weekly_star": {
             "weight": 10,
-            "value": 100.0,
-            "basis": "5.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "value": 100,
+            "basis": "5.00★ vs 4.7★ OKR (0 at 4.0★)"
           },
           "food_var": {
             "weight": 5,
             "value": 100,
-            "basis": "3.40% inside \u00b15% band"
+            "basis": "3.40% inside ±5% band"
           }
         },
-        "components_dropped": [
-          "food"
-        ],
-        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 — SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime★ excluded"
       },
       "red_light": {
         "status": "green",
         "triggers": [],
-        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+        "basis": "computed from the dashboard's own KPIs (sales vs target ≤ -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
         "week_avg_rating": 5,
@@ -137,8 +140,8 @@
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
-        "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-19..2026-10-25 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-26."
+        "response_rate_note": "No automated source — left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-19..2026-10-25 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-10-27."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-19.json (AGMM Task List Status). Open items only.",
@@ -148,23 +151,23 @@
         "tasks": [
           {
             "task": "K from Maki external sign detached from wire and cracked",
-            "priority": "\u2014",
+            "priority": "—",
             "logged_week": "11/10/2026",
-            "owner": "\u2014",
+            "owner": "—",
             "status": "open"
           },
           {
             "task": "Freezer for char siu and tan tan stops working",
-            "priority": "\u2014",
+            "priority": "—",
             "logged_week": "20/10/2026",
-            "owner": "\u2014",
+            "owner": "—",
             "status": "open"
           }
         ],
         "note": "2 open item(s)"
       },
       "issues_solutions": {
-        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "source": "GM KPI meeting notes — email pull not built.",
         "status": "pending",
         "live": false,
         "items": [],
@@ -175,21 +178,21 @@
         "week_ending": "2026-10-25",
         "resolution": "weekly",
         "partial": false,
-        "sales": 1031.0,
+        "sales": 1031,
         "orders": 27,
         "aov": 38.19,
         "new_customers": null,
         "rating": 2.33,
         "open_hours_pct": 99.9,
         "avg_prep_min": 12.7,
-        "rejection_pct": 0.0,
+        "rejection_pct": 0,
         "inaccuracy_pct": 11.1,
         "rider_wait_5min_pct": null,
         "conversion_pct": null,
         "wow": {
           "gmv_pct": 22.7,
           "orders_abs": null,
-          "prev_gmv": 840.0,
+          "prev_gmv": 840,
           "prev_orders": null
         },
         "gmv_vs_4wk_pct": 3.4,
@@ -197,11 +200,9 @@
         "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
         "sales_estimated": false,
         "orders_estimated": false,
-        "busy_mode_pct": 0.0
+        "busy_mode_pct": 0
       },
-      "gaps": [
-        "Food % \u2014 no entry in the Mona Lisa Food Cost % table this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [],
         "actions": [],
