@@ -5462,8 +5462,35 @@ function salesCell(s){
 // AOV / new-customers only, orders estimated). Replaces the monthly stopgap.
 // Clickable: toggles the Deliveroo week panel rendered under the kpi-grid.
 function deliverooCell(s){
+  const dt = s && s.kpis && s.kpis.delivery_total;
+  if (dt && (dt.sales != null || dt.orders != null)) {
+    // Baked by the weekly pull (builders/build_delivery_total.py, Michael 28/10/2026): the TOTAL delivery sales,
+    // all platforms (Deliverect incl. HungryPanda), from the Daily Headline Revenue Report. No fetch needed.
+    return `<div id="roo-cell-${rooPanelId(s.code)}" style="display:contents;">` + deliveryTotalCell(s, dt) + `</div>`;
+  }
   setTimeout(() => fillRooCellFromDailies(s), 0);
   return `<div id="roo-cell-${rooPanelId(s.code)}" style="display:contents;">` + deliverooCellWeekly(s) + `</div>`;
+}
+function deliveryTotalCell(s, dt){
+  const hint = `<span style="font-weight:600;color:var(--maki-orange);font-size:10px;"> · click for the week</span>`;
+  const click = `style="cursor:pointer;" onclick="toggleRooPanel('${(s.code||'').replace(/'/g, "\\'")}')" title="Click to show/hide the Deliveroo week panel"`;
+  const part = (dt.days != null && dt.days < 7);
+  const tag = `<span style="font-weight:600;color:${part ? 'var(--amber)' : 'var(--ink-3)'};font-size:10px;"> · all platforms${part ? ' (' + dt.days + '/7 days)' : ''}</span>`;
+  const gmv = dt.sales == null ? 'N/A' : '£' + Number(dt.sales).toLocaleString('en-GB', {maximumFractionDigits:0});
+  let tgtLine = '';
+  if (dt.target != null && dt.target > 0 && dt.sales != null) {
+    const vp = (dt.sales / dt.target - 1) * 100, hit = dt.sales >= dt.target;
+    tgtLine = `<div class="kpi-trend" style="margin-top:6px;font-weight:700;color:${hit ? 'var(--green)' : 'var(--red)'};">${hit ? '▲' : '▼'} ${Math.abs(vp).toFixed(1)}% vs £${Number(dt.target).toLocaleString('en-GB', {maximumFractionDigits:0})} delivery target${(dt.target_days != null && dt.target_days < 7) ? ' (' + dt.target_days + '/7 days)' : ''}</div>`;
+  }
+  let wow = '';
+  if (dt.wow_pct != null && dt.prev != null) {
+    const up = dt.wow_pct >= 0;
+    wow = ` · <span style="color:${up ? 'var(--green)' : 'var(--red)'};font-weight:600;">${up ? '▲' : '▼'} ${Math.abs(dt.wow_pct).toFixed(1)}% WoW</span>`;
+  }
+  const ord = dt.orders == null ? 'Deliveroo orders n/a' : dt.orders.toLocaleString() + ' Deliveroo orders';
+  return `<div class="kpi" ${click}><div class="kpi-label">Delivery Sales (wk)${tag}${hint}</div>`+
+    `<div class="kpi-value">${gmv}</div>`+ tgtLine +
+    `<div class="kpi-trend" style="margin-top:6px;">${ord}${wow} · Deliverect incl. HP</div></div>`;
 }
 // Deliveroo tile from the DAILIES (Michael 14/10/2026): orders = sum of the Deliveroo Daily
 // Master orders (data/deliveroo_daily.json), sales = sum of the cash-up delivery £
@@ -5823,6 +5850,7 @@ function adaptSite(jsonCode, s, isNewest){
     // pipe 6 / 6b: Deliveroo weekly block (full for the 8-store CSV list; PDF
     // sales-only fallback for gap sites M11-M18). Surfaced in the detail grid.
     site.deliveroo = s.deliveroo || null;
+    site.kpis.delivery_total = kp.delivery_total || null;   // weekly TOTAL delivery sales, all platforms (28/10/2026)
     // Deliveroo week panel (site modal): raw gaps + Google reviews block + json code for the daily feed.
     site.gaps        = s.gaps || [];
     site.reviewsWeek = s.reviews || null;
