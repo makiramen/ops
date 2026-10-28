@@ -100,6 +100,25 @@ jobs:
           for i in 1 2 3; do git push "$URL" HEAD:main && exit 0; git fetch "$URL" main && git rebase FETCH_HEAD; done
           exit 1
 
+      # 28/10/2026 (Michael): the weekly files carry the TOTAL delivery sales (all platforms, Deliverect incl.
+      # HungryPanda, from the Daily Headline Revenue Report via the dailies) as kpis.delivery_total, so the site
+      # modal tile is baked by the weekly pull. Re-derived here every run for the current and previous week, so a
+      # late-filed day or a Mac rebuild (which does not know the key) is healed within the hour. Idempotent.
+      - name: Total delivery sales into the weekly files (kpis.delivery_total)
+        if: always()
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          python3 builders/build_delivery_total.py --repo . --auto || exit 0
+          if [ -z "$(git status --porcelain -- 'data/*_wc_*.json')" ]; then echo "delivery_total: nothing to ship"; exit 0; fi
+          git config user.name "maki-nori"; git config user.email "michael@makiramen.com"
+          git add 'data/*_wc_*.json'
+          git commit -q -m "delivery_total: weekly total delivery sales $(TZ=Europe/London date +'%Y-%m-%d %H:%M') UK"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          for i in 1 2 3; do git push "$URL" HEAD:main && exit 0; git fetch "$URL" main && git rebase FETCH_HEAD; done
+          exit 0
+
       # 08/10/2026: chained morning build. workflow_run does not reach the Area Room or the Site CC reliably (runs the
       # scheduler starts with the job token raise no events), so the daily tab dispatches them itself, but
       # only when this run shipped the cash-up or reviews. Each has its own guard, so a redundant dispatch is a no-op.
