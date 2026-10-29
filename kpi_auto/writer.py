@@ -10,7 +10,10 @@ Rules (Michael, 22/10/2026):
 Modes (env WRITE_MODE):
   plan   (default) read every site sheet, write Layout + Write_Plan tabs to KPI Auto. No site sheet is touched.
   apply  write only cells whose action is FILL (cell blank or zero, not a formula, field listed in APPLY_FIELDS).
-         Cells holding a different non-zero value are left alone unless OVERWRITE=1. Formula cells are never written.
+         Cells holding a different non-zero value are left alone unless OVERWRITE=1. Formula cells are never written,
+         EXCEPT the fields listed in REPLACE_FORMULAS (Michael, 29/10/2026: Covers, Drinks %, Sushi %, Sides %): there the
+         sheet formula is replaced by the Kobas value (action FORMULA>WRITE), because the automation now works the figure out
+         (covers = Kobas covers + tabs without covers set + round(Stripe £ / 22); % = Kobas All Item Sales).
 
 Plan actions, per site / date / field:
   MATCH    sheet already equals Kobas within TOL (default 1.00)
@@ -35,6 +38,7 @@ AUTO = os.environ.get('KPI_AUTO_SHEET', '14_rQMgMu7TaHagGkgHYe-7mNar_QWyy-3yUgRo
 MODE = os.environ.get('WRITE_MODE', 'plan').strip().lower()
 OVERWRITE = os.environ.get('OVERWRITE') == '1'
 APPLY_FIELDS = {f.strip().lower() for f in os.environ.get('APPLY_FIELDS', '').split(',') if f.strip()}
+REPLACE_FORMULAS = {f.strip().lower() for f in os.environ.get('REPLACE_FORMULAS', '').split(',') if f.strip()}   # 29/10/2026
 TOL = float(os.environ.get('TOL', '0.005'))   # to the penny; Hours Used is held to 1 dp in the sheet
 FIELD_TOL = {'hours used': 0.051, 'covers': 0.5, 'drinks %': 0.5, 'sushi %': 0.5, 'sides %': 0.5}   # % held to 0.5 pt
 TEMPLATE = json.loads(os.environ.get('ROLLOVER_TEMPLATE') or '{}')
@@ -163,14 +167,14 @@ for site, sid in SITES.items():
                 if pct and cv is not None and '%' not in str(cur) and abs(cv) <= 1 and cv != 0: cv = cv * 100   # 0.125 typed as a fraction
                 cell = f'{a1col(c)}{i + 1}'
                 if k is None: act = 'NO KOBAS'
-                elif form.get((i, c)): act = 'FORMULA'
+                elif form.get((i, c)): act = 'FORMULA>WRITE' if (MODE == 'apply' and fl in REPLACE_FORMULAS and fl in APPLY_FIELDS) else 'FORMULA'
                 elif cv is not None and abs(cv - k) <= FIELD_TOL.get(fl, TOL): act = 'MATCH'
                 elif cv is None or cv == 0: act = 'FILL'
                 else: act = 'DIFFERS'
                 plan.append([site, tab, i + 1, d.isoformat(), field, cell, cur, k,
                              round(k - cv, 2) if k is not None and cv is not None else '', act])
                 if MODE == 'apply' and k is not None and fl in APPLY_FIELDS and \
-                        (act == 'FILL' or (act == 'DIFFERS' and OVERWRITE)):
+                        (act in ('FILL', 'FORMULA>WRITE') or (act == 'DIFFERS' and OVERWRITE)):
                     wv = f'{k}%' if pct_style else (int(round(k)) if fl == 'covers' else k)
                     writes.setdefault(sid, []).append({'range': f"'{tab}'!{cell}", 'values': [[wv]]})
                 d += datetime.timedelta(1)
@@ -230,7 +234,7 @@ except Exception as e:
 have = {s['properties']['title']: s['properties'] for s in svc.get(spreadsheetId=AUTO, fields='sheets.properties').execute()['sheets']}
 summary = {}
 for r in plan[1:]: summary[(r[0], r[4], r[9])] = summary.get((r[0], r[4], r[9]), 0) + 1
-plan_sum = [['mode', MODE, 'overwrite', OVERWRITE, 'apply fields', ','.join(sorted(APPLY_FIELDS)) or '(none)'],
+plan_sum = [['mode', MODE, 'overwrite', OVERWRITE, 'apply fields', ','.join(sorted(APPLY_FIELDS)) or '(none)', 'replace formulas', ','.join(sorted(REPLACE_FORMULAS)) or '(none)'],
             ['site', 'field', 'action', 'days']] + [list(k) + [v] for k, v in sorted(summary.items())]
 for tab, data in (('Layout', layout), ('Write_Plan', plan), ('Write_Summary', plan_sum + [[]] + done)):
     w = max(len(r) for r in data); data = [[('' if c is None else c) for c in r] + [''] * (w - len(r)) for r in data]

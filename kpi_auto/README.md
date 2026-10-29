@@ -45,3 +45,23 @@ Daily in the 04:10 UTC run (schedule = apply; dispatch input `forecast` = plan /
 - Days before today and after the window keep the Kobas value. 25 Dec is never written (Michael): Kobas stores 0 for that blank day on a new week.
 - Every in-window day is read back and verified; the plan/result is written to the `Forecast_Push` tab of KPI Auto.
 - Proved by hand 23/10/2026 on M9 (venue 2) W/C 26/10: upload, PUT change and PUT back all landed.
+
+## 29/10/2026 (Michael): covers rule, formula replacement, Auto Cash Up feed, run log and failure email
+- **Covers, all 20 sites** = Kobas covers + Tabs Without Covers Set + ROUND(online Stripe £ / 22), all from the Cash Log report
+  (`kobas_daily.py`, parts kept in `Kobas Covers`, `Tabs No Covers`, `Stripe £` columns of Kobas_Daily; `STRIPE_AVG_SPEND` env, default 22).
+- **Formula cells replaced**: in the site `DAY (Input)` tabs the Covers, Drinks %, Sushi %, Sides % cells that hold a formula are now
+  overwritten with the Kobas value (`writer.py` env `REPLACE_FORMULAS`, action `FORMULA>WRITE`). A figure a manager typed is still never
+  overwritten (DIFFERS), no rows appended.
+- **Backfill from 28/09/2026**: `kpi_auto/backfill.json` ({"from": "2026-09-28"}) makes the next scheduled 04:10 run pull from that date
+  instead of yesterday (site sheets + Auto Cash Up), then the run deletes the file. To run it now instead of waiting: Actions > KPI sheet
+  automation > Run workflow with date_from 2026-09-28, date_to yesterday, mode pull, write_mode apply, apply_fields `Covers,Drinks %,Sushi %,Sides %`,
+  cashup_mode apply, labour_fresh 1.
+- **Auto Cash Up fed direct** (`cashup_feed.py`): `Raw Data 2` of Auto Cash Up `1T4TtCs-SkBjinToxG45oKksUiPPPIllo2Pqrqbaix6w` gets Sit In, Delivery,
+  Tips, Actual, Labour £, Hours, No. Of Customers, Waste £, Drinks/Sushi/Sides %, Food Cost, Average Spend and Wages/Revenue % from Kobas_Daily
+  for every venue and date in range: existing rows only, blank or zero cells only, formulas never, plan to `CashUp_Plan` / `CashUp_Summary`.
+  Scheduled run = apply. The three `Daily Z Reports Script` sheets are only probed for access (`Z_Sheets` tab), nothing written.
+  **Share as Editor with `site-cc-reader@maki-reviews.iam.gserviceaccount.com`**: Auto Cash Up and the three Daily Z Reports Script sheets;
+  until shared the run logs NO ACCESS, fails, and emails.
+- **Run_History** tab: one line per run (time, run id, ok/FAILED, range, modes, summary, log link), never cleared (`run_history.py`).
+- **Failure email** to michael@makiramen.com (Gmail SMTP, the keyline `GMAIL_USER` / `GMAIL_APP_PASSWORD` secrets) with the log tails
+  whenever a step fails or a sheet is NO ACCESS.

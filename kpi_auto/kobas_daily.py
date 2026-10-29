@@ -14,8 +14,10 @@ Field rules (proved 23/10 against 408/408 Script Data cells and the Headline rep
   Food Cost Actual = total of supplier orders delivered that day and confirmed (last modified) before the morning cut-off
   Cost of Waste / Comp / Directors = Stock Usage report net cost by usage type
   Potential Gross Revenue Lost: dropped (Michael, 23/10/2026, not needed)
-DAY (Input) fields, Michael's rulings 23/10/2026 (one rule for every site):
-  Covers      = Kobas covers only (Cash Log report)
+DAY (Input) fields, Michael's rulings 23/10/2026 (one rule for every site), covers rule re-set 29/10/2026:
+  Covers      = Kobas covers + Tabs Without Covers Set + ROUND(online Stripe payments £ / 22)   (all from the Cash Log report;
+                Stripe = otherPaymentTypes 'of which Stripe', the online orders that carry no cover count; £22 = average spend)
+                The parts are kept in their own columns (Kobas Covers, Tabs No Covers, Stripe £) so the sum can be checked.
   Drinks % / Sushi % / Sides % = category sales incl. VAT / total sales incl. VAT (All Item Sales report, every menu incl. delivery)"""
 import os, sys, csv, io, json, re, glob, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -98,7 +100,16 @@ for f in glob.glob(os.path.join(out, 'items', '*_all.csv')):
     PCT[(site, day)] = {k: (round(100 * v / tot, 2) if tot > 0 else None) for k, v in grp.items()}
 SNAME = {v: k for k, v in VNAME.items()}
 head = ['date', 'site', 'Sit in', 'Delivery', 'Tips', 'Actual', 'Declared Rev', 'Hours work Cost', 'Hours Used', 'Food Cost Actual', 'Cost of Waste',
-        'Cost of Comp', 'Cost of Directors', 'Wet Sales', 'Covers', 'Drinks %', 'Sushi %', 'Sides %', 'pulled_at', 'labour_report']
+        'Cost of Comp', 'Cost of Directors', 'Wet Sales', 'Covers', 'Drinks %', 'Sushi %', 'Sides %', 'pulled_at', 'labour_report',
+        'Kobas Covers', 'Tabs No Covers', 'Stripe £']   # 29/10/2026: the three parts of Covers
+STRIPE_SPEND = float(os.environ.get('STRIPE_AVG_SPEND', '22'))
+def covers_of(s, ds):
+    """Covers rule 29/10/2026: Kobas covers + tabs without covers set + round(Stripe online £ / 22). None when the day has no cash log."""
+    if (s, ds, 'covers:Covers') not in CL: return None, None, None, None
+    kc = CL.get((s, ds, 'covers:Covers')) or 0.0
+    tn = CL.get((s, ds, 'tabsWithoutCoversSet:Tabs Without Covers Set')) or 0.0
+    st = CL.get((s, ds, 'otherPaymentTypes:of which Stripe')) or 0.0
+    return int(round(kc + tn + round(st / STRIPE_SPEND))), kc, tn, r2(st)
 rows = []
 pulled = datetime.datetime.now(datetime.timezone.utc).strftime('%Y-%m-%d %H:%MZ')
 d = d0
@@ -113,11 +124,13 @@ while d <= d1:
         food = sum(num(o.get('total')) or 0 for o in ORD if o.get('to_venue_id') == V[s] and o.get('type') == 'delivery'
                    and str(o.get('delivered_date') or '')[:10] == ds and str(o.get('m_date') or '') <= cutoff(d))
         tr = traded(s, ds)
+        cov, kc, tn, st = covers_of(s, ds)
         rows.append([ds, s, r2((e + t) * 1.2), r2(dl * 1.2), r2(tips), r2((e + t + dl) * 1.2), r2(g(s, ds, 'declaredPayments:Declared Payments') - tips),
                      r2(hwc), (r2(hrs) if tr else 0.0) if hrs is not None else None, r2(food), r2(SU.get((ven, ds, 'waste'), 0.0)), r2(SU.get((ven, ds, 'comp'), 0.0)),
                      r2(SU.get((ven, ds, 'director'), 0.0)), r2(g(s, ds, 'expectedNetPaymentsLeads:of which Wet sales')),
-                     CL.get((s, ds, 'covers:Covers')), (PCT.get((s, ds)) or {}).get('drinks'), (PCT.get((s, ds)) or {}).get('sushi'), (PCT.get((s, ds)) or {}).get('sides'), pulled,
-                     ','.join(os.path.basename(f)[11:].split('_')[0] for f in glob.glob(os.path.join(out, 'labour_snap', f'{ds}_*.csv')))])
+                     cov, (PCT.get((s, ds)) or {}).get('drinks'), (PCT.get((s, ds)) or {}).get('sushi'), (PCT.get((s, ds)) or {}).get('sides'), pulled,
+                     ','.join(os.path.basename(f)[11:].split('_')[0] for f in glob.glob(os.path.join(out, 'labour_snap', f'{ds}_*.csv'))),
+                     kc, tn, st])
     d += datetime.timedelta(1)
 cred = service_account.Credentials.from_service_account_info(json.loads(os.environ['GOOGLE_SERVICE_ACCOUNT_JSON']), scopes=['https://www.googleapis.com/auth/spreadsheets'])
 svc = build('sheets', 'v4', credentials=cred, cache_discovery=False).spreadsheets()

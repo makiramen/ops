@@ -9,6 +9,10 @@ on:
     # DAY (Input) fields (Covers, Drinks %, Sushi %, Sides %) into every site KPI sheet: blank/zero cells only, never a
     # typed figure, never a formula, never a new row. Script Data stays plan-only (the email skim still fills it).
     # Same run pushes the KPI sheet targets (Sit In + Delivery) into Kobas Sales Budgets for the next 28 days (25 Dec skipped).
+    # 29/10/2026 (Michael): Covers = Kobas covers + tabs without covers set + round(Stripe £/22) for all 20 sites; the Covers,
+    # Drinks %, Sushi %, Sides % FORMULA cells are replaced with the Kobas value; Auto Cash Up 'Raw Data 2' fed from Kobas_Daily
+    # (cashup_feed.py); one Run_History line per run and a failure email to Michael. A scheduled run reads kpi_auto/backfill.json
+    # ({"from": "2026-09-28"}) when present: it pulls from that date instead of yesterday, then deletes the file (one-off backfill).
     - cron: '10 4 * * *'
   workflow_dispatch:
     inputs:
@@ -21,6 +25,9 @@ on:
         default: '2026-10-21'
       write_mode:
         description: 'writer: plan (writes nothing to site sheets, only Layout/Write_Plan to KPI Auto) or apply'
+        default: 'plan'
+      cashup_mode:
+        description: 'Auto Cash Up Raw Data 2 feed from Kobas_Daily: plan (CashUp_Plan tab only) or apply'
         default: 'plan'
       apply_fields:
         description: 'apply only: comma list of fields allowed to be filled, e.g. Actual (empty = none)'
@@ -44,7 +51,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,13 +64,19 @@ jobs:
       - name: Dates (scheduled run = yesterday, UK)
         run: |
           F="${{ inputs.date_from }}"; T="${{ inputs.date_to }}"; LF="${{ inputs.labour_fresh }}"
-          M="${{ inputs.mode }}"; W="${{ inputs.write_mode }}"; AF="${{ inputs.apply_fields }}"
+          M="${{ inputs.mode }}"; W="${{ inputs.write_mode }}"; AF="${{ inputs.apply_fields }}"; CM="${{ inputs.cashup_mode }}"; BF=0
           if [ "${{ github.event_name }}" = "schedule" ]; then
             F=$(TZ=Europe/London date -d yesterday +%F); T=$F; LF=1; M=pull
             W=apply; AF="Covers,Drinks %,Sushi %,Sides %"   # DAY (Input) fields live from 24/10/2026 (Michael)
+            CM=apply                                        # Auto Cash Up feed live from 29/10/2026 (Michael)
+            if [ -f kpi_auto/backfill.json ]; then          # one-off backfill (29/10/2026): pull from the date in the file, then drop it
+              B=$(python3 -c "import json;print(json.load(open('kpi_auto/backfill.json')).get('from',''))"); [ -n "$B" ] && F=$B && BF=1
+            fi
           fi
           echo "DATE_FROM=${F:-2026-09-28}" >> $GITHUB_ENV; echo "DATE_TO=${T:-2026-10-21}" >> $GITHUB_ENV; echo "LABOUR_FRESH=${LF:-0}" >> $GITHUB_ENV
           echo "MODE=${M:-pull}" >> $GITHUB_ENV; echo "WRITE_MODE=${W:-plan}" >> $GITHUB_ENV; echo "APPLY_FIELDS=$AF" >> $GITHUB_ENV
+          echo "CASHUP_MODE=${CM:-plan}" >> $GITHUB_ENV; echo "BACKFILL=$BF" >> $GITHUB_ENV
+          echo "REPLACE_FORMULAS=Covers,Drinks %,Sushi %,Sides %" >> $GITHUB_ENV   # 29/10/2026: formula cells replaced with Kobas values
       - name: Run
         env:
           TZ: Europe/London
@@ -98,9 +111,29 @@ jobs:
           python3 kpi_auto/kobas_daily.py /tmp/kpi_out >> /tmp/to_sheet.log 2>&1 || rc=1; fi
           python3 kpi_auto/kpi_sheets.py > /tmp/kpi_sheets.log 2>&1 || rc=1
           python3 kpi_auto/writer.py > /tmp/writer.log 2>&1 || rc=1
-          cat /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log
-          python3 kpi_auto/log_to_sheet.py /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log /tmp/forecast.log
+          python3 kpi_auto/cashup_feed.py > /tmp/cashup.log 2>&1 || rc=1
+          cat /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log /tmp/cashup.log
+          python3 kpi_auto/log_to_sheet.py /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log /tmp/cashup.log /tmp/forecast.log
           exit $rc
+      - name: Run_History line (and failure email to Michael)
+        if: always()
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+        run: |
+          ST=ok; [ "${{ job.status }}" = "success" ] || ST=FAILED
+          for f in /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log /tmp/cashup.log /tmp/forecast.log; do [ -f $f ] || echo "(step did not run)" > $f; done
+          grep -q -E "Traceback|NO ACCESS" /tmp/to_sheet.log /tmp/writer.log /tmp/cashup.log && ST=FAILED
+          python3 kpi_auto/run_history.py $ST /tmp/to_sheet.log /tmp/kpi_sheets.log /tmp/writer.log /tmp/cashup.log /tmp/forecast.log
+      - name: Backfill done, drop kpi_auto/backfill.json (scheduled backfill run only)
+        if: success() && github.event_name == 'schedule' && env.BACKFILL == '1'
+        run: |
+          git rm -q kpi_auto/backfill.json
+          git config user.name 'kpi-auto bot'; git config user.email 'ops@makiramen.com'
+          git commit -m "kpi_auto: backfill ${DATE_FROM}..${DATE_TO} done, backfill.json dropped" || exit 0
+          git pull --rebase https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} main
+          git push https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} HEAD:main
       - name: Commit the DAY (Input) plan CSV to the repo (dispatch with plan_to_repo=1 only)
         if: always() && github.event_name == 'workflow_dispatch' && inputs.plan_to_repo == '1'
         run: |
