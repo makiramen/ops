@@ -652,6 +652,42 @@ def main():
             }, fh, indent=1)
         print(f"[daily] index: {len(dates)} day(s), latest {dates[0]} -> {idx_path}")
 
+        # 29/10/2026 (Michael): track FOH/BOH split compliance per site over the
+        # last 28 trading days from what is on disk. "bad" = unverified (the
+        # sheet's split does not reconcile), absent (nothing entered) or
+        # failed_validation (older files). Worst sites first.
+        window = dates[:28]
+        comp = {}
+        for d in window:
+            try:
+                dj = json.load(open(os.path.join(a.out, f"daily_{d}.json"), encoding="utf-8"))
+            except Exception:
+                continue
+            for c, site in (dj.get("sites") or {}).items():
+                st = (site.get("labour") or {}).get("split_status") or "absent"
+                e = comp.setdefault(c, {"name": site.get("name"), "days": 0, "ok": 0,
+                                        "unverified": 0, "absent": 0, "bad_dates": []})
+                e["days"] += 1
+                if st == "ok":
+                    e["ok"] += 1
+                else:
+                    e["unverified" if st == "unverified" else "absent"] += 1
+                    e["bad_dates"].append(d)
+        for e in comp.values():
+            e["bad"] = e["days"] - e["ok"]
+            e["bad_pct"] = round(e["bad"] / e["days"] * 100.0, 1) if e["days"] else None
+        ranked = sorted(comp.items(), key=lambda kv: (-kv[1]["bad"], kv[0]))
+        comp_path = os.path.join(a.out, "split_compliance.json")
+        with open(comp_path, "w", encoding="utf-8") as fh:
+            json.dump({
+                "_generated_at": datetime.now().isoformat(timespec="seconds"),
+                "window_from": window[-1] if window else None,
+                "window_to": window[0] if window else None,
+                "window_days": len(window),
+                "sites": [dict(code=c, **e) for c, e in ranked],
+            }, fh, indent=1)
+        print(f"[daily] split compliance: {len(window)} day(s) -> {comp_path}")
+
     for w in warnings:
         print(f"[daily] WARN {w}")
 

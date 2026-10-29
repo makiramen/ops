@@ -6875,6 +6875,27 @@ const MEETING_RISK = {
         + p.reopened_during_closure.map(esc).join(', ')
         + ' traded while marked closed. Included in the day. Close the window in builders/covers_accepted.json.</li></ul>';
     }
+    // 29/10/2026 (Michael): track the repeat offenders. Rolling 28 trading days
+    // from data/daily/split_compliance.json (built with the index). Worst first,
+    // only sites with at least one bad day; the clean ones are named at the end.
+    if (SPLITC && (SPLITC.sites || []).length) {
+      var offenders = SPLITC.sites.filter(function (x) { return x.bad > 0; });
+      var clean = SPLITC.sites.filter(function (x) { return !x.bad; }).map(function (x) { return x.code; });
+      blocks += '<b class="sec">FOH / BOH split compliance, last ' + SPLITC.window_days + ' trading days ('
+        + shortDate(SPLITC.window_from) + ' to ' + shortDate(SPLITC.window_to) + ')</b>'
+        + '<table style="font-size:12px;border-collapse:collapse;margin:4px 0 10px;">'
+        + '<tr style="color:var(--ink-3);"><th style="text-align:left;padding:2px 10px 2px 0;">Site</th><th style="padding:2px 10px;">Bad days</th><th style="padding:2px 10px;">Not reconciling</th><th style="padding:2px 10px;">Not entered</th><th style="text-align:left;padding:2px 0 2px 10px;">Dates</th></tr>'
+        + offenders.map(function (x) {
+          var cls = x.bad_pct >= 25 ? 'dly-r' : (x.bad_pct >= 10 ? 'dly-a' : '');
+          return '<tr><td style="padding:2px 10px 2px 0;"><b>' + esc(x.code) + '</b> <span class="dly-m">' + esc(x.name || '') + '</span></td>'
+            + '<td style="text-align:center;padding:2px 10px;" class="' + cls + '"><b>' + x.bad + '</b> / ' + x.days + ' (' + x.bad_pct + '%)</td>'
+            + '<td style="text-align:center;padding:2px 10px;">' + x.unverified + '</td>'
+            + '<td style="text-align:center;padding:2px 10px;">' + x.absent + '</td>'
+            + '<td style="padding:2px 0 2px 10px;" class="dly-m">' + x.bad_dates.map(function (d) { return shortDate(d); }).join(', ') + '</td></tr>';
+        }).join('')
+        + '</table>'
+        + (clean.length ? '<p style="font-size:11.5px;color:var(--ink-3);margin:0 0 10px;">Clean every day: ' + clean.map(esc).join(', ') + '.</p>' : '');
+    }
     if (!blocks) blocks = '<li style="list-style:none;font-size:12px;color:var(--ink-2);">Every site cashed up, hit target and assigned every shift to a department. Nothing outstanding.</li>';
     var closedNote = (p.closed || []).map(function (c) {
       return esc(c.code) + ' closed from ' + esc(ukDate(c.from)) + (c.until ? ' to ' + esc(ukDate(c.until)) : '') + (c.why ? ' (' + esc(String(c.why).split('.')[0]) + ')' : '');
@@ -6969,6 +6990,11 @@ const MEETING_RISK = {
     el.className = isOpen ? 'dly-rv' : 'dly-rv open';
   });
 
+  var SPLITC = null;
+  fetch(DIR + 'split_compliance.json?cb=' + Date.now())
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (j) { SPLITC = j; if (elSel.value) show(elSel.value); })
+    .catch(function () {});
   fetch(DIR + 'daily_index.json?cb=' + Date.now())
     .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function (ix) {
