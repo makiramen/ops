@@ -362,23 +362,35 @@ def extract_split(row, total_labour, code, date_str, warnings):
         tol = max(0.5, total_labour * 0.005)
         if (abs(foh_v - total_labour * foh_p / 100.0) > tol
                 or abs(boh_v - total_labour * boh_p / 100.0) > tol):
+            # 29/10/2026 (Michael): show it anyway, but say so. The £ pair is
+            # published with status "unverified" and the warning stays, so the
+            # tab can mark the row rather than blank it. Still rejected if the
+            # pair cannot even fit inside the total (checked below).
             warnings.append(
                 f"{date_str} {code}: FOH £{foh_v:,.2f}/{foh_p}% and BOH "
                 f"£{boh_v:,.2f}/{boh_p}% do not resolve against total labour "
                 f"£{total_labour:,.2f} - looks like projected, not actual "
-                f"- split rejected"
+                f"- shown as UNVERIFIED"
             )
-            return None, None, None, None, "failed_validation"
+            if foh_v + boh_v <= total_labour * 1.005:
+                return (round(foh_v, 2), round(foh_v / total_labour * 100.0, 2),
+                        round(boh_v, 2), round(boh_v / total_labour * 100.0, 2),
+                        "unverified")
 
     if not total_labour:
         return None, None, None, None, "absent"
 
     if foh_v + boh_v > total_labour * 1.005:
+        # 29/10/2026 (Michael): shown as UNVERIFIED rather than blanked. The
+        # percentages are still £ / total labour, so they will sum past 100%,
+        # which is the honest picture of what the sheet says.
         warnings.append(
             f"{date_str} {code}: FOH £{foh_v:,.2f} + BOH £{boh_v:,.2f} exceeds "
-            f"total labour £{total_labour:,.2f} - split rejected"
+            f"total labour £{total_labour:,.2f} - shown as UNVERIFIED"
         )
-        return None, None, None, None, "failed_validation"
+        return (round(foh_v, 2), round(foh_v / total_labour * 100.0, 2),
+                round(boh_v, 2), round(boh_v / total_labour * 100.0, 2),
+                "unverified")
 
     return (round(foh_v, 2), round(foh_v / total_labour * 100.0, 2),
             round(boh_v, 2), round(boh_v / total_labour * 100.0, 2), "ok")
@@ -469,7 +481,7 @@ def main():
             row, total_labour, code, date_str, warnings)
 
         unallocated = None
-        if status == "ok" and total_labour is not None:
+        if status in ("ok", "unverified") and total_labour is not None:
             unallocated = round(total_labour - foh - boh, 2)
             if abs(unallocated) < 0.05:      # rounding noise, not a real gap
                 unallocated = 0.0
@@ -539,7 +551,8 @@ def main():
 
     for date_str in sorted(days):
         sites = days[date_str]["sites"]
-        split_ok = [c for c, s in sites.items() if s["labour"]["split_status"] == "ok"]
+        split_ok = [c for c, s in sites.items() if s["labour"]["split_status"] in ("ok", "unverified")]
+        split_unverified = sorted(c for c, s in sites.items() if s["labour"]["split_status"] == "unverified")
         expected = live_codes_on(date_str) | reopened.get(date_str, set())
         closed = sorted(c for c in VENUE_TO_CODE.values() if c not in expected)
         missing = sorted(expected - set(sites))
@@ -577,6 +590,7 @@ def main():
             "gaps": {
                 "no_sales": missing,
                 "no_foh_boh_split": no_split,
+                "foh_boh_split_unverified": split_unverified,
                 "warnings": [w for w in warnings if w.startswith(date_str)],
             },
             "sites": dict(sorted(sites.items())),

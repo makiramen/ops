@@ -6639,12 +6639,16 @@ const MEETING_RISK = {
     // Delivery Target on its own (Michael 21/10/2026): delivery £ read against it, green if hit.
     var tdl = s.sales.target_delivery;
     if (tdl) deliv += ' <span class="' + (Number(s.sales.delivery || 0) >= tdl ? 'dly-g' : 'dly-r') + '" title="Delivery Target ' + fmtG(tdl) + '">vs ' + fmtG(tdl) + ' tgt</span>';
+    // 29/10/2026 (Michael): a split the sheet shows but that does not reconcile is
+    // shown anyway, flagged, rather than blanked. Numbers are what the sheet says.
+    var unv = l.split_status === 'unverified';
+    var unvTag = unv ? '<span class="sub dly-r" title="FOH + BOH do not reconcile against total labour in the cash-up sheet">unverified</span>' : '';
     var foh = l.foh == null
       ? '<span class="dly-m">—</span>'
-      : '<span class="dly-fohv">' + fmtG(l.foh) + '</span><span class="sub dly-fohv">' + fmtP(l.foh_pct) + '</span>';
+      : '<span class="dly-fohv">' + fmtG(l.foh) + '</span><span class="sub dly-fohv">' + fmtP(l.foh_pct) + '</span>' + unvTag;
     var boh = l.boh == null
       ? '<span class="dly-m">—</span>'
-      : '<span class="dly-bohv">' + fmtG(l.boh) + '</span><span class="sub dly-bohv">' + fmtP(l.boh_pct) + '</span>';
+      : '<span class="dly-bohv">' + fmtG(l.boh) + '</span><span class="sub dly-bohv">' + fmtP(l.boh_pct) + '</span>' + unvTag;
     return '<tr>'
       + '<td class="dly-site">' + esc(code) + '<span class="sub">' + esc(s.name) + '</span></td>'
       + '<td>' + fmtG(s.sales.target) + '</td>'
@@ -6732,17 +6736,20 @@ const MEETING_RISK = {
     var closedCodes = (p.closed || []).map(function (c) { return c.code; });
     elSub.textContent = p.sites_reported + ' of ' + p.sites_expected + ' sites cashed up'
       + (closedCodes.length ? ' (' + closedCodes.join(', ') + ' closed)' : '') + ' · '
-      + 'FOH/BOH split recorded at ' + p.foh_boh_reported + ' · pulled ' + pulled;
+      + 'FOH/BOH split recorded at ' + p.foh_boh_reported
+      + (((p.gaps || {}).foh_boh_split_unverified || []).length ? ' (' + p.gaps.foh_boh_split_unverified.length + ' unverified)' : '')
+      + ' · pulled ' + pulled;
 
     // The FOH/BOH shares are taken over the sites that ACTUALLY recorded a
     // split, not over all labour. Dividing by total labour would fold the sites
     // with no split at all into the same bucket as genuinely unassigned shifts,
     // and the two are different problems with different owners.
-    var splitCodes = codes.filter(function (c) { return p.sites[c].labour.split_status === 'ok'; });
+    var isSplit = function (st) { return st === 'ok' || st === 'unverified'; };
+    var splitCodes = codes.filter(function (c) { return isSplit(p.sites[c].labour.split_status); });
     var splitLabour = 0, unrecLabour = 0;
     codes.forEach(function (c) {
       var l = p.sites[c].labour;
-      if (l.split_status === 'ok') { splitLabour += (l.total || 0); }
+      if (isSplit(l.split_status)) { splitLabour += (l.total || 0); }
       else { unrecLabour += (l.total || 0); }
     });
     var share = function (v) { return splitLabour ? v / splitLabour * 100 : null; };
@@ -6798,6 +6805,17 @@ const MEETING_RISK = {
 
     var g = p.gaps || {};
     var blocks = '';
+    if ((g.foh_boh_split_unverified || []).length) {
+      blocks += '<b class="sec">FOH / BOH split shown but does not reconcile</b><ul style="margin:4px 0 10px;padding-left:18px;">'
+        + g.foh_boh_split_unverified.map(function (c) {
+          var l = (p.sites[c] || { labour: {} }).labour;
+          var sum = (l.foh || 0) + (l.boh || 0), diff = sum - (l.total || 0);
+          return '<li>' + esc(c) + ' — ' + esc((p.sites[c] || {}).name || '') + ': FOH ' + fmtG2(l.foh) + ' + BOH ' + fmtG2(l.boh) + ' = ' + fmtG2(sum)
+            + ' against total labour ' + fmtG2(l.total) + ' ('
+            + (diff > 0 ? fmtG2(diff) + ' over the total, cannot be actual' : fmtG2(-diff) + ' unaccounted, percentages in the sheet look projected')
+            + '). Shown as the sheet has it; treat as unverified.</li>';
+        }).join('') + '</ul>';
+    }
     if ((g.no_foh_boh_split || []).length) {
       blocks += '<b class="sec">FOH / BOH split not recorded</b><ul style="margin:4px 0 10px;padding-left:18px;">'
         + g.no_foh_boh_split.map(function (c) {
