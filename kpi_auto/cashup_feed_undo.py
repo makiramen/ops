@@ -15,12 +15,13 @@ svc = build('sheets', 'v4', credentials=cred, cache_discovery=False).spreadsheet
 plan = svc.values().get(spreadsheetId=AUTO, range="'CashUp_Plan'").execute().get('values', [])
 cells = sorted({r[5] for r in plan[1:] if len(r) > 9 and r[9] == 'FILL' and re.fullmatch(r'[A-Z]+\d+', r[5] or '')})
 print('plan rows', len(plan) - 1, 'FILL cells', len(cells), cells, flush=True)
+print(f"::notice title=undo::plan rows {len(plan)-1}, FILL cells {len(cells)}: {' '.join(cells)[:900]}", flush=True)
 a1 = svc.values().get(spreadsheetId=CASHUP, range=f"'{TAB}'!A1").execute().get('values', [['']])[0][0]
-print('A1 before:', a1, flush=True)
+print('A1 before:', a1, flush=True); print(f'::notice title=A1 before::{a1}', flush=True)
 if os.environ.get('UNDO_APPLY') != '1':
     print('dry run, nothing cleared'); raise SystemExit
 if not cells: raise SystemExit('no FILL cells in the plan, nothing to clear')
 svc.values().batchClear(spreadsheetId=CASHUP, body={'ranges': [f"'{TAB}'!{c}" for c in cells]}).execute()
 a1 = svc.values().get(spreadsheetId=CASHUP, range=f"'{TAB}'!A1:C1").execute().get('values', [['']])[0]
-print('cleared', len(cells), 'cells. A1:C1 after:', a1, flush=True)
+print('cleared', len(cells), 'cells. A1:C1 after:', a1, flush=True); print(f'::notice title=after::cleared {len(cells)} cells, A1:C1 now {a1}', flush=True)
 if a1 and str(a1[0]).startswith('#'): raise SystemExit('A1 still an error after the clear: ' + str(a1))
