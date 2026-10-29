@@ -68,7 +68,7 @@ jobs:
           if [ "${{ github.event_name }}" = "schedule" ]; then
             F=$(TZ=Europe/London date -d yesterday +%F); T=$F; LF=1; M=pull
             W=apply; AF="Covers,Drinks %,Sushi %,Sides %"   # DAY (Input) fields live from 24/10/2026 (Michael)
-            CM=apply                                        # Auto Cash Up feed live from 29/10/2026 (Michael)
+            CM=plan   # 29/10/2026: apply PAUSED. Raw Data 2 is one IMPORTRANGE array (A1), writing into it breaks the array (#REF!) and stops the daily cash-up. Re-enable only once the feed targets a real tab.
             if [ -f kpi_auto/backfill.json ]; then          # one-off backfill (29/10/2026): pull from the date in the file, then drop it
               B=$(python3 -c "import json;print(json.load(open('kpi_auto/backfill.json')).get('from',''))"); [ -n "$B" ] && F=$B && BF=1
             fi
