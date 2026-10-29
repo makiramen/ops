@@ -44,6 +44,9 @@ on:
       plan_to_repo:
         description: '1 = commit the DAY (Input) plan CSV (kpi_auto/plan/day_plan_<from>_<to>.csv) to main for reading in chat'
         default: '0'
+      site_sheets:
+        description: 'TRIAL: JSON map of site code -> sheet id, e.g. {"M3":"13KD..."}; when set the run writes ONLY to those sheets (no live site sheet is touched)'
+        default: ''
 
 permissions:
   contents: write
@@ -77,6 +80,7 @@ jobs:
           echo "MODE=${M:-pull}" >> $GITHUB_ENV; echo "WRITE_MODE=${W:-plan}" >> $GITHUB_ENV; echo "APPLY_FIELDS=$AF" >> $GITHUB_ENV
           echo "CASHUP_MODE=${CM:-plan}" >> $GITHUB_ENV; echo "BACKFILL=$BF" >> $GITHUB_ENV
           echo "REPLACE_FORMULAS=Covers,Drinks %,Sushi %,Sides %" >> $GITHUB_ENV   # 29/10/2026: formula cells replaced with Kobas values
+          echo 'SITE_SHEETS=${{ inputs.site_sheets }}' >> $GITHUB_ENV   # TRIAL override (29/10/2026), empty on schedule
       - name: Run
         env:
           TZ: Europe/London
