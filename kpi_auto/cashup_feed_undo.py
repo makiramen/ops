@@ -17,8 +17,10 @@ fill = [r for r in plan[1:] if len(r) > 9 and r[9] == 'FILL' and re.fullmatch(r'
 cells = sorted({r[5] for r in fill})
 # a cell that held a typed 0 (cur non-empty) goes back to that exact text; a blank goes back to blank
 prev = {r[5]: (r[6] if len(r) > 6 else '') for r in fill}
-restore = [{'range': f"'{TAB}'!{c}", 'values': [[prev[c]]]} for c in cells if str(prev[c]).strip() != '']
-clear = [f"'{TAB}'!{c}" for c in cells if str(prev[c]).strip() == '']
+# every FILL cell sits inside the IMPORTRANGE array: its 'cur' value was the array's own output, never a typed value.
+# Writing anything back blocks the array again (AD1368, 14:09). Clear them all.
+restore = []
+clear = [f"'{TAB}'!{c}" for c in cells]
 print('plan rows', len(plan) - 1, 'FILL cells', len(cells), cells, flush=True)
 print(f"::notice title=undo::plan rows {len(plan)-1}, FILL cells {len(cells)}: {' '.join(cells)[:900]}", flush=True)
 a1 = svc.values().get(spreadsheetId=CASHUP, range=f"'{TAB}'!A1").execute().get('values', [['']])[0][0]
