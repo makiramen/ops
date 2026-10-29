@@ -40,6 +40,9 @@ from google.auth.transport.requests import Request
 UK = ZoneInfo("Europe/London")
 
 CASHUP_MIRROR  = "1CxrxXJ66vKdDTNvcxfQExDcGWfoVB3_Ed4AHO6_4Gl0"   # "Auto Cash Up MIRROR , cloud pipe (do not edit)"
+CASHUP_MASTER  = "1T4TtCs-SkBjinToxG45oKksUiPPPIllo2Pqrqbaix6w"   # "Auto Cash Up" , the real workbook (Site CC reads it too)
+CASHUP_RANGE   = "'Raw Data 2'!A:AV"                               # same width as the mirror (Month / Week Number at AU:AV)
+CASHUP_WINDOW  = 14                                                # rolling days, as the mirror kept
 REVIEWS_MIRROR = "1KG2Q5YM8etf614xMpSpeQv3SF2iLdf5SLc978vH3YHY"   # "Google Reviews MIRROR , cloud pipe (do not edit)"
 REVIEWS_MASTER = "1aFGfbGrEBeqWny8myF6H4LVxO0YegT0MdIJHrxpxk3I"   # "Google Reviews Maki & Ramen" , the real tracker
 REVIEWS_RANGE  = "'Raw Data'!A:L"                                  # A:L is exactly what the mirror carries
@@ -52,12 +55,47 @@ SCOPES = ["https://www.googleapis.com/auth/drive.readonly",
 def log(*a): print(*a, file=sys.stderr)
 
 
-def token():
-    raw = os.environ.get("GOOGLE_SA_JSON")
-    if not raw: log("GOOGLE_SA_JSON is not set"); sys.exit(2)
+def token(var="GOOGLE_SA_JSON", required=True):
+    raw = os.environ.get(var)
+    if not raw:
+        if required: log(f"{var} is not set"); sys.exit(2)
+        return None
     creds = service_account.Credentials.from_service_account_info(json.loads(raw), scopes=SCOPES)
     creds.refresh(Request())
     return creds.token
+
+
+def master_csv(tok, fid, rng, window_days, today, must_have, name):
+    """Sheets API v4 values.get on a REAL tab (not a formula mirror), windowed on the 'Date' column
+    (dd/mm/yyyy), padded to a rectangle, returned as CSV bytes. FORMATTED_VALUE keeps £ and % text
+    exactly as the Drive CSV export of the mirror produced them, so downstream parsers see no change."""
+    resp = requests.get(f"https://sheets.googleapis.com/v4/spreadsheets/{fid}/values/{quote(rng, safe='')}",
+                        params={"majorDimension": "ROWS", "valueRenderOption": "FORMATTED_VALUE",
+                                "dateTimeRenderOption": "FORMATTED_STRING"},
+                        headers={"Authorization": f"Bearer {tok}"}, timeout=180)
+    if resp.status_code != 200: raise RuntimeError(f"values.get {fid} -> HTTP {resp.status_code}: {resp.text[:300]}")
+    vals = resp.json().get("values", [])
+    if len(vals) < 21: raise RuntimeError(f"values.get {fid} returned {len(vals)} rows , too few to trust")
+    w = max(len(v) for v in vals)
+    rows = [[str(x) for x in v] + [""] * (w - len(v)) for v in vals]
+    hdr = [h.strip() for h in rows[0]]
+    for h in must_have:
+        if h not in hdr: raise RuntimeError(f"{name} master header unexpected (no {h!r}): {hdr[:8]}")
+    idt = hdr.index("Date")
+    floor = today - datetime.timedelta(days=window_days - 1)
+    kept = [rows[0]]
+    for row in rows[1:]:
+        try:
+            dd, mm, yy = row[idt].strip().split("/")[:3]
+            d = datetime.date(int(yy), int(mm), int(dd))
+        except Exception:
+            continue
+        if d >= floor: kept.append(row)
+    if len(kept) < 21: raise RuntimeError(f"{name} master gave only {len(kept)-1} rows inside the {window_days}-day window")
+    buf = io.StringIO(newline="")
+    out = csv.writer(buf, lineterminator="\r\n")
+    for row in kept: out.writerow(row)
+    return buf.getvalue().encode("utf-8")
 
 
 def export(tok, fid):
@@ -180,11 +218,33 @@ def main():
     D = datetime.date.fromisoformat(a.day) if a.day else datetime.datetime.now(UK).date() - datetime.timedelta(days=1)
     tok = token()
 
-    cb = twice(lambda: export(tok, CASHUP_MIRROR), "cashup", a.gap)
+    # 29/10/2026: the cash-up MIRROR (a formula sheet) came up as #REF! / #N/A with no header and
+    # killed the 09:30Z and 09:40Z runs. The daily tab stopped at 27/10. A formula mirror can break or
+    # freeze with no error anywhere in the chain, so the master tab 'Raw Data 2' is now the primary
+    # route (live Sheets API read, same route Site CC has used nightly since 08/10). The mirror is
+    # only the fallback. The second key SITE_CC_SERVICE_ACCOUNT_JSON is tried when the first service
+    # account is not shared on the master.
+    today_uk = datetime.datetime.now(UK).date()
+    cash_route = "master:sheets-api"
+    cb = None
+    for var in ("GOOGLE_SA_JSON", "SITE_CC_SERVICE_ACCOUNT_JSON"):
+        try:
+            t = tok if var == "GOOGLE_SA_JSON" else token(var, required=False)
+            if not t: continue
+            cb = twice(lambda: master_csv(t, CASHUP_MASTER, CASHUP_RANGE, CASHUP_WINDOW, today_uk,
+                                          ("Venue", "Date"), "cashup"), "cashup", 2)
+            cash_route += f" ({var})"; break
+        except SystemExit: raise
+        except Exception as e:
+            log(f"!! CASHUP MASTER READ FAILED with {var}: {e}")
+    if cb is None:
+        log( "!!   Falling back to the cash-up MIRROR, which CAN be frozen or #REF!. To fix permanently,")
+        log(f"!!   share {CASHUP_MASTER} with the service account as Viewer.")
+        cash_route = "mirror:drive-export"
+        cb = twice(lambda: export(tok, CASHUP_MIRROR), "cashup", a.gap)
 
     route = "master:sheets-api"
     try:
-        today_uk = datetime.datetime.now(UK).date()
         rb = twice(lambda: sheet_csv(tok, REVIEWS_MASTER, REVIEWS_RANGE, REVIEWS_WINDOW, today_uk), "reviews", 2)
     except SystemExit: raise
     except Exception as e:
@@ -197,8 +257,9 @@ def main():
     for name, b in (("cashup", cb), ("reviews", rb)):
         for i in (1, 2): open(os.path.join(a.out, f"{name}_{i}.csv"), "wb").write(b)
     open(os.path.join(a.out, "reviews_source.txt"), "w").write(route + "\n")
+    open(os.path.join(a.out, "cashup_source.txt"), "w").write(cash_route + "\n")
 
-    gate(cb, "cashup", D, "mirror:drive-export")
+    gate(cb, "cashup", D, cash_route)
     # 26/10/2026: a stale REVIEWS source must not block the cash-up. daily_cloud_run.py already holds
     # reviews back (loudly) when D has 0 rows, so the gate here only needs to shout, not exit. The
     # maki-nori/google-reviews nightly pull failed 24-26/10 and this exit(5) stopped FOUR cash-up runs.
@@ -207,7 +268,7 @@ def main():
     except SystemExit as e:
         if e.code != 5: raise
         log("!!   REVIEWS gate failed (stale source): continuing so the CASH-UP still ships; reviews are held by the builder.")
-    print("ok " + route)
+    print("ok cashup " + cash_route + " reviews " + route)
 
 
 if __name__ == "__main__":
