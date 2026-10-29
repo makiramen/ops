@@ -13,7 +13,12 @@ cred = service_account.Credentials.from_service_account_info(json.loads(os.envir
 svc = build('sheets', 'v4', credentials=cred, cache_discovery=False).spreadsheets()
 
 plan = svc.values().get(spreadsheetId=AUTO, range="'CashUp_Plan'").execute().get('values', [])
-cells = sorted({r[5] for r in plan[1:] if len(r) > 9 and r[9] == 'FILL' and re.fullmatch(r'[A-Z]+\d+', r[5] or '')})
+fill = [r for r in plan[1:] if len(r) > 9 and r[9] == 'FILL' and re.fullmatch(r'[A-Z]+\d+', r[5] or '')]
+cells = sorted({r[5] for r in fill})
+# a cell that held a typed 0 (cur non-empty) goes back to that exact text; a blank goes back to blank
+prev = {r[5]: (r[6] if len(r) > 6 else '') for r in fill}
+restore = [{'range': f"'{TAB}'!{c}", 'values': [[prev[c]]]} for c in cells if str(prev[c]).strip() != '']
+clear = [f"'{TAB}'!{c}" for c in cells if str(prev[c]).strip() == '']
 print('plan rows', len(plan) - 1, 'FILL cells', len(cells), cells, flush=True)
 print(f"::notice title=undo::plan rows {len(plan)-1}, FILL cells {len(cells)}: {' '.join(cells)[:900]}", flush=True)
 a1 = svc.values().get(spreadsheetId=CASHUP, range=f"'{TAB}'!A1").execute().get('values', [['']])[0][0]
@@ -21,7 +26,9 @@ print('A1 before:', a1, flush=True); print(f'::notice title=A1 before::{a1}', fl
 if os.environ.get('UNDO_APPLY') != '1':
     print('dry run, nothing cleared'); raise SystemExit
 if not cells: raise SystemExit('no FILL cells in the plan, nothing to clear')
-svc.values().batchClear(spreadsheetId=CASHUP, body={'ranges': [f"'{TAB}'!{c}" for c in cells]}).execute()
+print('clear', len(clear), 'restore', len(restore), flush=True)
+for b in range(0, len(clear), 500): svc.values().batchClear(spreadsheetId=CASHUP, body={'ranges': clear[b:b+500]}).execute()
+for b in range(0, len(restore), 500): svc.values().batchUpdate(spreadsheetId=CASHUP, body={'valueInputOption': 'USER_ENTERED', 'data': restore[b:b+500]}).execute()
 a1 = svc.values().get(spreadsheetId=CASHUP, range=f"'{TAB}'!A1:C1").execute().get('values', [['']])[0]
 print('cleared', len(cells), 'cells. A1:C1 after:', a1, flush=True); print(f'::notice title=after::cleared {len(cells)} cells, A1:C1 now {a1}', flush=True)
 if a1 and str(a1[0]).startswith('#'): raise SystemExit('A1 still an error after the clear: ' + str(a1))
