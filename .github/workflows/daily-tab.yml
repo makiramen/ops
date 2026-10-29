@@ -52,7 +52,10 @@ jobs:
         env:
           GOOGLE_SA_JSON: ${{ secrets.GOOGLE_SA_JSON }}
           SITE_CC_SERVICE_ACCOUNT_JSON: ${{ secrets.SITE_CC_SERVICE_ACCOUNT_JSON }}
-        run: python3 builders/fetch_mirrors.py --out /tmp/mirrors
+        run: |
+          set +e; python3 builders/fetch_mirrors.py --out /tmp/mirrors 2>&1 | tee /tmp/fetch.log; rc=${PIPESTATUS[0]}
+          grep -E "^!!|Error|newest|^ok" /tmp/fetch.log | tail -6 | while read -r l; do echo "::notice title=fetch::${l:0:400}"; done
+          exit $rc
 
       - name: Build, diff, commit, push
         id: run
