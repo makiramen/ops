@@ -273,7 +273,7 @@ kbd{font:inherit;font-size:10.5px;background:var(--surface-2);border:1px solid v
     <button class="tabbtn" data-tab="issues">Service vs quality</button>
     <button class="tabbtn" data-tab="people">Dishes &amp; staff</button>
     <button class="tabbtn" data-tab="timing">Timing &amp; KPIs</button>
-    <button class="tabbtn" data-tab="reader">Reviews <span class="tb-badge zero" id="tbReader">0</span></button>
+    <button class="tabbtn" data-tab="reader" title="Badge = negative (≤3★) reviews that have text; starred-only ones cannot be read">Reviews <span class="tb-badge zero" id="tbReader">0</span></button>
     <button class="tabbtn" data-tab="actions">Actions <span class="tb-badge zero" id="tbActions">0</span></button>
   </nav>
   <div class="cluster-nav" id="cnav"></div>
@@ -285,7 +285,7 @@ kbd{font:inherit;font-size:10.5px;background:var(--surface-2);border:1px solid v
     <div class="grid g2">
       <div class="card"><h3 id="roTitle">Read-out</h3><div class="sub">Written from the review text for this period and scope. Refreshed by the weekly run.</div><div class="readout" id="readout"></div></div>
       <div>
-        <div class="card"><h3>Service issue or quality issue?</h3><div class="sub">Reviews carrying each issue, then total mentions (one review can carry several). Click a bar to read them.</div><div id="splitMini"></div></div>
+        <div class="card"><h3>Service issue or quality issue?</h3><div class="sub">Three buckets, each broken down by category. Reviews carrying the issue, then total mentions (one review can carry several). Issues are read from every review with text, 4 to 5★ included, so these can exceed the negative count. Click a row to read them.</div><div id="splitMini"></div></div>
         <div class="card"><h3>Top actions</h3><div class="sub">The three flags that matter most. Full list under <b>Actions</b>.</div><div id="flagsTop"></div></div>
       </div>
     </div>
@@ -478,9 +478,9 @@ function renderTiles(){
     {l:'Reviews received',v:st.n.toLocaleString(),d:ps?delta(st.n,ps.n,x=>Math.round(x).toLocaleString()):'',rag:''},
     {l:'Average ★',v:st.avg==null?'–':st.avg.toFixed(2),rag:starRag(st.avg),d:(ps?delta(st.avg,ps.avg,x=>x.toFixed(2)):'')+` · OKR ≥ ${OKR}`,click:()=>goRead({stars:'neg'})},
     {l:'Negative (≤3★)',v:st.n?`${st.neg} <span class="small muted">${st.negPct.toFixed(1)}%</span>`:'–',rag:negRag(st.negPct,st.n),d:ps?delta(st.negPct,ps.negPct,x=>x.toFixed(1)+'pp',true):'',click:()=>goRead({stars:'neg'})},
-    {l:'Issues logged',v:st.issues,rag:rateRag(st.issueRate,st.n),d:`${st.issueRate==null?'–':st.issueRate.toFixed(1)} per 100 reviews`+(S.scope.type!=='fleet'?` · fleet ${fleet.issueRate==null?'–':fleet.issueRate.toFixed(1)}`:'')+(ps?` · ${delta(st.issues,ps.issues,x=>Math.round(x),true)}`:''),tt:'Distinct complaints found in the review text. One review can carry several; each counts once.'},
+    {l:'Issues logged',v:st.issues,rag:rateRag(st.issueRate,st.n),d:`${st.issueRate==null?'–':st.issueRate.toFixed(1)} per 100 reviews`+(S.scope.type!=='fleet'?` · fleet ${fleet.issueRate==null?'–':fleet.issueRate.toFixed(1)}`:'')+(ps?` · ${delta(st.issueRate,ps.issueRate,x=>x.toFixed(1)+' per 100',true)}`:''),tt:'Distinct complaints found in the review text. One review can carry several; each counts once.'},
     {l:'Top issue',v:top?`<span style="color:${catCol(top[0])}">${esc(D.taxonomy[top[0]].label)}</span>`:'<span class="muted">none</span>',rag:'',d:top?`${top[1]} of ${st.issues} · owner ${esc(D.taxonomy[top[0]].owner)}`:'',click:top?()=>goRead({cat:top[0]}):null},
-    {l:'With a comment',v:st.n?Math.round(st.wt/st.n*100)+'%':'–',rag:'',d:`${st.wt.toLocaleString()} of ${st.n.toLocaleString()} can be read`},
+    {l:'With a comment',v:st.n?(st.wt/st.n*100).toFixed(1)+'%':'–',rag:'',d:`${st.wt.toLocaleString()} of ${st.n.toLocaleString()} can be read`},
   ];
   $('#tiles').innerHTML=t.map((x,i)=>`<div class="kpi ${x.rag} ${x.click?'clickable':''}" data-i="${i}" ${x.tt?tip(0,x.tt):''}><div class="kpi-label">${x.l}</div><div class="kpi-value ${x.rag}">${x.v}</div><div class="kpi-trend">${x.d||''}</div></div>`).join('');
   $$('#tiles .kpi').forEach(el=>{const x=t[+el.dataset.i];if(x.click)el.onclick=x.click;});
@@ -502,11 +502,20 @@ function stackBar(cats,total,h){
   if(other)s+=`<i style="width:${other/total*100}%;background:var(--c-other)" ${tip(0,'Other (accuracy, hours, availability, tech): '+other)}></i>`;return s+'</div>';
 }
 function renderSplitMini(){
-  const st=stats(rows(S.pkey));const q=st.cats.food||0,sv=(st.cats.service||0)+(st.cats.speed||0),rest=st.issues-q-sv;
-  let html=st.issues?`<div class="split"><i style="flex:${q};background:var(--c-food)" ${tip(0,'Food quality: '+q)}>${q?Math.round(q/st.issues*100)+'% quality':''}</i><i style="flex:${sv};background:var(--c-service)" ${tip(0,'Service + speed: '+sv)}>${sv?Math.round(sv/st.issues*100)+'% service':''}</i><i style="flex:${rest};background:var(--c-other)" ${tip(0,'Value, cleanliness, accuracy, hours, availability, tech: '+rest)}>${rest?Math.round(rest/st.issues*100)+'% other':''}</i></div>`:'<div class="muted small">No issues logged.</div>';
-  const cats=Object.entries(D.taxonomy).map(([c,v])=>({c,label:v.label,n:st.cats[c]||0,rev:st.catRev[c]||0})).filter(x=>x.n).sort((a,b)=>b.n-a.n);const mx=Math.max(1,...cats.map(x=>x.n));
-  html+=cats.map(x=>`<div class="hbar wide clickable" data-cat="${x.c}" ${tip(0,`${x.rev} review${x.rev===1?'':'s'} mention ${x.label.toLowerCase()} · ${x.n} distinct complaint${x.n===1?'':'s'} in total (one review can carry several)`)}><div><span class="sw" style="background:${catCol(x.c)}"></span><b>${esc(x.label)}</b></div><div class="trk"><i style="width:${x.n/mx*100}%;background:${catCol(x.c)}"></i></div><div class="n" style="white-space:nowrap">${x.rev} <span class="muted" style="font-weight:500;font-size:11px">rev · ${x.n} mentions</span></div></div>`).join('');
-  $('#splitMini').innerHTML=html;$$('#splitMini .hbar').forEach(el=>el.onclick=()=>goRead({cat:el.dataset.cat}));
+  const rs=rows(S.pkey),st=stats(rs);
+  const G=[{k:'quality',label:'Quality',cats:['food'],col:'var(--c-food)'},{k:'service',label:'Service',cats:['service','speed','accuracy','hours_access'],col:'var(--c-service)'},{k:'other',label:'Other',cats:['value','cleanliness_ambience','availability','digital_payment'],col:'var(--c-other)'}];
+  G.forEach(g=>{g.n=g.cats.reduce((a,c)=>a+(st.cats[c]||0),0);g.rev=rs.filter(r=>r.issues.some(i=>g.cats.includes(i.cat))).length;g.pct=st.issues?g.n/st.issues*100:0;});
+  const pc=g=>Math.round(g.pct);
+  let html=st.issues?`<div class="split">${G.map(g=>`<i style="flex:${g.n};background:${g.col}" ${tip(0,`${g.label}: ${g.n} of ${st.issues} mentions (${g.pct.toFixed(1)}%) in ${g.rev} review${g.rev===1?'':'s'}`)}>${g.n?pc(g)+'% '+g.label.toLowerCase():''}</i>`).join('')}</div>`:'<div class="muted small">No issues logged.</div>';
+  const mx=Math.max(1,...G.map(g=>g.n));
+  G.forEach(g=>{if(!g.n)return;
+    html+=`<div class="hbar wide clickable" data-cats="${g.cats.join(',')}" ${tip(0,`${g.label}: ${g.cats.map(c=>D.taxonomy[c].label).join(' + ')}`)}><div><span class="sw" style="background:${g.col}"></span><b>${g.label} ${pc(g)}%</b></div><div class="trk"><i style="width:${g.n/mx*100}%;background:${g.col}"></i></div><div class="n" style="white-space:nowrap">${g.rev} <span class="muted" style="font-weight:500;font-size:11px">rev · ${g.n} mentions</span></div></div>`;
+    g.cats.map(c=>({c,label:D.taxonomy[c].label,n:st.cats[c]||0,rev:st.catRev[c]||0})).filter(x=>x.n).sort((a,b)=>b.n-a.n).forEach(x=>{
+      html+=`<div class="hbar wide sub clickable" data-cat="${x.c}" ${tip(0,`${x.rev} review${x.rev===1?'':'s'} mention ${x.label.toLowerCase()} · ${x.n} distinct complaint${x.n===1?'':'s'} (${st.issues?Math.round(x.n/st.issues*100):0}% of all issues, ${Math.round(x.n/g.n*100)}% of ${g.label.toLowerCase()})`)}><div><span class="sw" style="background:${catCol(x.c)};opacity:.75"></span>${esc(x.label)} <span class="muted" style="font-size:11px">${st.issues?Math.round(x.n/st.issues*100):0}%</span></div><div class="trk"><i style="width:${x.n/mx*100}%;background:${catCol(x.c)};opacity:.7"></i></div><div class="n" style="white-space:nowrap;font-weight:600">${x.rev} <span class="muted" style="font-weight:500;font-size:11px">rev · ${x.n} mentions</span></div></div>`;});
+  });
+  $('#splitMini').innerHTML=html;
+  $$('#splitMini .hbar[data-cat]').forEach(el=>el.onclick=()=>goRead({cat:el.dataset.cat}));
+  $$('#splitMini .hbar[data-cats]').forEach(el=>el.onclick=()=>{const cs=el.dataset.cats.split(',');goRead({cat:cs.length===1?cs[0]:cs[0]});});
 }
 /* ---------- flags ---------- */
 function flagsFor(){
