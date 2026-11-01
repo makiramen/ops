@@ -9,7 +9,7 @@ ap.add_argument('--data',default='.');ap.add_argument('--from',dest='frm',defaul
 a=ap.parse_args()
 g=lambda o,*p:(o:=o) and [o:=(o or {}).get(k) for k in p][-1]
 def row(s,wc):
-    k=s.get('kpis',{});st=s.get('stock_take',{});rv=s.get('reviews',{});ef=s.get('efficiency_score',{})
+    k=s.get('kpis') or {};st=s.get('stock_take') or {};rv=s.get('reviews') or {};ef=s.get('efficiency_score') or {}
     m=[wc,g(k,'sales','actual'),g(k,'sales','target'),g(k,'covers','actual'),g(k,'sph','actual'),g(k,'wage_pct','actual'),g(k,'food_pct','actual'),
        g(k,'labour_hours','actual'),g(k,'waste','actual'),rv.get('new_reviews'),rv.get('week_avg_rating'),rv.get('negatives'),
        g(st,'food','variance_pct'),g(st,'drinks','variance_pct'),ef.get('score'),g(s,'red_light','status')]
