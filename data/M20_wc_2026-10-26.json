@@ -1,0 +1,248 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-11-02",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-10-26 \u2013 2026-11-01",
+    "commencing": "2026-10-26",
+    "ending": "2026-11-01"
+  },
+  "sites": {
+    "M20": {
+      "code": "M20",
+      "name": "Maki 20",
+      "gm": "TBC",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 48852.06,
+          "target": 40000.0,
+          "var_pct": 22.13,
+          "prev": 43443.18,
+          "wow_abs": 5408.88,
+          "wow_pct": 12.45
+        },
+        "covers": {
+          "actual": 2191,
+          "prev": 1934,
+          "wow_abs": 257,
+          "wow_pct": 13.29
+        },
+        "sph": {
+          "actual": 21.33,
+          "prev": 20.78,
+          "wow_abs": 0.55,
+          "wow_pct": 2.65,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 21.51,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 23.52,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 816.9
+        },
+        "waste": {
+          "actual": 387.33
+        },
+        "delivery_total": {
+          "sales": 2115.69,
+          "days": 7,
+          "target": null,
+          "target_days": 0,
+          "var_pct": null,
+          "orders": 53,
+          "order_days": 7,
+          "prev": 3261.16,
+          "wow_abs": -1145.47,
+          "wow_pct": -35.12,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 95,
+        "rag": "green",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+22.13) + 30% (\u00a3gap +8852 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 85.13,
+            "basis": "\u00a321.33 vs \u00a322 tgt \u2014 level 89, WoW +2.65% \u2192 mom 76"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "23.52% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 92.35,
+            "basis": "21.51% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.81\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.81,
+        "new_reviews": 100,
+        "star_breakdown": {
+          "1": 2,
+          "2": 2,
+          "3": 1,
+          "4": 3,
+          "5": 92
+        },
+        "negatives": 5,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Rebecca Howell",
+            "text": "Maki and Ramen, Westquay. Very disappointed in the food. We even left some!",
+            "date": "2026-10-30",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Sari Narulita",
+            "text": "Had given reheated chicken karaage mayo after complained about drinks order that came in plastic take away cups and didn't get replacement for a while until asked another staff !\n\nStaff needs to learn more about soft shells/seafood and other allergens and serving food with long hair down is big no no !",
+            "date": "2026-10-30",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Martina Spragg",
+            "text": "Will not be returning!!!!\n\nThe time waiting for food was crazy long, other tables sat after us were served, ate and left before we got our food.\n\nI sent back my ramen which was not hot, tepid at best. When I finally got a replacement the seafood was so overcooked especially the prawns and salmon  which had turned to unchewable rubber but were not even warm. The seafood was horrid.\n\nServers were like deer in headlights that didn't know what to do when I didn't want a third replacement.\n\nWould not recommend \ud83d\ude15",
+            "date": "2026-10-30",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Claire \u201cClaire Jones\u201d Jones",
+            "text": "Seems an ongoing issue but all noodles and some other bits were out of stock. Unsure why but looking at other reviews it seems this is normal for them.\nFood was okay, nothing to write home about. Gyozas were nice.\nFood came before our drinks which was odd.",
+            "date": "2026-10-27",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Shaz R.",
+            "text": "I really don\u2019t want this to come across as complaining, as I understand that not everything was within Maki Ramen\u2019s control, especially as I ordered through Slerp.\n\nHowever, the back and forth between Slerp and Maki Ramen while trying to cancel the order was exhausting, particularly after being told I couldn\u2019t cancel.\n\nWe\u2019ve just moved in and currently don\u2019t have a kitchen or microwave, so waiting over an hour only to receive cold food was really upsetting, especially as I was starving. In the end, we couldn\u2019t even eat the food, which was really disappointing given the circumstances. I appreciated receiving a full refund, and I was also grateful that a goodwill gesture was offered for the inconvenience by Chris the assistant manager, although I haven\u2019t received any further update on this.\n\nI\u2019m not trying to be difficult or unappreciative, and I do understand that things can go wrong. I was just really disappointed because, after such a stressful move and currently not having a kitchen or microwave, the experience was much harder than it needed to be. Ultimately, we were left unable to eat our food after waiting over an hour, and although the refund was appreciated, it didn\u2019t change how disappointing the overall experience was.",
+            "date": "2026-10-27",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 1,
+        "tasks": [
+          {
+            "task": "Hand washing sink (KP area) water flow is very low",
+            "priority": "\u2014",
+            "logged_week": "20/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "1 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1706.14,
+        "orders": 53,
+        "aov": 32.19,
+        "new_customers": 37,
+        "rating": 5.0,
+        "open_hours_pct": 100.0,
+        "avg_prep_min": 14.2,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 0.0,
+        "rider_wait_5min_pct": 5.7,
+        "conversion_pct": 5.8,
+        "wow": {
+          "gmv_pct": -22.5,
+          "orders_abs": -24,
+          "prev_gmv": 2203.0,
+          "prev_orders": 77
+        },
+        "gmv_vs_4wk_pct": 0.7,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    }
+  }
+}

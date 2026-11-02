@@ -1,0 +1,4293 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-11-02",
+  "week": {
+    "label": "Week of 2026-10-26 \u2013 2026-11-01",
+    "commencing": "2026-10-26",
+    "ending": "2026-11-01"
+  },
+  "sites": {
+    "M1": {
+      "code": "M1",
+      "name": "Maki 1",
+      "gm": "Derrick Cheung",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 25925.99,
+          "target": 21000.0,
+          "var_pct": 23.46,
+          "prev": 24435.36,
+          "wow_abs": 1490.63,
+          "wow_pct": 6.1
+        },
+        "covers": {
+          "actual": 877,
+          "prev": 913,
+          "wow_abs": -36,
+          "wow_pct": -3.94
+        },
+        "sph": {
+          "actual": 20.6,
+          "prev": 17.76,
+          "wow_abs": 2.84,
+          "wow_pct": 15.99,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 18.54,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 26.79,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 329.7
+        },
+        "waste": {
+          "actual": 0.0
+        },
+        "delivery_total": {
+          "sales": 7855.51,
+          "days": 7,
+          "target": 6300.0,
+          "target_days": 7,
+          "var_pct": 24.69,
+          "orders": 194,
+          "order_days": 7,
+          "prev": 8216.76,
+          "wow_abs": -361.25,
+          "wow_pct": -4.4,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 3.9,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 82,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+23.46) + 30% (\u00a3gap +4926 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 83.67,
+            "basis": "\u00a320.60 vs \u00a322 tgt \u2014 level 77, WoW +15.99% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 85.68,
+            "basis": "26.79% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.54% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 0.0,
+            "basis": "4.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 26.8%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4,
+        "new_reviews": 4,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 3
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Ronan Allison",
+            "text": "Food portion was very small. Service not great. Better maki and ramen elsewhere in Edinburgh. Post it notes were funny though",
+            "date": "2026-10-27",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 1,
+        "tasks": [
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          }
+        ],
+        "note": "1 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 5327.8,
+        "orders": 168,
+        "aov": 31.71,
+        "new_customers": 54,
+        "rating": 4.79,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 14.1,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 2.1,
+        "rider_wait_5min_pct": 1.0,
+        "conversion_pct": 11.7,
+        "wow": {
+          "gmv_pct": -2.1,
+          "orders_abs": -7,
+          "prev_gmv": 5635.32,
+          "prev_orders": 175
+        },
+        "gmv_vs_4wk_pct": 1.9,
+        "gmv_vs_ly_pct": -49.8,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M3": {
+      "code": "M3",
+      "name": "Maki 3",
+      "gm": "Rory Ferguson",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 44777.36,
+          "target": 37800.0,
+          "var_pct": 18.46,
+          "prev": 43253.48,
+          "wow_abs": 1523.88,
+          "wow_pct": 3.52
+        },
+        "covers": {
+          "actual": 1528,
+          "prev": 1594,
+          "wow_abs": -66,
+          "wow_pct": -4.14
+        },
+        "sph": {
+          "actual": 22.1,
+          "prev": 20.51,
+          "wow_abs": 1.59,
+          "wow_pct": 7.75,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 19.81,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 26.07,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 606.5
+        },
+        "waste": {
+          "actual": 0.0
+        },
+        "delivery_total": {
+          "sales": 11011.44,
+          "days": 7,
+          "target": 9450.0,
+          "target_days": 7,
+          "var_pct": 16.52,
+          "orders": 282,
+          "order_days": 7,
+          "prev": 10568.26,
+          "wow_abs": 443.18,
+          "wow_pct": 4.19,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 97,
+        "rag": "green",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+18.46) + 30% (\u00a3gap +6977 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 100.0,
+            "basis": "\u00a322.10 vs \u00a322 tgt \u2014 level 100, WoW +7.75% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 91.44,
+            "basis": "26.07% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "19.81% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.83\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 26.1%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.8333,
+        "new_reviews": 6,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 5
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 4,
+        "tasks": [
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Look into purchasing a floor buffer to properly deep cleaning flooring {Shared between all sites}",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "WiFi still inconsistent",
+            "priority": "\u2014",
+            "logged_week": "Pending",
+            "owner": "Chris",
+            "status": "open"
+          },
+          {
+            "task": "Leak in drinks store room",
+            "priority": "\u2014",
+            "logged_week": "19/10/2026",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "4 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 8534.34,
+        "orders": 244,
+        "aov": 34.98,
+        "new_customers": 56,
+        "rating": 4.52,
+        "open_hours_pct": 98.1,
+        "avg_prep_min": 19.0,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 1.4,
+        "rider_wait_5min_pct": 1.1,
+        "conversion_pct": 9.9,
+        "wow": {
+          "gmv_pct": 4.5,
+          "orders_abs": -27,
+          "prev_gmv": 8696.34,
+          "prev_orders": 271
+        },
+        "gmv_vs_4wk_pct": -1.3,
+        "gmv_vs_ly_pct": -35.4,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 8.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M6": {
+      "code": "M6",
+      "name": "Maki 6",
+      "gm": "Justyna Polak (RM)",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 26999.95,
+          "target": 24900.0,
+          "var_pct": 8.43,
+          "prev": 24182.62,
+          "wow_abs": 2817.33,
+          "wow_pct": 11.65
+        },
+        "covers": {
+          "actual": 1128,
+          "prev": 988,
+          "wow_abs": 140,
+          "wow_pct": 14.17
+        },
+        "sph": {
+          "actual": 19.63,
+          "prev": 20.09,
+          "wow_abs": -0.46,
+          "wow_pct": -2.29,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 20.14,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 18.67,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 364.6
+        },
+        "waste": {
+          "actual": 78.0
+        },
+        "delivery_total": {
+          "sales": 4858.63,
+          "days": 7,
+          "target": 3361.5,
+          "target_days": 7,
+          "var_pct": 44.54,
+          "orders": 123,
+          "order_days": 7,
+          "prev": 4333.91,
+          "wow_abs": 524.72,
+          "wow_pct": 12.11,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 92,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+8.43) + 30% (\u00a3gap +2100 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 50.48,
+            "basis": "\u00a319.63 vs \u00a322 tgt \u2014 level 60, WoW -2.29% \u2192 mom 27"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.67% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "20.14% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.75\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.75,
+        "new_reviews": 4,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 3
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 1,
+        "tasks": [
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          }
+        ],
+        "note": "1 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 3892.99,
+        "orders": 107,
+        "aov": 36.38,
+        "new_customers": 34,
+        "rating": 4.4,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 12.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.2,
+        "rider_wait_5min_pct": 1.6,
+        "conversion_pct": 7.6,
+        "wow": {
+          "gmv_pct": 12.7,
+          "orders_abs": 6,
+          "prev_gmv": 3510.29,
+          "prev_orders": 101
+        },
+        "gmv_vs_4wk_pct": 16.2,
+        "gmv_vs_ly_pct": -33.7,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M7": {
+      "code": "M7",
+      "name": "Maki 7",
+      "gm": "Calum Heriot",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 74820.92,
+          "target": 67500.0,
+          "var_pct": 10.85,
+          "prev": 71505.69,
+          "wow_abs": 3315.23,
+          "wow_pct": 4.64
+        },
+        "covers": {
+          "actual": 3505,
+          "prev": 3320,
+          "wow_abs": 185,
+          "wow_pct": 5.57
+        },
+        "sph": {
+          "actual": 21.35,
+          "prev": 21.54,
+          "wow_abs": -0.19,
+          "wow_pct": -0.88,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 19.56,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 22.24,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 987.3
+        },
+        "waste": {
+          "actual": 0.0
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 1.8,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 96,
+        "rag": "green",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+10.85) + 30% (\u00a3gap +7321 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 74.78,
+            "basis": "\u00a321.35 vs \u00a322 tgt \u2014 level 89, WoW -0.88% \u2192 mom 41"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "22.24% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "19.56% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.76\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7619,
+        "new_reviews": 21,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 3,
+          "5": 17
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Ilh",
+            "text": "(Translated by Google) It was very good. However, I recommend ordering via the QR code on the table if you want to choose whether or not to leave a tip, as you pay directly online and the choice is yours. Otherwise, the server will automatically add a tip to your bill without asking your permission.\n\n(Original)\nC\u2019\u00e9tait tr\u00e8s bon. Cependant je vous conseille de commander via le QR code sur la table, si vous voulez choisir de donner un pourboire ou non car vous payez directement en ligne et c\u2019est \u00e0 vous de choisir. Sinon, le serveur ou la serveuse ajoutera un pourboire automatiquement \u00e0 votre note sans vous demander votre permission.",
+            "date": "2026-11-01",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 4,
+        "tasks": [
+          {
+            "task": "ticket machine has connection issue, ticket time to time delay",
+            "priority": "\u2014",
+            "logged_week": "Pending",
+            "owner": "Chris",
+            "status": "open"
+          },
+          {
+            "task": "Booth Seats needing reupholstered",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Lincoln/Ross",
+            "status": "open"
+          },
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Look into purchasing a floor buffer to properly deep cleaning flooring {Shared between all sites}",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "4 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo \u2014 no storefront at this site, nothing to report (declared, not missing)"
+      ]
+    },
+    "M8": {
+      "code": "M8",
+      "name": "Maki 8",
+      "gm": "Scott Renwick",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 47765.23,
+          "target": 45500.0,
+          "var_pct": 4.98,
+          "prev": 41790.37,
+          "wow_abs": 5974.86,
+          "wow_pct": 14.3
+        },
+        "covers": {
+          "actual": 2044,
+          "prev": 1820,
+          "wow_abs": 224,
+          "wow_pct": 12.31
+        },
+        "sph": {
+          "actual": 21.14,
+          "prev": 19.78,
+          "wow_abs": 1.36,
+          "wow_pct": 6.88,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 24.77,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 24.49,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 732.9
+        },
+        "waste": {
+          "actual": 248.12
+        },
+        "delivery_total": {
+          "sales": 4547.94,
+          "days": 7,
+          "target": 4550.0,
+          "target_days": 7,
+          "var_pct": -0.05,
+          "orders": 128,
+          "order_days": 7,
+          "prev": 5789.62,
+          "wow_abs": -1241.68,
+          "wow_pct": -21.45,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 81,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+4.98) + 30% (\u00a3gap +2265 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 89.97,
+            "basis": "\u00a321.14 vs \u00a322 tgt \u2014 level 86, WoW +6.88% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "24.49% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 43.45,
+            "basis": "24.77% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.88\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.875,
+        "new_reviews": 16,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 2,
+          "5": 14
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 3,
+        "tasks": [
+          {
+            "task": "Recarpeting at front of store, potentially with company logo",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Look into purchasing a floor buffer to properly deep cleaning flooring {Shared between all sites}",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "3 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 3637.63,
+        "orders": 117,
+        "aov": 31.09,
+        "new_customers": 36,
+        "rating": 4.25,
+        "open_hours_pct": 99.7,
+        "avg_prep_min": 15.6,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.1,
+        "rider_wait_5min_pct": 4.7,
+        "conversion_pct": 9.4,
+        "wow": {
+          "gmv_pct": -14,
+          "orders_abs": -16,
+          "prev_gmv": 4161.78,
+          "prev_orders": 133
+        },
+        "gmv_vs_4wk_pct": -5.8,
+        "gmv_vs_ly_pct": -28.1,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "IKI2": {
+      "code": "IKI2",
+      "name": "Ikigai 2",
+      "gm": "IKI2 GM",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 28451.29,
+          "target": 24500.0,
+          "var_pct": 16.13,
+          "prev": 29819.02,
+          "wow_abs": -1367.73,
+          "wow_pct": -4.59
+        },
+        "covers": {
+          "actual": 1187,
+          "prev": 1228,
+          "wow_abs": -41,
+          "wow_pct": -3.34
+        },
+        "sph": {
+          "actual": 21.65,
+          "prev": 22.13,
+          "wow_abs": -0.48,
+          "wow_pct": -2.17,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 18.32,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 21.19,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 354.3
+        },
+        "waste": {
+          "actual": 60.62
+        },
+        "delivery_total": {
+          "sales": 2751.96,
+          "days": 7,
+          "target": 1960.0,
+          "target_days": 7,
+          "var_pct": 40.41,
+          "orders": null,
+          "order_days": 0,
+          "prev": 2647.04,
+          "wow_abs": 104.92,
+          "wow_pct": 3.96,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 5,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 1.6,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 94,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+16.13) + 30% (\u00a3gap +3951 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 78.49,
+            "basis": "\u00a321.65 vs \u00a321 tgt \u2014 level 100, WoW -2.17% \u2192 mom 28"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "21.19% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.32% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 71.43,
+            "basis": "4.50\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.5,
+        "new_reviews": 12,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 2,
+          "5": 9
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Bibi",
+            "text": "The food was decent, not bad but neither impressive. But the thing that affected this whole experience the most was the way we got treated by a specific staff. Upon arrival there was no one, so we seated ourselves to an empty table. 5 to 10 minutes later a Scottish waiter came by, and without a proper hello or anything he said: you ok?? In a weird way. We initially got confused and thought it was his way of asking guests how they are, but his question got immediately followed by: who seated you? In which we just politely replied and asked if we had to wait, he then said there's a whole que and that we skipped it, we then replied that when we arrived there was no one. He looked like he didn't believe us and started questioning us. We repeatedly said that there was no que when we arrived, but he continued going on about it. Eventually I asked him what he wanted us to do, as there's no reason to go back and forth about this, he then said with an attitude \"well you seated yourselves to a table thats obviously not cleaned so might as well stay\" and left. We then got served by an Asian guy, who stayed polite and friendly.\n\nI understand that it's not okay to cut a que, but that wasn't the case and the way the waiter addressed this is very shocking. This kind of behavior would absolutely not get accepted from where I'm from in EU West. This whole situation could have been handled differently, in a civilized way. I as a customer had to discuss a solution rather than a weird back and forth approach that the waiter was going for.\n\nThe next day we wanted to eat ramen again, and although this location was the most efficient for us, we decided to go out of our way to find another place.",
+            "date": "2026-10-29",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 3,
+        "tasks": [
+          {
+            "task": "canopy above stairs leaking and needs serviced",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Change toilet fan in mens to a 24/7 fan, current one shuts itself off and there is a strong urine smell downstairs",
+            "priority": "\u2014",
+            "logged_week": "19/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "3 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 2354.23,
+        "orders": 83,
+        "aov": 28.36,
+        "new_customers": 35,
+        "rating": 4.56,
+        "open_hours_pct": 80.8,
+        "avg_prep_min": 11.5,
+        "rejection_pct": 0,
+        "inaccuracy_pct": null,
+        "rider_wait_5min_pct": 1.2,
+        "conversion_pct": 10.3,
+        "wow": {
+          "gmv_pct": 3.1,
+          "orders_abs": 6,
+          "prev_gmv": 2283.19,
+          "prev_orders": 77
+        },
+        "gmv_vs_4wk_pct": 14.1,
+        "gmv_vs_ly_pct": 30.9,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary."
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M12": {
+      "code": "M12",
+      "name": "Maki 12",
+      "gm": "Matt Lee",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 39030.31,
+          "target": 30000.0,
+          "var_pct": 30.1,
+          "prev": 31137.53,
+          "wow_abs": 7892.78,
+          "wow_pct": 25.35
+        },
+        "covers": {
+          "actual": 1657,
+          "prev": 1458,
+          "wow_abs": 199,
+          "wow_pct": 13.65
+        },
+        "sph": {
+          "actual": 19.59,
+          "prev": 17.12,
+          "wow_abs": 2.47,
+          "wow_pct": 14.43,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 20.46,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 18.51,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 573.0
+        },
+        "waste": {
+          "actual": 20.02
+        },
+        "delivery_total": {
+          "sales": 6565.42,
+          "days": 7,
+          "target": 3000.0,
+          "target_days": 7,
+          "var_pct": 118.85,
+          "orders": 179,
+          "order_days": 7,
+          "prev": 6179.84,
+          "wow_abs": 385.58,
+          "wow_pct": 6.24,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 6,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 4.5,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 93,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+30.10) + 30% (\u00a3gap +9030 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 71.88,
+            "basis": "\u00a319.59 vs \u00a322 tgt \u2014 level 60, WoW +14.43% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.51% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "20.46% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 76.93,
+            "basis": "4.54\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.5385,
+        "new_reviews": 13,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 1,
+          "4": 0,
+          "5": 11
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Joshua Stapleton",
+            "text": "Birthday booking for the bottomless on a Saturday afternoon, but did not have half the drinks menu and no substitutes. No solution offered during bottomless or when paying because it was a \u201cSet menu\u201d. Slow on drinks or would say not available well after ordering, overall not value for money. Food was nice however and staff were friendly! But probably not recommend bottomless when cisiting.",
+            "date": "2026-10-31",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 5,
+        "tasks": [
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Look into purchasing a floor buffer to properly deep cleaning flooring {Shared between all sites}",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "Front door breaking down: jams half way, slams shut, failed to open on fire alarm test (fire exit). This needs fixing",
+            "priority": "\u2014",
+            "logged_week": "13/10/2026",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "Basement fridge ceiling leak water",
+            "priority": "\u2014",
+            "logged_week": "16/10/2026",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "Toilet leaks underneath",
+            "priority": "\u2014",
+            "logged_week": "16/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "5 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 4951.48,
+        "orders": 154,
+        "aov": 32.15,
+        "new_customers": 69,
+        "rating": 4.41,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 14.5,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 4.5,
+        "rider_wait_5min_pct": 4.5,
+        "conversion_pct": 7.4,
+        "wow": {
+          "gmv_pct": 8.6,
+          "orders_abs": 9,
+          "prev_gmv": 5280.0,
+          "prev_orders": 145
+        },
+        "gmv_vs_4wk_pct": 7.9,
+        "gmv_vs_ly_pct": -4.5,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 4.6
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M13": {
+      "code": "M13",
+      "name": "Maki 13",
+      "gm": "Joe Herera",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 42955.78,
+          "target": 42000.0,
+          "var_pct": 2.28,
+          "prev": 43798.39,
+          "wow_abs": -842.61,
+          "wow_pct": -1.92
+        },
+        "covers": {
+          "actual": 1655,
+          "prev": 1665,
+          "wow_abs": -10,
+          "wow_pct": -0.6
+        },
+        "sph": {
+          "actual": 21.34,
+          "prev": 21.28,
+          "wow_abs": 0.06,
+          "wow_pct": 0.28,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 21.38,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 24.72,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 634.5
+        },
+        "waste": {
+          "actual": 27.85
+        },
+        "delivery_total": {
+          "sales": 7647.38,
+          "days": 7,
+          "target": 7770.0,
+          "target_days": 7,
+          "var_pct": -1.58,
+          "orders": 197,
+          "order_days": 7,
+          "prev": 8372.36,
+          "wow_abs": -724.98,
+          "wow_pct": -8.66,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 5.0,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 84,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+2.28) + 30% (\u00a3gap +956 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 78.14,
+            "basis": "\u00a321.34 vs \u00a322 tgt \u2014 level 89, WoW +0.28% \u2192 mom 53"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "24.72% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 94.3,
+            "basis": "21.38% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 0.0,
+            "basis": "3.50\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 3.5,
+        "new_reviews": 8,
+        "star_breakdown": {
+          "1": 3,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 5
+        },
+        "negatives": 3,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Kristina Sreckovic",
+            "text": "Ordering food from there 3 times now, and all 3 times I\u2019ve been given a different order. It\u2019s ridiculous at this point",
+            "date": "2026-10-29",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "jessica dorsett",
+            "text": "Burnt food!  We got credit back for the roll on Deliveroo but being pregnant and starving I\u2019m disappointed I won\u2019t be able to eat my food. The quality of maki and ramen has gone down so far since they first opened.",
+            "date": "2026-10-26",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Jason Yu",
+            "text": "I ordered food it was burnt and arrived by deliveroo, just shows a complete lack of quality control for the food and it\u2019s honestly not acceptable, I hope they really consider how they do things",
+            "date": "2026-10-26",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Roof tiles needing replaced.",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          },
+          {
+            "task": "Cracked wall tiles need replacing.",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 5938.55,
+        "orders": 177,
+        "aov": 33.55,
+        "new_customers": 58,
+        "rating": 4.63,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 15.3,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.1,
+        "rider_wait_5min_pct": 7.1,
+        "conversion_pct": 8.4,
+        "wow": {
+          "gmv_pct": -8.1,
+          "orders_abs": -9,
+          "prev_gmv": 7146.0,
+          "prev_orders": 186
+        },
+        "gmv_vs_4wk_pct": -6.7,
+        "gmv_vs_ly_pct": -39.3,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M15": {
+      "code": "M15",
+      "name": "Maki 15",
+      "gm": "Kieran Day",
+      "gm_confirm": true,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "kpis": {
+        "sales": {
+          "actual": 73391.67,
+          "target": 56000.0,
+          "var_pct": 31.06,
+          "prev": 54878.78,
+          "wow_abs": 18512.89,
+          "wow_pct": 33.73
+        },
+        "covers": {
+          "actual": 3201,
+          "prev": 2366,
+          "wow_abs": 835,
+          "wow_pct": 35.29
+        },
+        "sph": {
+          "actual": 22.39,
+          "prev": 22.63,
+          "wow_abs": -0.24,
+          "wow_pct": -1.06,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 18.01,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 23.32,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 901.6
+        },
+        "waste": {
+          "actual": 18.41
+        },
+        "delivery_total": {
+          "sales": 1702.08,
+          "days": 7,
+          "target": 2800.0,
+          "target_days": 7,
+          "var_pct": -39.21,
+          "orders": 47,
+          "order_days": 7,
+          "prev": 1337.81,
+          "wow_abs": 364.27,
+          "wow_pct": 27.23,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": -1.9,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 97,
+        "rag": "green",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+31.06) + 30% (\u00a3gap +17392 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 81.82,
+            "basis": "\u00a322.39 vs \u00a322 tgt \u2014 level 100, WoW -1.06% \u2192 mom 39"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "23.32% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.01% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.83\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.8333,
+        "new_reviews": 6,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 1,
+          "5": 5
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Paint needing touched up in all Scotland/Newcastle sites",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris/Rafal",
+            "status": "open"
+          },
+          {
+            "task": "Look into purchasing a floor buffer to properly deep cleaning flooring {Shared between all sites}",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Kris",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1642.0,
+        "orders": 47,
+        "aov": 34.94,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 13.0,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 4.3,
+        "rider_wait_5min_pct": 2.1,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": 34.8,
+          "orders_abs": null,
+          "prev_gmv": 1218.0,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": 32.7,
+        "gmv_vs_ly_pct": null,
+        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "sales_estimated": false,
+        "orders_estimated": false,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M9": {
+      "code": "M9",
+      "name": "Maki 9",
+      "gm": "Kai Chau Leung / Chan Zhi Quan",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 91947.46,
+          "target": 73000.0,
+          "var_pct": 25.96,
+          "prev": 78560.74,
+          "wow_abs": 13386.72,
+          "wow_pct": 17.04
+        },
+        "covers": {
+          "actual": 4633,
+          "prev": 4916,
+          "wow_abs": -283,
+          "wow_pct": -5.76
+        },
+        "sph": {
+          "actual": 17.58,
+          "prev": 13.79,
+          "wow_abs": 3.79,
+          "wow_pct": 27.48,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 18.93,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 23.3,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 1199.4
+        },
+        "waste": {
+          "actual": 0.0
+        },
+        "delivery_total": {
+          "sales": 10498.41,
+          "days": 7,
+          "target": 8760.0,
+          "target_days": 7,
+          "var_pct": 19.84,
+          "orders": 261,
+          "order_days": 7,
+          "prev": 10759.32,
+          "wow_abs": -260.91,
+          "wow_pct": -2.42,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": 0.4,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 92,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+25.96) + 30% (\u00a3gap +18947 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 48.43,
+            "basis": "\u00a317.58 vs \u00a322 tgt \u2014 level 26, WoW +27.48% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "23.30% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.93% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.71\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "0.40% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7097,
+        "new_reviews": 62,
+        "star_breakdown": {
+          "1": 2,
+          "2": 0,
+          "3": 1,
+          "4": 8,
+          "5": 51
+        },
+        "negatives": 3,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Alzahraa Nagi Ali Al-Mughrbi",
+            "text": "Not the best and NOT allergen friendly\n\nThe prices are a lot plus a service fee especially seeing as no waiter came to use for 20 mins despite the place not being crowded.\nAnd not as allergen friendly as promised especially with nuts. For a restaurant that claims to be nut free MOST of the food was labelled by an employee (who knew alarmingly little about it herself) as \u201cmay contain nuts\u201d. Apparently they don\u2019t even know what\u2019s in their own pastes and admit they might have nuts but can\u2019t confirm it be liable or prevent cross contamination which is BS.\n\nAlso there\u2019s a glitch in their app that gives \u00a35 coupon and says it\u2019s viable for two weeks but isn\u2019t accepted after 29/10 so be careful for that",
+            "date": "2026-11-01",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Berke",
+            "text": "I had really high expectations coming here but when I tried the Ramen with meat... I had the worst experience. I think it was mixed with some fish from other spoons because I tasted fish in my ramen.\nOther than the horrible smell of the ramen, the restaurant is top tear looking but really loud inside. Every other minute the waitresses play the gong and its annoying after the tenth...",
+            "date": "2026-10-28",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 7492.13,
+        "orders": 238,
+        "aov": 31.48,
+        "new_customers": 85,
+        "rating": 4.59,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 15.1,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 1.9,
+        "rider_wait_5min_pct": 3.8,
+        "conversion_pct": 9,
+        "wow": {
+          "gmv_pct": -4.9,
+          "orders_abs": -20,
+          "prev_gmv": 7785.56,
+          "prev_orders": 258
+        },
+        "gmv_vs_4wk_pct": -3.7,
+        "gmv_vs_ly_pct": 8.6,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": []
+    },
+    "M10": {
+      "code": "M10",
+      "name": "Maki 10",
+      "gm": "Ninder Joshi",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 48488.7,
+          "target": 33000.0,
+          "var_pct": 46.94,
+          "prev": 40834.2,
+          "wow_abs": 7654.5,
+          "wow_pct": 18.75
+        },
+        "covers": {
+          "actual": 1963,
+          "prev": 1527,
+          "wow_abs": 436,
+          "wow_pct": 28.55
+        },
+        "sph": {
+          "actual": 20.85,
+          "prev": 21.56,
+          "wow_abs": -0.71,
+          "wow_pct": -3.29,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 21.7,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 24.21,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 710.1
+        },
+        "waste": {
+          "actual": 0.0
+        },
+        "delivery_total": {
+          "sales": 7562.1,
+          "days": 7,
+          "target": 3960.0,
+          "target_days": 7,
+          "var_pct": 90.96,
+          "orders": 204,
+          "order_days": 7,
+          "prev": 7910.52,
+          "wow_abs": -348.42,
+          "wow_pct": -4.4,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 6,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 91,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+46.94) + 30% (\u00a3gap +15489 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 61.71,
+            "basis": "\u00a320.85 vs \u00a322 tgt \u2014 level 81, WoW -3.29% \u2192 mom 17"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "24.21% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 89.5,
+            "basis": "21.70% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.74\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7429,
+        "new_reviews": 35,
+        "star_breakdown": {
+          "1": 1,
+          "2": 1,
+          "3": 0,
+          "4": 2,
+          "5": 31
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Ellie Bleasdale",
+            "text": "Today was my 5th visit to Maki & Ramen in Leeds, having previously really enjoyed the food and brought along different friends and family on each occasion. My only previous criticism would have been how close together the tables are. Unfortunately, tonight\u2019s experience has completely changed my opinion.\n\nThe service was extremely disappointing. We waited 15 minutes to be approached, so ended up ordering through the QR code on the table. After receiving our drinks and sharing some sushi, we waited around 35\u201340 minutes for our ramen. During this time, two tables who arrived after us had already received the exact same dishes. We were never asked if we wanted to order another drink either.\n\nWhen we eventually asked about our order, we were told the ticket hadn\u2019t gone through to the kitchen and asked to show our email receipt. There was no apology, and nobody had checked whether we were enjoying our starter or offered us another drink while we waited. We then waited a further 15 minutes for our food.\n\nHaving ordered the same ramen on all five visits, I was really disappointed with it. The broth was nowhere near as good as previously, and by this point the long wait and poor service had completely put me off. The only positive was that the karaage chicken was still as good as ever.\n\nTo finish things off, when we asked to take the remaining food home, we were simply handed two containers to decant the ramen into ourselves.\n\nIt\u2019s such a shame that a restaurant I\u2019ve previously enjoyed and recommended has left me feeling this way. Unfortunately, I won\u2019t be returning or recommending it going forward. There are plenty of other places in Leeds serving great ramen, and the service tonight has completely put me off coming back. Unfortunately, due to us paying online we had already paid the full amount otherwise we\u2019d have probably asked for the bill & left after the sushi. Then to finish the visit no one asked if we had enjoyed the food , apologised before we left or even said bye thanks for coming as any other restaurant would.",
+            "date": "2026-11-01",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Phoebe Chen",
+            "text": "The servers are friendly enough and I can see they aren\u2019t slacking at all, but management is clearly a little disorganised beginning from when you are sat down to the order and timing of the food being brought out.\n\nWe ordered 2 ramens (tonkostu ramen & steak ramen) and 1 green dragon roll which came to \u00a355. Not much to complain about the sushi it was quite nice, but the ramen is another story. The broth was thick, heavy and oily which is basically the complete opposite of what good ramen is meant to be (light & clean). There was something off with the noodles it seemed to have a weird texture and was chewy. Perhaps it was boiled for too long? Needless to say, we didn\u2019t finish the ramen at all and still spent \u00a355. In the photo attached you can see the layer of oil. Maybe this restaurant is more suited to British tastes, very clearly not targeted for actual Asian palettes.",
+            "date": "2026-10-29",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 3,
+        "tasks": [
+          {
+            "task": "Wifi Consistency",
+            "priority": "\u2014",
+            "logged_week": "Pending",
+            "owner": "Chris",
+            "status": "open"
+          },
+          {
+            "task": "Front Door (Left) Stopper smashed",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Front door Stopper need to be fixed",
+            "priority": "\u2014",
+            "logged_week": "14/09/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "3 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 5474.63,
+        "orders": 183,
+        "aov": 29.92,
+        "new_customers": 65,
+        "rating": 4.06,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 13.2,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.7,
+        "rider_wait_5min_pct": 1.5,
+        "conversion_pct": 6.5,
+        "wow": {
+          "gmv_pct": -2.7,
+          "orders_abs": -18,
+          "prev_gmv": 5473.76,
+          "prev_orders": 201
+        },
+        "gmv_vs_4wk_pct": 0.6,
+        "gmv_vs_ly_pct": -32.4,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M11": {
+      "code": "M11",
+      "name": "Maki 11",
+      "gm": "Caroline / JJ",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 25569.9,
+          "target": 27000.0,
+          "var_pct": -5.3,
+          "prev": 25822.09,
+          "wow_abs": -252.19,
+          "wow_pct": -0.98
+        },
+        "covers": {
+          "actual": 1155,
+          "prev": 1290,
+          "wow_abs": -135,
+          "wow_pct": -10.47
+        },
+        "sph": {
+          "actual": 18.01,
+          "prev": 17.5,
+          "wow_abs": 0.51,
+          "wow_pct": 2.91,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 24.68,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 36.44,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 449.7
+        },
+        "waste": {
+          "actual": 34.85
+        },
+        "delivery_total": {
+          "sales": 4769.91,
+          "days": 7,
+          "target": 2700.0,
+          "target_days": 7,
+          "var_pct": 76.66,
+          "orders": 116,
+          "order_days": 7,
+          "prev": 3240.1,
+          "wow_abs": 1529.81,
+          "wow_pct": 47.21,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 45,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 95.43,
+            "basis": "70% (100-5.30) + 30% (\u00a3gap -1430 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 47.18,
+            "basis": "\u00a318.01 vs \u00a322 tgt \u2014 level 34, WoW +2.91% \u2192 mom 79"
+          },
+          "food": {
+            "weight": 30,
+            "value": 8.48,
+            "basis": "36.44% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 44.8,
+            "basis": "24.68% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "5.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 36.4%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 5,
+        "new_reviews": 14,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 14
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 4,
+        "tasks": [
+          {
+            "task": "Wifi are slow in some areas",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "Chris/Amy",
+            "status": "open"
+          },
+          {
+            "task": "Griddle where we cook gyoza steak and pork is broken",
+            "priority": "\u2014",
+            "logged_week": "Ongoing",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Service lift (broken since last 3 months, stuck in the middle, manually pulled down, still does not work)",
+            "priority": "\u2014",
+            "logged_week": "17/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Fryer broken",
+            "priority": "\u2014",
+            "logged_week": "18/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "4 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 3725.24,
+        "orders": 108,
+        "aov": 34.49,
+        "new_customers": 40,
+        "rating": 4.93,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 11.4,
+        "rejection_pct": 0.9,
+        "inaccuracy_pct": 1.7,
+        "rider_wait_5min_pct": 0.9,
+        "conversion_pct": 4.2,
+        "wow": {
+          "gmv_pct": 64.9,
+          "orders_abs": 33,
+          "prev_gmv": 2424.0,
+          "prev_orders": 75
+        },
+        "gmv_vs_4wk_pct": 21.8,
+        "gmv_vs_ly_pct": 17.8,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M14": {
+      "code": "M14",
+      "name": "Maki 14",
+      "gm": "Eve",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 55573.0,
+          "target": 43000.0,
+          "var_pct": 29.24,
+          "prev": 41544.86,
+          "wow_abs": 14028.14,
+          "wow_pct": 33.77
+        },
+        "covers": {
+          "actual": 2536,
+          "prev": 1910,
+          "wow_abs": 626,
+          "wow_pct": 32.77
+        },
+        "sph": {
+          "actual": 21.39,
+          "prev": 21.12,
+          "wow_abs": 0.27,
+          "wow_pct": 1.28,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 20.75,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 27.47,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 792.4
+        },
+        "waste": {
+          "actual": 8.92
+        },
+        "delivery_total": {
+          "sales": 1327.09,
+          "days": 7,
+          "target": 2150.0,
+          "target_days": 7,
+          "var_pct": -38.27,
+          "orders": 34,
+          "order_days": 7,
+          "prev": 1203.47,
+          "wow_abs": 123.62,
+          "wow_pct": 10.27,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": 1.4,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 91,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+29.24) + 30% (\u00a3gap +12573 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 81.72,
+            "basis": "\u00a321.39 vs \u00a322 tgt \u2014 level 90, WoW +1.28% \u2192 mom 63"
+          },
+          "food": {
+            "weight": 30,
+            "value": 80.24,
+            "basis": "27.47% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "20.75% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "5.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "1.40% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 27.5%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 5,
+        "new_reviews": 9,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 0,
+          "4": 0,
+          "5": 9
+        },
+        "negatives": 0,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "K from Maki external sign detached from wire and cracked",
+            "priority": "\u2014",
+            "logged_week": "11/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Freezer for char siu and tan tan stops working",
+            "priority": "\u2014",
+            "logged_week": "20/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1276.0,
+        "orders": 34,
+        "aov": 37.53,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 13.4,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 0.0,
+        "rider_wait_5min_pct": null,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": 23.8,
+          "orders_abs": null,
+          "prev_gmv": 1031.0,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": 15.7,
+        "gmv_vs_ly_pct": null,
+        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "sales_estimated": false,
+        "orders_estimated": false,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": []
+    },
+    "M16": {
+      "code": "M16",
+      "name": "Maki 16",
+      "gm": "(vacant)",
+      "gm_confirm": false,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 44079.89,
+          "target": 38000.0,
+          "var_pct": 16.0,
+          "prev": 43001.74,
+          "wow_abs": 1078.15,
+          "wow_pct": 2.51
+        },
+        "covers": {
+          "actual": 2108,
+          "prev": 2357,
+          "wow_abs": -249,
+          "wow_pct": -10.56
+        },
+        "sph": {
+          "actual": 18.03,
+          "prev": 15.75,
+          "wow_abs": 2.28,
+          "wow_pct": 14.48,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 28.51,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 33.78,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 876.2
+        },
+        "waste": {
+          "actual": 37.64
+        },
+        "delivery_total": {
+          "sales": 6081.67,
+          "days": 7,
+          "target": 1900.0,
+          "target_days": 7,
+          "var_pct": 220.09,
+          "orders": 169,
+          "order_days": 7,
+          "prev": 5888.61,
+          "wow_abs": 193.06,
+          "wow_pct": 3.28,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": 4.6,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 42,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+16.00) + 30% (\u00a3gap +6080 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 53.68,
+            "basis": "\u00a318.03 vs \u00a322 tgt \u2014 level 34, WoW +14.48% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 29.76,
+            "basis": "33.78% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "28.51% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.82\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "4.60% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "wage 28.5%",
+          "food 33.8%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.8235,
+        "new_reviews": 34,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 0,
+          "4": 2,
+          "5": 31
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Faizan iqbal",
+            "text": "We walked in almost an hour before this restaurant closes and as soon as we stepped into the building 2 of the staff turned around and had the biggest expression of disappointment and annoyance on the face and started gesturing frustration with there hands as if we\u2019ve just made there life miserable by walking in, right in front of our eyes mind you, rolling their eyes and told us \u201ckitchen is closed kitchen is closed\u201d and as we was walking out the frail skinny man put hands up in happiness and I heard him say \u201cyess\u201d mind you we were still in the building. We went to WoWo which is a Chinese restaurant literally 2 doors away from here, which also closes at the same time as them, and the staff was lovely and our food was delicious. I would consider customer service a bit more given the competition right next to them.",
+            "date": "2026-10-27",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 2,
+        "tasks": [
+          {
+            "task": "Drinks fridge leaking continuously, even when mopped. Seems to be coming from between/under",
+            "priority": "\u2014",
+            "logged_week": "18/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          },
+          {
+            "task": "Hole on bar floor",
+            "priority": "\u2014",
+            "logged_week": "18/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "2 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 4994.73,
+        "orders": 160,
+        "aov": 31.22,
+        "new_customers": 87,
+        "rating": 4.41,
+        "open_hours_pct": 98.8,
+        "avg_prep_min": 12.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 1.7,
+        "rider_wait_5min_pct": 2.4,
+        "conversion_pct": 8.5,
+        "wow": {
+          "gmv_pct": -8.6,
+          "orders_abs": -17,
+          "prev_gmv": 5788.0,
+          "prev_orders": 177
+        },
+        "gmv_vs_4wk_pct": -7.0,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": []
+    },
+    "M21": {
+      "code": "M21",
+      "name": "Maki 21",
+      "gm": "Emily",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "kpis": {
+        "sales": {
+          "actual": 20316.23,
+          "target": 25000.0,
+          "var_pct": -18.74,
+          "prev": 0.0,
+          "wow_abs": 20316.23,
+          "wow_pct": null
+        },
+        "covers": {
+          "actual": 768,
+          "prev": null,
+          "wow_abs": null,
+          "wow_pct": null
+        },
+        "sph": {
+          "actual": 24.55,
+          "prev": null,
+          "wow_abs": null,
+          "wow_pct": null,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 39.93,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 72.21,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 493.0
+        },
+        "waste": {
+          "actual": 6.71
+        },
+        "delivery_total": {
+          "sales": 1458.91,
+          "days": 3,
+          "target": null,
+          "target_days": 0,
+          "var_pct": null,
+          "orders": 33,
+          "order_days": 3,
+          "prev": null,
+          "wow_abs": null,
+          "wow_pct": null,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 1,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 35,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 84.07,
+            "basis": "70% (100-18.74) + 30% (\u00a3gap -4684 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 100.0,
+            "basis": "\u00a324.55 vs \u00a322 tgt \u2014 level 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "72.21% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "39.93% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.84\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "sales -18.7% vs target",
+          "wage 39.9%",
+          "food 72.2%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.8387,
+        "new_reviews": 31,
+        "star_breakdown": {
+          "1": 0,
+          "2": 1,
+          "3": 0,
+          "4": 2,
+          "5": 28
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "Isa Sharrocks",
+            "text": "Ordered 2 chicken ramen + rainbow sushi roll, watched about 4 tables who came after us get their food. took 30 min until it turned out we was told our order wasnt put through, reordered and waited another 10/15 min until it came. Was got told we'd get a discount for such a long wait only for it to turn out its the 10% off that we would've already have gotten for NHS discount...food was alright, staff friendly.",
+            "date": "2026-10-31",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1099.0,
+        "orders": 33,
+        "aov": 33.3,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 42.3,
+        "avg_prep_min": 11.9,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 9.1,
+        "rider_wait_5min_pct": null,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": 80.8,
+        "gmv_vs_ly_pct": null,
+        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "sales_estimated": false,
+        "orders_estimated": false,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M17": {
+      "code": "M17",
+      "name": "Maki 17",
+      "gm": "Kei Cannon",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 28163.77,
+          "target": 33000.0,
+          "var_pct": -14.66,
+          "prev": 23623.12,
+          "wow_abs": 4540.65,
+          "wow_pct": 19.22
+        },
+        "covers": {
+          "actual": 1147,
+          "prev": 966,
+          "wow_abs": 181,
+          "wow_pct": 18.74
+        },
+        "sph": {
+          "actual": 22.42,
+          "prev": 22.33,
+          "wow_abs": 0.09,
+          "wow_pct": 0.4,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 21.64,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 27.5,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 430.9
+        },
+        "waste": {
+          "actual": 3.57
+        },
+        "delivery_total": {
+          "sales": 2447.02,
+          "days": 7,
+          "target": 1650.0,
+          "target_days": 7,
+          "var_pct": 48.3,
+          "orders": 84,
+          "order_days": 7,
+          "prev": 2051.2,
+          "wow_abs": 395.82,
+          "wow_pct": 19.3,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 6,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 87,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 86.84,
+            "basis": "70% (100-14.66) + 30% (\u00a3gap -4836 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 86.2,
+            "basis": "\u00a322.42 vs \u00a322 tgt \u2014 level 100, WoW +0.40% \u2192 mom 54"
+          },
+          "food": {
+            "weight": 30,
+            "value": 80.0,
+            "basis": "27.50% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 90.4,
+            "basis": "21.64% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.76\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "sales -14.7% vs target",
+          "food 27.5%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7619,
+        "new_reviews": 21,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 2,
+          "4": 1,
+          "5": 18
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Snoopy",
+            "text": "Chilled atmosphere\nAttentive friendly staff welcoming\nNice interior\nFood was good although not the best tasting chicken karrage ramen not quite enough flavour but perhaps just not the best menu option !\nTiger roll was nice although had a belly ache after eating",
+            "date": "2026-10-31",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Paul Fisher",
+            "text": "It was going to be a more positive review until.......\nSat gown after thr waiter banged thr drum (happens each time people enter) took my order the prawns and squid were on but a tad greasy. The prawns were borderline cooked.\nSadly the Kimchi arrived after I had finished my mains so rejected it.\nWas planning to order Mochi but not after thr failures.",
+            "date": "2026-10-29",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 2112.31,
+        "orders": 76,
+        "aov": 27.79,
+        "new_customers": 45,
+        "rating": 4.79,
+        "open_hours_pct": 98.6,
+        "avg_prep_min": 12.3,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 1.1,
+        "rider_wait_5min_pct": 4.7,
+        "conversion_pct": 7,
+        "wow": {
+          "gmv_pct": 14.8,
+          "orders_abs": 6,
+          "prev_gmv": 2057.0,
+          "prev_orders": 70
+        },
+        "gmv_vs_4wk_pct": 16.9,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M18": {
+      "code": "M18",
+      "name": "Maki 18",
+      "gm": "Imre Balogh",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 50653.95,
+          "target": 42000.0,
+          "var_pct": 20.6,
+          "prev": 44924.57,
+          "wow_abs": 5729.38,
+          "wow_pct": 12.75
+        },
+        "covers": {
+          "actual": 2518,
+          "prev": 2247,
+          "wow_abs": 271,
+          "wow_pct": 12.06
+        },
+        "sph": {
+          "actual": 19.29,
+          "prev": 19.28,
+          "wow_abs": 0.01,
+          "wow_pct": 0.05,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 23.42,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 24.01,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 805.3
+        },
+        "waste": {
+          "actual": 5.44
+        },
+        "delivery_total": {
+          "sales": 2078.18,
+          "days": 7,
+          "target": 6300.0,
+          "target_days": 7,
+          "var_pct": -67.01,
+          "orders": 54,
+          "order_days": 7,
+          "prev": 1606.16,
+          "wow_abs": 472.02,
+          "wow_pct": 29.39,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 80,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+20.60) + 30% (\u00a3gap +8654 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 53.53,
+            "basis": "\u00a319.29 vs \u00a322 tgt \u2014 level 55, WoW +0.05% \u2192 mom 50"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "24.01% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 63.7,
+            "basis": "23.42% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 92.17,
+            "basis": "4.65\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.6452,
+        "new_reviews": 31,
+        "star_breakdown": {
+          "1": 0,
+          "2": 2,
+          "3": 2,
+          "4": 1,
+          "5": 26
+        },
+        "negatives": 4,
+        "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "\u30b9\u30da\u30fc\u30b9oppaikunt",
+            "text": "Waited at least 20 minutes for a server, couple next to us didn\u2019t get their second main until after their first meal. Server didn\u2019t come back to us again until around 20 minutes after we finished our main for our pre-ordered dessert. Forgot spoons as well for dessert. Food was good, nothing crazy of course. Broth was very well done and rich, but the pork slices were tough and only got two for a large portion.",
+            "date": "2026-11-01",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Mai",
+            "text": "Disappointing experience - had to wait for ages, my bowl of ramen was cold when it was finally served, didn't even get my water. People next to me were only served half of the dishes they ordered and even though they asked a few times, it never came, making them cancel their order in the end. I came here because of the positive reviews for the vegan ramen but the experience was not worth it (ramen were also just ok and, as said above, cold).\n\nSidenote: The state of the toilets was really awful",
+            "date": "2026-11-01",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Ruth Ashley",
+            "text": "Great food and great service from staff but the condition of the restaurant really lets this place down. i\u2019m a huge fan of maki and ramen in edinburgh and was excited that they\u2019re in london now but this particular restaurant had a very strong smell of damp, and the toilets were in terrible condition. i\u2019m really hoping these were just temporary problems but we felt the setting was just a bit run down to be a nice place to eat.",
+            "date": "2026-10-29",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Tierdish",
+            "text": "Rude waitress but very good ramen. She made a weird face and laughed at us when we asked if we could put a food item on the side due to our friends dietary requirements.\nWe did feel quite uncomfortable and weirded out by this.\nThe food itself was good but this was very strange",
+            "date": "2026-10-27",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 1,
+        "tasks": [
+          {
+            "task": "Toilet seat",
+            "priority": "\u2014",
+            "logged_week": "15/10/2026",
+            "owner": "Ross",
+            "status": "open"
+          }
+        ],
+        "note": "1 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1510.0,
+        "orders": 54,
+        "aov": 27.96,
+        "new_customers": null,
+        "rating": 4.5,
+        "open_hours_pct": 99.9,
+        "avg_prep_min": 14.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.7,
+        "rider_wait_5min_pct": 11.1,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": -4.5,
+          "orders_abs": null,
+          "prev_gmv": 1581.0,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": -13.3,
+        "gmv_vs_ly_pct": null,
+        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "sales_estimated": false,
+        "orders_estimated": false,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M19": {
+      "code": "M19",
+      "name": "Maki 19",
+      "gm": "Lesley",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 27591.88,
+          "target": 25750.0,
+          "var_pct": 7.15,
+          "prev": 25525.74,
+          "wow_abs": 2066.14,
+          "wow_pct": 8.09
+        },
+        "covers": {
+          "actual": 1159,
+          "prev": 1127,
+          "wow_abs": 32,
+          "wow_pct": 2.84
+        },
+        "sph": {
+          "actual": 22.45,
+          "prev": 21.35,
+          "wow_abs": 1.1,
+          "wow_pct": 5.15,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 23.34,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 25.56,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 445.4
+        },
+        "waste": {
+          "actual": 86.33
+        },
+        "delivery_total": {
+          "sales": 1568.27,
+          "days": 7,
+          "target": 1287.5,
+          "target_days": 7,
+          "var_pct": 21.81,
+          "orders": 42,
+          "order_days": 7,
+          "prev": 1469.82,
+          "wow_abs": 98.45,
+          "wow_pct": 6.7,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 6,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 88,
+        "rag": "amber",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+7.15) + 30% (\u00a3gap +1842 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 100.0,
+            "basis": "\u00a322.45 vs \u00a322 tgt \u2014 level 100, WoW +5.15% \u2192 mom 100"
+          },
+          "food": {
+            "weight": 30,
+            "value": 95.52,
+            "basis": "25.56% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 64.9,
+            "basis": "23.34% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.92\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 25.6%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.9155,
+        "new_reviews": 71,
+        "star_breakdown": {
+          "1": 0,
+          "2": 0,
+          "3": 1,
+          "4": 4,
+          "5": 66
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Maria Itiacandy",
+            "text": "The drinks were the highlight...\nThe food was fine except for the dessert which I sent back and which was taken off the menu. The chocolate matcha brownie came with vanilla ice cream that was not defrosted or melted properly/ ready to be served to customers.  The chocolate sauce/syrup was awful it tasted like the  squeezy chocolate sauce you get in the supermarkets. The brownie itself had a strange texture that was neither gooey, dense, OR traditionally cakey for a brownie. The texture was on the tougher side. The flavour tasted like stolen/ christmas cake... Something was clearly wrong here. The server tried to allude to my racial background and say maybe that's why I didn't enjoy the desert... And maybe I'm not used to the matcha taste...which was inappropriate and I corrected her promptly. I like matcha but this dessert was awful. You can (try) see in the picture how pale the brownie looks....",
+            "date": "2026-10-28",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 1,
+        "tasks": [
+          {
+            "task": "The Maki Ramen light not working",
+            "priority": "\u2014",
+            "logged_week": "20/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "1 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1450.0,
+        "orders": 42,
+        "aov": 34.52,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 100.0,
+        "avg_prep_min": 12.8,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 4.9,
+        "rider_wait_5min_pct": null,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": 9.1,
+          "orders_abs": null,
+          "prev_gmv": 1329.0,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": 36.3,
+        "gmv_vs_ly_pct": null,
+        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "sales_estimated": false,
+        "orders_estimated": false,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "M20": {
+      "code": "M20",
+      "name": "Maki 20",
+      "gm": "TBC",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 48852.06,
+          "target": 40000.0,
+          "var_pct": 22.13,
+          "prev": 43443.18,
+          "wow_abs": 5408.88,
+          "wow_pct": 12.45
+        },
+        "covers": {
+          "actual": 2191,
+          "prev": 1934,
+          "wow_abs": 257,
+          "wow_pct": 13.29
+        },
+        "sph": {
+          "actual": 21.33,
+          "prev": 20.78,
+          "wow_abs": 0.55,
+          "wow_pct": 2.65,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 21.51,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 23.52,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 816.9
+        },
+        "waste": {
+          "actual": 387.33
+        },
+        "delivery_total": {
+          "sales": 2115.69,
+          "days": 7,
+          "target": null,
+          "target_days": 0,
+          "var_pct": null,
+          "orders": 53,
+          "order_days": 7,
+          "prev": 3261.16,
+          "wow_abs": -1145.47,
+          "wow_pct": -35.12,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 95,
+        "rag": "green",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+22.13) + 30% (\u00a3gap +8852 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 85.13,
+            "basis": "\u00a321.33 vs \u00a322 tgt \u2014 level 89, WoW +2.65% \u2192 mom 76"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "23.52% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 92.35,
+            "basis": "21.51% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.81\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.81,
+        "new_reviews": 100,
+        "star_breakdown": {
+          "1": 2,
+          "2": 2,
+          "3": 1,
+          "4": 3,
+          "5": 92
+        },
+        "negatives": 5,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Rebecca Howell",
+            "text": "Maki and Ramen, Westquay. Very disappointed in the food. We even left some!",
+            "date": "2026-10-30",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Sari Narulita",
+            "text": "Had given reheated chicken karaage mayo after complained about drinks order that came in plastic take away cups and didn't get replacement for a while until asked another staff !\n\nStaff needs to learn more about soft shells/seafood and other allergens and serving food with long hair down is big no no !",
+            "date": "2026-10-30",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Martina Spragg",
+            "text": "Will not be returning!!!!\n\nThe time waiting for food was crazy long, other tables sat after us were served, ate and left before we got our food.\n\nI sent back my ramen which was not hot, tepid at best. When I finally got a replacement the seafood was so overcooked especially the prawns and salmon  which had turned to unchewable rubber but were not even warm. The seafood was horrid.\n\nServers were like deer in headlights that didn't know what to do when I didn't want a third replacement.\n\nWould not recommend \ud83d\ude15",
+            "date": "2026-10-30",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Claire \u201cClaire Jones\u201d Jones",
+            "text": "Seems an ongoing issue but all noodles and some other bits were out of stock. Unsure why but looking at other reviews it seems this is normal for them.\nFood was okay, nothing to write home about. Gyozas were nice.\nFood came before our drinks which was odd.",
+            "date": "2026-10-27",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Shaz R.",
+            "text": "I really don\u2019t want this to come across as complaining, as I understand that not everything was within Maki Ramen\u2019s control, especially as I ordered through Slerp.\n\nHowever, the back and forth between Slerp and Maki Ramen while trying to cancel the order was exhausting, particularly after being told I couldn\u2019t cancel.\n\nWe\u2019ve just moved in and currently don\u2019t have a kitchen or microwave, so waiting over an hour only to receive cold food was really upsetting, especially as I was starving. In the end, we couldn\u2019t even eat the food, which was really disappointing given the circumstances. I appreciated receiving a full refund, and I was also grateful that a goodwill gesture was offered for the inconvenience by Chris the assistant manager, although I haven\u2019t received any further update on this.\n\nI\u2019m not trying to be difficult or unappreciative, and I do understand that things can go wrong. I was just really disappointed because, after such a stressful move and currently not having a kitchen or microwave, the experience was much harder than it needed to be. Ultimately, we were left unable to eat our food after waiting over an hour, and although the refund was appreciated, it didn\u2019t change how disappointing the overall experience was.",
+            "date": "2026-10-27",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 1,
+        "tasks": [
+          {
+            "task": "Hand washing sink (KP area) water flow is very low",
+            "priority": "\u2014",
+            "logged_week": "20/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "1 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-01",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": 1706.14,
+        "orders": 53,
+        "aov": 32.19,
+        "new_customers": 37,
+        "rating": 5.0,
+        "open_hours_pct": 100.0,
+        "avg_prep_min": 14.2,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 0.0,
+        "rider_wait_5min_pct": 5.7,
+        "conversion_pct": 5.8,
+        "wow": {
+          "gmv_pct": -22.5,
+          "orders_abs": -24,
+          "prev_gmv": 2203.0,
+          "prev_orders": 77
+        },
+        "gmv_vs_4wk_pct": 0.7,
+        "gmv_vs_ly_pct": null,
+        "source": "Deliveroo_Master_Consolidation.xlsx \u2014 Weekly Summary. + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week"
+      ]
+    },
+    "MakiNori": {
+      "code": "MakiNori",
+      "name": "Maki Nori",
+      "gm": "(confirm)",
+      "gm_confirm": false,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "kpis": {
+        "sales": {
+          "actual": 19805.97,
+          "target": 24500.0,
+          "var_pct": -19.16,
+          "prev": 14686.71,
+          "wow_abs": 5119.26,
+          "wow_pct": 34.86
+        },
+        "covers": {
+          "actual": 470,
+          "prev": 364,
+          "wow_abs": 106,
+          "wow_pct": 29.12
+        },
+        "sph": {
+          "actual": 42.14,
+          "prev": 40.35,
+          "wow_abs": 1.79,
+          "wow_pct": 4.44,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 39.12,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 18.59,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 500.1
+        },
+        "waste": {
+          "actual": 440.82
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "week_commencing": "2026-10-26"
+      },
+      "efficiency_score": {
+        "score": 63,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 83.77,
+            "basis": "70% (100-19.16) + 30% (\u00a3gap -4694 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 98.32,
+            "basis": "\u00a342.14 vs \u00a335 tgt \u2014 level 100, WoW +4.44% \u2192 mom 94"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.59% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 0.0,
+            "basis": "39.12% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 71.43,
+            "basis": "4.50\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          }
+        },
+        "components_dropped": [
+          "food_var"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "sales -19.2% vs target",
+          "wage 39.1%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.5,
+        "new_reviews": 6,
+        "star_breakdown": {
+          "1": 0,
+          "2": 1,
+          "3": 0,
+          "4": 0,
+          "5": 5
+        },
+        "negatives": 1,
+        "negative_reviews": [
+          {
+            "stars": 2,
+            "author": "Massimiliano Vitali",
+            "text": "Looking at all the positive reviews, I don't understand whether they are all fake or whether I was just unlucky.\nWe entered the restaurant without a reservation, and the manager didn't seem very happy to welcome us.\nNo one pointed out that there were specials on a board on the wall. We had to ask twice for our drinks because they never arrived, and three times for tap water. No one asked us about allergies when taking our order. The food was well presented but of fairly average quality. Nothing I ordered really stood out. There was no salmon available, and the only dessert was unavailable too. I didn't have a great experience.",
+            "date": "2026-10-29",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-02."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Stock-take \u2014 no variance entered this week",
+        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+      ]
+    }
+  }
+}
