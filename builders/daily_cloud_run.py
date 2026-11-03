@@ -133,11 +133,12 @@ def main():
             if PC.reopen_tripwire(code, iso, money(vr[v][iact])):
                 live.add(v)
                 msg = (f"{iso} REOPEN TRIPWIRE: {code} ({v}) filed £{money(vr[v][iact]):,.2f} inside its closure "
-                       f"window (from {PC.CLOSURES[code]['from']}, until {PC.CLOSURES[code]['until'] or 'open'}). "
+                       f"window (from {PC.closure_info(code)['from']}, until {PC.closure_info(code)['until'] or 'open'}). "
                        f"Included as live. Set closures.{code}.until in builders/covers_accepted.json.")
                 if msg not in R["warnings"]: R["warnings"].append(msg)
         return live
     R["cashup"]["closures"] = PC.CLOSURES
+    R["cashup"]["weekly_closures"] = PC.WEEKLY_CLOSURES
 
     # 02/10/2026: covers_accepted.json holds (a) per-day sites Michael has confirmed as genuine, keyed dd/mm/yyyy,
     # and (b) "offer_floor": a lower ramen spend-per-head floor while the app offer runs (low SPH is real).
@@ -145,6 +146,7 @@ def main():
     except FileNotFoundError: ACCEPTED_COVERS = {}
     OFFER = ACCEPTED_COVERS.pop("offer_floor", None) or {}
     ACCEPTED_COVERS.pop("closures", None)   # dated site closures: read by pull_daily_cashup (PC.CLOSURES), not a day key
+    ACCEPTED_COVERS.pop("weekly_closures", None)   # recurring weekday closures (Maki Nori Mon/Tue, 03/11/2026): PC.WEEKLY_CLOSURES
     def ramen_lo(dt):
         try:
             iso = datetime.datetime.strptime(dt, "%d/%m/%Y").date().isoformat()

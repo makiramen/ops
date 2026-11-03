@@ -157,10 +157,52 @@ def load_closures(path=_CLOSURES_PATH):
 CLOSURES = load_closures()
 CODE_TO_VENUE = {c: v for v, c in VENUE_TO_CODE.items()}
 
+# 03/11/2026 (Michael): Maki Nori is officially closed every Monday and Tuesday.
+# Recurring weekday closures live under "weekly_closures" in covers_accepted.json:
+#   "weekly_closures": {"MakiNori": {"from": "YYYY-MM-DD", "until": null, "days": ["Mon", "Tue"], "why": ...}}
+# Kept as a SEPARATE key from "closures" on purpose: index.html (Budget Burn tab) reads
+# "closures" as whole-period windows and would treat a weekday rule there as closed every day.
+_DAY_IDX = {"mon": 0, "tue": 1, "wed": 2, "thu": 3, "fri": 4, "sat": 5, "sun": 6}
+
+
+def load_weekly_closures(path=_CLOSURES_PATH):
+    try:
+        with open(path, encoding="utf-8") as fh:
+            raw = json.load(fh).get("weekly_closures") or {}
+    except FileNotFoundError:
+        return {}
+    out = {}
+    for code, c in raw.items():
+        if code not in VENUE_TO_CODE.values():
+            sys.exit(f"FATAL: covers_accepted.json weekly closure for unknown site code {code!r}")
+        frm = c.get("from")
+        if not frm or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", frm):
+            sys.exit(f"FATAL: weekly closure for {code} needs an ISO 'from' date, got {frm!r}")
+        until = c.get("until")
+        if until is not None and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", until):
+            sys.exit(f"FATAL: weekly closure for {code} has a non-ISO 'until' {until!r}")
+        days = c.get("days") or []
+        try:
+            idx = sorted({_DAY_IDX[str(d)[:3].lower()] for d in days})
+        except KeyError:
+            sys.exit(f"FATAL: weekly closure for {code} has unknown day names {days!r}")
+        if not idx:
+            sys.exit(f"FATAL: weekly closure for {code} needs a non-empty 'days' list")
+        out[code] = {"from": frm, "until": until, "days": idx, "why": c.get("why", "")}
+    return out
+
+
+WEEKLY_CLOSURES = load_weekly_closures()
+
 
 def closed_on(code, iso_date):
     c = CLOSURES.get(code)
-    return bool(c) and c["from"] <= iso_date and (c["until"] is None or iso_date <= c["until"])
+    if c and c["from"] <= iso_date and (c["until"] is None or iso_date <= c["until"]):
+        return True
+    w = WEEKLY_CLOSURES.get(code)
+    if w and w["from"] <= iso_date and (w["until"] is None or iso_date <= w["until"]):
+        return datetime.fromisoformat(iso_date).weekday() in w["days"]
+    return False
 
 
 def live_codes_on(iso_date):
@@ -171,6 +213,11 @@ def live_codes_on(iso_date):
 def live_venues_on(iso_date):
     """Venue labels (VENUE_TO_CODE keys) expected to trade on an ISO date."""
     return {v for v, c in VENUE_TO_CODE.items() if not closed_on(c, iso_date)}
+
+
+def closure_info(code):
+    """The closure record (dated or weekly) for a code, for messages. Dated wins."""
+    return CLOSURES.get(code) or WEEKLY_CLOSURES.get(code) or {"from": "?", "until": None, "why": ""}
 
 
 def reopen_tripwire(code, iso_date, sales):
@@ -461,7 +508,7 @@ def main():
         # REOPEN TRIPWIRE. A site inside a dated closure window that files real
         # sales is kept, not skipped, and shouted about. Silence is the failure.
         if reopen_tripwire(code, date_str, sales):
-            c = CLOSURES[code]
+            c = closure_info(code)
             warnings.append(
                 f"{date_str} {code}: REOPEN TRIPWIRE - filed £{sales:,.2f} while "
                 f"closed from {c['from']} (until {c['until'] or 'open'}). Kept as "
@@ -576,8 +623,8 @@ def main():
             # Dated closures in force on this day (covers_accepted.json). These
             # sites are not expected and are not gaps. Empty on a normal day.
             "closed": [
-                {"code": c, "from": CLOSURES[c]["from"], "until": CLOSURES[c]["until"],
-                 "why": CLOSURES[c]["why"]} for c in closed
+                {"code": c, "from": closure_info(c)["from"], "until": closure_info(c)["until"],
+                 "why": closure_info(c)["why"]} for c in closed
             ],
             "reopened_during_closure": sorted(reopened.get(date_str, set())),
             "foh_boh_reported": len(split_ok),
