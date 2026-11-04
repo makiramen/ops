@@ -12,6 +12,8 @@ export SCC_CACHE="$(mktemp -d)"   # each Google sheet range is read once per run
 step(){ echo "== $*"; "$@" || { echo "!! FAILED: $*"; FAILS=$((FAILS+1)); }; }
 # Deliveroo daily ops (Deliveroo Daily Master sheet): one estate file for the AM CC daily tab and the Area Room, then per site below
 step python3 pipeline/pull_deliveroo_daily.py --estate "$ROOT/data/deliveroo_daily.json"
+# Employee of the Month nominations from Guudjob (secrets GUUDJOB_EMAIL / GUUDJOB_PASSWORD), one estate file, merged per site by pull_eotm.py (04/11/2026)
+[ -n "${GUUDJOB_PASSWORD:-}" ] && step python3 pipeline/pull_guudjob_eotm.py --out data/guudjob_eotm.json --shot "$ROOT/guudjob_login.png"
 for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open('sites.json'))['sites'].items() if v.get('live')))"); do
   D="data/$CODE"; mkdir -p "$D"
   step python3 pipeline/seed_site.py     --site "$CODE" --data "$D"

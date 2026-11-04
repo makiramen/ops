@@ -63,6 +63,20 @@ out={'src':"Hanna's EOTM Manual Input sheets (one per site and department), serv
 for k,v in M.items():
     o=dict(out['m'].get(k) or {'BOH':None,'FOH':None})
     o.update(v);out['m'][k]=o
+# 04/11/2026: Guudjob nominations (pull_guudjob_eotm.py, estate file) take priority where the site is switched on (sites.json guudjob_eotm true)
+GJ=os.path.join(A.data,'..','guudjob_eotm.json')
+if C.get('guudjob_eotm') and os.path.exists(GJ):
+    gj=json.load(open(GJ));n=0
+    for mo,v in (gj.get('m') or {}).items():
+        for dept,x in (v.get(A.site) or {}).items():
+            if not x.get('n'):continue
+            why=next((t for k,t in x.get('answers',{}).items() if 'stand out' in k.lower() or 'above and beyond' in k.lower()),'') or max(x.get('answers',{}).values(),key=len,default='')
+            o=dict(out['m'].get(mo) or {'BOH':None,'FOH':None})
+            o[dept]={'n':short(x['n']),'full':x['n'],'role':x.get('role',''),'by':x.get('by',''),'byrole':x.get('byrole',''),'on':x.get('on'),'why':why,'gj':1,
+                     'answers':x.get('answers',{}),'choices':x.get('choices',{}),'url':((gj.get('surveys') or {}).get(f'{mo}/{dept}') or {}).get('url','')}
+            out['m'][mo]=o;n+=1
+    out['gj']={'pulled':gj.get('pulled'),'surveys':gj.get('surveys',{})};out['src']='Guudjob push surveys (nominations) + Hanna\'s EOTM Manual Input sheets'
+    print(f'eotm {A.site}: {n} Guudjob nominations merged')
 out['m']=dict(sorted(out['m'].items()))
 print(f'eotm {A.site}:',{k:{d:(x or {}).get('n') for d,x in v.items()} for k,v in out['m'].items()})
 if A.check:sys.exit(0)

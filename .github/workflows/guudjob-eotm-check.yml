@@ -1,0 +1,31 @@
+name: Guudjob EOTM check (dry run)
+
+# Manual only. Signs in to Guudjob with the GUUDJOB_EMAIL / GUUDJOB_PASSWORD secrets, reads the Employee of the Month surveys
+# and prints what it would write, without touching the repo. Used to prove the login and the parsing before the nightly picks it up.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+        with: { ref: main, fetch-depth: 1, persist-credentials: false }
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12', cache: pip, cache-dependency-path: site_cc/pipeline/requirements.txt }
+      - run: |
+          pip install -r site_cc/pipeline/requirements.txt
+          python -m playwright install --with-deps chromium
+      - name: Dry run
+        env:
+          GUUDJOB_EMAIL: ${{ secrets.GUUDJOB_EMAIL }}
+          GUUDJOB_PASSWORD: ${{ secrets.GUUDJOB_PASSWORD }}
+        run: cd site_cc && python3 pipeline/pull_guudjob_eotm.py --out /tmp/guudjob_eotm.json --check --shot "$GITHUB_WORKSPACE/guudjob_login.png"
+      - name: Login screenshot (only when the login failed)
+        if: always() && hashFiles('guudjob_login.png') != ''
+        uses: actions/upload-artifact@v4
+        with: { name: guudjob-login, path: guudjob_login.png, retention-days: 7 }
