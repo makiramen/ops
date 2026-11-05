@@ -201,6 +201,27 @@ def main():
             routes |= set(re.findall(r'["\'](/data/[A-Za-z0-9_\-/]*export[A-Za-z0-9_\-/]*)', h))
         except Exception as e: log('page', pg, e); continue
         routes.add(f'/data/reports/{slug}/export')
+        # the report's own JSON (the pattern the KPI pipe uses for cash-log): GET /data/reports/<slug>?venueIds[]=..&fromDate=..&toDate=..
+        if not (only and not any(o in slug for o in only)):
+            jurl = f'/data/reports/{slug}'
+            params = [('venueIds[]', '37'), ('fromDate', yday), ('toDate', yday), ('from', yday), ('to', yday), ('date', yday)]
+            try:
+                r = k.s.get(BASE + jurl, params=params, timeout=180)
+                ct = r.headers.get('content-type', '')
+                log('report json', jurl, r.status_code, ct.split(';')[0], len(r.text), r.text[:160].replace('\n', ' '))
+                if r.status_code == 200 and 'json' in ct:
+                    j = r.json()
+                    if isinstance(j, dict) and isinstance(j.get('data'), (list, dict)): j = j['data']
+                    recs = None
+                    if isinstance(j, list) and j and isinstance(j[0], dict): recs = j
+                    elif isinstance(j, dict):
+                        vals = list(j.values())
+                        if vals and all(isinstance(v, dict) for v in vals) and all(re.fullmatch(r'[\d\-/ :T]+', str(kk)) for kk in j): recs = vals  # keyed by date
+                        else: recs = [j]
+                    if recs:
+                        entities['report__' + slug.replace('-', '_')] = {'routes': [jurl + ' (GET venueIds[], fromDate, toDate)'], 'records': recs[:a.limit]}
+                        log(slug, 'json records', len(recs), 'keys', sorted(recs[0].keys())[:30])
+            except Exception as e: log('report json', jurl, 'ERR', e)
         direct[pg] = sorted(routes)
         if only and not any(o in slug for o in only): continue
         for url in sorted(routes):
