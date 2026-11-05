@@ -136,6 +136,62 @@ def main():
             entities['report__' + key] = {'routes': [inv['keys'][key]['export']], 'records': recs, 'columns': rows[0], 'row_count_sample': len(rows) - 1}
             log(key, 'csv cols', len(hdr), 'rows', len(rows) - 1)
         time.sleep(0.3)
+    # 2b. direct (non-queued) report exports: the reports list page links every report page; each page's
+    # /data/reports/<slug>/export answers a POST with venueIds[] / from / to (the item-by-sales pattern the KPI pipe uses).
+    pages = set()
+    for pg in ('/reports/list/', '/reports/', '/reporting/', '/'):
+        try:
+            h = k.s.get(BASE + pg, timeout=60, headers={'X-Requested-With': None}).text
+            pages |= set(re.findall(r'href=["\'](/report(?:s|ing)/[a-z0-9\-/]+)', h))
+        except Exception as e: log('pages', pg, e)
+    pages = sorted(p.rstrip('/') for p in pages if p.count('/') >= 2 and not p.endswith('/list'))
+    inv['report_pages'] = pages; log('report pages', len(pages), pages[:40])
+    yday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
+    direct = {}
+    for pg in pages:
+        slug = pg.split('/')[-1]
+        routes = set()
+        try:
+            h = k.s.get(BASE + pg + '/', timeout=60, headers={'X-Requested-With': None}).text
+            routes |= set(re.findall(r'["\'](/data/reports?/[A-Za-z0-9_\-/]+)', h))
+            routes |= set(re.findall(r'["\'](/data/[A-Za-z0-9_\-/]*export[A-Za-z0-9_\-/]*)', h))
+        except Exception as e: log('page', pg, e); continue
+        routes.add(f'/data/reports/{slug}/export')
+        direct[pg] = sorted(routes)
+        if only and not any(o in slug for o in only): continue
+        for url in sorted(routes):
+            if not url.endswith('/export'): continue
+            form = [('venueIds[]', '37'), ('venue_ids[]', '37'), ('venueId', '37'), ('from', yday), ('to', yday), ('date', yday),
+                    ('fromDate', yday), ('toDate', yday), ('piscMode', ''), ('filterByTill', 'false'), ('seatingArea', ''), ('consumptionMode', '')]
+            try:
+                r = k.s.post(BASE + url, data=form, timeout=120, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            except Exception as e: log(url, 'ERR', e); continue
+            ct = r.headers.get('content-type', '')
+            log('direct', url, r.status_code, ct.split(';')[0], len(r.text))
+            if r.status_code != 200 or r.text[:1] == '<': continue
+            if 'json' in ct:
+                try:
+                    j = r.json(); recs = j if isinstance(j, list) else (j.get('data') if isinstance(j, dict) else None)
+                    if recs and isinstance(recs, list) and isinstance(recs[0], dict):
+                        entities['report__' + slug.replace('-', '_')] = {'routes': [url + ' (POST)'], 'records': recs[:a.limit]}
+                except Exception: pass
+                continue
+            rows = list(csv.reader(io.StringIO(r.text)))
+            if len(rows) > 1 and len(rows[0]) > 1:
+                hdr = [col_key(c) for c in rows[0]]; recs = []
+                for x in rows[1:1 + a.limit]:
+                    if len(x) < len(hdr): continue
+                    d = {}
+                    for c, v in zip(hdr, x):
+                        v = v.strip()
+                        if re.fullmatch(r'-?\d+', v): d[c] = int(v)
+                        elif re.fullmatch(r'-?\d+\.\d+', v): d[c] = float(v)
+                        else: d[c] = v or None
+                    recs.append(d)
+                entities['report__' + slug.replace('-', '_')] = {'routes': [url + ' (POST)'], 'records': recs, 'columns': rows[0], 'row_count_sample': len(rows) - 1}
+                log(slug, 'csv cols', len(hdr), 'rows', len(rows) - 1)
+            time.sleep(0.3)
+    inv['direct_exports'] = direct
     json.dump(inv, open(os.path.join(a.out, 'reports_inventory.json'), 'w'), indent=1)
     # 3. schemas and graph merge
     os.makedirs(os.path.join(a.out, 'schemas'), exist_ok=True)
