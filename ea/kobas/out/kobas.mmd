@@ -491,7 +491,11 @@ classDiagram
   venue_stock_ingredient_restrictions --> stock_ingredient : 1[].stock_ingredient_id
   venue_trading --> menu : menu_id
   venue_trading --> venue : preoday_venue_id
-  venue_trading --> price_band : preoday_till_priceband_id
+  venue_trading --> price_band : preoday_till_priceband_id}}}}
+  class report__cash_log {
+    array dates
+    array venues
+  }}
   class report__item_by_sales {
     string item
     string lead_type
@@ -523,6 +527,10 @@ classDiagram
     mixed 2026_11_07
     mixed 2026_11_08
     mixed total
+  }}
+  class report__sales_mix_by_lead_type {
+    object leadTypes
+    object total
   }}
   class report__stock_current_position_report {
     string stock_check_date

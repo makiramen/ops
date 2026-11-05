@@ -1,0 +1,1080 @@
+{
+ "type": "object",
+ "properties": {
+  "dates": {
+   "type": "array",
+   "items": {
+    "type": [
+     "string:date"
+    ]
+   }
+  },
+  "venues": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "37"
+      ]
+     },
+     "name": {
+      "type": "string",
+      "x-examples": [
+       "Maki Yorkshire"
+      ]
+     },
+     "validity": {
+      "type": "object",
+      "properties": {
+       "2026-11-04": {
+        "type": "boolean",
+        "x-examples": [
+         "True"
+        ]
+       }
+      }
+     },
+     "xero_enabled": {
+      "type": "integer",
+      "x-examples": [
+       "0"
+      ]
+     },
+     "ids": {
+      "type": "object",
+      "properties": {
+       "2026-11-04": {
+        "type": "integer",
+        "x-examples": [
+         "19162"
+        ]
+       }
+      }
+     },
+     "data": {
+      "type": "object",
+      "properties": {
+       "declaredPayments": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which Deposits Received",
+            "  of which Gratuity",
+            "Declared Payments"
+           ]
+          },
+          "total": {
+           "type": [
+            "integer",
+            "number"
+           ],
+           "x-examples": [
+            "3204.37",
+            "80.05",
+            "0"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "3204.37",
+            "80.05"
+           ]
+          }
+         }
+        }
+       },
+       "depositsRedeemed": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            " of which Bank Transfer",
+            " of which Card",
+            " of which Cash",
+            " of which Cheque",
+            " of which Online Payment",
+            " of which PDQ Stand Alone",
+            "Deposits Redeemed"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-enum-like": [
+            "0"
+           ]
+          },
+          "displayZeroes": {
+           "type": "boolean",
+           "x-examples": [
+            "False"
+           ]
+          }
+         }
+        }
+       },
+       "declaredRevenue": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Declared Revenue"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "3124.32"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "3124.32"
+           ]
+          }
+         }
+        }
+       },
+       "cheques": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Cheques"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "cashDeclared": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Cash Declared"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "216.5"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "216.5"
+           ]
+          }
+         }
+        }
+       },
+       "PDQPayments": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which Amex",
+            "  of which PDQ Tips",
+            "  of which other cards",
+            "PDQ Payments"
+           ]
+          },
+          "total": {
+           "type": [
+            "integer",
+            "number"
+           ],
+           "x-examples": [
+            "2741.28",
+            "0"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "2741.28"
+           ]
+          }
+         }
+        }
+       },
+       "otherPaymentTypes": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Other Payment Types",
+            "  of which AA2",
+            "  of which Ikigai Ramen South Bridge"
+           ]
+          },
+          "total": {
+           "type": [
+            "integer",
+            "number"
+           ],
+           "x-examples": [
+            "201.6",
+            "0",
+            "165.5"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "201.6",
+            "165.5",
+            "36.1"
+           ]
+          },
+          "otherPaymentTypeName": {
+           "type": "string",
+           "x-examples": [
+            "AA2",
+            "Ikigai Ramen South Bridge",
+            "IRB"
+           ]
+          }
+         }
+        }
+       },
+       "depositsLoggedInCloud": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Deposits Logged in Cloud"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "cashTips": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Cash Tips"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "voucherTips": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Other Tips"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "serviceCharge": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Service Charge"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "80.05"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "80.05"
+           ]
+          }
+         }
+        }
+       },
+       "fixedDiscounts": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Fixed Discounts"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "giftVouchers": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Gift Vouchers"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "forfeitedGiftVoucher": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Forfeited Pre-Paid Vouchers"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "depositsReceived": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Deposits Received"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "depositsRefunded": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Deposits Refunded"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "paidOut": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Petty Cash"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "44.99"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "44.99"
+           ]
+          }
+         }
+        }
+       },
+       "expectedGrossPayments": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Expected Gross Payments",
+            "  of which Deposits Received"
+           ]
+          },
+          "total": {
+           "type": [
+            "integer",
+            "number"
+           ],
+           "x-examples": [
+            "3204.37",
+            "0"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "3204.37"
+           ]
+          }
+         }
+        }
+       },
+       "expectedTax": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Expected Tax on Payments"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "506.91"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "506.91"
+           ]
+          }
+         }
+        }
+       },
+       "unusedDeposits": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "  of which Unused Deposits"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "expectedNetPayments": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Net Sales and Gratuity",
+            "  of which Gratuity"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "2697.47",
+            "123.49"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "2697.47",
+            "123.49"
+           ]
+          }
+         }
+        }
+       },
+       "totalSales": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Gross Sales",
+            "Net Sales"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "3080.88",
+            "2573.98"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "3080.88",
+            "2573.98"
+           ]
+          }
+         }
+        }
+       },
+       "totalRefunds": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Total Refunds"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "expectedTaxBreakdown": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which No Tax (0%) Gross Sales",
+            "  of which No Tax (0%) Net Sales",
+            "  of which No Tax (0%) Tax",
+            "  of which Standard (20%) Gross Sales",
+            "  of which Standard (20%) Net Sales",
+            "  of which Standard (20%) Tax"
+           ]
+          },
+          "total": {
+           "type": [
+            "integer",
+            "number"
+           ],
+           "x-examples": [
+            "3041.43",
+            "2534.53",
+            "506.91"
+           ]
+          },
+          "displayZeroes": {
+           "type": "boolean",
+           "x-examples": [
+            "True"
+           ]
+          },
+          "typeName": {
+           "type": "string",
+           "x-enum-like": [
+            "Gross Sales",
+            "Net Sales",
+            "Tax"
+           ]
+          },
+          "taxName": {
+           "type": "string",
+           "x-enum-like": [
+            "No Tax",
+            "Standard"
+           ]
+          },
+          "2026-11-04": {
+           "type": [
+            "integer",
+            "number"
+           ],
+           "x-examples": [
+            "3041.43",
+            "2534.53",
+            "506.91"
+           ]
+          }
+         }
+        }
+       },
+       "expectedNetPaymentsLeads": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which Controllables sales",
+            "  of which Food sales",
+            "  of which Logistics sales",
+            "  of which Wet sales"
+           ]
+          },
+          "total": {
+           "type": [
+            "integer",
+            "number"
+           ],
+           "x-examples": [
+            "0",
+            "2243.08",
+            "330.9"
+           ]
+          },
+          "leadName": {
+           "type": "string",
+           "x-enum-like": [
+            "Controllables",
+            "Food",
+            "Logistics",
+            "Wet"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "2243.08",
+            "330.9"
+           ]
+          }
+         }
+        }
+       },
+       "expectedNetPaymentsConsumptions": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which Delivery sales",
+            "  of which Eat-in sales",
+            "  of which Takeaway sales"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "2403.82",
+            "41.19",
+            "128.97"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "2403.82",
+            "41.19",
+            "128.97"
+           ]
+          }
+         }
+        }
+       },
+       "overallVariance": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which Cash Variance",
+            "  of which Other Payment Types Variance",
+            "  of which PDQ Variance",
+            "  of which Till Float Variance",
+            "Overall Variance"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-enum-like": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "PDQTipVariance": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "PDQ Tip Variance"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "-43.44"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "-43.44"
+           ]
+          }
+         }
+        }
+       },
+       "ordersTaken": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which Delivery",
+            "  of which Eat-in",
+            "  of which Takeaway",
+            "Orders Taken"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-enum-like": [
+            "113",
+            "121",
+            "3",
+            "5"
+           ]
+          },
+          "2026-11-04": {
+           "type": "integer",
+           "x-enum-like": [
+            "113",
+            "121",
+            "3",
+            "5"
+           ]
+          }
+         }
+        }
+       },
+       "covers": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Covers"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "138"
+           ]
+          },
+          "2026-11-04": {
+           "type": "integer",
+           "x-examples": [
+            "138"
+           ]
+          }
+         }
+        }
+       },
+       "tabsWithoutCoversSet": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Tabs Without Covers Set"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "5"
+           ]
+          },
+          "2026-11-04": {
+           "type": "integer",
+           "x-examples": [
+            "5"
+           ]
+          }
+         }
+        }
+       },
+       "averageSpendPerHead": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Average Spend Per Head"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "21.13"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "21.13"
+           ]
+          }
+         }
+        }
+       },
+       "outstandingTabCredit": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Tab Outstanding Credit"
+           ]
+          },
+          "total": {
+           "type": "string",
+           "x-examples": [
+            "N/A"
+           ]
+          }
+         }
+        }
+       },
+       "tabCreditDelta": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Tab Credit Changes"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          }
+         }
+        }
+       },
+       "salesFinalUntil": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Sales Final Until"
+           ]
+          },
+          "2026-11-04": {
+           "type": "string",
+           "x-examples": [
+            "03/11/2026"
+           ]
+          }
+         }
+        }
+       },
+       "averageNetTransactionValue": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-enum-like": [
+            "  of which Delivery",
+            "  of which Eat-In",
+            "  of which Takeaway",
+            "Average Net Transaction Value"
+           ]
+          },
+          "total": {
+           "type": "number",
+           "x-examples": [
+            "32.17",
+            "33.39",
+            "13.73"
+           ]
+          },
+          "2026-11-04": {
+           "type": "number",
+           "x-examples": [
+            "32.17",
+            "33.39",
+            "13.73"
+           ]
+          }
+         }
+        }
+       },
+       "cashLogTypesB": {
+        "type": "array",
+        "items": {
+         "type": "object",
+         "properties": {
+          "name": {
+           "type": "string",
+           "x-examples": [
+            "Online Ordering Covers"
+           ]
+          },
+          "total": {
+           "type": "integer",
+           "x-examples": [
+            "0"
+           ]
+          },
+          "currency": {
+           "type": "boolean",
+           "x-examples": [
+            "False"
+           ]
+          }
+         }
+        }
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "required": [
+  "dates",
+  "venues"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "report__cash_log",
+ "x-routes": [
+  "/data/reports/cash-log (GET venueIds[], fromDate, toDate)"
+ ],
+ "x-sample-size": 1,
+ "x-pii-redacted": false,
+ "x-source": "report export (csv)",
+ "x-columns": null
+}

@@ -400,14 +400,16 @@
 - 404 /data/epos/sales
 - 404 /data/epos/seating-area
 
-## Report-only entities (step 1b, 2026-11-05T17:42Z)
+## Report-only entities (step 1b, 2026-11-05T17:46Z)
 
-- report keys ever queued: 5; exports read: 4; catalogue entries on /reports/list/: 0
+- report keys ever queued: 5; exports read: 6; catalogue entries on /reports/list/: 0
 
 | report | columns | sample rows | export |
 |---|---|---|---|
+| report__cash_log | 0 | 1 | /data/reports/cash-log (GET venueIds[], fromDate, toDate) |
 | report__item_by_sales | 18 | 25 | /data/reports/item-by-sales/export (POST) |
 | report__labour_costs_report | 10 | 25 | /data/reports/labour-costs/29198/export |
+| report__sales_mix_by_lead_type | 0 | 25 | /data/reports/sales-mix-by-lead-type (GET venueIds[], fromDate, toDate) |
 | report__stock_current_position_report | 25 | 25 | /data/reports/stock-current-position/29181/export |
 | report__stock_usage_report | 12 | 25 | /data/reports/stock-usage/29193/export |
 
