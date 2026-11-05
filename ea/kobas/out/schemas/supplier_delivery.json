@@ -1,0 +1,278 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "33",
+    "91",
+    "48"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-examples": [
+    "AA Factory1 Limited",
+    "Amazon",
+    "AO SEAFOODS"
+   ]
+  },
+  "address1": {
+   "type": "null",
+   "nullable": true
+  },
+  "address2": {
+   "type": "null",
+   "nullable": true
+  },
+  "town": {
+   "type": "null",
+   "nullable": true
+  },
+  "county": {
+   "type": "null",
+   "nullable": true
+  },
+  "postcode": {
+   "type": "null",
+   "nullable": true
+  },
+  "contact": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "Beth",
+    "Campbell",
+    "Hodgson Fish",
+    "Lisa",
+    "Maggie Wang",
+    "TIGER",
+    "Welz",
+    "Yoshi Lee"
+   ]
+  },
+  "email": {
+   "type": "string",
+   "nullable": true
+  },
+  "phone": {
+   "type": "string",
+   "format": "numeric",
+   "nullable": true
+  },
+  "companyaccountreference": {
+   "type": "string",
+   "nullable": true,
+   "x-examples": [
+    "Boba Box Ltd",
+    "RAME04"
+   ]
+  },
+  "bvenuecodes": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "bdelivery": {
+   "type": "boolean",
+   "x-examples": [
+    "True"
+   ]
+  },
+  "bpettycash": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "code": {
+   "type": "null",
+   "nullable": true
+  },
+  "tax_rate": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "T0"
+   ]
+  },
+  "sageaccountref": {
+   "type": "null",
+   "nullable": true
+  },
+  "vtprimaryaccount": {
+   "type": "null",
+   "nullable": true
+  },
+  "vtanalysisaccount": {
+   "type": "null",
+   "nullable": true
+  },
+  "xero_account_ref": {
+   "type": "null",
+   "nullable": true
+  },
+  "hasvat": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "bdelnoteprices": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "gross-and-net"
+   ]
+  },
+  "active": {
+   "type": "boolean",
+   "x-examples": [
+    "True"
+   ]
+  },
+  "venues": {
+   "type": "array",
+   "items": {
+    "type": []
+   }
+  },
+  "venue_codes": {
+   "type": "array",
+   "items": {
+    "type": []
+   }
+  },
+  "paidout_types": {
+   "type": "array",
+   "items": {
+    "type": []
+   }
+  },
+  "notification_emails": {
+   "type": "array",
+   "items": {
+    "type": [
+     "string"
+    ]
+   }
+  },
+  "venue_restrictions": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "65",
+       "75",
+       "19"
+      ]
+     },
+     "supplier_id": {
+      "type": "integer",
+      "x-examples": [
+       "33",
+       "48",
+       "75"
+      ]
+     },
+     "venue_id": {
+      "type": "integer",
+      "nullable": true,
+      "x-examples": [
+       "49",
+       "1",
+       "18"
+      ]
+     },
+     "no_restrictions": {
+      "type": "integer",
+      "x-enum-like": [
+       "0",
+       "1"
+      ]
+     },
+     "cut_off_time": {
+      "type": "string",
+      "x-enum-like": [
+       "15:00:00",
+       "23:45:00"
+      ]
+     },
+     "lead_time_days": {
+      "type": "integer",
+      "x-enum-like": [
+       "0",
+       "1"
+      ]
+     },
+     "working_days": {
+      "type": "string",
+      "x-enum-like": [
+       "1,2,3,4,5,6,7"
+      ]
+     },
+     "delivery_days": {
+      "type": "string",
+      "x-enum-like": [
+       "1,2,3,4,5,6,7",
+       "1,3,5,6",
+       "2,4,6"
+      ]
+     },
+     "min_order_value": {
+      "type": "integer",
+      "x-enum-like": [
+       "0"
+      ]
+     },
+     "delivery_notes": {
+      "type": "null",
+      "nullable": true
+     }
+    }
+   }
+  },
+  "edi": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "gln": {
+   "type": "null",
+   "nullable": true
+  },
+  "edi_identity": {
+   "type": "null",
+   "nullable": true
+  }
+ },
+ "required": [
+  "active",
+  "bdelivery",
+  "bpettycash",
+  "bvenuecodes",
+  "edi",
+  "hasvat",
+  "id",
+  "name",
+  "notification_emails",
+  "paidout_types",
+  "venue_codes",
+  "venue_restrictions",
+  "venues"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "supplier_delivery",
+ "x-routes": [
+  "/data/supplier/delivery"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

@@ -1,4 +1,15 @@
 classDiagram
+  class access_area {
+    array Administration
+    array Daily Tasks
+    array EPoS - Local
+    array EPoS Administration
+    array Operations
+    array Reports
+    array Rotas
+    array Staff
+    array Your Customers
+  }
   class company {
     string name
     string website
@@ -67,6 +78,10 @@ classDiagram
     boolean active
     string image_url
   }
+  class loyalty_tags {
+    integer id
+    string name
+  }
   class menu {
     integer id
     string name
@@ -82,6 +97,21 @@ classDiagram
     integer id
     string name
     object venue
+  }
+  class report_holiday_remaining {
+    object 1
+  }
+  class report_system {
+    integer id
+    string name
+    string report_key
+    string link
+    string category
+    string description
+    string m_date
+    string c_date
+    boolean active
+    boolean isFunction
   }
   class reservation {
     integer id
@@ -219,6 +249,33 @@ classDiagram
     array venues
     array venue_codes
   }
+  class supplier_delivery {
+    integer id
+    string name
+    null address1
+    null address2
+    null town
+    null county
+    null postcode
+    string contact
+    string email
+    string phone
+    string companyaccountreference
+    boolean bvenuecodes
+    boolean bdelivery
+    boolean bpettycash
+    null code
+    string tax_rate
+    null sageaccountref
+    null vtprimaryaccount
+    null vtanalysisaccount
+    null xero_account_ref
+    boolean hasvat
+    string bdelnoteprices
+    boolean active
+    array venues
+    array venue_codes
+  }
   class till {
     integer id
     string ip_addr
@@ -252,6 +309,18 @@ classDiagram
     integer style
     integer ordering
   }
+  class user_level {
+    integer id
+    integer franchisee_id
+    string name
+    integer ordering
+    boolean manage_locked
+    string m_date
+    string c_date
+    boolean active
+    array users
+    array permissions
+  }
   class venue {
     integer id
     null parent_id
@@ -279,6 +348,124 @@ classDiagram
     string tiptype
     string amexmode
   }
+  class venue_epos {
+    object 64
+    object 11
+    object 1
+    object 62
+    object 7
+    object 3
+    object 28
+    object 43
+    object 61
+    object 63
+    object 5
+    object 49
+    object 13
+    object 24
+    object 6
+    object 2
+    object 21
+    object 41
+    object 65
+    object 27
+    object 4
+    object 57
+    object 42
+    object 52
+    object 47
+  }
+  class venue_meta_receipt_formats {
+    string value
+    string label
+  }
+  class venue_online_ordering {
+    integer venue_id
+    string venue_name
+    integer system_integration_settings_stripe_id
+    object system_integration_settings_stripe
+    integer tips_available
+    integer tips_percentage_option_default
+    mixed tips_percentage_option_high
+    integer tips_percentage_option_low
+    integer tips_percentage_option_default_automatically_apply
+    integer eat_in_available
+    integer eat_in_automatically_approve
+    integer eat_in_approval_timeout_minutes
+    integer eat_in_estimation_minutes
+    integer eat_in_tips_available
+    array eat_in_venue_online_ordering_times
+    integer delivery_available
+    integer delivery_automatically_approve
+    integer delivery_approval_timeout_minutes
+    integer delivery_order_ahead_available
+    integer delivery_order_ahead_interval_minutes
+    null delivery_custom_html
+    null delivery_maximum_distance
+    null delivery_minimum_value
+    integer delivery_fee
+    null delivery_stock_item_id
+  }
+  class venue_service_times {
+    integer venue_id
+    string venue_name
+    array service_times
+  }
+  class venue_stock_ingredient_restrictions {
+    array 1
+    array 2
+    array 3
+    array 5
+    array 6
+    array 7
+    array 9
+    array 13
+    array 18
+    array 24
+    array 27
+    array 28
+    array 41
+    array 43
+    array 47
+    array 58
+    array 62
+    array 21
+    array 37
+    array 42
+    array 49
+    array 51
+    array 52
+    array 57
+    array 11
+  }
+  class venue_trading {
+    integer id
+    null parent_id
+    boolean is_parent
+    integer territory_region_id
+    string territory_region_name
+    integer territory_id
+    string territory_name
+    integer franchisee_id
+    boolean is_head_office
+    integer menuid
+    integer menu_id
+    string name
+    string sname
+    string address
+    number latitude
+    number longitude
+    string postcode
+    string telephone
+    string email
+    integer startweekid
+    string startweek_date
+    integer endweekid
+    string endweek_date
+    string tiptype
+    string amexmode
+  }
+  access_area *-- staff : Staff[]
   menu --> venue : venue_id
   price_band *-- venue : venue
   reservation --> staff : staff_id
@@ -293,7 +480,38 @@ classDiagram
   stock_order_delivery --> stock_order : stock_order_id
   stock_order_delivery --> staff : staff_id
   supplier *-- venue : venues[]
-  venue --> menu : menu_id}}}}}}}}}}}}
+  supplier_delivery --> supplier : venue_restrictions[].supplier_id
+  supplier_delivery --> venue : venue_restrictions[].venue_id
+  venue --> menu : menu_id
+  venue_epos --> menu : 64.menu_id
+  venue_epos --> venue : 64.preoday_venue_id
+  venue_epos --> price_band : 64.preoday_till_priceband_id
+  venue_online_ordering --> venue : venue_id
+  venue_service_times --> venue : venue_id
+  venue_stock_ingredient_restrictions --> stock_ingredient : 1[].stock_ingredient_id
+  venue_trading --> menu : menu_id
+  venue_trading --> venue : preoday_venue_id
+  venue_trading --> price_band : preoday_till_priceband_id
+  class report__item_by_sales {
+    string item
+    string lead_type
+    string category
+    integer items_sold
+    mixed gross_sales
+    mixed tax
+    mixed net_sales
+    mixed potential_net_revenue
+    mixed cost_e
+    mixed cost_a
+    mixed margin_e
+    mixed margin_a
+    mixed achieved_theoretical_gp
+    mixed target_theoretical_gp
+    integer waste
+    integer comp
+    integer director
+    integer total
+  }}
   class report__labour_costs_report {
     string venue_name
     string information

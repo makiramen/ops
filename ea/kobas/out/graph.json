@@ -1,7 +1,15 @@
 {
- "generated": "2026-11-05T17:30:08+00:00",
+ "generated": "2026-11-05T17:42:22+00:00",
  "source": "https://login.kobas.co.uk",
  "nodes": [
+  {
+   "id": "access_area",
+   "fields": 9,
+   "routes": [
+    "/data/access-area"
+   ],
+   "sample": 1
+  },
   {
    "id": "company",
    "fields": 3,
@@ -44,6 +52,14 @@
    "sample": 25
   },
   {
+   "id": "loyalty_tags",
+   "fields": 2,
+   "routes": [
+    "/data/loyalty-tags"
+   ],
+   "sample": 8
+  },
+  {
    "id": "menu",
    "fields": 9,
    "routes": [
@@ -58,6 +74,22 @@
     "/data/price-band"
    ],
    "sample": 6
+  },
+  {
+   "id": "report_holiday_remaining",
+   "fields": 1,
+   "routes": [
+    "/data/report/holiday-remaining"
+   ],
+   "sample": 1
+  },
+  {
+   "id": "report_system",
+   "fields": 10,
+   "routes": [
+    "/data/report/system"
+   ],
+   "sample": 25
   },
   {
    "id": "reservation",
@@ -116,6 +148,14 @@
    "sample": 25
   },
   {
+   "id": "supplier_delivery",
+   "fields": 31,
+   "routes": [
+    "/data/supplier/delivery"
+   ],
+   "sample": 25
+  },
+  {
    "id": "till",
    "fields": 26,
    "routes": [
@@ -133,12 +173,77 @@
    "sample": 25
   },
   {
+   "id": "user_level",
+   "fields": 10,
+   "routes": [
+    "/data/user-level"
+   ],
+   "sample": 19
+  },
+  {
    "id": "venue",
    "fields": 97,
    "routes": [
     "/data/venue"
    ],
    "sample": 25
+  },
+  {
+   "id": "venue_epos",
+   "fields": 34,
+   "routes": [
+    "/data/venue/epos"
+   ],
+   "sample": 1
+  },
+  {
+   "id": "venue_meta_receipt_formats",
+   "fields": 2,
+   "routes": [
+    "/data/venue/meta/receipt-formats"
+   ],
+   "sample": 2
+  },
+  {
+   "id": "venue_online_ordering",
+   "fields": 45,
+   "routes": [
+    "/data/venue/online-ordering"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "venue_service_times",
+   "fields": 3,
+   "routes": [
+    "/data/venue/service-times"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "venue_stock_ingredient_restrictions",
+   "fields": 30,
+   "routes": [
+    "/data/venue/stock-ingredient-restrictions"
+   ],
+   "sample": 1
+  },
+  {
+   "id": "venue_trading",
+   "fields": 98,
+   "routes": [
+    "/data/venue/trading"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "report__item_by_sales",
+   "fields": 18,
+   "routes": [
+    "/data/reports/item-by-sales/export (POST)"
+   ],
+   "sample": 25,
+   "kind": "report"
   },
   {
    "id": "report__labour_costs_report",
@@ -169,6 +274,60 @@
   }
  ],
  "edges": [
+  {
+   "from": "access_area",
+   "to": "access_area.Administration",
+   "field": "Administration[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "access_area",
+   "to": "access_area.Daily Tasks",
+   "field": "Daily Tasks[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "access_area",
+   "to": "access_area.EPoS - Local",
+   "field": "EPoS - Local[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "access_area",
+   "to": "access_area.EPoS Administration",
+   "field": "EPoS Administration[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "access_area",
+   "to": "access_area.Operations",
+   "field": "Operations[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "access_area",
+   "to": "access_area.Reports",
+   "field": "Reports[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "access_area",
+   "to": "access_area.Rotas",
+   "field": "Rotas[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "access_area",
+   "to": "staff",
+   "field": "Staff[]",
+   "kind": "composition-many"
+  },
+  {
+   "from": "access_area",
+   "to": "access_area.Your Customers",
+   "field": "Your Customers[]",
+   "kind": "composition-many:inline"
+  },
   {
    "from": "discount",
    "to": "discount.eligible_items",
@@ -204,6 +363,12 @@
    "to": "price_band.used",
    "field": "venue.used[]",
    "kind": "composition-many:inline"
+  },
+  {
+   "from": "report_holiday_remaining",
+   "to": "report_holiday_remaining.1",
+   "field": "1",
+   "kind": "composition:inline"
   },
   {
    "from": "reservation",
@@ -368,9 +533,1707 @@
    "kind": "reference"
   },
   {
+   "from": "supplier_delivery",
+   "to": "supplier_delivery.venue_restrictions",
+   "field": "venue_restrictions[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "supplier_delivery",
+   "to": "supplier",
+   "field": "venue_restrictions[].supplier_id",
+   "kind": "reference"
+  },
+  {
+   "from": "supplier_delivery",
+   "to": "venue",
+   "field": "venue_restrictions[].venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "user_level",
+   "to": "user_level.users",
+   "field": "users[]",
+   "kind": "composition-many:inline"
+  },
+  {
    "from": "venue",
    "to": "menu",
    "field": "menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.64",
+   "field": "64",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "64.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "64.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "64.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "64.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "64.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.11",
+   "field": "11",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "11.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "11.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "11.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "11.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "11.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.1",
+   "field": "1",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "1.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "1.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "1.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "1.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "1.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.62",
+   "field": "62",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "62.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "62.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "62.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "62.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "62.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.7",
+   "field": "7",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "7.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "7.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "7.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "7.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "7.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.3",
+   "field": "3",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "3.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "3.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "3.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "3.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "3.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.28",
+   "field": "28",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "28.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "28.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "28.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "28.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "28.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.43",
+   "field": "43",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "43.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "43.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "43.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "43.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "43.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.61",
+   "field": "61",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "61.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "61.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "61.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "61.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "61.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.63",
+   "field": "63",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "63.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "63.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "63.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "63.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "63.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.5",
+   "field": "5",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "5.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "5.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "5.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "5.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "5.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.49",
+   "field": "49",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "49.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "49.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "49.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "49.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "49.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.13",
+   "field": "13",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "13.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "13.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "13.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "13.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "13.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.24",
+   "field": "24",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "24.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "24.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "24.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "24.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "24.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.6",
+   "field": "6",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "6.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "6.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "6.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "6.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "6.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.2",
+   "field": "2",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "2.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "2.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "2.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "2.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "2.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.21",
+   "field": "21",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "21.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "21.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "21.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "21.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "21.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.41",
+   "field": "41",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "41.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "41.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "41.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "41.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "41.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.65",
+   "field": "65",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "65.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "65.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "65.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "65.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "65.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.27",
+   "field": "27",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "27.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "27.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "27.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "27.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "27.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.4",
+   "field": "4",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "4.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "4.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "4.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "4.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "4.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.57",
+   "field": "57",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "57.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "57.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "57.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "57.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "57.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.42",
+   "field": "42",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "42.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "42.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "42.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "42.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "42.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.52",
+   "field": "52",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "52.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "52.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "52.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "52.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "52.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.47",
+   "field": "47",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "47.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "47.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "47.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "47.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "47.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.58",
+   "field": "58",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "58.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "58.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "58.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "58.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "58.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.9",
+   "field": "9",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "9.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "9.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "9.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "9.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "9.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.51",
+   "field": "51",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "51.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "51.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "51.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "51.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "51.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.60",
+   "field": "60",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "60.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "60.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "60.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "60.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "60.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.18",
+   "field": "18",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "18.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "18.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "18.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "18.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "18.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.37",
+   "field": "37",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "37.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "37.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "37.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "37.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "37.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.12",
+   "field": "12",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "12.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "12.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "12.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "12.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "12.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.8",
+   "field": "8",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "8.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "8.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "8.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "8.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "8.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue_epos.10",
+   "field": "10",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "10.menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "venue",
+   "field": "10.preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "10.preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "menu",
+   "field": "10.preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_epos",
+   "to": "price_band",
+   "field": "10.preoday_till_priceband_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue",
+   "field": "venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue_online_ordering.system_integration_settings_stripe",
+   "field": "system_integration_settings_stripe",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue_online_ordering.eat_in_venue_online_ordering_times",
+   "field": "eat_in_venue_online_ordering_times[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue",
+   "field": "eat_in_venue_online_ordering_times[].venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue_online_ordering.delivery_venue_online_ordering_times",
+   "field": "delivery_venue_online_ordering_times[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue",
+   "field": "delivery_venue_online_ordering_times[].venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue_online_ordering.takeaway_venue_online_ordering_times",
+   "field": "takeaway_venue_online_ordering_times[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue",
+   "field": "takeaway_venue_online_ordering_times[].venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_online_ordering",
+   "to": "venue_online_ordering.current_till_applypricebandvenue",
+   "field": "current_till_applypricebandvenue",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "venue_service_times",
+   "to": "venue",
+   "field": "venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.1",
+   "field": "1[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "1[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.2",
+   "field": "2[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "2[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.3",
+   "field": "3[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "3[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.5",
+   "field": "5[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "5[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.6",
+   "field": "6[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "6[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.7",
+   "field": "7[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "7[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.9",
+   "field": "9[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "9[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.13",
+   "field": "13[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "13[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.18",
+   "field": "18[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "18[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.24",
+   "field": "24[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "24[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.27",
+   "field": "27[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "27[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.28",
+   "field": "28[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "28[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.41",
+   "field": "41[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "41[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.43",
+   "field": "43[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "43[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.47",
+   "field": "47[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "47[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.58",
+   "field": "58[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "58[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.62",
+   "field": "62[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "62[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.21",
+   "field": "21[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "21[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.37",
+   "field": "37[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "37[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.42",
+   "field": "42[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "42[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.49",
+   "field": "49[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "49[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.51",
+   "field": "51[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "51[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.52",
+   "field": "52[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "52[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.57",
+   "field": "57[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "57[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.11",
+   "field": "11[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "11[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.60",
+   "field": "60[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "60[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.61",
+   "field": "61[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "61[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.63",
+   "field": "63[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "63[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.64",
+   "field": "64[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "64[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "venue_stock_ingredient_restrictions.65",
+   "field": "65[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "venue_stock_ingredient_restrictions",
+   "to": "stock_ingredient",
+   "field": "65[].stock_ingredient_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_trading",
+   "to": "menu",
+   "field": "menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_trading",
+   "to": "venue",
+   "field": "preoday_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_trading",
+   "to": "menu",
+   "field": "preoday_till_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_trading",
+   "to": "menu",
+   "field": "preoday_menu_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue_trading",
+   "to": "price_band",
+   "field": "preoday_till_priceband_id",
    "kind": "reference"
   },
   {
@@ -382,39 +2245,60 @@
  ],
  "unresolved_references": {
   "booker_location": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "default_till_pages": [
    "till"
+  ],
+  "delivery_stock_item": [
+   "venue_online_ordering"
   ],
   "external": [
    "reservation"
   ],
   "franchisee": [
    "staff",
-   "venue"
+   "user_level",
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "mailchimp_list": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "meta_deliverect_delivery_stock_item": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "meta_deliverect_location": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "meta_trifft_location": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "parent": [
    "stock_ingredient",
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "primary_till_printers": [
    "till"
   ],
   "reservation_source": [
    "reservation"
+  ],
+  "service_fee_stock_item": [
+   "venue_online_ordering"
   ],
   "staff_application_source": [
    "staff"
@@ -431,11 +2315,18 @@
   "system_email_queue": [
    "stock_order"
   ],
+  "system_integration_settings_stripe": [
+   "venue_online_ordering"
+  ],
   "territory": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "territory_region": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "till_type": [
    "till"
@@ -444,7 +2335,9 @@
    "staff"
   ],
   "xero_organisation": [
-   "venue"
+   "venue",
+   "venue_epos",
+   "venue_trading"
   ],
   "item": [
    "report__stock_current_position_report"

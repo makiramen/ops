@@ -1,18 +1,22 @@
-# Kobas extraction 2026-11-05T17:05Z
+# Kobas extraction 2026-11-05T17:40Z
 
-- routes probed: 1397; answered JSON: 21; entities with fields: 17
-- reference edges: 15; compositions: 19
-- unresolved `<x>_id` references: 21 (booker_location, default_till_pages, external, franchisee, mailchimp_list, meta_deliverect_delivery_stock_item, meta_deliverect_location, meta_trifft_location, parent, primary_till_printers, reservation_source, staff_application_source, stock_ingredient_category, stock_ingredient_tax_code, stock_measurement, system_email_queue, territory, territory_region, till_type, type)
+- routes probed: 1414; answered JSON: 35; entities with fields: 29
+- reference edges: 227; compositions: 100
+- unresolved `<x>_id` references: 24 (booker_location, default_till_pages, delivery_stock_item, external, franchisee, mailchimp_list, meta_deliverect_delivery_stock_item, meta_deliverect_location, meta_trifft_location, parent, primary_till_printers, reservation_source, service_fee_stock_item, staff_application_source, stock_ingredient_category, stock_ingredient_tax_code, stock_measurement, system_email_queue, system_integration_settings_stripe, territory)
 
 | entity | routes | fields | sample |
 |---|---|---|---|
+| access_area | /data/access-area | 9 | 1 |
 | company | /data/company | 3 | 1 |
 | customer | /data/customer | 14 | 25 |
 | discount | /data/discount | 32 | 25 |
 | integration | /data/integration | 3 | 25 |
 | item_category | /data/item/category, /data/item/category/6 | 13 | 25 |
+| loyalty_tags | /data/loyalty-tags | 2 | 8 |
 | menu | /data/menu | 9 | 25 |
 | price_band | /data/price-band | 3 | 6 |
+| report_holiday_remaining | /data/report/holiday-remaining | 1 | 1 |
+| report_system | /data/report/system | 10 | 25 |
 | reservation | /data/reservation | 20 | 5 |
 | staff | /data/staff | 62 | 25 |
 | stock_ingredient | /data/v2/stock/ingredient | 10 | 25 |
@@ -20,9 +24,17 @@
 | stock_order_delivery | /data/v2/stock/order/delivery | 18 | 25 |
 | stock_usage | /data/v2/stock/usage/reasons | 3 | 1 |
 | supplier | /data/supplier | 31 | 25 |
+| supplier_delivery | /data/supplier/delivery | 31 | 25 |
 | till | /data/till, /data/till/all | 26 | 25 |
 | till_page | /data/till-page | 4 | 25 |
+| user_level | /data/user-level | 10 | 19 |
 | venue | /data/venue | 97 | 25 |
+| venue_epos | /data/venue/epos | 34 | 1 |
+| venue_meta_receipt_formats | /data/venue/meta/receipt-formats | 2 | 2 |
+| venue_online_ordering | /data/venue/online-ordering | 45 | 25 |
+| venue_service_times | /data/venue/service-times | 3 | 25 |
+| venue_stock_ingredient_restrictions | /data/venue/stock-ingredient-restrictions | 30 | 1 |
+| venue_trading | /data/venue/trading | 98 | 25 |
 
 ## Non-JSON or failed routes (first 80)
 
@@ -196,6 +208,7 @@
 - 404 /data/customer/event
 - 404 /data/customer/events
 - 404 /data/customer/feedback
+- 404 /data/customer/find
 - 404 /data/customer/forecast
 - 404 /data/customer/gift-card
 - 404 /data/customer/gift-cards
@@ -386,26 +399,14 @@
 - 404 /data/epos/sale
 - 404 /data/epos/sales
 - 404 /data/epos/seating-area
-- 404 /data/epos/service-charge
-- 404 /data/epos/session
-- 404 /data/epos/sessions
-- 404 /data/epos/shift
-- 404 /data/epos/shifts
-- 404 /data/epos/staff
-- 404 /data/epos/stock/ingredient
-- 404 /data/epos/stock/order
-- 404 /data/epos/stock/stocktake
-- 404 /data/epos/stock/transfer
-- 404 /data/epos/stock/usage
-- 404 /data/epos/supplier
-- 404 /data/epos/suppliers
 
-## Report-only entities (step 1b, 2026-11-05T17:30Z)
+## Report-only entities (step 1b, 2026-11-05T17:42Z)
 
-- report keys ever queued: 5; exports read: 3; catalogue entries on /reports/list/: 0
+- report keys ever queued: 5; exports read: 4; catalogue entries on /reports/list/: 0
 
 | report | columns | sample rows | export |
 |---|---|---|---|
+| report__item_by_sales | 18 | 25 | /data/reports/item-by-sales/export (POST) |
 | report__labour_costs_report | 10 | 25 | /data/reports/labour-costs/29198/export |
 | report__stock_current_position_report | 25 | 25 | /data/reports/stock-current-position/29181/export |
 | report__stock_usage_report | 12 | 25 | /data/reports/stock-usage/29193/export |

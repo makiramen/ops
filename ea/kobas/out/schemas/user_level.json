@@ -1,0 +1,114 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "1",
+    "18",
+    "10"
+   ]
+  },
+  "franchisee_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "name": {
+   "type": "string"
+  },
+  "ordering": {
+   "type": "integer",
+   "x-enum-like": [
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7"
+   ]
+  },
+  "manage_locked": {
+   "type": "boolean",
+   "x-examples": [
+    "True",
+    "False"
+   ]
+  },
+  "m_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2026-10-12 11:43:34",
+    "2026-09-14 15:12:05",
+    "2026-09-17 14:28:19"
+   ]
+  },
+  "c_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2012-05-01 10:28:18",
+    "2024-04-24 12:13:04",
+    "2023-08-17 17:01:25"
+   ]
+  },
+  "active": {
+   "type": "boolean",
+   "x-examples": [
+    "True"
+   ]
+  },
+  "users": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "24",
+       "208",
+       "210"
+      ]
+     },
+     "surname": {
+      "type": "string"
+     },
+     "name": {
+      "type": "string"
+     }
+    }
+   }
+  },
+  "permissions": {
+   "type": "array",
+   "items": {
+    "type": [
+     "integer"
+    ]
+   }
+  }
+ },
+ "required": [
+  "active",
+  "c_date",
+  "franchisee_id",
+  "id",
+  "m_date",
+  "manage_locked",
+  "name",
+  "ordering",
+  "permissions",
+  "users"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "user_level",
+ "x-routes": [
+  "/data/user-level"
+ ],
+ "x-sample-size": 19,
+ "x-pii-redacted": true
+}

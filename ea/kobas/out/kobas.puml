@@ -2,6 +2,17 @@
 title Kobas business entities (PSM, extracted 2026-11-05)
 hide empty members
 skinparam classAttributeIconSize 0
+class access_area {
+  Administration : array
+  Daily Tasks : array
+  EPoS - Local : array
+  EPoS Administration : array
+  Operations : array
+  Reports : array
+  Rotas : array
+  Staff : array
+  Your Customers : array
+}
 class company {
   name : string
   website : string
@@ -77,6 +88,10 @@ class item_category {
   active : boolean
   image_url : string?
 }
+class loyalty_tags {
+  id : integer
+  name : string
+}
 class menu {
   id : integer
   name : string
@@ -92,6 +107,21 @@ class price_band {
   id : integer
   name : string
   venue : object
+}
+class report_holiday_remaining {
+  1 : object
+}
+class report_system {
+  id : integer
+  name : string
+  report_key : string?
+  link : string
+  category : string
+  description : string
+  m_date : string
+  c_date : string
+  active : boolean
+  isFunction : boolean
 }
 class reservation {
   id : integer
@@ -251,6 +281,39 @@ class supplier {
   gln : null?
   edi_identity : null?
 }
+class supplier_delivery {
+  id : integer
+  name : string
+  address1 : null?
+  address2 : null?
+  town : null?
+  county : null?
+  postcode : null?
+  contact : string?
+  email : string?
+  phone : string?
+  companyaccountreference : string?
+  bvenuecodes : boolean
+  bdelivery : boolean
+  bpettycash : boolean
+  code : null?
+  tax_rate : string?
+  sageaccountref : null?
+  vtprimaryaccount : null?
+  vtanalysisaccount : null?
+  xero_account_ref : null?
+  hasvat : boolean
+  bdelnoteprices : string?
+  active : boolean
+  venues : array
+  venue_codes : array
+  paidout_types : array
+  notification_emails : array
+  venue_restrictions : array
+  edi : boolean
+  gln : null?
+  edi_identity : null?
+}
 class till {
   id : integer
   ip_addr : string
@@ -284,6 +347,18 @@ class till_page {
   name : string
   style : integer
   ordering : integer
+}
+class user_level {
+  id : integer
+  franchisee_id : integer
+  name : string
+  ordering : integer
+  manage_locked : boolean
+  m_date : string
+  c_date : string
+  active : boolean
+  users : array
+  permissions : array
 }
 class venue {
   id : integer
@@ -328,6 +403,170 @@ class venue {
   preoday_print_orders : boolean
   .. 57 more ..
 }
+class venue_epos {
+  64 : object
+  11 : object
+  1 : object
+  62 : object
+  7 : object
+  3 : object
+  28 : object
+  43 : object
+  61 : object
+  63 : object
+  5 : object
+  49 : object
+  13 : object
+  24 : object
+  6 : object
+  2 : object
+  21 : object
+  41 : object
+  65 : object
+  27 : object
+  4 : object
+  57 : object
+  42 : object
+  52 : object
+  47 : object
+  58 : object
+  9 : object
+  51 : object
+  60 : object
+  18 : object
+  37 : object
+  12 : object
+  8 : object
+  10 : object
+}
+class venue_meta_receipt_formats {
+  value : string
+  label : string
+}
+class venue_online_ordering {
+  venue_id : integer
+  venue_name : string
+  system_integration_settings_stripe_id : integer?
+  system_integration_settings_stripe : object?
+  tips_available : integer
+  tips_percentage_option_default : integer?
+  tips_percentage_option_high : integer|number?
+  tips_percentage_option_low : integer?
+  tips_percentage_option_default_automatically_apply : integer
+  eat_in_available : integer
+  eat_in_automatically_approve : integer
+  eat_in_approval_timeout_minutes : integer?
+  eat_in_estimation_minutes : integer?
+  eat_in_tips_available : integer?
+  eat_in_venue_online_ordering_times : array
+  delivery_available : integer
+  delivery_automatically_approve : integer
+  delivery_approval_timeout_minutes : integer?
+  delivery_order_ahead_available : integer
+  delivery_order_ahead_interval_minutes : integer
+  delivery_custom_html : null?
+  delivery_maximum_distance : null?
+  delivery_minimum_value : null?
+  delivery_fee : integer
+  delivery_stock_item_id : null?
+  delivery_stock_item : null?
+  delivery_minimum_value_free_delivery : null?
+  delivery_estimation_minutes : integer?
+  delivery_tips_available : null?
+  delivery_venue_online_ordering_times : array
+  takeaway_available : integer
+  takeaway_automatically_approve : integer
+  takeaway_approval_timeout_minutes : integer?
+  takeaway_order_ahead_available : integer
+  takeaway_order_ahead_interval_minutes : integer
+  takeaway_custom_html : null?
+  takeaway_estimation_minutes : integer?
+  takeaway_tips_available : integer?
+  takeaway_venue_online_ordering_times : array
+  current_till_applypricebandvenue : object?
+  .. 5 more ..
+}
+class venue_service_times {
+  venue_id : integer
+  venue_name : string
+  service_times : array
+}
+class venue_stock_ingredient_restrictions {
+  1 : array
+  2 : array
+  3 : array
+  5 : array
+  6 : array
+  7 : array
+  9 : array
+  13 : array
+  18 : array
+  24 : array
+  27 : array
+  28 : array
+  41 : array
+  43 : array
+  47 : array
+  58 : array
+  62 : array
+  21 : array
+  37 : array
+  42 : array
+  49 : array
+  51 : array
+  52 : array
+  57 : array
+  11 : array
+  60 : array
+  61 : array
+  63 : array
+  64 : array
+  65 : array
+}
+class venue_trading {
+  id : integer
+  parent_id : null?
+  is_parent : boolean
+  territory_region_id : integer
+  territory_region_name : string
+  territory_id : integer
+  territory_name : string
+  franchisee_id : integer
+  is_head_office : boolean
+  menuid : integer
+  menu_id : integer
+  name : string
+  sname : string
+  address : string
+  latitude : number
+  longitude : number
+  postcode : string
+  telephone : string
+  email : string
+  startweekid : integer
+  startweek_date : string
+  endweekid : integer
+  endweek_date : string?
+  tiptype : string
+  amexmode : string
+  gmap_address : string
+  receipt_signoff : string
+  receipt_hide_name : boolean
+  receipt_header_url : string
+  screen_message : string?
+  tax_number : string
+  managerid : integer
+  weeklybonus : integer
+  sagepayelementhours : null?
+  sagepayelementtips : null?
+  sageaccountreference : null?
+  sagedepartmentcode : null?
+  preoday_enabled : boolean
+  preoday_venue_id : null?
+  preoday_till_menu_id : null?
+  .. 58 more ..
+}
+access_area *-- "many" staff : Staff[]
 menu --> venue : venue_id
 price_band *-- venue : venue
 reservation --> staff : staff_id
@@ -342,7 +581,38 @@ stock_order *-- stock_order_delivery : stock_order_delivery
 stock_order_delivery --> stock_order : stock_order_id
 stock_order_delivery --> staff : staff_id
 supplier *-- "many" venue : venues[]
-venue --> menu : menu_id}}}}}}}}}}}}
+supplier_delivery --> supplier : venue_restrictions[].supplier_id
+supplier_delivery --> venue : venue_restrictions[].venue_id
+venue --> menu : menu_id
+venue_epos --> menu : 64.menu_id
+venue_epos --> venue : 64.preoday_venue_id
+venue_epos --> price_band : 64.preoday_till_priceband_id
+venue_online_ordering --> venue : venue_id
+venue_service_times --> venue : venue_id
+venue_stock_ingredient_restrictions --> stock_ingredient : 1[].stock_ingredient_id
+venue_trading --> menu : menu_id
+venue_trading --> venue : preoday_venue_id
+venue_trading --> price_band : preoday_till_priceband_id
+class report__item_by_sales <<report>> {
+  item : string
+  lead_type : string
+  category : string
+  items_sold : integer
+  gross_sales : mixed
+  tax : mixed
+  net_sales : mixed
+  potential_net_revenue : mixed
+  cost_e : mixed
+  cost_a : mixed
+  margin_e : mixed
+  margin_a : mixed
+  achieved_theoretical_gp : mixed
+  target_theoretical_gp : mixed
+  waste : integer
+  comp : integer
+  director : integer
+  total : integer
+}}
 class report__labour_costs_report <<report>> {
   venue_name : string
   information : string

@@ -1,0 +1,472 @@
+{
+ "type": "object",
+ "properties": {
+  "venue_id": {
+   "type": "integer",
+   "x-examples": [
+    "2",
+    "3",
+    "4"
+   ]
+  },
+  "venue_name": {
+   "type": "string",
+   "x-examples": [
+    "Maki Manchester",
+    "Maki 1/2 (Nicolson St)",
+    "Maki Nicolson"
+   ]
+  },
+  "system_integration_settings_stripe_id": {
+   "type": "integer",
+   "nullable": true,
+   "x-examples": [
+    "1",
+    "8",
+    "6"
+   ]
+  },
+  "system_integration_settings_stripe": {
+   "type": "object",
+   "nullable": true,
+   "properties": {
+    "id": {
+     "type": "integer",
+     "x-examples": [
+      "1",
+      "8",
+      "6"
+     ]
+    },
+    "publishable_key": {
+     "type": "null",
+     "nullable": true
+    }
+   }
+  },
+  "tips_available": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1"
+   ]
+  },
+  "tips_percentage_option_default": {
+   "type": "integer",
+   "nullable": true,
+   "x-enum-like": [
+    "10"
+   ]
+  },
+  "tips_percentage_option_high": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "nullable": true,
+   "x-examples": [
+    "15",
+    "12.5"
+   ]
+  },
+  "tips_percentage_option_low": {
+   "type": "integer",
+   "nullable": true,
+   "x-enum-like": [
+    "5"
+   ]
+  },
+  "tips_percentage_option_default_automatically_apply": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1",
+    "2"
+   ]
+  },
+  "eat_in_available": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1"
+   ]
+  },
+  "eat_in_automatically_approve": {
+   "type": "integer",
+   "x-enum-like": [
+    "1"
+   ]
+  },
+  "eat_in_approval_timeout_minutes": {
+   "type": "integer",
+   "nullable": true,
+   "x-enum-like": [
+    "3",
+    "5",
+    "6"
+   ]
+  },
+  "eat_in_estimation_minutes": {
+   "type": "integer",
+   "nullable": true,
+   "x-enum-like": [
+    "10",
+    "15",
+    "20",
+    "25",
+    "60"
+   ]
+  },
+  "eat_in_tips_available": {
+   "type": "integer",
+   "nullable": true,
+   "x-enum-like": [
+    "0",
+    "1"
+   ]
+  },
+  "eat_in_venue_online_ordering_times": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "venue_id": {
+      "type": "integer",
+      "x-examples": [
+       "2",
+       "3",
+       "4"
+      ]
+     },
+     "consumption_mode": {
+      "type": "string",
+      "x-enum-like": [
+       "eat-in"
+      ]
+     },
+     "day": {
+      "type": "string",
+      "x-enum-like": [
+       "Friday",
+       "Monday",
+       "Saturday",
+       "Sunday",
+       "Thursday",
+       "Tuesday",
+       "Wednesday"
+      ]
+     },
+     "start_at": {
+      "type": "string",
+      "nullable": true,
+      "x-enum-like": [
+       "11:00:00",
+       "11:30:00",
+       "12:00:00"
+      ]
+     },
+     "end_at": {
+      "type": "string",
+      "nullable": true,
+      "x-examples": [
+       "22:00:00",
+       "21:30:00",
+       "21:00:00"
+      ]
+     }
+    }
+   }
+  },
+  "delivery_available": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "delivery_automatically_approve": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "delivery_approval_timeout_minutes": {
+   "type": "integer",
+   "nullable": true,
+   "x-examples": [
+    "5"
+   ]
+  },
+  "delivery_order_ahead_available": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "delivery_order_ahead_interval_minutes": {
+   "type": "integer",
+   "x-enum-like": [
+    "5"
+   ]
+  },
+  "delivery_custom_html": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_maximum_distance": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_minimum_value": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_fee": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "delivery_stock_item_id": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_stock_item": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_minimum_value_free_delivery": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_estimation_minutes": {
+   "type": "integer",
+   "nullable": true,
+   "x-examples": [
+    "30"
+   ]
+  },
+  "delivery_tips_available": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_venue_online_ordering_times": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "venue_id": {
+      "type": "integer",
+      "x-examples": [
+       "2",
+       "3",
+       "4"
+      ]
+     },
+     "consumption_mode": {
+      "type": "string",
+      "x-enum-like": [
+       "delivery"
+      ]
+     },
+     "day": {
+      "type": "string",
+      "x-enum-like": [
+       "Friday",
+       "Monday",
+       "Saturday",
+       "Sunday",
+       "Thursday",
+       "Tuesday",
+       "Wednesday"
+      ]
+     },
+     "start_at": {
+      "type": "null",
+      "nullable": true
+     },
+     "end_at": {
+      "type": "null",
+      "nullable": true
+     }
+    }
+   }
+  },
+  "takeaway_available": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "takeaway_automatically_approve": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "takeaway_approval_timeout_minutes": {
+   "type": "integer",
+   "nullable": true,
+   "x-enum-like": [
+    "5"
+   ]
+  },
+  "takeaway_order_ahead_available": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "takeaway_order_ahead_interval_minutes": {
+   "type": "integer",
+   "x-enum-like": [
+    "5"
+   ]
+  },
+  "takeaway_custom_html": {
+   "type": "null",
+   "nullable": true
+  },
+  "takeaway_estimation_minutes": {
+   "type": "integer",
+   "nullable": true,
+   "x-enum-like": [
+    "10"
+   ]
+  },
+  "takeaway_tips_available": {
+   "type": "integer",
+   "nullable": true,
+   "x-examples": [
+    "0"
+   ]
+  },
+  "takeaway_venue_online_ordering_times": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "venue_id": {
+      "type": "integer",
+      "x-examples": [
+       "2",
+       "3",
+       "4"
+      ]
+     },
+     "consumption_mode": {
+      "type": "string",
+      "x-enum-like": [
+       "takeaway"
+      ]
+     },
+     "day": {
+      "type": "string",
+      "x-enum-like": [
+       "Friday",
+       "Monday",
+       "Saturday",
+       "Sunday",
+       "Thursday",
+       "Tuesday",
+       "Wednesday"
+      ]
+     },
+     "start_at": {
+      "type": "string",
+      "nullable": true,
+      "x-enum-like": [
+       "10:00:00"
+      ]
+     },
+     "end_at": {
+      "type": "string",
+      "nullable": true,
+      "x-enum-like": [
+       "21:00:00"
+      ]
+     }
+    }
+   }
+  },
+  "current_till_applypricebandvenue": {
+   "type": "object",
+   "nullable": true,
+   "properties": {
+    "venueid": {
+     "type": "integer",
+     "x-examples": [
+      "2",
+      "3",
+      "4"
+     ]
+    },
+    "apply_from": {
+     "type": "string",
+     "x-enum-like": [
+      "00:00:00",
+      "24:00:00",
+      "89:00:00"
+     ]
+    },
+    "pricebandid": {
+     "type": "integer",
+     "x-enum-like": [
+      "0",
+      "13",
+      "8"
+     ]
+    }
+   }
+  },
+  "image_url": {
+   "type": "null",
+   "nullable": true
+  },
+  "service_fee": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "service_fee_stock_item_id": {
+   "type": "null",
+   "nullable": true
+  },
+  "service_fee_stock_item": {
+   "type": "null",
+   "nullable": true
+  },
+  "is_mobile_required_for_guest_checkout": {
+   "type": "integer"
+  }
+ },
+ "required": [
+  "delivery_automatically_approve",
+  "delivery_available",
+  "delivery_fee",
+  "delivery_order_ahead_available",
+  "delivery_order_ahead_interval_minutes",
+  "delivery_venue_online_ordering_times",
+  "eat_in_automatically_approve",
+  "eat_in_available",
+  "eat_in_venue_online_ordering_times",
+  "is_mobile_required_for_guest_checkout",
+  "service_fee",
+  "takeaway_automatically_approve",
+  "takeaway_available",
+  "takeaway_order_ahead_available",
+  "takeaway_order_ahead_interval_minutes",
+  "takeaway_venue_online_ordering_times",
+  "tips_available",
+  "tips_percentage_option_default_automatically_apply",
+  "venue_id",
+  "venue_name"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "venue_online_ordering",
+ "x-routes": [
+  "/data/venue/online-ordering"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

@@ -1,0 +1,224 @@
+{
+ "type": "object",
+ "properties": {
+  "item": {
+   "type": "string",
+   "x-examples": [
+    "TOTAL",
+    "Matcha Creme Brulee - 2024",
+    "Mochi Icecream - 2024"
+   ]
+  },
+  "lead_type": {
+   "type": "string",
+   "x-enum-like": [
+    "food",
+    "wet"
+   ]
+  },
+  "category": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "Dessert 2024",
+    "Donburi 2024",
+    "Extra 2024",
+    "Hosomaki 2024",
+    "Maki Rolls 2024"
+   ]
+  },
+  "items_sold": {
+   "type": "integer",
+   "x-examples": [
+    "283",
+    "154",
+    "0"
+   ]
+  },
+  "gross_sales": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "2683.8",
+    "397.08",
+    "0"
+   ]
+  },
+  "tax": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "440.725006",
+    "66.180014",
+    "0"
+   ]
+  },
+  "net_sales": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "2243.074994",
+    "330.899986",
+    "0"
+   ]
+  },
+  "potential_net_revenue": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "nullable": true,
+   "x-examples": [
+    "555.124986",
+    "99.016653",
+    "0"
+   ]
+  },
+  "cost_e": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "nullable": true,
+   "x-examples": [
+    "0",
+    "2.050005",
+    "0.68"
+   ]
+  },
+  "cost_a": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "574.529223",
+    "99.363809",
+    "0"
+   ]
+  },
+  "margin_e": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "nullable": true,
+   "x-examples": [
+    "0",
+    "3.699995",
+    "-0.68"
+   ]
+  },
+  "margin_a": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "1668.545771",
+    "231.536177",
+    "0"
+   ]
+  },
+  "achieved_theoretical_gp": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "74.39",
+    "69.97",
+    "0"
+   ]
+  },
+  "target_theoretical_gp": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "nullable": true,
+   "x-examples": [
+    "79.47",
+    "76.89",
+    "0"
+   ]
+  },
+  "waste": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "comp": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1",
+    "4"
+   ]
+  },
+  "director": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "total": {
+   "type": "integer",
+   "x-examples": [
+    "287",
+    "155",
+    "1"
+   ]
+  }
+ },
+ "required": [
+  "achieved_theoretical_gp",
+  "comp",
+  "cost_a",
+  "director",
+  "gross_sales",
+  "item",
+  "items_sold",
+  "lead_type",
+  "margin_a",
+  "net_sales",
+  "tax",
+  "total",
+  "waste"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "report__item_by_sales",
+ "x-routes": [
+  "/data/reports/item-by-sales/export (POST)"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false,
+ "x-source": "report export (csv)",
+ "x-columns": [
+  "Item",
+  "Lead Type",
+  "Category",
+  "Items Sold",
+  "Gross Sales",
+  "Tax",
+  "Net Sales",
+  "Potential Net Revenue",
+  "Cost(E)",
+  "Cost(A)",
+  "Margin(E)",
+  "Margin(A)",
+  "Achieved Theoretical GP%",
+  "Target Theoretical GP%",
+  "Waste",
+  "Comp",
+  "Director",
+  "Total"
+ ]
+}
