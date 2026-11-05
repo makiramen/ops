@@ -169,9 +169,9 @@ def main():
                 js = k.s.get(u, timeout=90).text
             except Exception as e: log('bundle', u, e); continue
             urls = sorted(set(re.findall(r'["\'`](/(?:data|reports?)/[A-Za-z0-9_\-/\.${}]{2,120})["\'`]', js)))
-            keys = sorted(set(re.findall(r'\b([a-z]+(?:_[a-z0-9]+){1,6}_(?:report|export))\b', js)))
-            bundles[u] = {'bytes': len(js), 'urls': urls[:400], 'report_keys': keys[:200]}
-            log('bundle', u.split('/')[-1][:50], len(js), 'urls', len(urls), 'keys', len(keys))
+            bkeys = sorted(set(re.findall(r'\b([a-z]+(?:_[a-z0-9]+){1,6}_(?:report|export))\b', js)))
+            bundles[u] = {'bytes': len(js), 'urls': urls[:400], 'report_keys': bkeys[:200]}
+            log('bundle', u.split('/')[-1][:50], len(js), 'urls', len(urls), 'keys', len(bkeys), urls[:30])
             pages |= {x.rstrip('/') for x in urls if x.startswith('/reports/') and x.count('/') >= 2 and '$' not in x}
         inv['bundles'] = bundles
         for cand in ('/data/reports', '/data/report', '/data/report/list', '/data/reports/list', '/data/reports/available', '/data/report-list'):
