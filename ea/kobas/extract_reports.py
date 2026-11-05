@@ -32,22 +32,49 @@ def main():
     k = Kobas()
     if not k.login(): sys.exit(30)
     # 1. queue inventory
-    runs = []
-    def as_list(j):
-        if isinstance(j, list): return j
-        if isinstance(j, dict):
-            for kk in ('data', 'results', 'items', 'rows', 'reportQueue', 'report_queue'):
-                if isinstance(j.get(kk), list): return j[kk]
-        return []
-    for params in ({}, {'orderBy[id]': 'DESC'}, {'filterBy[id][gte]': '1'}):
+    # The queue only answers per report_key (400 otherwise). Build the key list from the catalogue pages, the
+    # keys the other pipes use, and a guessed set, then ask the queue for each.
+    KNOWN = ['labour_costs_report', 'stock_current_position_report', 'stock_usage_report', 'stock_transfers_report',
+             'supplier_stock_deliveries_report', 'operational_profitability_report', 'hours_export', 'item_by_sales_report',
+             'all_item_sales_report', 'sales_breakdown_report', 'tabs_report', 'tab_report', 'tab_export', 'payments_report',
+             'payment_report', 'payments_export', 'sales_report', 'sales_export', 'z_report', 'z_reports', 'cash_log_report',
+             'cash_log_export', 'transactions_report', 'transaction_export', 'receipts_report', 'discounts_report',
+             'discount_usage_report', 'vouchers_report', 'voucher_usage_report', 'loyalty_report', 'loyalty_customers_report',
+             'customers_report', 'customer_export', 'reservations_report', 'bookings_report', 'covers_report',
+             'daily_headline_revenue_report', 'headline_revenue_report', 'daily_sales_report', 'sales_by_payment_type_report',
+             'payment_types_report', 'card_payments_report', 'tips_report', 'service_charge_report', 'refunds_report',
+             'voids_report', 'comps_report', 'wastage_report', 'staff_sales_report', 'staff_report', 'rota_report',
+             'clock_ins_report', 'till_sessions_report', 'epos_sessions_report', 'session_report', 'menu_report',
+             'item_sales_report', 'product_mix_report', 'category_sales_report', 'hourly_sales_report', 'delivery_sales_report',
+             'deliverect_orders_report', 'online_orders_report', 'xero_export', 'accounting_export', 'gift_cards_report']
+    found_keys = set(KNOWN)
+    for pg in ('/reports/list/', '/reports/', '/reporting/', '/data/report-queue'):
         try:
-            r = k.s.get(BASE + '/data/report-queue', params=params, timeout=90)
-            log('report-queue', params, r.status_code, r.headers.get('content-type', '')[:30], r.text[:300].replace('\n', ' '))
-            runs = as_list(r.json())
+            h = k.s.get(BASE + pg, timeout=60, headers={'X-Requested-With': None}).text
+            found_keys |= set(re.findall(r'\b([a-z]+(?:_[a-z0-9]+)*_(?:report|export))\b', h))
+            found_keys |= {x.replace('-', '_') + '_report' for x in re.findall(r'/reports/([a-z0-9\-]+)/', h)}
+            for src in re.findall(r'<script[^>]+src=["\']([^"\']+)', h):
+                if src.startswith('/'): src = BASE + src
+                if not src.startswith(BASE): continue
+                try: found_keys |= set(re.findall(r'\b([a-z]+(?:_[a-z0-9]+)*_(?:report|export))\b', k.s.get(src, timeout=60).text))
+                except Exception: pass
+        except Exception as e: log('catalogue', pg, e)
+    found_keys = {x for x in found_keys if 3 < len(x) < 60}
+    log('candidate report keys', len(found_keys))
+    runs = []; key_status = {}
+    for key in sorted(found_keys):
+        try:
+            r = k.s.get(BASE + '/data/report-queue', params={'filterBy[report_key][eq]': key}, timeout=90)
+            j = r.json() if 'json' in r.headers.get('content-type', '') else None
+            lst = j if isinstance(j, list) else (j.get('data') if isinstance(j, dict) and isinstance(j.get('data'), list) else [])
+            key_status[key] = {'status': r.status_code, 'runs': len(lst)}
+            if r.status_code == 200 and lst: runs += lst
+            elif r.status_code == 200: runs.append({'report_key': key, 'id': 0, 'generated': None})
         except Exception as e:
-            log('report-queue', params, 'ERR', e); runs = []
-        if runs: break
-    log('report-queue runs', len(runs))
+            key_status[key] = {'status': 'ERR', 'error': str(e)[:100]}
+        time.sleep(0.2)
+    log('valid keys', sum(1 for v in key_status.values() if v.get('status') == 200), 'with runs', sum(1 for v in key_status.values() if v.get('runs')))
+    runs = [r for r in runs if r.get('id')] or runs
     if not runs: sys.exit(35)
     keys = {}
     for r in runs:
@@ -65,6 +92,7 @@ def main():
                            set(re.findall(r'/reports/([a-z0-9\-]+)/', h)))
     except Exception as e: log('catalogue', e)
     inv = {'generated': datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds'), 'queued_runs': len(runs),
+           'key_status': key_status,
            'keys': {kk: {'runs': v['runs'], 'filters': sorted(v['filters']), 'latest': v['latest']} for kk, v in sorted(keys.items())},
            'catalogue': catalogue}
     os.makedirs(a.out, exist_ok=True); os.makedirs(a.raw, exist_ok=True)
@@ -74,7 +102,7 @@ def main():
     entities = {}
     for key, K in sorted(keys.items()):
         if only and not any(o in key for o in only): continue
-        if not K['latest']: continue
+        if not K['latest'] or not K['latest'].get('id'): continue
         slug = re.sub(r'_report$', '', key).replace('_', '-')
         rid = K['latest']['id']; rows = None
         for url in (f'/data/reports/{slug}/{rid}/export', f'/data/reports/{slug}/{rid}/export?format=csv', f'/data/report-queue/{rid}/export'):
