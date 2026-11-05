@@ -65,7 +65,8 @@ PREFIXES = ['/data/', '/data/v2/', '/data/v2/epos/', '/data/v2/customer/', '/dat
 
 PII = re.compile(r'(^|_)(first_?name|last_?name|full_?name|surname|forename|email|phone|mobile|telephone|address'
                  r'|address_?line|postcode|post_?code|zip|dob|date_of_birth|birth|password|pin|token|secret|api_?key'
-                 r'|card_?number|pan|iban|sort_?code|account_?number|ip|ip_address|notes?|comment)($|_)', re.I)
+                 r'|card_?number|pan|iban|sort_?code|account_?number|ip|ip_address|notes?|comment|sms|rfid'
+                 r'|(customer|staff|guest|member|user|manager|booker|contact)_?(name|full_?name))($|_)', re.I)
 NAMEY = re.compile(r'(^|_)name$', re.I)  # a venue/item/supplier name is not PII, a customer name is
 PEOPLE = re.compile(r'customer|staff|user|employee|member|guest|contact', re.I)
 
