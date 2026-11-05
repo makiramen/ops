@@ -1,4 +1,4 @@
-# Kobas extraction 2026-11-05T16:39Z
+# Kobas extraction 2026-11-05T16:51Z
 
 - routes probed: 1397; answered JSON: 21; entities with fields: 17
 - reference edges: 15; compositions: 19
