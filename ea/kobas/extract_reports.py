@@ -174,12 +174,18 @@ def main():
             log('bundle', u.split('/')[-1][:50], len(js), 'urls', len(urls), 'keys', len(bkeys), urls[:30])
             pages |= {x.rstrip('/') for x in urls if x.startswith('/reports/') and x.count('/') >= 2 and '$' not in x}
         inv['bundles'] = bundles
-        for cand in ('/data/reports', '/data/report', '/data/report/list', '/data/reports/list', '/data/reports/available', '/data/report-list'):
+        for cand in ('/data/report/system', '/data/reports', '/data/report', '/data/report/list', '/data/reports/list', '/data/reports/available', '/data/report-list'):
             try:
                 rr = k.s.get(BASE + cand, timeout=60)
                 log('catalogue api', cand, rr.status_code, rr.headers.get('content-type', '')[:30], rr.text[:200].replace('\n', ' '))
                 if rr.status_code == 200 and 'json' in rr.headers.get('content-type', ''):
-                    inv['catalogue_api'] = {'route': cand, 'body': rr.json()}; break
+                    body = rr.json(); inv['catalogue_api'] = {'route': cand, 'body': body}
+                    blob = json.dumps(body)
+                    pages |= {x.rstrip('/') for x in re.findall(r'"(/reports?/[a-z0-9\-/]+)"', blob)}
+                    found = sorted(set(re.findall(r'"([a-z]+(?:_[a-z0-9]+)*_(?:report|export))"', blob)) | set(re.findall(r'"report_key":\s*"([a-z0-9_]+)"', blob)))
+                    inv['catalogue_keys'] = found
+                    log('catalogue api keys', len(found), found[:80], 'pages', len(pages))
+                    break
             except Exception as e: log('catalogue api', cand, e)
     except Exception as e: log('reports list scripts', e)
     pages = sorted(p.rstrip('/') for p in pages if p.count('/') >= 2 and not p.endswith('/list'))

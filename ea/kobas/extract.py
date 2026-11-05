@@ -44,7 +44,12 @@ PAGES = ['/', '/dashboard/', '/admin/', '/admin/venues/', '/admin/users/', '/adm
 SEED = ['/data/venue', '/data/daily', '/data/items', '/data/item/1', '/data/item/category/6', '/data/till/all',
         '/data/till-menu/1', '/data/till-page/1', '/data/price-band', '/data/reports/cash-log', '/data/report-queue',
         '/data/v2/epos/item', '/data/v2/epos/items', '/data/epos/item', '/data/v2/stock/ingredient',
-        '/data/v2/stock/order', '/data/v2/stock/order/delivery', '/data/v2/stock/usage', '/data/v2/stock/usage/reasons']
+        '/data/v2/stock/order', '/data/v2/stock/order/delivery', '/data/v2/stock/usage', '/data/v2/stock/usage/reasons',
+        '/data/venue/epos', '/data/venue/online-ordering', '/data/venue/trading', '/data/venue/service-times', '/data/venue/options',
+        '/data/venue/meta/receipt-formats', '/data/venue/stock-ingredient-restrictions', '/data/loyalty', '/data/loyalty-tags',
+        '/data/loyalty/code/descriptions', '/data/access-area', '/data/user-level', '/data/user-permission', '/data/session',
+        '/data/supplier/delivery', '/data/report/system', '/data/report/holiday-remaining', '/data/system-option/value',
+        '/data/customer/find']
 NAMES = ['venue', 'venues', 'company', 'customer', 'customers', 'customer-group', 'loyalty', 'loyalty-scheme',
          'loyalty-card', 'booking', 'bookings', 'reservation', 'reservations', 'table', 'tables', 'seating-area',
          'order', 'orders', 'sale', 'sales', 'transaction', 'transactions', 'receipt', 'receipts', 'tab', 'tabs',
