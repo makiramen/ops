@@ -161,6 +161,26 @@ def main():
         inv['reports_list_strings'] = sorted(x for x in strings if 'report' in x or x.startswith('/'))[:600]
         pages |= {x.rstrip('/') for x in strings if x.startswith('/reports/') and x.count('/') >= 2}
         log('reports list inline scripts', len(scripts), 'strings kept', len(inv['reports_list_strings']))
+        # the catalogue comes from the external bundles (cloudfront): read those too
+        bundles = {}
+        for src in re.findall(r'<script[^>]+src=["\']([^"\']+)', h):
+            u = ('https:' + src) if src.startswith('//') else ((BASE + src) if src.startswith('/') else src)
+            try:
+                js = k.s.get(u, timeout=90).text
+            except Exception as e: log('bundle', u, e); continue
+            urls = sorted(set(re.findall(r'["\'`](/(?:data|reports?)/[A-Za-z0-9_\-/\.${}]{2,120})["\'`]', js)))
+            keys = sorted(set(re.findall(r'\b([a-z]+(?:_[a-z0-9]+){1,6}_(?:report|export))\b', js)))
+            bundles[u] = {'bytes': len(js), 'urls': urls[:400], 'report_keys': keys[:200]}
+            log('bundle', u.split('/')[-1][:50], len(js), 'urls', len(urls), 'keys', len(keys))
+            pages |= {x.rstrip('/') for x in urls if x.startswith('/reports/') and x.count('/') >= 2 and '$' not in x}
+        inv['bundles'] = bundles
+        for cand in ('/data/reports', '/data/report', '/data/report/list', '/data/reports/list', '/data/reports/available', '/data/report-list'):
+            try:
+                rr = k.s.get(BASE + cand, timeout=60)
+                log('catalogue api', cand, rr.status_code, rr.headers.get('content-type', '')[:30], rr.text[:200].replace('\n', ' '))
+                if rr.status_code == 200 and 'json' in rr.headers.get('content-type', ''):
+                    inv['catalogue_api'] = {'route': cand, 'body': rr.json()}; break
+            except Exception as e: log('catalogue api', cand, e)
     except Exception as e: log('reports list scripts', e)
     pages = sorted(p.rstrip('/') for p in pages if p.count('/') >= 2 and not p.endswith('/list'))
     inv['report_pages'] = pages; log('report pages', len(pages), pages[:40])
