@@ -149,6 +149,19 @@ def main():
             pages |= set(re.findall(r'href=["\'](?:https?://login\.kobas\.co\.uk)?(/report(?:s|ing)/[a-z0-9\-/]+)', h))
         except Exception as e: log('pages', pg, e)
     inv['nav'] = nav
+    # the reports list is rendered client side: keep its inline scripts and every url-ish / key-ish string in them
+    try:
+        h = k.s.get(BASE + '/reports/list/', timeout=60, headers={'X-Requested-With': None}).text
+        scripts = re.findall(r'<script(?![^>]*src)[^>]*>(.*?)</script>', h, flags=re.S)
+        open(os.path.join(a.raw, 'reports_list_inline_scripts.js'), 'w').write('\n\n/* ---- */\n\n'.join(scripts))
+        strings = set()
+        for sc in scripts:
+            strings |= set(re.findall(r'["\'](/[A-Za-z0-9_\-/\.]{3,120})["\']', sc))
+            strings |= set(re.findall(r'\b([a-z]+(?:_[a-z0-9]+){1,6})\b', sc))
+        inv['reports_list_strings'] = sorted(x for x in strings if 'report' in x or x.startswith('/'))[:600]
+        pages |= {x.rstrip('/') for x in strings if x.startswith('/reports/') and x.count('/') >= 2}
+        log('reports list inline scripts', len(scripts), 'strings kept', len(inv['reports_list_strings']))
+    except Exception as e: log('reports list scripts', e)
     pages = sorted(p.rstrip('/') for p in pages if p.count('/') >= 2 and not p.endswith('/list'))
     inv['report_pages'] = pages; log('report pages', len(pages), pages[:40])
     yday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
