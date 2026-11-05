@@ -400,7 +400,7 @@
 - 404 /data/epos/supplier
 - 404 /data/epos/suppliers
 
-## Report-only entities (step 1b, 2026-11-05T17:16Z)
+## Report-only entities (step 1b, 2026-11-05T17:20Z)
 
 - report keys ever queued: 5; exports read: 3; catalogue entries on /reports/list/: 0
 
