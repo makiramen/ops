@@ -1,0 +1,163 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "2",
+    "3",
+    "4"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-examples": [
+    "Alcohol - IKIGAI",
+    "Cocktails - IKIGAI",
+    "Dessert - IKIGAI"
+   ]
+  },
+  "public_name": {
+   "type": "string",
+   "nullable": true,
+   "x-examples": [
+    "Cocktails",
+    "Add ons",
+    "Sides"
+   ]
+  },
+  "public_facing": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1"
+   ]
+  },
+  "printorder": {
+   "type": "integer",
+   "x-examples": [
+    "8",
+    "10",
+    "11"
+   ]
+  },
+  "led": {
+   "type": "string",
+   "x-enum-like": [
+    "controllables",
+    "food",
+    "wet"
+   ]
+  },
+  "servicecharge": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "total_items": {
+   "type": "integer",
+   "x-examples": [
+    "29",
+    "0",
+    "4"
+   ]
+  },
+  "system_categoryleadtype": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "integer",
+     "x-enum-like": [
+      "1",
+      "2",
+      "3"
+     ]
+    },
+    "name": {
+     "type": "string",
+     "x-enum-like": [
+      "controllables",
+      "food",
+      "wet"
+     ]
+    },
+    "bdontattributesales": {
+     "type": "boolean",
+     "x-examples": [
+      "False",
+      "True"
+     ]
+    },
+    "active": {
+     "type": "boolean",
+     "x-examples": [
+      "True"
+     ]
+    },
+    "m_date": {
+     "type": "string",
+     "format": "date-time",
+     "x-enum-like": [
+      "2017-08-14 15:26:15"
+     ]
+    }
+   }
+  },
+  "m_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2024-07-05 10:14:57",
+    "2024-07-05 10:15:23",
+    "2024-07-05 10:15:30"
+   ]
+  },
+  "c_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2023-05-31 17:07:04",
+    "2023-05-31 17:08:47",
+    "2023-05-31 17:09:12"
+   ]
+  },
+  "active": {
+   "type": "boolean",
+   "x-examples": [
+    "True"
+   ]
+  },
+  "image_url": {
+   "type": "string",
+   "nullable": true,
+   "x-examples": [
+    "3031/item_category_images/alcohol.jpg",
+    "3031/item_category_images/2-cocktails.pn",
+    "3031/item_category_images/2-dessert.png"
+   ]
+  }
+ },
+ "required": [
+  "active",
+  "c_date",
+  "id",
+  "led",
+  "m_date",
+  "name",
+  "printorder",
+  "public_facing",
+  "servicecharge",
+  "system_categoryleadtype",
+  "total_items"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "item_category",
+ "x-routes": [
+  "/data/item/category",
+  "/data/item/category/6"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

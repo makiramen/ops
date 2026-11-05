@@ -1,0 +1,139 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "1",
+    "2",
+    "3"
+   ]
+  },
+  "stock_order_id": {
+   "type": "integer",
+   "x-examples": [
+    "2",
+    "3",
+    "4"
+   ]
+  },
+  "staff_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "170",
+    "210",
+    "279",
+    "280",
+    "300",
+    "301"
+   ]
+  },
+  "staff_name": {
+   "type": "string",
+   "x-enum-like": [
+    "Agnieszka Dominika Sztubecka",
+    "Farsai Niparrath",
+    "Karthick Malaivasan",
+    "Miu Maeda",
+    "Yi Hui (Zinnie) Ong",
+    "Ziang Lin"
+   ]
+  },
+  "log_date": {
+   "type": "string",
+   "format": "date",
+   "x-examples": [
+    "2023-07-19",
+    "2023-07-21",
+    "2023-07-22"
+   ]
+  },
+  "delivery_note_number": {
+   "type": "string",
+   "format": "numeric",
+   "nullable": true
+  },
+  "delivery_note_net_total": {
+   "type": [
+    "integer",
+    "number"
+   ]
+  },
+  "delivery_note_gross_total": {
+   "type": [
+    "integer",
+    "number"
+   ]
+  },
+  "delivery_note_url": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivery_note_url_cdn": {
+   "type": "null",
+   "nullable": true
+  },
+  "invoice_number": {
+   "type": "null",
+   "nullable": true
+  },
+  "invoice_date": {
+   "type": "null",
+   "nullable": true
+  },
+  "invoice_received": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "invoice_paid": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "invoice_url": {
+   "type": "null",
+   "nullable": true
+  },
+  "invoice_url_cdn": {
+   "type": "null",
+   "nullable": true
+  },
+  "note": {
+   "type": "null",
+   "nullable": true
+  },
+  "total": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "4.8",
+    "620",
+    "201"
+   ]
+  }
+ },
+ "required": [
+  "delivery_note_gross_total",
+  "delivery_note_net_total",
+  "id",
+  "invoice_paid",
+  "invoice_received",
+  "log_date",
+  "staff_id",
+  "staff_name",
+  "stock_order_id",
+  "total"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "stock_order_delivery",
+ "x-routes": [
+  "/data/v2/stock/order/delivery"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

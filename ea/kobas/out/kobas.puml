@@ -1,0 +1,346 @@
+@startuml
+title Kobas business entities (PSM, extracted 2026-11-05)
+hide empty members
+skinparam classAttributeIconSize 0
+class company {
+  name : string
+  website : string
+  logourl : string
+}
+class customer {
+  id : integer
+  firstname : string
+  surname : string?
+  email : string
+  mobile : string?
+  active_cards : integer
+  inactive_cards : integer
+  cards_order : integer
+  net_points : integer
+  invalid_email : null?
+  invalid_sms : string?
+  is_confirmed : boolean
+  has_rfid : boolean
+  has_inactive_rfid : boolean
+}
+class discount {
+  id : integer
+  name : string
+  public_name : string
+  appliesto : string
+  discounttype : string
+  discountitems : integer
+  discountvalue : integer
+  max_value_per_cover : integer
+  max_total_value : null?
+  autoapply : boolean
+  spantabs : boolean
+  singleuse : boolean
+  voucherlocked : boolean
+  tab_locked : boolean
+  hidden : boolean
+  expireafter : integer
+  ordering : integer
+  when_available : string
+  available_all_menus : boolean
+  available_all_consumption_modes : boolean
+  available_in_consumption_modes : string
+  available_on : string
+  tax_exempt : boolean
+  potentialsales : boolean
+  m_date : string
+  c_date : string
+  active : boolean
+  menus : array
+  eligible_items : array|object
+  qualifying_items : array
+  threshold_assigned : boolean
+  campaign_assigned : boolean
+}
+class integration {
+  id : integer
+  name : string
+  enabled : boolean
+}
+class item_category {
+  id : integer
+  name : string
+  public_name : string?
+  public_facing : integer
+  printorder : integer
+  led : string
+  servicecharge : boolean
+  total_items : integer
+  system_categoryleadtype : object
+  m_date : string
+  c_date : string
+  active : boolean
+  image_url : string?
+}
+class menu {
+  id : integer
+  name : string
+  venue_id : integer
+  deliverect_requires_external_sync : integer
+  deliverect_last_external_sync : string?
+  requires_external_sync : null?
+  requires_external_delete : null?
+  last_external_sync : null?
+  active : integer
+}
+class price_band {
+  id : integer
+  name : string
+  venue : object
+}
+class reservation {
+  id : integer
+  staff_id : integer
+  staff_name : string
+  venue_id : integer
+  venue_name : string
+  loyalty_customer_id : integer
+  loyalty_customer_name : string
+  reference : string
+  start_at : string
+  end_at : string
+  guests : integer
+  status : string
+  reservation_source_id : integer
+  reservation_source_name : string
+  reservation_type : string
+  external_id : null?
+  m_date : string
+  c_date : string
+  tag_xref : array
+  payments : array
+}
+class staff {
+  id : integer
+  franchisee_id : integer
+  userid : integer
+  type_id : integer
+  title : string?
+  firstname : string
+  surname : string
+  name : string
+  gender : string?
+  email : string
+  telephone : string
+  mobile : string?
+  address1 : string
+  address2 : string?
+  town : string
+  postcode : string
+  nationality : string?
+  dob : string?
+  applicationformurl : string
+  cvurl : string
+  profileimageurl : string
+  startdate : string
+  enddate : null?
+  is_current_employee : boolean
+  nextreview : string
+  nextappraisal : string
+  bstage1 : boolean
+  bstage2 : boolean
+  bstage3 : boolean
+  bstage4 : boolean
+  bstage5 : boolean
+  boffered : boolean
+  brejected : boolean
+  bnewstarter : boolean
+  bleft : boolean
+  bexported : boolean
+  breinstated : boolean
+  venueid : integer
+  level : integer
+  level_seniority : integer
+  .. 22 more ..
+}
+class stock_ingredient {
+  id : integer
+  name : string
+  public_name : string?
+  stock_ingredient_category_id : integer
+  stock_ingredient_category_name : string
+  dormant : integer
+  listed : integer
+  current_stock_ingredient_interval : object
+  children : array
+  restrictions : array
+}
+class stock_order {
+  id : integer
+  type : string
+  staff_id : integer
+  staff_name : string
+  to_venue_id : integer
+  to_venue_name : string
+  from_venue_id : null?
+  from_venue_name : null?
+  from_supplier_id : integer
+  from_supplier_name : string
+  log_date : string
+  estimated_date : null?
+  dispatched_date : null?
+  delivered_date : string
+  last_for : integer
+  status : string
+  stock_order_email : array
+  total : integer|number
+  m_date : string
+  c_date : string
+  stock_order_delivery : object
+}
+class stock_order_delivery {
+  id : integer
+  stock_order_id : integer
+  staff_id : integer
+  staff_name : string
+  log_date : string
+  delivery_note_number : string?
+  delivery_note_net_total : integer|number
+  delivery_note_gross_total : integer|number
+  delivery_note_url : null?
+  delivery_note_url_cdn : null?
+  invoice_number : null?
+  invoice_date : null?
+  invoice_received : integer
+  invoice_paid : integer
+  invoice_url : null?
+  invoice_url_cdn : null?
+  note : null?
+  total : integer|number
+}
+class stock_usage {
+  comp : array
+  director : array
+  waste : array
+}
+class supplier {
+  id : integer
+  name : string
+  address1 : null?
+  address2 : null?
+  town : null?
+  county : null?
+  postcode : null?
+  contact : string?
+  email : string?
+  phone : string?
+  companyaccountreference : string?
+  bvenuecodes : boolean
+  bdelivery : boolean
+  bpettycash : boolean
+  code : null?
+  tax_rate : string?
+  sageaccountref : null?
+  vtprimaryaccount : null?
+  vtanalysisaccount : null?
+  xero_account_ref : null?
+  hasvat : boolean
+  bdelnoteprices : string?
+  active : boolean
+  venues : array
+  venue_codes : array
+  paidout_types : array
+  notification_emails : array
+  venue_restrictions : array
+  edi : boolean
+  gln : null?
+  edi_identity : null?
+}
+class till {
+  id : integer
+  ip_addr : string
+  default_consumption_mode : string
+  default_order_tracking : integer
+  name : string
+  parlevel : integer
+  venueid : integer
+  till_type_id : integer
+  login_action : string
+  login_timeout : integer
+  logout_after_cash_out : boolean
+  service_charge_auto_order : integer
+  service_charge_auto_tab : integer
+  print_when_tab_settled : boolean
+  print_when_order_settled : boolean
+  only_open_drawer_for_cash : boolean
+  primary_till_printers_id : integer
+  default_till_pages_id : integer?
+  permit_cash : integer
+  permit_pin : integer
+  permit_attendance_tracking : integer
+  pdq_integrated : boolean?
+  service_charges : array
+  venue_name : string
+  till_type : string
+  active : integer
+}
+class till_page {
+  id : integer
+  name : string
+  style : integer
+  ordering : integer
+}
+class venue {
+  id : integer
+  parent_id : null?
+  is_parent : boolean
+  territory_region_id : integer
+  territory_region_name : string
+  territory_id : integer
+  territory_name : string
+  franchisee_id : integer
+  is_head_office : boolean
+  menuid : integer
+  menu_id : integer
+  name : string
+  sname : string
+  address : string
+  latitude : number
+  longitude : number
+  postcode : string
+  telephone : string
+  email : string
+  startweekid : integer
+  startweek_date : string
+  endweekid : integer
+  endweek_date : string?
+  tiptype : string
+  amexmode : string
+  gmap_address : string
+  receipt_signoff : string
+  receipt_hide_name : boolean
+  receipt_header_url : string
+  screen_message : string?
+  tax_number : string
+  managerid : integer
+  weeklybonus : integer
+  sagepayelementhours : null?
+  sagepayelementtips : null?
+  sageaccountreference : null?
+  sagedepartmentcode : null?
+  preoday_enabled : boolean
+  preoday_venue_id : null?
+  preoday_print_orders : boolean
+  .. 57 more ..
+}
+menu --> venue : venue_id
+price_band *-- venue : venue
+reservation --> staff : staff_id
+reservation --> venue : venue_id
+reservation --> customer : loyalty_customer_id
+stock_ingredient --> supplier : children[].supplier_id
+stock_ingredient --> venue : children[].restrictions[].venue_id
+stock_order --> staff : staff_id
+stock_order --> venue : to_venue_id
+stock_order --> supplier : from_supplier_id
+stock_order *-- stock_order_delivery : stock_order_delivery
+stock_order_delivery --> stock_order : stock_order_id
+stock_order_delivery --> staff : staff_id
+supplier *-- "many" venue : venues[]
+venue --> menu : menu_id
+@enduml

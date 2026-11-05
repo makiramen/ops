@@ -1,0 +1,296 @@
+classDiagram
+  class company {
+    string name
+    string website
+    string logourl
+  }
+  class customer {
+    integer id
+    string firstname
+    string surname
+    string email
+    string mobile
+    integer active_cards
+    integer inactive_cards
+    integer cards_order
+    integer net_points
+    null invalid_email
+    string invalid_sms
+    boolean is_confirmed
+    boolean has_rfid
+    boolean has_inactive_rfid
+  }
+  class discount {
+    integer id
+    string name
+    string public_name
+    string appliesto
+    string discounttype
+    integer discountitems
+    integer discountvalue
+    integer max_value_per_cover
+    null max_total_value
+    boolean autoapply
+    boolean spantabs
+    boolean singleuse
+    boolean voucherlocked
+    boolean tab_locked
+    boolean hidden
+    integer expireafter
+    integer ordering
+    string when_available
+    boolean available_all_menus
+    boolean available_all_consumption_modes
+    string available_in_consumption_modes
+    string available_on
+    boolean tax_exempt
+    boolean potentialsales
+    string m_date
+  }
+  class integration {
+    integer id
+    string name
+    boolean enabled
+  }
+  class item_category {
+    integer id
+    string name
+    string public_name
+    integer public_facing
+    integer printorder
+    string led
+    boolean servicecharge
+    integer total_items
+    object system_categoryleadtype
+    string m_date
+    string c_date
+    boolean active
+    string image_url
+  }
+  class menu {
+    integer id
+    string name
+    integer venue_id
+    integer deliverect_requires_external_sync
+    string deliverect_last_external_sync
+    null requires_external_sync
+    null requires_external_delete
+    null last_external_sync
+    integer active
+  }
+  class price_band {
+    integer id
+    string name
+    object venue
+  }
+  class reservation {
+    integer id
+    integer staff_id
+    string staff_name
+    integer venue_id
+    string venue_name
+    integer loyalty_customer_id
+    string loyalty_customer_name
+    string reference
+    string start_at
+    string end_at
+    integer guests
+    string status
+    integer reservation_source_id
+    string reservation_source_name
+    string reservation_type
+    null external_id
+    string m_date
+    string c_date
+    array tag_xref
+    array payments
+  }
+  class staff {
+    integer id
+    integer franchisee_id
+    integer userid
+    integer type_id
+    string title
+    string firstname
+    string surname
+    string name
+    string gender
+    string email
+    string telephone
+    string mobile
+    string address1
+    string address2
+    string town
+    string postcode
+    string nationality
+    string dob
+    string applicationformurl
+    string cvurl
+    string profileimageurl
+    string startdate
+    null enddate
+    boolean is_current_employee
+    string nextreview
+  }
+  class stock_ingredient {
+    integer id
+    string name
+    string public_name
+    integer stock_ingredient_category_id
+    string stock_ingredient_category_name
+    integer dormant
+    integer listed
+    object current_stock_ingredient_interval
+    array children
+    array restrictions
+  }
+  class stock_order {
+    integer id
+    string type
+    integer staff_id
+    string staff_name
+    integer to_venue_id
+    string to_venue_name
+    null from_venue_id
+    null from_venue_name
+    integer from_supplier_id
+    string from_supplier_name
+    string log_date
+    null estimated_date
+    null dispatched_date
+    string delivered_date
+    integer last_for
+    string status
+    array stock_order_email
+    mixed total
+    string m_date
+    string c_date
+    object stock_order_delivery
+  }
+  class stock_order_delivery {
+    integer id
+    integer stock_order_id
+    integer staff_id
+    string staff_name
+    string log_date
+    string delivery_note_number
+    mixed delivery_note_net_total
+    mixed delivery_note_gross_total
+    null delivery_note_url
+    null delivery_note_url_cdn
+    null invoice_number
+    null invoice_date
+    integer invoice_received
+    integer invoice_paid
+    null invoice_url
+    null invoice_url_cdn
+    null note
+    mixed total
+  }
+  class stock_usage {
+    array comp
+    array director
+    array waste
+  }
+  class supplier {
+    integer id
+    string name
+    null address1
+    null address2
+    null town
+    null county
+    null postcode
+    string contact
+    string email
+    string phone
+    string companyaccountreference
+    boolean bvenuecodes
+    boolean bdelivery
+    boolean bpettycash
+    null code
+    string tax_rate
+    null sageaccountref
+    null vtprimaryaccount
+    null vtanalysisaccount
+    null xero_account_ref
+    boolean hasvat
+    string bdelnoteprices
+    boolean active
+    array venues
+    array venue_codes
+  }
+  class till {
+    integer id
+    string ip_addr
+    string default_consumption_mode
+    integer default_order_tracking
+    string name
+    integer parlevel
+    integer venueid
+    integer till_type_id
+    string login_action
+    integer login_timeout
+    boolean logout_after_cash_out
+    integer service_charge_auto_order
+    integer service_charge_auto_tab
+    boolean print_when_tab_settled
+    boolean print_when_order_settled
+    boolean only_open_drawer_for_cash
+    integer primary_till_printers_id
+    integer default_till_pages_id
+    integer permit_cash
+    integer permit_pin
+    integer permit_attendance_tracking
+    boolean pdq_integrated
+    array service_charges
+    string venue_name
+    string till_type
+  }
+  class till_page {
+    integer id
+    string name
+    integer style
+    integer ordering
+  }
+  class venue {
+    integer id
+    null parent_id
+    boolean is_parent
+    integer territory_region_id
+    string territory_region_name
+    integer territory_id
+    string territory_name
+    integer franchisee_id
+    boolean is_head_office
+    integer menuid
+    integer menu_id
+    string name
+    string sname
+    string address
+    number latitude
+    number longitude
+    string postcode
+    string telephone
+    string email
+    integer startweekid
+    string startweek_date
+    integer endweekid
+    string endweek_date
+    string tiptype
+    string amexmode
+  }
+  menu --> venue : venue_id
+  price_band *-- venue : venue
+  reservation --> staff : staff_id
+  reservation --> venue : venue_id
+  reservation --> customer : loyalty_customer_id
+  stock_ingredient --> supplier : children[].supplier_id
+  stock_ingredient --> venue : children[].restrictions[].venue_id
+  stock_order --> staff : staff_id
+  stock_order --> venue : to_venue_id
+  stock_order --> supplier : from_supplier_id
+  stock_order *-- stock_order_delivery : stock_order_delivery
+  stock_order_delivery --> stock_order : stock_order_id
+  stock_order_delivery --> staff : staff_id
+  supplier *-- venue : venues[]
+  venue --> menu : menu_id

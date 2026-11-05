@@ -1,0 +1,215 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "1",
+    "2",
+    "3"
+   ]
+  },
+  "ip_addr": {
+   "type": "string"
+  },
+  "default_consumption_mode": {
+   "type": "string",
+   "x-enum-like": [
+    "eatin"
+   ]
+  },
+  "default_order_tracking": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-examples": [
+    "Server Till",
+    "Till 1 [Server]",
+    "iPad 1"
+   ]
+  },
+  "parlevel": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "100",
+    "200"
+   ]
+  },
+  "venueid": {
+   "type": "integer",
+   "x-examples": [
+    "5",
+    "10",
+    "11"
+   ]
+  },
+  "till_type_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "12",
+    "5"
+   ]
+  },
+  "login_action": {
+   "type": "string",
+   "x-enum-like": [
+    "menu"
+   ]
+  },
+  "login_timeout": {
+   "type": "integer",
+   "x-enum-like": [
+    "120",
+    "60"
+   ]
+  },
+  "logout_after_cash_out": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "service_charge_auto_order": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "10"
+   ]
+  },
+  "service_charge_auto_tab": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "10"
+   ]
+  },
+  "print_when_tab_settled": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "print_when_order_settled": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "only_open_drawer_for_cash": {
+   "type": "boolean",
+   "x-examples": [
+    "True",
+    "False"
+   ]
+  },
+  "primary_till_printers_id": {
+   "type": "integer",
+   "x-examples": [
+    "16",
+    "1",
+    "5"
+   ]
+  },
+  "default_till_pages_id": {
+   "type": "integer",
+   "nullable": true,
+   "x-examples": [
+    "19"
+   ]
+  },
+  "permit_cash": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1"
+   ]
+  },
+  "permit_pin": {
+   "type": "integer"
+  },
+  "permit_attendance_tracking": {
+   "type": "integer",
+   "x-enum-like": [
+    "1"
+   ]
+  },
+  "pdq_integrated": {
+   "type": "boolean",
+   "nullable": true,
+   "x-examples": [
+    "True"
+   ]
+  },
+  "service_charges": {
+   "type": "array",
+   "items": {
+    "type": [
+     "integer"
+    ]
+   }
+  },
+  "venue_name": {
+   "type": "string",
+   "x-examples": [
+    "Maki Fountainbridge",
+    "OLD: Maki Renfield",
+    "AAHQ Ltd"
+   ]
+  },
+  "till_type": {
+   "type": "string",
+   "x-enum-like": [
+    "Apple iPad OS 13.3+",
+    "Kobas Enterprise Linux"
+   ]
+  },
+  "active": {
+   "type": "integer",
+   "x-enum-like": [
+    "1"
+   ]
+  }
+ },
+ "required": [
+  "active",
+  "default_consumption_mode",
+  "default_order_tracking",
+  "id",
+  "ip_addr",
+  "login_action",
+  "login_timeout",
+  "logout_after_cash_out",
+  "name",
+  "only_open_drawer_for_cash",
+  "parlevel",
+  "permit_attendance_tracking",
+  "permit_cash",
+  "permit_pin",
+  "primary_till_printers_id",
+  "print_when_order_settled",
+  "print_when_tab_settled",
+  "service_charge_auto_order",
+  "service_charge_auto_tab",
+  "service_charges",
+  "till_type",
+  "till_type_id",
+  "venue_name",
+  "venueid"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "till",
+ "x-routes": [
+  "/data/till",
+  "/data/till/all"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

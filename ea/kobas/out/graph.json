@@ -1,0 +1,417 @@
+{
+ "generated": "2026-11-05T16:39:08+00:00",
+ "source": "https://login.kobas.co.uk",
+ "nodes": [
+  {
+   "id": "company",
+   "fields": 3,
+   "routes": [
+    "/data/company"
+   ],
+   "sample": 1
+  },
+  {
+   "id": "customer",
+   "fields": 14,
+   "routes": [
+    "/data/customer"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "discount",
+   "fields": 32,
+   "routes": [
+    "/data/discount"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "integration",
+   "fields": 3,
+   "routes": [
+    "/data/integration"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "item_category",
+   "fields": 13,
+   "routes": [
+    "/data/item/category",
+    "/data/item/category/6"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "menu",
+   "fields": 9,
+   "routes": [
+    "/data/menu"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "price_band",
+   "fields": 3,
+   "routes": [
+    "/data/price-band"
+   ],
+   "sample": 6
+  },
+  {
+   "id": "reservation",
+   "fields": 20,
+   "routes": [
+    "/data/reservation"
+   ],
+   "sample": 5
+  },
+  {
+   "id": "staff",
+   "fields": 62,
+   "routes": [
+    "/data/staff"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "stock_ingredient",
+   "fields": 10,
+   "routes": [
+    "/data/v2/stock/ingredient"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "stock_order",
+   "fields": 21,
+   "routes": [
+    "/data/v2/stock/order"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "stock_order_delivery",
+   "fields": 18,
+   "routes": [
+    "/data/v2/stock/order/delivery"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "stock_usage",
+   "fields": 3,
+   "routes": [
+    "/data/v2/stock/usage/reasons"
+   ],
+   "sample": 1
+  },
+  {
+   "id": "supplier",
+   "fields": 31,
+   "routes": [
+    "/data/supplier"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "till",
+   "fields": 26,
+   "routes": [
+    "/data/till",
+    "/data/till/all"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "till_page",
+   "fields": 4,
+   "routes": [
+    "/data/till-page"
+   ],
+   "sample": 25
+  },
+  {
+   "id": "venue",
+   "fields": 97,
+   "routes": [
+    "/data/venue"
+   ],
+   "sample": 25
+  }
+ ],
+ "edges": [
+  {
+   "from": "discount",
+   "to": "discount.eligible_items",
+   "field": "eligible_items",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "discount",
+   "to": "discount.1",
+   "field": "eligible_items.1",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "item_category",
+   "to": "item_category.system_categoryleadtype",
+   "field": "system_categoryleadtype",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "menu",
+   "to": "venue",
+   "field": "venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "price_band",
+   "to": "venue",
+   "field": "venue",
+   "kind": "composition"
+  },
+  {
+   "from": "price_band",
+   "to": "price_band.used",
+   "field": "venue.used[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "reservation",
+   "to": "staff",
+   "field": "staff_id",
+   "kind": "reference"
+  },
+  {
+   "from": "reservation",
+   "to": "venue",
+   "field": "venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "reservation",
+   "to": "customer",
+   "field": "loyalty_customer_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "stock_ingredient.current_stock_ingredient_interval",
+   "field": "current_stock_ingredient_interval",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "stock_ingredient.children",
+   "field": "children[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "supplier",
+   "field": "children[].supplier_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "stock_ingredient.current_stock_ingredient_interval",
+   "field": "children[].current_stock_ingredient_interval",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "stock_ingredient.restrictions",
+   "field": "children[].restrictions[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "venue",
+   "field": "children[].restrictions[].venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "stock_ingredient.restrictions",
+   "field": "restrictions[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "stock_ingredient",
+   "to": "venue",
+   "field": "restrictions[].venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_order",
+   "to": "staff",
+   "field": "staff_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_order",
+   "to": "venue",
+   "field": "to_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_order",
+   "to": "venue",
+   "field": "from_venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_order",
+   "to": "supplier",
+   "field": "from_supplier_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_order",
+   "to": "stock_order.stock_order_email",
+   "field": "stock_order_email[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "stock_order",
+   "to": "stock_order.state",
+   "field": "stock_order_email[].state",
+   "kind": "composition:inline"
+  },
+  {
+   "from": "stock_order",
+   "to": "stock_order_delivery",
+   "field": "stock_order_delivery",
+   "kind": "composition"
+  },
+  {
+   "from": "stock_order_delivery",
+   "to": "stock_order",
+   "field": "stock_order_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_order_delivery",
+   "to": "staff",
+   "field": "staff_id",
+   "kind": "reference"
+  },
+  {
+   "from": "stock_usage",
+   "to": "stock_usage.comp",
+   "field": "comp[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "stock_usage",
+   "to": "stock_usage.director",
+   "field": "director[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "stock_usage",
+   "to": "stock_usage.waste",
+   "field": "waste[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "supplier",
+   "to": "venue",
+   "field": "venues[]",
+   "kind": "composition-many"
+  },
+  {
+   "from": "supplier",
+   "to": "supplier.paidout_types",
+   "field": "paidout_types[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "supplier",
+   "to": "supplier.venue_restrictions",
+   "field": "venue_restrictions[]",
+   "kind": "composition-many:inline"
+  },
+  {
+   "from": "supplier",
+   "to": "venue",
+   "field": "venue_restrictions[].venue_id",
+   "kind": "reference"
+  },
+  {
+   "from": "venue",
+   "to": "menu",
+   "field": "menu_id",
+   "kind": "reference"
+  }
+ ],
+ "unresolved_references": {
+  "booker_location": [
+   "venue"
+  ],
+  "default_till_pages": [
+   "till"
+  ],
+  "external": [
+   "reservation"
+  ],
+  "franchisee": [
+   "staff",
+   "venue"
+  ],
+  "mailchimp_list": [
+   "venue"
+  ],
+  "meta_deliverect_delivery_stock_item": [
+   "venue"
+  ],
+  "meta_deliverect_location": [
+   "venue"
+  ],
+  "meta_trifft_location": [
+   "venue"
+  ],
+  "parent": [
+   "stock_ingredient",
+   "venue"
+  ],
+  "primary_till_printers": [
+   "till"
+  ],
+  "reservation_source": [
+   "reservation"
+  ],
+  "staff_application_source": [
+   "staff"
+  ],
+  "stock_ingredient_category": [
+   "stock_ingredient"
+  ],
+  "stock_ingredient_tax_code": [
+   "stock_ingredient"
+  ],
+  "stock_measurement": [
+   "stock_ingredient"
+  ],
+  "system_email_queue": [
+   "stock_order"
+  ],
+  "territory": [
+   "venue"
+  ],
+  "territory_region": [
+   "venue"
+  ],
+  "till_type": [
+   "till"
+  ],
+  "type": [
+   "staff"
+  ],
+  "xero_organisation": [
+   "venue"
+  ]
+ }
+}

@@ -1,0 +1,77 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "1",
+    "2",
+    "3"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-examples": [
+    "Maki Manchester",
+    "Maki Bath Street",
+    "Maki Fountainbridge "
+   ]
+  },
+  "venue_id": {
+   "type": "integer",
+   "x-examples": [
+    "2",
+    "43",
+    "5"
+   ]
+  },
+  "deliverect_requires_external_sync": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "deliverect_last_external_sync": {
+   "type": "string",
+   "format": "date-time",
+   "nullable": true,
+   "x-examples": [
+    "2026-09-12 00:29:04",
+    "2026-10-30 16:34:53",
+    "2026-10-30 16:51:02"
+   ]
+  },
+  "requires_external_sync": {
+   "type": "null",
+   "nullable": true
+  },
+  "requires_external_delete": {
+   "type": "null",
+   "nullable": true
+  },
+  "last_external_sync": {
+   "type": "null",
+   "nullable": true
+  },
+  "active": {
+   "type": "integer",
+   "x-enum-like": [
+    "1"
+   ]
+  }
+ },
+ "required": [
+  "active",
+  "deliverect_requires_external_sync",
+  "id",
+  "name",
+  "venue_id"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "menu",
+ "x-routes": [
+  "/data/menu"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

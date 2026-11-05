@@ -1,0 +1,101 @@
+{
+ "type": "object",
+ "properties": {
+  "comp": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-enum-like": [
+       "1",
+       "2",
+       "3",
+       "4",
+       "5"
+      ]
+     },
+     "description": {
+      "type": "string",
+      "x-enum-like": [
+       "Compensation",
+       "Management Discretion",
+       "Marketing",
+       "Other",
+       "Regular / Resident"
+      ]
+     }
+    }
+   }
+  },
+  "director": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-enum-like": [
+       "15",
+       "6",
+       "7"
+      ]
+     },
+     "description": {
+      "type": "string",
+      "x-enum-like": [
+       "Director",
+       "Other",
+       "Staff Event"
+      ]
+     }
+    }
+   }
+  },
+  "waste": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-enum-like": [
+       "10",
+       "11",
+       "12",
+       "13",
+       "14",
+       "8",
+       "9"
+      ]
+     },
+     "description": {
+      "type": "string",
+      "x-enum-like": [
+       "Bar Burn",
+       "End Of Day",
+       "Expired",
+       "FOH Burn",
+       "Kitchen Burn",
+       "Other",
+       "Service Error"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "required": [
+  "comp",
+  "director",
+  "waste"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "stock_usage",
+ "x-routes": [
+  "/data/v2/stock/usage/reasons"
+ ],
+ "x-sample-size": 1,
+ "x-pii-redacted": false
+}

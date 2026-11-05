@@ -1,0 +1,281 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "60",
+    "61",
+    "62"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-examples": [
+    "\u00a35 Voucher",
+    "\u00a310 Voucher",
+    "\u00a320 Voucher"
+   ]
+  },
+  "public_name": {
+   "type": "string",
+   "x-enum-like": [
+    ""
+   ]
+  },
+  "appliesto": {
+   "type": "string",
+   "x-enum-like": [
+    "Item",
+    "Order"
+   ]
+  },
+  "discounttype": {
+   "type": "string",
+   "x-enum-like": [
+    "Fixed",
+    "Percent"
+   ]
+  },
+  "discountitems": {
+   "type": "integer",
+   "x-enum-like": [
+    "1"
+   ]
+  },
+  "discountvalue": {
+   "type": "integer",
+   "x-enum-like": [
+    "10",
+    "15",
+    "20",
+    "25",
+    "30",
+    "5"
+   ]
+  },
+  "max_value_per_cover": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "max_total_value": {
+   "type": "null",
+   "nullable": true
+  },
+  "autoapply": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "spantabs": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "singleuse": {
+   "type": "boolean",
+   "x-examples": [
+    "True",
+    "False"
+   ]
+  },
+  "voucherlocked": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "tab_locked": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "hidden": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "expireafter": {
+   "type": "integer",
+   "x-enum-like": [
+    "1"
+   ]
+  },
+  "ordering": {
+   "type": "integer",
+   "x-enum-like": [
+    "3"
+   ]
+  },
+  "when_available": {
+   "type": "string",
+   "x-enum-like": [
+    "all the time"
+   ]
+  },
+  "available_all_menus": {
+   "type": "boolean",
+   "x-examples": [
+    "True",
+    "False"
+   ]
+  },
+  "available_all_consumption_modes": {
+   "type": "boolean",
+   "x-examples": [
+    "True"
+   ]
+  },
+  "available_in_consumption_modes": {
+   "type": "string",
+   "x-enum-like": [
+    "[\"eatin\",\"takeaway\",\"delivery\"]"
+   ]
+  },
+  "available_on": {
+   "type": "string",
+   "x-enum-like": [
+    "epos"
+   ]
+  },
+  "tax_exempt": {
+   "type": "boolean",
+   "x-examples": [
+    "True",
+    "False"
+   ]
+  },
+  "potentialsales": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "m_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2025-03-10 09:32:33",
+    "2023-06-30 16:59:50",
+    "2023-06-30 17:00:02"
+   ]
+  },
+  "c_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2023-06-30 16:59:36",
+    "2023-06-30 16:59:50",
+    "2023-06-30 17:00:02"
+   ]
+  },
+  "active": {
+   "type": "boolean",
+   "x-examples": [
+    "True"
+   ]
+  },
+  "menus": {
+   "type": "array",
+   "items": {
+    "type": []
+   }
+  },
+  "eligible_items": {
+   "type": [
+    "array",
+    "object"
+   ],
+   "properties": {
+    "1": {
+     "type": "object",
+     "properties": {
+      "category": {
+       "type": "array",
+       "items": {
+        "type": [
+         "integer"
+        ]
+       }
+      },
+      "item": {
+       "type": "array",
+       "items": {
+        "type": []
+       }
+      }
+     }
+    }
+   },
+   "items": {
+    "type": []
+   }
+  },
+  "qualifying_items": {
+   "type": "array",
+   "items": {
+    "type": []
+   }
+  },
+  "threshold_assigned": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "campaign_assigned": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  }
+ },
+ "required": [
+  "active",
+  "appliesto",
+  "autoapply",
+  "available_all_consumption_modes",
+  "available_all_menus",
+  "available_in_consumption_modes",
+  "available_on",
+  "c_date",
+  "campaign_assigned",
+  "discountitems",
+  "discounttype",
+  "discountvalue",
+  "eligible_items",
+  "expireafter",
+  "hidden",
+  "id",
+  "m_date",
+  "max_value_per_cover",
+  "menus",
+  "name",
+  "ordering",
+  "potentialsales",
+  "public_name",
+  "qualifying_items",
+  "singleuse",
+  "spantabs",
+  "tab_locked",
+  "tax_exempt",
+  "threshold_assigned",
+  "voucherlocked",
+  "when_available"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "discount",
+ "x-routes": [
+  "/data/discount"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

@@ -1,0 +1,307 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "20",
+    "25",
+    "26"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-examples": [
+    "PETTY CASH (from till)",
+    "LYNAS FOODSERVICE",
+    "SCOTCH FROST"
+   ]
+  },
+  "address1": {
+   "type": "null",
+   "nullable": true
+  },
+  "address2": {
+   "type": "null",
+   "nullable": true
+  },
+  "town": {
+   "type": "null",
+   "nullable": true
+  },
+  "county": {
+   "type": "null",
+   "nullable": true
+  },
+  "postcode": {
+   "type": "null",
+   "nullable": true
+  },
+  "contact": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "Dean Thomas",
+    "Global Foods",
+    "Nadeem Shah",
+    "Niraj",
+    "STRAWBERRY CATERING",
+    "Sam",
+    "TIGER",
+    "Welz"
+   ]
+  },
+  "email": {
+   "type": "string",
+   "nullable": true
+  },
+  "phone": {
+   "type": "string",
+   "format": "numeric",
+   "nullable": true
+  },
+  "companyaccountreference": {
+   "type": "string",
+   "format": "numeric",
+   "nullable": true,
+   "x-enum-like": [
+    "01315540358",
+    "MAK012",
+    "RAM005",
+    "RAME04"
+   ]
+  },
+  "bvenuecodes": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "bdelivery": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "bpettycash": {
+   "type": "boolean",
+   "x-examples": [
+    "True",
+    "False"
+   ]
+  },
+  "code": {
+   "type": "null",
+   "nullable": true
+  },
+  "tax_rate": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "T0"
+   ]
+  },
+  "sageaccountref": {
+   "type": "null",
+   "nullable": true
+  },
+  "vtprimaryaccount": {
+   "type": "null",
+   "nullable": true
+  },
+  "vtanalysisaccount": {
+   "type": "null",
+   "nullable": true
+  },
+  "xero_account_ref": {
+   "type": "null",
+   "nullable": true
+  },
+  "hasvat": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "bdelnoteprices": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "gross-and-net"
+   ]
+  },
+  "active": {
+   "type": "boolean",
+   "x-examples": [
+    "True"
+   ]
+  },
+  "venues": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "2",
+       "3",
+       "4"
+      ]
+     },
+     "name": {
+      "type": "string",
+      "x-examples": [
+       "Maki Manchester",
+       "Maki 1/2 (Nicolson St)",
+       "Maki Nicolson"
+      ]
+     }
+    }
+   }
+  },
+  "venue_codes": {
+   "type": "array",
+   "items": {
+    "type": []
+   }
+  },
+  "paidout_types": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "1"
+      ]
+     },
+     "name": {
+      "type": "string",
+      "x-examples": [
+       "Short stock top-up / Venue Operations"
+      ]
+     }
+    }
+   }
+  },
+  "notification_emails": {
+   "type": "array",
+   "items": {
+    "type": []
+   }
+  },
+  "venue_restrictions": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "18",
+       "5",
+       "15"
+      ]
+     },
+     "supplier_id": {
+      "type": "integer",
+      "x-examples": [
+       "20",
+       "25",
+       "27"
+      ]
+     },
+     "venue_id": {
+      "type": "integer",
+      "nullable": true,
+      "x-examples": [
+       "8",
+       "2",
+       "10"
+      ]
+     },
+     "no_restrictions": {
+      "type": "integer",
+      "x-enum-like": [
+       "1"
+      ]
+     },
+     "cut_off_time": {
+      "type": "string",
+      "x-enum-like": [
+       "23:45:00"
+      ]
+     },
+     "lead_time_days": {
+      "type": "integer",
+      "x-enum-like": [
+       "0"
+      ]
+     },
+     "working_days": {
+      "type": "string",
+      "x-enum-like": [
+       "1,2,3,4,5,6,7"
+      ]
+     },
+     "delivery_days": {
+      "type": "string",
+      "x-enum-like": [
+       "1,2,3,4,5,6,7"
+      ]
+     },
+     "min_order_value": {
+      "type": "integer",
+      "x-enum-like": [
+       "0"
+      ]
+     },
+     "delivery_notes": {
+      "type": "null",
+      "nullable": true
+     }
+    }
+   }
+  },
+  "edi": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  },
+  "gln": {
+   "type": "null",
+   "nullable": true
+  },
+  "edi_identity": {
+   "type": "null",
+   "nullable": true
+  }
+ },
+ "required": [
+  "active",
+  "bdelivery",
+  "bpettycash",
+  "bvenuecodes",
+  "edi",
+  "hasvat",
+  "id",
+  "name",
+  "notification_emails",
+  "paidout_types",
+  "venue_codes",
+  "venue_restrictions",
+  "venues"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "supplier",
+ "x-routes": [
+  "/data/supplier"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

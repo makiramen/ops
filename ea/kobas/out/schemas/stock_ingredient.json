@@ -1,0 +1,336 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "1631",
+    "1633",
+    "1635"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-examples": [
+    "FISH BONES - SALMON",
+    "SALMON HEAD",
+    "ONIONS SPANISH"
+   ]
+  },
+  "public_name": {
+   "type": "string",
+   "nullable": true,
+   "x-enum-like": [
+    "Ariake Tonkotsu Ramen - Pork Bone Base S",
+    "Gochujang \u2013 Hot Red Pepper Paste",
+    "LKK Japanese Style Premium Soy Sauce",
+    "Mirin Fu - Sweet Seasoning",
+    "Otafuku Yakisoba - Stir-fry Noodles Sauc",
+    "Shimaya Kombu-Dashi Soup Stock",
+    "Uchibori Rice Vinegar"
+   ]
+  },
+  "stock_ingredient_category_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "18",
+    "19",
+    "20"
+   ]
+  },
+  "stock_ingredient_category_name": {
+   "type": "string",
+   "x-enum-like": [
+    "RHQ DRY STORE",
+    "RHQ FRUIT & VEG",
+    "RHQ MEAT"
+   ]
+  },
+  "dormant": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "listed": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1"
+   ]
+  },
+  "current_stock_ingredient_interval": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "integer",
+     "x-examples": [
+      "2533",
+      "2535",
+      "2537"
+     ]
+    },
+    "stock_ingredient_id": {
+     "type": "integer",
+     "x-examples": [
+      "1631",
+      "1633",
+      "1635"
+     ]
+    },
+    "stock_measurement_id": {
+     "type": "integer",
+     "x-enum-like": [
+      "1",
+      "2",
+      "3"
+     ]
+    },
+    "stock_measurement_name": {
+     "type": "string",
+     "x-enum-like": [
+      "Grams",
+      "Items",
+      "Millilitres"
+     ]
+    },
+    "use_guide": {
+     "type": "integer",
+     "x-enum-like": [
+      "0"
+     ]
+    },
+    "start_at": {
+     "type": "string",
+     "format": "date-time",
+     "x-enum-like": [
+      "2024-01-25 12:13:02",
+      "2024-01-25 12:13:03"
+     ]
+    }
+   }
+  },
+  "children": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "1632",
+       "2226",
+       "1636"
+      ]
+     },
+     "parent_id": {
+      "type": "integer",
+      "x-examples": [
+       "1631",
+       "1633",
+       "1635"
+      ]
+     },
+     "supplier_id": {
+      "type": "integer",
+      "x-examples": [
+       "32",
+       "28",
+       "25"
+      ]
+     },
+     "supplier_name": {
+      "type": "string",
+      "x-examples": [
+       "CAMPBELLS",
+       "GLOBAL FRUITS",
+       "LYNAS FOODSERVICE"
+      ]
+     },
+     "supplier_code": {
+      "type": "string",
+      "nullable": true,
+      "x-examples": [
+       "26FISHBO",
+       "F4F0175",
+       "F4F0189"
+      ]
+     },
+     "listed": {
+      "type": "integer",
+      "x-enum-like": [
+       "0",
+       "1"
+      ]
+     },
+     "current_stock_ingredient_interval": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "integer",
+        "x-examples": [
+         "2534",
+         "3178",
+         "23588"
+        ]
+       },
+       "stock_ingredient_id": {
+        "type": "integer",
+        "x-examples": [
+         "1632",
+         "2226",
+         "1636"
+        ]
+       },
+       "stock_ingredient_tax_code_id": {
+        "type": "integer",
+        "x-enum-like": [
+         "1"
+        ]
+       },
+       "stock_ingredient_tax_rate": {
+        "type": "integer",
+        "x-enum-like": [
+         "1"
+        ]
+       },
+       "pack_price": {
+        "type": [
+         "integer",
+         "number"
+        ],
+        "x-examples": [
+         "0.5",
+         "1",
+         "17.9"
+        ]
+       },
+       "pack_size": {
+        "type": "integer",
+        "x-enum-like": [
+         "1",
+         "10",
+         "12",
+         "15",
+         "16",
+         "20",
+         "6"
+        ]
+       },
+       "unit_volume": {
+        "type": "integer",
+        "x-examples": [
+         "1000",
+         "1",
+         "20000"
+        ]
+       },
+       "use_guide": {
+        "type": "integer",
+        "x-enum-like": [
+         "0",
+         "1"
+        ]
+       },
+       "start_at": {
+        "type": "string",
+        "format": "date-time",
+        "x-examples": [
+         "2024-01-25 12:13:02",
+         "2024-02-25 08:44:17",
+         "2026-10-03 23:59:59"
+        ]
+       }
+      }
+     },
+     "restrictions": {
+      "type": "array",
+      "items": {
+       "type": "object",
+       "properties": {
+        "stock_ingredient_id": {
+         "type": "integer",
+         "x-examples": [
+          "1632",
+          "2226",
+          "1636"
+         ]
+        },
+        "venue_id": {
+         "type": "integer",
+         "x-examples": [
+          "1",
+          "2",
+          "3"
+         ]
+        },
+        "restricted_to": {
+         "type": "string",
+         "x-enum-like": [
+          "orders",
+          "stock"
+         ]
+        }
+       }
+      }
+     },
+     "active": {
+      "type": "integer",
+      "x-enum-like": [
+       "1"
+      ]
+     }
+    }
+   }
+  },
+  "restrictions": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "stock_ingredient_id": {
+      "type": "integer",
+      "x-examples": [
+       "1631",
+       "1633",
+       "1635"
+      ]
+     },
+     "venue_id": {
+      "type": "integer",
+      "x-examples": [
+       "1",
+       "2",
+       "3"
+      ]
+     },
+     "restricted_to": {
+      "type": "string",
+      "x-enum-like": [
+       "orders",
+       "stock"
+      ]
+     }
+    }
+   }
+  }
+ },
+ "required": [
+  "children",
+  "current_stock_ingredient_interval",
+  "dormant",
+  "id",
+  "listed",
+  "name",
+  "restrictions",
+  "stock_ingredient_category_id",
+  "stock_ingredient_category_name"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "stock_ingredient",
+ "x-routes": [
+  "/data/v2/stock/ingredient"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

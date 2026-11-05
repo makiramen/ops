@@ -1,0 +1,112 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "1",
+    "2",
+    "3"
+   ]
+  },
+  "firstname": {
+   "type": "string"
+  },
+  "surname": {
+   "type": "string",
+   "nullable": true
+  },
+  "email": {
+   "type": "string"
+  },
+  "mobile": {
+   "type": "string",
+   "format": "numeric",
+   "nullable": true
+  },
+  "active_cards": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "1"
+   ]
+  },
+  "inactive_cards": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "cards_order": {
+   "type": "integer",
+   "x-enum-like": [
+    "1",
+    "3"
+   ]
+  },
+  "net_points": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "10",
+    "400",
+    "43",
+    "5",
+    "5007"
+   ]
+  },
+  "invalid_email": {
+   "type": "null",
+   "nullable": true
+  },
+  "invalid_sms": {
+   "type": "string",
+   "format": "numeric",
+   "nullable": true,
+   "x-examples": [
+    "447362628263",
+    "447517138119",
+    "447450020477"
+   ]
+  },
+  "is_confirmed": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "has_rfid": {
+   "type": "boolean",
+   "x-examples": [
+    "False",
+    "True"
+   ]
+  },
+  "has_inactive_rfid": {
+   "type": "boolean",
+   "x-examples": [
+    "False"
+   ]
+  }
+ },
+ "required": [
+  "active_cards",
+  "cards_order",
+  "email",
+  "firstname",
+  "has_inactive_rfid",
+  "has_rfid",
+  "id",
+  "inactive_cards",
+  "is_confirmed",
+  "net_points"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "customer",
+ "x-routes": [
+  "/data/customer"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": true
+}

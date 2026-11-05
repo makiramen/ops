@@ -1,0 +1,313 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-examples": [
+    "2",
+    "3",
+    "4"
+   ]
+  },
+  "type": {
+   "type": "string",
+   "x-enum-like": [
+    "delivery"
+   ]
+  },
+  "staff_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "170",
+    "210",
+    "279",
+    "280",
+    "300",
+    "301",
+    "37"
+   ]
+  },
+  "staff_name": {
+   "type": "string",
+   "x-enum-like": [
+    "Agnieszka Dominika Sztubecka",
+    "Farsai Niparrath",
+    "Jian Huii Lim",
+    "Karthick Malaivasan",
+    "Miu Maeda",
+    "Yi Hui (Zinnie) Ong",
+    "Ziang Lin"
+   ]
+  },
+  "to_venue_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "11",
+    "5",
+    "6",
+    "8",
+    "9"
+   ]
+  },
+  "to_venue_name": {
+   "type": "string",
+   "x-enum-like": [
+    "AAHQ Ltd",
+    "Maki Fountainbridge",
+    "Maki Leith",
+    "Maki SJQ",
+    "OLD: Maki Bath Street"
+   ]
+  },
+  "from_venue_id": {
+   "type": "null",
+   "nullable": true
+  },
+  "from_venue_name": {
+   "type": "null",
+   "nullable": true
+  },
+  "from_supplier_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "11",
+    "13",
+    "14",
+    "2",
+    "4",
+    "6",
+    "9"
+   ]
+  },
+  "from_supplier_name": {
+   "type": "string",
+   "x-enum-like": [
+    "CAMPBELLS PRIME MEAT LTD",
+    "EDDIE'S SEAFOOD MARKET LTD.",
+    "GLOBAL FRUITS EDINBURGH LTD",
+    "JB FOODS",
+    "LYNAS FOODSERVICE",
+    "RAMEN HQ LTD",
+    "SCOTCH FROST OF GLASGOW LTD"
+   ]
+  },
+  "log_date": {
+   "type": "string",
+   "format": "date",
+   "x-examples": [
+    "2023-07-19",
+    "2023-07-20",
+    "2023-07-21"
+   ]
+  },
+  "estimated_date": {
+   "type": "null",
+   "nullable": true
+  },
+  "dispatched_date": {
+   "type": "null",
+   "nullable": true
+  },
+  "delivered_date": {
+   "type": "string",
+   "format": "date",
+   "x-examples": [
+    "2023-07-19",
+    "2023-07-21",
+    "2023-07-22"
+   ]
+  },
+  "last_for": {
+   "type": "integer",
+   "x-enum-like": [
+    "7"
+   ]
+  },
+  "status": {
+   "type": "string",
+   "x-enum-like": [
+    "delivered"
+   ]
+  },
+  "stock_order_email": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "properties": {
+     "id": {
+      "type": "integer",
+      "x-examples": [
+       "2",
+       "3",
+       "4"
+      ]
+     },
+     "stock_order_id": {
+      "type": "integer",
+      "x-examples": [
+       "2",
+       "3",
+       "4"
+      ]
+     },
+     "system_email_queue_id": {
+      "type": "integer"
+     },
+     "state": {
+      "type": "object",
+      "properties": {
+       "Suryak463@gmail.com": {
+        "type": "string",
+        "x-enum-like": [
+         "pending"
+        ]
+       },
+       "Lincoln@makiramen.com": {
+        "type": "string",
+        "x-examples": [
+         "pending"
+        ]
+       },
+       "yihuiong00@gmail.com": {
+        "type": "string",
+        "x-examples": [
+         "pending"
+        ]
+       },
+       "wniparrath@gmail.com": {
+        "type": "string",
+        "x-examples": [
+         "pending"
+        ]
+       },
+       "maedamwork@gmail.com": {
+        "type": "string",
+        "x-examples": [
+         "pending"
+        ]
+       },
+       "dominika.sztubecka@gmail.com": {
+        "type": "string",
+        "x-enum-like": [
+         "pending"
+        ]
+       },
+       "karthick@makiramen.com": {
+        "type": "string",
+        "x-examples": [
+         "pending"
+        ]
+       },
+       "jianhuii.lim@gmail.com": {
+        "type": "string",
+        "x-examples": [
+         "pending"
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "total": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "4.8",
+    "620",
+    "201"
+   ]
+  },
+  "m_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2023-07-19 16:02:00",
+    "2023-07-19 16:05:01",
+    "2023-07-19 16:06:54"
+   ]
+  },
+  "c_date": {
+   "type": "string",
+   "format": "date-time",
+   "x-examples": [
+    "2023-07-19 16:01:19",
+    "2023-07-19 16:04:39",
+    "2023-07-19 16:06:36"
+   ]
+  },
+  "stock_order_delivery": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "integer",
+     "x-examples": [
+      "1",
+      "2",
+      "3"
+     ]
+    },
+    "log_date": {
+     "type": "string",
+     "format": "date",
+     "x-examples": [
+      "2023-07-19",
+      "2023-07-21",
+      "2023-07-22"
+     ]
+    },
+    "invoice_received": {
+     "type": "integer",
+     "x-enum-like": [
+      "0"
+     ]
+    },
+    "invoice_paid": {
+     "type": "integer",
+     "x-enum-like": [
+      "0"
+     ]
+    },
+    "total": {
+     "type": [
+      "integer",
+      "number"
+     ],
+     "x-examples": [
+      "4.8",
+      "620",
+      "201"
+     ]
+    }
+   }
+  }
+ },
+ "required": [
+  "c_date",
+  "delivered_date",
+  "from_supplier_id",
+  "from_supplier_name",
+  "id",
+  "last_for",
+  "log_date",
+  "m_date",
+  "staff_id",
+  "staff_name",
+  "status",
+  "stock_order_delivery",
+  "stock_order_email",
+  "to_venue_id",
+  "to_venue_name",
+  "total",
+  "type"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "stock_order",
+ "x-routes": [
+  "/data/v2/stock/order"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false
+}

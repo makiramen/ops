@@ -1,0 +1,79 @@
+{
+ "type": "object",
+ "properties": {
+  "id": {
+   "type": "integer",
+   "x-enum-like": [
+    "13",
+    "15",
+    "16",
+    "4",
+    "8",
+    "9"
+   ]
+  },
+  "name": {
+   "type": "string",
+   "x-enum-like": [
+    "England",
+    "Fringe Edinburgh",
+    "Lakeside/O2",
+    "Scotland",
+    "Soho",
+    "\u00a35 Ramen"
+   ]
+  },
+  "venue": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "string",
+     "format": "numeric",
+     "x-enum-like": [
+      "0"
+     ]
+    },
+    "used": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "properties": {
+       "id": {
+        "type": "integer",
+        "x-enum-like": [
+         "10",
+         "12",
+         "51",
+         "58",
+         "8"
+        ]
+       },
+       "name": {
+        "type": "string",
+        "x-enum-like": [
+         "Maki SOHO",
+         "Maki Shoreditch",
+         "OLD: Ikigai Ramen & Burger",
+         "OLD: Maki Bath Street",
+         "OLD: Maki Renfield"
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "required": [
+  "id",
+  "name",
+  "venue"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "price_band",
+ "x-routes": [
+  "/data/price-band"
+ ],
+ "x-sample-size": 6,
+ "x-pii-redacted": false
+}
