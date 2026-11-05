@@ -294,3 +294,57 @@ classDiagram
   stock_order_delivery --> staff : staff_id
   supplier *-- venue : venues[]
   venue --> menu : menu_id
+  class report__labour_costs_report {
+    string venue_name
+    string information
+    mixed 2026_11_02
+    mixed 2026_11_03
+    mixed 2026_11_04
+    mixed 2026_11_05
+    mixed 2026_11_06
+    mixed 2026_11_07
+    mixed 2026_11_08
+    mixed total
+  }}
+  class report__stock_current_position_report {
+    string stock_check_date
+    integer venue_id
+    integer item_id
+    string item_name
+    string each_pack
+    mixed stock_declared
+    mixed stock_declared_cost
+    integer deliveries_in
+    mixed deliveries_in_cost
+    integer deliveries_out
+    integer deliveries_out_cost
+    mixed transfers_in
+    mixed transfers_in_cost
+    mixed transfers_out
+    mixed transfers_out_cost
+    mixed theoretical_usage
+    mixed theoretical_usage_cost
+    mixed current_estimated_stock
+    mixed current_estimated_stock_cost
+    string estimated_days_remaining
+    string default_supplier
+    string lead_type
+    string category
+    mixed pack_price
+    mixed unit_cost
+  }}
+  class report__stock_usage_report {
+    string venue
+    string item
+    string type
+    string usage_type
+    string reason
+    null notes
+    string staff_name
+    string source
+    string date
+    integer volume_used
+    string unit_measurement
+    mixed net_cost
+  }}
+  report__stock_current_position_report --> venue : venue_id

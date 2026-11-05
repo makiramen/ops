@@ -1,0 +1,298 @@
+{
+ "type": "object",
+ "properties": {
+  "stock_check_date": {
+   "type": "string",
+   "format": "date",
+   "x-enum-like": [
+    "2026-11-02"
+   ]
+  },
+  "venue_id": {
+   "type": "integer",
+   "x-enum-like": [
+    "60"
+   ]
+  },
+  "item_id": {
+   "type": "integer",
+   "x-examples": [
+    "1962",
+    "13856",
+    "11167"
+   ]
+  },
+  "item_name": {
+   "type": "string",
+   "x-examples": [
+    "ARCTIC SURF CLAM (RAW) (Default Supply)",
+    "Apple Gyoza (Default Supply)",
+    "Blackjack Burger Bun (Default Supply)"
+   ]
+  },
+  "each_pack": {
+   "type": "string",
+   "x-examples": [
+    "1 x 1000 Grams",
+    "12 x 400 Grams",
+    "1 x 40 Items"
+   ]
+  },
+  "stock_declared": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "0.358",
+    "11",
+    "0"
+   ]
+  },
+  "stock_declared_cost": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "10.67",
+    "33",
+    "0"
+   ]
+  },
+  "deliveries_in": {
+   "type": "integer",
+   "x-enum-like": [
+    "0",
+    "120",
+    "2",
+    "20",
+    "36"
+   ]
+  },
+  "deliveries_in_cost": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "0",
+    "579.48",
+    "129.04"
+   ]
+  },
+  "deliveries_out": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "deliveries_out_cost": {
+   "type": "integer",
+   "x-enum-like": [
+    "0"
+   ]
+  },
+  "transfers_in": {
+   "type": [
+    "integer",
+    "string"
+   ],
+   "x-examples": [
+    "0",
+    "Included in Default Supply"
+   ]
+  },
+  "transfers_in_cost": {
+   "type": [
+    "integer",
+    "string"
+   ],
+   "x-examples": [
+    "0",
+    "Included in Default Supply"
+   ]
+  },
+  "transfers_out": {
+   "type": [
+    "integer",
+    "string"
+   ],
+   "x-examples": [
+    "0",
+    "Included in Default Supply"
+   ]
+  },
+  "transfers_out_cost": {
+   "type": [
+    "integer",
+    "string"
+   ],
+   "x-examples": [
+    "0",
+    "Included in Default Supply"
+   ]
+  },
+  "theoretical_usage": {
+   "type": [
+    "integer",
+    "number",
+    "string"
+   ],
+   "x-examples": [
+    "0",
+    "39.6",
+    "8.55"
+   ]
+  },
+  "theoretical_usage_cost": {
+   "type": [
+    "integer",
+    "number",
+    "string"
+   ],
+   "x-examples": [
+    "0",
+    "191.23",
+    "55.16"
+   ]
+  },
+  "current_estimated_stock": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "0.358",
+    "11",
+    "0"
+   ]
+  },
+  "current_estimated_stock_cost": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "10.67",
+    "33",
+    "0"
+   ]
+  },
+  "estimated_days_remaining": {
+   "type": "string",
+   "x-enum-like": [
+    "0 days",
+    "13 days",
+    "18 days",
+    "19 days",
+    "64 days",
+    "8 days",
+    "82 days",
+    "Included in Default Supply"
+   ]
+  },
+  "default_supplier": {
+   "type": "string",
+   "x-enum-like": [
+    "TRUE WORLD FOODS"
+   ]
+  },
+  "lead_type": {
+   "type": "string",
+   "x-enum-like": [
+    "food"
+   ]
+  },
+  "category": {
+   "type": "string",
+   "x-enum-like": [
+    "FROZEN STORE"
+   ]
+  },
+  "pack_price": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "29.8",
+    "36",
+    "19.41"
+   ]
+  },
+  "unit_cost": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "29.8",
+    "3",
+    "19.41"
+   ]
+  }
+ },
+ "required": [
+  "category",
+  "current_estimated_stock",
+  "current_estimated_stock_cost",
+  "default_supplier",
+  "deliveries_in",
+  "deliveries_in_cost",
+  "deliveries_out",
+  "deliveries_out_cost",
+  "each_pack",
+  "estimated_days_remaining",
+  "item_id",
+  "item_name",
+  "lead_type",
+  "pack_price",
+  "stock_check_date",
+  "stock_declared",
+  "stock_declared_cost",
+  "theoretical_usage",
+  "theoretical_usage_cost",
+  "transfers_in",
+  "transfers_in_cost",
+  "transfers_out",
+  "transfers_out_cost",
+  "unit_cost",
+  "venue_id"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "report__stock_current_position_report",
+ "x-routes": [
+  "/data/reports/stock-current-position/29181/export"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false,
+ "x-source": "report export (csv)",
+ "x-columns": [
+  "Stock Check Date",
+  "Venue ID",
+  "Item ID",
+  "Item Name",
+  "Each Pack",
+  "Stock Declared",
+  "Stock Declared Cost",
+  "Deliveries In",
+  "Deliveries In Cost",
+  "Deliveries Out",
+  "Deliveries Out Cost",
+  "Transfers In",
+  "Transfers In Cost",
+  "Transfers Out",
+  "Transfers Out Cost",
+  "Theoretical Usage",
+  "Theoretical Usage Cost",
+  "Current Estimated Stock",
+  "Current Estimated Stock Cost",
+  "Estimated Days Remaining",
+  "Default Supplier",
+  "Lead Type",
+  "Category",
+  "Pack Price",
+  "Unit Cost"
+ ]
+}

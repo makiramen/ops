@@ -1,0 +1,122 @@
+{
+ "type": "object",
+ "properties": {
+  "venue": {
+   "type": "string",
+   "x-examples": [
+    "Maki Shoreditch",
+    "Maki SOHO",
+    "Maki Lakeside"
+   ]
+  },
+  "item": {
+   "type": "string",
+   "x-enum-like": [
+    "100% RAPESEED OIL",
+    "100% Rapeseed Oil"
+   ]
+  },
+  "type": {
+   "type": "string",
+   "x-enum-like": [
+    "Ingredient"
+   ]
+  },
+  "usage_type": {
+   "type": "string",
+   "x-enum-like": [
+    "Comp",
+    "Waste"
+   ]
+  },
+  "reason": {
+   "type": "string",
+   "x-enum-like": [
+    "Kitchen Burn",
+    "Other",
+    "Service Error"
+   ]
+  },
+  "notes": {
+   "type": "null",
+   "nullable": true
+  },
+  "staff_name": {
+   "type": "string"
+  },
+  "source": {
+   "type": "string",
+   "x-enum-like": [
+    "Cloud"
+   ]
+  },
+  "date": {
+   "type": "string",
+   "x-examples": [
+    "29 Sept 2026 16:00 BST",
+    "28 Sept 2026 19:00 BST",
+    "30 Sept 2026 19:00 BST"
+   ]
+  },
+  "volume_used": {
+   "type": "integer",
+   "x-examples": [
+    "40000",
+    "60000",
+    "100000"
+   ]
+  },
+  "unit_measurement": {
+   "type": "string",
+   "x-enum-like": [
+    "Millilitres"
+   ]
+  },
+  "net_cost": {
+   "type": [
+    "integer",
+    "number"
+   ],
+   "x-examples": [
+    "74.12",
+    "60.12",
+    "60.08"
+   ]
+  }
+ },
+ "required": [
+  "date",
+  "item",
+  "net_cost",
+  "reason",
+  "source",
+  "staff_name",
+  "type",
+  "unit_measurement",
+  "usage_type",
+  "venue",
+  "volume_used"
+ ],
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "title": "report__stock_usage_report",
+ "x-routes": [
+  "/data/reports/stock-usage/29193/export"
+ ],
+ "x-sample-size": 25,
+ "x-pii-redacted": false,
+ "x-source": "report export (csv)",
+ "x-columns": [
+  "Venue",
+  "Item",
+  "Type",
+  "Usage Type",
+  "Reason",
+  "Notes",
+  "Staff Name",
+  "Source",
+  "Date",
+  "Volume Used",
+  "Unit Measurement",
+  "Net Cost"
+ ]
+}

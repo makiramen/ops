@@ -399,3 +399,18 @@
 - 404 /data/epos/stock/usage
 - 404 /data/epos/supplier
 - 404 /data/epos/suppliers
+
+## Report-only entities (step 1b, 2026-11-05T17:13Z)
+
+- report keys ever queued: 5; exports read: 3; catalogue entries on /reports/list/: 0
+
+| report | columns | sample rows | export |
+|---|---|---|---|
+| report__labour_costs_report | 10 | 25 | /data/reports/labour-costs/29198/export |
+| report__stock_current_position_report | 25 | 25 | /data/reports/stock-current-position/29181/export |
+| report__stock_usage_report | 12 | 25 | /data/reports/stock-usage/29193/export |
+
+### Keys with no readable export
+
+- hours_export (runs 2878, latest 29196)
+- operational_profitability_report (runs 26, latest 28376)

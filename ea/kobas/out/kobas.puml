@@ -343,4 +343,58 @@ stock_order_delivery --> stock_order : stock_order_id
 stock_order_delivery --> staff : staff_id
 supplier *-- "many" venue : venues[]
 venue --> menu : menu_id
+class report__labour_costs_report <<report>> {
+  venue_name : string
+  information : string
+  2026_11_02 : mixed
+  2026_11_03 : mixed
+  2026_11_04 : mixed
+  2026_11_05 : mixed
+  2026_11_06 : mixed
+  2026_11_07 : mixed
+  2026_11_08 : mixed
+  total : mixed
+}}
+class report__stock_current_position_report <<report>> {
+  stock_check_date : string
+  venue_id : integer
+  item_id : integer
+  item_name : string
+  each_pack : string
+  stock_declared : mixed
+  stock_declared_cost : mixed
+  deliveries_in : integer
+  deliveries_in_cost : mixed
+  deliveries_out : integer
+  deliveries_out_cost : integer
+  transfers_in : mixed
+  transfers_in_cost : mixed
+  transfers_out : mixed
+  transfers_out_cost : mixed
+  theoretical_usage : mixed
+  theoretical_usage_cost : mixed
+  current_estimated_stock : mixed
+  current_estimated_stock_cost : mixed
+  estimated_days_remaining : string
+  default_supplier : string
+  lead_type : string
+  category : string
+  pack_price : mixed
+  unit_cost : mixed
+}}
+class report__stock_usage_report <<report>> {
+  venue : string
+  item : string
+  type : string
+  usage_type : string
+  reason : string
+  notes : null
+  staff_name : string
+  source : string
+  date : string
+  volume_used : integer
+  unit_measurement : string
+  net_cost : mixed
+}}
+report__stock_current_position_report --> venue : venue_id
 @enduml

@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-05T17:05:37+00:00",
+ "generated": "2026-11-05T17:13:32+00:00",
  "source": "https://login.kobas.co.uk",
  "nodes": [
   {
@@ -139,6 +139,33 @@
     "/data/venue"
    ],
    "sample": 25
+  },
+  {
+   "id": "report__labour_costs_report",
+   "fields": 10,
+   "routes": [
+    "/data/reports/labour-costs/29198/export"
+   ],
+   "sample": 25,
+   "kind": "report"
+  },
+  {
+   "id": "report__stock_current_position_report",
+   "fields": 25,
+   "routes": [
+    "/data/reports/stock-current-position/29181/export"
+   ],
+   "sample": 25,
+   "kind": "report"
+  },
+  {
+   "id": "report__stock_usage_report",
+   "fields": 12,
+   "routes": [
+    "/data/reports/stock-usage/29193/export"
+   ],
+   "sample": 25,
+   "kind": "report"
   }
  ],
  "edges": [
@@ -345,6 +372,12 @@
    "to": "menu",
    "field": "menu_id",
    "kind": "reference"
+  },
+  {
+   "from": "report__stock_current_position_report",
+   "to": "venue",
+   "field": "venue_id",
+   "kind": "reference"
   }
  ],
  "unresolved_references": {
@@ -412,6 +445,9 @@
   ],
   "xero_organisation": [
    "venue"
+  ],
+  "item": [
+   "report__stock_current_position_report"
   ]
  }
 }
