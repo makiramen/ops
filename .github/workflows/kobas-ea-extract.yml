@@ -65,6 +65,7 @@ jobs:
           echo '' >> "$GITHUB_STEP_SUMMARY"
           [ -f out/SUMMARY.md ] && cat out/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
           echo '### log tail' >> "$GITHUB_STEP_SUMMARY"; tail -n 60 /tmp/extract.err >> "$GITHUB_STEP_SUMMARY"
+          echo '----- stderr -----'; tail -n 120 /tmp/extract.err
           exit $code
       - name: Keep raw samples and logs (7 days)
         if: always()

@@ -32,23 +32,22 @@ def main():
     k = Kobas()
     if not k.login(): sys.exit(30)
     # 1. queue inventory
-    runs = []; off = 0
-    while True:
+    runs = []
+    def as_list(j):
+        if isinstance(j, list): return j
+        if isinstance(j, dict):
+            for kk in ('data', 'results', 'items', 'rows', 'reportQueue', 'report_queue'):
+                if isinstance(j.get(kk), list): return j[kk]
+        return []
+    for params in ({}, {'orderBy[id]': 'DESC'}, {'filterBy[id][gte]': '1'}):
         try:
-            r = k.s.get(BASE + '/data/report-queue', params={'limit': 200, 'offset': off}, timeout=90)
-            page = r.json()
-        except Exception as e: log('report-queue', off, e); break
-        if isinstance(page, dict): page = page.get('data') or page.get('results') or []
-        if not isinstance(page, list): log('report-queue shape', type(page).__name__, str(page)[:200]); break
-        runs += page
-        if len(page) < 200 or off > 20000: break
-        off += 200
-    if not runs:
-        try:
-            r = k.s.get(BASE + '/data/report-queue', timeout=90); j = r.json()
-            runs = j if isinstance(j, list) else (j.get('data') or [])
-            log('report-queue unpaged', r.status_code, len(runs))
-        except Exception as e: log('report-queue unpaged', e)
+            r = k.s.get(BASE + '/data/report-queue', params=params, timeout=90)
+            log('report-queue', params, r.status_code, r.headers.get('content-type', '')[:30], r.text[:300].replace('\n', ' '))
+            runs = as_list(r.json())
+        except Exception as e:
+            log('report-queue', params, 'ERR', e); runs = []
+        if runs: break
+    log('report-queue runs', len(runs))
     if not runs: sys.exit(35)
     keys = {}
     for r in runs:
