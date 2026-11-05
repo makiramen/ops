@@ -17,6 +17,9 @@ on:
       commit:
         description: '1 = commit ea/kobas/out to main, 0 = artifact only'
         default: '1'
+      phase:
+        description: 'entities (step 1, /data routes), reports (step 1b, report exports), or both'
+        default: 'both'
 
 permissions:
   contents: write
@@ -47,8 +50,15 @@ jobs:
         run: |
           set +e
           cd ea/kobas
-          python3 extract.py --out out --raw /tmp/kobas_raw --limit "${{ inputs.limit }}" --only "${{ inputs.only }}" > /tmp/extract_out.json 2> /tmp/extract.err
-          code=$?
+          code=0
+          if [ "${{ inputs.phase }}" != "reports" ]; then
+            python3 extract.py --out out --raw /tmp/kobas_raw --limit "${{ inputs.limit }}" --only "${{ inputs.only }}" > /tmp/extract_out.json 2> /tmp/extract.err
+            code=$?
+          fi
+          if [ "${{ inputs.phase }}" != "entities" ] && [ "$code" = "0" ]; then
+            python3 extract_reports.py --out out --raw /tmp/kobas_raw --limit "${{ inputs.limit }}" --only "${{ inputs.only }}" >> /tmp/extract_out.json 2>> /tmp/extract.err
+            code=$?
+          fi
           echo "exit=$code" >> "$GITHUB_OUTPUT"
           echo "## Kobas EA extraction (exit $code)" >> "$GITHUB_STEP_SUMMARY"
           cat /tmp/extract_out.json >> "$GITHUB_STEP_SUMMARY" 2>/dev/null
