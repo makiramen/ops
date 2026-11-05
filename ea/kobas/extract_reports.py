@@ -34,12 +34,21 @@ def main():
     # 1. queue inventory
     runs = []; off = 0
     while True:
-        try: page = k.gj(f'/data/report-queue?limit=200&offset={off}')
-        except Exception as e: log('report-queue', e); break
-        if not isinstance(page, list): break
+        try:
+            r = k.s.get(BASE + '/data/report-queue', params={'limit': 200, 'offset': off}, timeout=90)
+            page = r.json()
+        except Exception as e: log('report-queue', off, e); break
+        if isinstance(page, dict): page = page.get('data') or page.get('results') or []
+        if not isinstance(page, list): log('report-queue shape', type(page).__name__, str(page)[:200]); break
         runs += page
-        if len(page) < 200: break
+        if len(page) < 200 or off > 20000: break
         off += 200
+    if not runs:
+        try:
+            r = k.s.get(BASE + '/data/report-queue', timeout=90); j = r.json()
+            runs = j if isinstance(j, list) else (j.get('data') or [])
+            log('report-queue unpaged', r.status_code, len(runs))
+        except Exception as e: log('report-queue unpaged', e)
     if not runs: sys.exit(35)
     keys = {}
     for r in runs:
