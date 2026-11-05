@@ -1,0 +1,77 @@
+name: Kobas EA extraction (entities, schemas, graph, UML)
+
+# Marcel's enterprise architecture exercise, step 1 (5 Nov 2026). Logs into Kobas as the keyline bot user
+# (secrets only, the password never leaves Actions), discovers and probes the /data routes, infers one JSON
+# schema per business entity, builds the object reference graph and PlantUML / Mermaid class diagrams, and
+# commits the results under ea/kobas/out/. Raw samples (PII redacted) are a 7-day run artifact, never committed.
+# Manual only: workflow_dispatch.
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'records sampled per route'
+        default: '25'
+      only:
+        description: 'comma list of entity names to restrict the probe to (empty = all)'
+        default: ''
+      commit:
+        description: '1 = commit ea/kobas/out to main, 0 = artifact only'
+        default: '1'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kobas-ea-extract
+  cancel-in-progress: false
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install --quiet requests
+      - name: Extract
+        id: run
+        env:
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+        run: |
+          set +e
+          cd ea/kobas
+          python3 extract.py --out out --raw /tmp/kobas_raw --limit "${{ inputs.limit }}" --only "${{ inputs.only }}" > /tmp/extract_out.json 2> /tmp/extract.err
+          code=$?
+          echo "exit=$code" >> "$GITHUB_OUTPUT"
+          echo "## Kobas EA extraction (exit $code)" >> "$GITHUB_STEP_SUMMARY"
+          cat /tmp/extract_out.json >> "$GITHUB_STEP_SUMMARY" 2>/dev/null
+          echo '' >> "$GITHUB_STEP_SUMMARY"
+          [ -f out/SUMMARY.md ] && cat out/SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+          echo '### log tail' >> "$GITHUB_STEP_SUMMARY"; tail -n 60 /tmp/extract.err >> "$GITHUB_STEP_SUMMARY"
+          exit $code
+      - name: Keep raw samples and logs (7 days)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: kobas-ea-raw-${{ github.run_id }}
+          path: |
+            /tmp/kobas_raw
+            /tmp/extract_out.json
+            /tmp/extract.err
+            ea/kobas/out
+          retention-days: 7
+      - name: Commit outputs to main
+        if: steps.run.outputs.exit == '0' && inputs.commit == '1'
+        run: |
+          git config user.name 'kobas-ea bot'; git config user.email 'ops@makiramen.com'
+          git add ea/kobas/out
+          git commit -m "ea/kobas: extraction $(date -u +%Y-%m-%dT%H:%M)Z (run ${{ github.run_id }})" || exit 0
+          git pull --rebase https://x-access-token:${{ secrets.OPS_DEPLOY_TOKEN || github.token }}@github.com/${{ github.repository }} main
+          git push https://x-access-token:${{ secrets.OPS_DEPLOY_TOKEN || github.token }}@github.com/${{ github.repository }} HEAD:main
