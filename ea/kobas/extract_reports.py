@@ -138,12 +138,17 @@ def main():
         time.sleep(0.3)
     # 2b. direct (non-queued) report exports: the reports list page links every report page; each page's
     # /data/reports/<slug>/export answers a POST with venueIds[] / from / to (the item-by-sales pattern the KPI pipe uses).
-    pages = set()
-    for pg in ('/reports/list/', '/reports/', '/reporting/', '/'):
+    pages = set(); nav = {}
+    for pg in ('/reports/list/', '/reports/', '/reporting/', '/', '/dashboard/'):
         try:
-            h = k.s.get(BASE + pg, timeout=60, headers={'X-Requested-With': None}).text
-            pages |= set(re.findall(r'href=["\'](/report(?:s|ing)/[a-z0-9\-/]+)', h))
+            rr = k.s.get(BASE + pg, timeout=60, headers={'X-Requested-With': None}); h = rr.text
+            hrefs = sorted(set(re.findall(r'href=["\']([^"\'#]+)', h)))
+            nav[pg] = {'status': rr.status_code, 'final_url': rr.url, 'bytes': len(h), 'hrefs': [x for x in hrefs if not x.startswith(('http', 'mailto', 'javascript'))][:400],
+                       'ext': [x for x in hrefs if x.startswith('http') and 'kobas' in x][:100]}
+            log('nav', pg, rr.status_code, rr.url, len(h), 'hrefs', len(hrefs))
+            pages |= set(re.findall(r'href=["\'](?:https?://login\.kobas\.co\.uk)?(/report(?:s|ing)/[a-z0-9\-/]+)', h))
         except Exception as e: log('pages', pg, e)
+    inv['nav'] = nav
     pages = sorted(p.rstrip('/') for p in pages if p.count('/') >= 2 and not p.endswith('/list'))
     inv['report_pages'] = pages; log('report pages', len(pages), pages[:40])
     yday = (datetime.date.today() - datetime.timedelta(days=1)).isoformat()
