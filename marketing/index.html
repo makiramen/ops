@@ -2161,7 +2161,11 @@ td.sitecell { white-space: nowrap; }
     var dr = D.discounts.map(function (nm, i) { return { name: nm, s: series(function (x) { return x === i; }, 'd') }; })
       .filter(function (r) { return r.s.some(Boolean); })
       .sort(function (a, b) { return b.s.reduce(function (x, y) { return x + y; }, 0) - a.s.reduce(function (x, y) { return x + y; }, 0); });
-    $('pm-disc').innerHTML = dr.length ? table(dr, { first: ST.meas === 'g' ? 'Discount · £ given' : 'Discount · uses' }) : '<div class="pm-note">No till discounts in the Kobas pull yet.</div>';
+    var cols = weekCols(); dr = dr.filter(function (r) { return cols.some(function (c) { return r.s[c]; }); });
+    var more = dr.length > 25 && !ST.allDisc;
+    $('pm-disc').innerHTML = dr.length ? table(more ? dr.slice(0, 25) : dr, { first: ST.meas === 'g' ? 'Discount · £ discounted' : 'Discount · uses' }) +
+      (dr.length > 25 ? '<p class="pm-note"><a href="#" id="pm-disc-more">' + (more ? 'Show all ' + dr.length + ' discounts' : 'Show top 25 only') + '</a></p>' : '') : '<div class="pm-note">No till discounts in the Kobas pull yet.</div>';
+    var mb = $('pm-disc-more'); if (mb) mb.addEventListener('click', function (e) { e.preventDefault(); ST.allDisc = !ST.allDisc; render(); });
   }
   function renderItems() {
     var q = ST.q.trim().toLowerCase();
