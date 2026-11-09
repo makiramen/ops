@@ -31,7 +31,7 @@ KNOWN = {3: ('M1', 'Nicolson St'), 5: ('M3', 'Fountainbridge'), 43: ('M6', 'Bath
          27: ('M12', 'Newcastle'), 28: ('M13', 'Aberdeen'), 37: ('M14', 'Meadowhall'), 41: ('M15', 'Metrocentre'),
          42: ('M16', 'Nottingham'), 49: ('M17', 'Lakeside'), 51: ('M18', 'Soho'), 58: ('M19', 'Shoreditch'),
          60: ('M20', 'Southampton'), 61: ('M21', 'Birmingham'), 57: ('NORI', 'Maki Nori'), 7: ('IKI2', 'Ikigai Ramen')}
-SCHEMA = 6   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
+SCHEMA = 7   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
 SKIP_NAME = re.compile(r'aahq|head office|\bho\b|factory|warehouse|kitchen ltd|test|training|demo|central', re.I)
 
 
@@ -113,12 +113,14 @@ def disc_probe(k, vid, d0, d1):
                 ctx = h[max(0, m.start() - 160): m.end() + 160]
                 if re.search(r'http|url|get\(|post\(|/data|\$http|api|\.json|endpoint|report', ctx, re.I):
                     log('discounts ctx', ctx.replace('\n', ' ')[:340])
-            for src in re.findall(r'<script[^>]+src=["\']([^"\']+)', h)[:20]:
+            for src in [x for x in re.findall(r'<script[^>]+src=["\']([^"\']+)', h) if 'discount' in x.lower()][:12]:
                 u = ('https:' + src) if src.startswith('//') else ((BASE + src) if src.startswith('/') else src)
                 try:
                     js = k.s.get(u, timeout=60).text
                     hits = sorted(set(m for m in re.findall(r'["\'`](/?[A-Za-z0-9_\-/\.${}]{3,120})["\'`]', js) if 'discount' in m.lower()))
                     if hits: log('discounts bundle', u[-60:], len(js), hits[:60])
+                    if re.search(r'discountsService|discountsReportController', u):
+                        log('discounts js', u[-50:], js[:2500].replace('\n', ' '))
                     for m in list(re.finditer(r'reports?/discounts|discountsReport|discounts-report|DiscountReport', js))[:6]:
                         log('discounts bundle ctx', js[max(0, m.start() - 200): m.end() + 200].replace('\n', ' '))
                 except Exception: pass
