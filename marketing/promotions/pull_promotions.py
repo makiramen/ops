@@ -31,7 +31,7 @@ KNOWN = {3: ('M1', 'Nicolson St'), 5: ('M3', 'Fountainbridge'), 43: ('M6', 'Bath
          27: ('M12', 'Newcastle'), 28: ('M13', 'Aberdeen'), 37: ('M14', 'Meadowhall'), 41: ('M15', 'Metrocentre'),
          42: ('M16', 'Nottingham'), 49: ('M17', 'Lakeside'), 51: ('M18', 'Soho'), 58: ('M19', 'Shoreditch'),
          60: ('M20', 'Southampton'), 61: ('M21', 'Birmingham'), 57: ('NORI', 'Maki Nori'), 7: ('IKI2', 'Ikigai Ramen')}
-SCHEMA = 7   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
+SCHEMA = 8   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
 SKIP_NAME = re.compile(r'aahq|head office|\bho\b|factory|warehouse|kitchen ltd|test|training|demo|central', re.I)
 
 
@@ -81,127 +81,84 @@ SAMPLE = {'done': False}
 DISC_OFF = {'off': False, 'fails': 0}
 
 
-DISC_VARIANTS = [
-    ('GET', '/data/reports/discounts', ('venueIds[]', 'fromDate', 'toDate')),
-    ('GET', '/data/reports/discounts/export', ('venueIds[]', 'fromDate', 'toDate')),
-    ('GET', '/data/reports/discounts', ('venueIds[]', 'from', 'to')),
-    ('GET', '/data/reports/discounts/export', ('venueIds[]', 'from', 'to')),
-    ('POST', '/data/reports/discounts', ('venueIds[]', 'from', 'to')),
-    ('GET', '/data/reports/discounts', ('venueId', 'fromDate', 'toDate')),
-]
+DISC_NAMES = {}
 
 
-def _disc_req(k, var, vid, d0, d1, timeout=45):
-    m, path, (pv, pf, pt) = var
-    params = [(pv, str(vid)), (pf, d0), (pt, d1)]
-    if m == 'GET': return k.s.get(BASE + path, params=params, timeout=timeout)
-    return k.s.post(BASE + path, data=params, timeout=timeout, headers={'Content-Type': 'application/x-www-form-urlencoded'})
-
-
-def disc_probe(k, vid, d0, d1):
-    """Find which call shape the Discounts report answers (it is not the item-by-sales POST export)."""
-    # the report page itself: log every endpoint / form it references so the right call can be wired
-    for pg in ('/reports/discounts', '/reports/discounts/'):
-        try:
-            r = k.s.get(BASE + pg, timeout=60, headers={'X-Requested-With': None})
-            h = r.text
-            urls = sorted(set(re.findall(r'["\'`](/(?:data|api|reports?|ajax)/[^"\'`\s<>]{2,160})["\'`]', h)))
-            forms = re.findall(r'<form[^>]*>', h)[:5]
-            names = sorted(set(re.findall(r'name=["\']([^"\']{2,60})["\']', h)))[:60]
-            log('discounts page', pg, r.status_code, r.url, len(h), 'urls', urls[:60], 'forms', forms, 'fields', names)
-            for m in list(re.finditer(r'discount', h, re.I))[:400]:
-                ctx = h[max(0, m.start() - 160): m.end() + 160]
-                if re.search(r'http|url|get\(|post\(|/data|\$http|api|\.json|endpoint|report', ctx, re.I):
-                    log('discounts ctx', ctx.replace('\n', ' ')[:340])
-            for src in [x for x in re.findall(r'<script[^>]+src=["\']([^"\']+)', h) if 'discount' in x.lower()][:12]:
-                u = ('https:' + src) if src.startswith('//') else ((BASE + src) if src.startswith('/') else src)
-                try:
-                    js = k.s.get(u, timeout=60).text
-                    hits = sorted(set(m for m in re.findall(r'["\'`](/?[A-Za-z0-9_\-/\.${}]{3,120})["\'`]', js) if 'discount' in m.lower()))
-                    if hits: log('discounts bundle', u[-60:], len(js), hits[:60])
-                    if re.search(r'discountsService|discountsReportController', u):
-                        log('discounts js', u[-50:], js[:2500].replace('\n', ' '))
-                    for m in list(re.finditer(r'reports?/discounts|discountsReport|discounts-report|DiscountReport', js))[:6]:
-                        log('discounts bundle ctx', js[max(0, m.start() - 200): m.end() + 200].replace('\n', ' '))
-                except Exception: pass
-            for u in urls:
-                if 'discount' in u.lower() and '{' not in u and '$' not in u:
-                    DISC_VARIANTS.insert(0, ('GET', u.split('?')[0], ('venueIds[]', 'fromDate', 'toDate')))
-                    DISC_VARIANTS.insert(1, ('POST', u.split('?')[0], ('venueIds[]', 'from', 'to')))
-        except Exception as e:
-            log('discounts page', pg, repr(e)[:120])
-    for var in DISC_VARIANTS:
-        try:
-            r = _disc_req(k, var, vid, d0, d1)
-            body = r.text.lstrip('\ufeff')
-            log('discounts probe', var[0], var[1], var[2][1], r.status_code, r.headers.get('content-type', ''), body[:400].replace('\n', ' | '))
-            if r.status_code == 200 and not body.lstrip().lower().startswith(('<!doctype', '<html')) and disc_parse(body) is not None:
-                DISC_OFF['var'] = var; log('discounts: using', var); return True
-        except Exception as e:
-            log('discounts probe', var, repr(e)[:120])
-    DISC_OFF['off'] = True; log('discounts report not reachable, lunch deals stay off this run')
-    return False
-
-
-def _pick(keys, pats, avoid=()):
-    for pt in pats:
-        for kk in keys:
-            lk = kk.lower()
-            if pt in lk and not any(a in lk for a in avoid): return kk
+def _promos(j):
+    if isinstance(j, dict):
+        if isinstance(j.get('promos'), list): return j['promos']
+        if isinstance(j.get('data'), dict) and isinstance(j['data'].get('promos'), list): return j['data']['promos']
     return None
 
 
-def disc_parse(body):
-    """CSV or JSON -> {name: [uses, value]}; None when the shape is not understood."""
-    rows = None
-    try:
-        j = json.loads(body)
-        def lists(o):
-            if isinstance(o, list) and o and all(isinstance(x, dict) for x in o): yield o
-            if isinstance(o, dict):
-                if o and all(isinstance(v, dict) for v in o.values()):
-                    yield [dict(v, _key=kk) for kk, v in o.items()]
-                for v in o.values(): yield from lists(v)
-            elif isinstance(o, list):
-                for v in o: yield from lists(v)
-        cands = list(lists(j))
-        if cands: rows = max(enumerate(cands), key=lambda t: (len(t[1]), t[0]))[1]   # ties: the deeper list
-        elif j in ([], {}): return {}
-    except ValueError:
-        recs = [l for l in csv.reader(io.StringIO(body)) if any(c.strip() for c in l)]
-        if not recs: return {}
-        h = [c.strip() for c in recs[0]]
-        rows = [dict(zip(h, l)) for l in recs[1:]]
-    if rows is None: return None
-    keys = sorted({kk for r in rows for kk in r})
-    nk = _pick(keys, ('discount name', 'discount_name', 'public_name', 'name', 'discount', 'description', '_key'), avoid=('venue', 'value', 'amount', 'id'))
-    ck = _pick(keys, ('uses', 'usage', 'times', 'number', 'count', 'qty', 'quantity'), avoid=('value', 'amount', '£', 'discount_id'))
-    vk = _pick(keys, ('total discount', 'discount value', 'discount_value', 'value', 'amount', 'total'), avoid=('number', 'uses', ' count', 'qty', '_id'))
-    if not nk: return None
+def _first(d, keys):
+    for kk in keys:
+        if kk in d and d[kk] not in (None, ''): return d[kk]
+    return None
+
+
+def disc_parse(j):
+    """Kobas /data/report/discount JSON -> {discount name: [uses, £ value]} from its promos list."""
+    ps = _promos(j)
+    if ps is None: return None
     out = {}
-    for r in rows:
-        nm = str(r.get(nk) or '').strip()
-        if not nm or nm.lower() in ('total', 'totals'): continue
-        c = num(r.get(ck)) if ck else 1.0
-        v = abs(num(r.get(vk))) if vk else 0.0
+    for pr in ps:
+        if not isinstance(pr, dict): continue
+        pid = _first(pr, ('id', 'promo_id', 'discount_id', 'promoid', 'discountid'))
+        nm = str(_first(pr, ('name', 'promo_name', 'discount_name', 'public_name', 'title')) or DISC_NAMES.get(str(pid)) or pid or '').strip()
+        if not nm: continue
+        c = num(_first(pr, ('count', 'qty', 'quantity', 'uses', 'used', 'number', 'num', 'times', 'transactions')) or 0)
+        v = abs(num(_first(pr, ('value', 'amount', 'discount', 'total', 'discount_value', 'gross', 'net')) or 0))
         cur = out.setdefault(nm, [0.0, 0.0]); cur[0] += c; cur[1] += v
     return out
+
+
+def _disc_get(k, vid, d0, d1, timeout=60):
+    return k.s.get(BASE + '/data/report/discount', params=[('venueIds[]', str(vid)), ('startDate', d0), ('endDate', d1)], timeout=timeout)
+
+
+def disc_probe(k, vid, d0, d1):
+    """The Discounts report page calls GET /data/report/discount?venueIds[]&startDate&endDate (discountsService.js)."""
+    try:
+        lst = k.gj('/data/discount')
+        lst = lst.get('data', lst) if isinstance(lst, dict) else lst
+        for x in lst or []:
+            if isinstance(x, dict) and x.get('id') is not None:
+                DISC_NAMES[str(x['id'])] = (x.get('name') or x.get('public_name') or '').strip()
+        log('till discount names', len(DISC_NAMES))
+    except Exception as e:
+        log('till discount list failed', repr(e)[:120])
+    try:
+        r = _disc_get(k, vid, d0, d1)
+        log('discounts report', r.status_code, r.headers.get('content-type', ''), len(r.text))
+        j = r.json()
+        log('discounts report keys', list(j)[:20] if isinstance(j, dict) else type(j).__name__)
+        ps = _promos(j)
+        if ps: log('discounts first promo', json.dumps(ps[0])[:600])
+        res = disc_parse(j)
+        if res is not None:
+            DISC_OFF['var'] = True
+            log('discounts sample', vid, d0, sorted(res.items(), key=lambda x: -x[1][0])[:10])
+            return True
+    except Exception as e:
+        log('discounts report error', repr(e)[:200])
+    DISC_OFF['off'] = True; log('discounts report not usable, lunch deals stay off this run')
+    return False
 
 
 def pull_disc(k, vid, d0, d1):
     """Discounts report (lunch deals and other till discounts) for one venue and week: {name: [uses, value]}.
     Best effort: a failure returns None and never stops the item pull."""
     if DISC_OFF['off'] or not DISC_OFF.get('var'): return None
-    try:
-        r = _disc_req(k, DISC_OFF['var'], vid, d0, d1)
-        if r.status_code == 200:
-            res = disc_parse(r.text.lstrip('\ufeff'))
-            if res is not None:
-                if not SAMPLE['done']:
-                    SAMPLE['done'] = True; log('discounts sample', vid, d0, sorted(res.items(), key=lambda x: -x[1][0])[:8])
-                return res
-    except Exception as e:
-        log('discounts error', vid, d0, repr(e)[:120])
+    for i in range(2):
+        try:
+            r = _disc_get(k, vid, d0, d1)
+            if r.status_code == 200:
+                res = disc_parse(r.json())
+                if res is not None: return res
+        except Exception as e:
+            last = repr(e)[:120]
+        time.sleep(2)
     DISC_OFF['fails'] += 1
     if DISC_OFF['fails'] >= 10: DISC_OFF['off'] = True; log('discounts switched off for this run')
     return None
