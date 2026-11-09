@@ -2137,7 +2137,7 @@ td.sitecell { white-space: nowrap; }
     var rows = [];
     PROMOS.forEach(function (p) {
       if (!groupItems[p.id].length) return;
-      var sr = src(p.id), s = series(inGrp(p.id), sr); if (!s.some(Boolean)) return;
+      var sr = src(p.id), s = series(inGrp(p.id), sr), vc = weekCols(); if (!vc.some(function (c) { return s[c]; })) return;   // not running in the weeks shown
       rows.push({ name: p.name + (p.disc ? ' (till discount)' : ''), s: s, cls: 'grp' + (ST.open[p.id] ? ' open' : ''), key: p.id });
       if (ST.open[p.id]) groupItems[p.id].forEach(function (i) {
         var si = series(function (x) { return x === i; }, sr);
