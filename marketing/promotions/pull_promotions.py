@@ -31,7 +31,7 @@ KNOWN = {3: ('M1', 'Nicolson St'), 5: ('M3', 'Fountainbridge'), 43: ('M6', 'Bath
          27: ('M12', 'Newcastle'), 28: ('M13', 'Aberdeen'), 37: ('M14', 'Meadowhall'), 41: ('M15', 'Metrocentre'),
          42: ('M16', 'Nottingham'), 49: ('M17', 'Lakeside'), 51: ('M18', 'Soho'), 58: ('M19', 'Shoreditch'),
          60: ('M20', 'Southampton'), 61: ('M21', 'Birmingham'), 57: ('NORI', 'Maki Nori'), 7: ('IKI2', 'Ikigai Ramen')}
-SCHEMA = 2   # bump to force a full backfill (2: modifier "of which" lines kept)
+SCHEMA = 3   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
 SKIP_NAME = re.compile(r'aahq|head office|\bho\b|factory|warehouse|kitchen ltd|test|training|demo|central', re.I)
 
 
@@ -75,6 +75,49 @@ def pull_one(k, vid, d0, d1):
         except Exception as e: last = e
         time.sleep(3 * (i + 1))
     raise RuntimeError(f'venue {vid} {d0}: {last}')
+
+
+SAMPLE = {'done': False}
+
+
+def pull_disc(k, vid, d0, d1):
+    """Discounts report (lunch deals and other till discounts) for one venue and week: {name: [uses, value]}.
+    Best effort: a failure returns None and never stops the item pull."""
+    data = [('venueIds[]', str(vid)), ('from', d0), ('to', d1), ('fromDate', d0), ('toDate', d1)]
+    for i in range(3):
+        try:
+            p = k.s.post(BASE + '/data/reports/discounts/export', data=data, timeout=180,
+                         headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            if p.status_code == 200: break
+        except Exception: p = None
+        time.sleep(3 * (i + 1))
+    else:
+        return None
+    txt = p.text.lstrip('\ufeff')
+    rows = [l for l in csv.reader(io.StringIO(txt)) if any(c.strip() for c in l)]
+    if not SAMPLE['done']:
+        SAMPLE['done'] = True
+        log('discounts export sample', vid, d0, '|', ' / '.join(','.join(r[:8]) for r in rows[:6]))
+    if not rows: return {}
+    h = [c.strip().lower() for c in rows[0]]
+    def ix(*pats, avoid=()):
+        for pt in pats:
+            for j, c in enumerate(h):
+                if pt in c and not any(a in c for a in avoid): return j
+        return None
+    ni = ix('discount name', 'discount', 'name', 'description')
+    ci = ix('uses', 'times', 'number', 'qty', 'quantity', ' count', 'count', avoid=('value', 'amount', '£', 'discount'))
+    vi = ix('total discount', 'discount value', 'value', 'amount', 'total', avoid=('number', 'uses', ' count', 'qty'))
+    if ni is None: return {}
+    out = {}
+    for l in rows[1:]:
+        if len(l) <= ni: continue
+        nm = l[ni].strip()
+        if not nm or nm.lower() in ('total', 'totals'): continue
+        c = num(l[ci]) if ci is not None and ci < len(l) else 1.0
+        v = abs(num(l[vi])) if vi is not None and vi < len(l) else 0.0
+        cur = out.setdefault(nm, [0.0, 0.0]); cur[0] += c; cur[1] += v
+    return out
 
 
 def parse(txt):
@@ -125,7 +168,7 @@ def main():
     if partial is None: mondays = [x for x in mondays if x < this_mon]
 
     # existing data -> raw {(week, vid): {item: [cat, q, g]}}
-    raw, old_sites = {}, {}
+    raw, old_sites, draw = {}, {}, {}
     if os.path.exists(a.out):
         try:
             d = json.load(open(a.out))
@@ -137,10 +180,15 @@ def main():
                     w = d['weeks'][int(wi)]
                     if w == d.get('partial'): continue
                     raw[(w, vid)] = {d['items'][ii][0]: [d['items'][ii][1], q, g] for ii, q, g in lst}
+            for si, wk in (d.get('dcells') or {}).items():
+                vid = d['sites'][int(si)][0]
+                for wi, lst in wk.items():
+                    w = d['weeks'][int(wi)]
+                    if w != d.get('partial'): draw[(w, vid)] = {d['discounts'][ii]: [c, v] for ii, c, v in lst}
             for w, vid in d.get('empty', []):
                 if w != d.get('partial'): raw[(w, vid)] = {}
         except Exception as e:
-            log('existing data.json unreadable, full backfill:', e); raw = {}
+            log('existing data.json unreadable, full backfill:', e); raw = {}; draw = {}
 
     k = Kobas()
     if not k.login(): log('Kobas login failed'); sys.exit(30)
@@ -154,19 +202,25 @@ def main():
         w = mon.isoformat()
         end = (today - datetime.timedelta(days=1)) if mon == partial else mon + datetime.timedelta(days=6)
         for vid in vs:
-            if w in fixed and w in have and (w, vid) in raw: continue   # settled week already pulled for this venue
+            if w in fixed and w in have and (w, vid) in raw and (w, vid) in draw: continue   # settled week already pulled
             jobs.append((w, vid, w, end.isoformat()))
     log('jobs', len(jobs))
 
     def run(j):
         w, vid, d0, d1 = j
-        try: return j, pull_one(k, vid, d0, d1), None
-        except Exception as e: return j, None, str(e)
-    errs = []
+        try: res = pull_one(k, vid, d0, d1)
+        except Exception as e: return j, None, None, str(e)
+        try: dres = pull_disc(k, vid, d0, d1)
+        except Exception: dres = None
+        return j, res, dres, None
+    errs = []; derr = 0
     with ThreadPoolExecutor(5) as ex:
-        for (w, vid, _, _), res, err in ex.map(run, jobs):
+        for (w, vid, _, _), res, dres, err in ex.map(run, jobs):
             if err: errs.append(err); continue
             raw[(w, vid)] = res
+            if dres is None: derr += 1
+            else: draw[(w, vid)] = dres
+    log('discount pulls failed', derr)
     log('errors', len(errs), errs[:5])
     if jobs and len(errs) > len(jobs) * 0.3:
         log('too many failures, not writing'); sys.exit(32)
@@ -187,15 +241,25 @@ def main():
                 if key not in iidx: iidx[key] = len(items); items.append([nm, cat])
                 lst.append([iidx[key], round(q, 2) if q % 1 else int(q), round(g)])
             cells.setdefault(str(si), {})[str(wi)] = lst
+    discs, didx, dcells = [], {}, {}
+    for si, vid in enumerate(site_ids):
+        for wi, w in enumerate(weeks):
+            r = draw.get((w, vid))
+            if not r: continue
+            lst = []
+            for nm, (c, v) in sorted(r.items()):
+                if nm not in didx: didx[nm] = len(discs); discs.append(nm)
+                lst.append([didx[nm], round(c, 2) if c % 1 else int(c), round(v)])
+            dcells.setdefault(str(si), {})[str(wi)] = lst
     outd = {'schema': SCHEMA, 'generated_at': datetime.datetime.now(UK).strftime('%Y-%m-%d %H:%M'), 'source': 'Kobas All Item Sales, weekly Mon-Sun',
             'weeks': weeks, 'partial': partial.isoformat() if partial else None,
             'partial_to': (today - datetime.timedelta(days=1)).isoformat() if partial else None,
             'sites': [[vid, sites_all.get(vid, ('', str(vid)))[0], sites_all.get(vid, ('', str(vid)))[1]] for vid in site_ids],
-            'items': items, 'cells': cells, 'errors': len(errs),
+            'items': items, 'cells': cells, 'errors': len(errs), 'discounts': discs, 'dcells': dcells,
             'empty': sorted([w, v] for (w, v), r in raw.items() if not r)}
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     json.dump(outd, open(a.out, 'w'), separators=(',', ':'))
-    print(json.dumps({'weeks': len(weeks), 'sites': len(site_ids), 'items': len(items), 'jobs': len(jobs), 'errors': len(errs),
+    print(json.dumps({'discounts': len(discs), 'weeks': len(weeks), 'sites': len(site_ids), 'items': len(items), 'jobs': len(jobs), 'errors': len(errs),
                       'bytes': os.path.getsize(a.out)}))
 
 

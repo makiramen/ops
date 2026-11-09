@@ -2017,25 +2017,31 @@ td.sitecell { white-space: nowrap; }
 
   <div class="shead"><span class="n">P4</span><h2>Any item</h2><span class="r"><input type="search" id="pm-q" placeholder="Search any Kobas item, e.g. matcha"></span></div>
   <div class="card scroll" id="pm-items"></div>
-  <p class="pm-note">Source: Kobas All Item Sales, every venue, weeks Monday to Sunday, pulled automatically twice a day (no sheet, no Mac). Units include every channel (eat-in, takeaway, delivery). Modifier lines ("of which…") are excluded so nothing is counted twice. A promotion is a set of Kobas items matched by name or category; the matched items are listed under each promotion in P2.</p>
+
+  <div class="shead"><span class="n">P5</span><h2>Till discounts</h2><span class="r">Kobas discounts report · uses (or £ given with Measure = Gross £)</span></div>
+  <div class="card scroll" id="pm-disc"></div>
+  <p class="pm-note">Source: Kobas All Item Sales and Discounts reports, every venue, weeks Monday to Sunday, pulled automatically twice a day (no sheet, no Mac). Units include every channel (eat-in, takeaway, delivery). Modifier lines ("of which…", e.g. toppings and bento choices) are shown as their own lines but never added into a promotion or a total, so nothing is counted twice. A promotion is a set of Kobas items matched by name or category, or a till discount (lunch deals); click it in P2 to see exactly what it counts.</p>
 </div>
 
 <script>
 (function () {
   'use strict';
   // Promotion definitions: name/category patterns against Kobas items. Edit here to add a promotion.
+  // Each promotion is either a set of Kobas till items (test on item name n / category c; modifier "of which" lines are
+  // skipped unless mods:true) or a Kobas till discount (disc: pattern on the discount name). Edit here to add one.
   var PROMOS = [
-    { id: 'lunch',  name: 'Lunch deals',       test: function (n, c) { return /^lunch\b/i.test(n) || /lunch/i.test(c); } },
-    { id: 'kids',   name: 'Kids menu',          test: function (n, c) { return /\bkids?\b/i.test(c) || /\bkids?\b/i.test(n); } },
+    { id: 'lunch',  name: 'Lunch deals',       disc: /lunch/i },
+    { id: 'lunchm', name: 'Lunch menu items',  test: function (n, c) { return /^l(unch)?\s*-/i.test(n) || /lunch/i.test(c); } },
+    { id: 'kids',   name: 'Kids menu',          test: function (n) { return /\bkids?\b/i.test(n); } },
     { id: 'xoxo',   name: 'XOXO drinks',        test: function (n) { return /xoxo/i.test(n) && !/cocktail/i.test(n); } },
-    { id: 'xoxoc',  name: 'XOXO cocktails',     test: function (n) { return /xoxo/i.test(n) && /cocktail/i.test(n); } },
-    { id: 'matcha', name: 'Matcha drinks',      test: function (n, c) { return /matcha/i.test(n) && !/brownie|brul|affogato|noodle|cake|ice ?cream|mochi|dessert/i.test(n + ' ' + c); } },
-    { id: 'tofoo',  name: 'Tofoo items',        test: function (n) { return /tofoo/i.test(n); } },
-    { id: 'tubes',  name: 'Sushi tubes',        test: function (n) { return /tube/i.test(n); } },
+    { id: 'xoxoc',  name: 'XOXO cocktails',     test: function (n) { return /^(tokyo berry|watermelon yuzu|ginger zen) spritz/i.test(n) || /xoxo.*cocktail/i.test(n); } },
+    { id: 'matcha', name: 'Matcha drinks',      test: function (n, c) { return /matcha/i.test(n) && !/dessert/i.test(c); } },
     { id: 'pitch',  name: 'Pitchers',           test: function (n) { return /pitcher/i.test(n); } },
+    { id: 'tubes',  name: 'Sushi tubes',        test: function (n) { return /^pop.?up/i.test(n); } },
+    { id: 'tofoo',  name: 'Tofoo items',        test: function (n) { return /tofoo/i.test(n); } },
     { id: 'brunch', name: 'Bottomless brunch',  test: function (n, c) { return /bottomless/i.test(n + ' ' + c); } },
-    { id: 'protein',name: 'Protein ramen',      test: function (n) { return /protein/i.test(n); } },
-    { id: 'foot',   name: 'Football drinks',    test: function (n) { return /^(england|scotland|wales|world cup)\b/i.test(n) && /cocktail|mocktail/i.test(n); } }
+    { id: 'happy',  name: 'Happy hour',         test: function (n, c) { return /happy hour/i.test(c); } },
+    { id: 'wow',    name: 'Wowcher',            test: function (n, c) { return /wowcher/i.test(n + ' ' + c); } }
   ];
   var D = null, ST = { week: null, site: 'all', span: 12, meas: 'q', grp: 'lunch', q: '', open: {} };
   var $ = function (id) { return document.getElementById(id); };
@@ -2053,28 +2059,35 @@ td.sitecell { white-space: nowrap; }
   // index: per item -> group ids; cube[group or 'i'+item][site][week] = [q, g]
   var itemGrp = [], groupItems = {};
   function build() {
+    D.discounts = D.discounts || []; D.dcells = D.dcells || {};
     PROMOS.forEach(function (p) { groupItems[p.id] = []; });
     D.items.forEach(function (it, i) {
       itemGrp[i] = [];
-      PROMOS.forEach(function (p) { if (p.test(it[0], it[1] || '')) { itemGrp[i].push(p.id); groupItems[p.id].push(i); } });
+      var mod = /^of which /i.test(it[0]);
+      PROMOS.forEach(function (p) { if (p.test && (!mod || p.mods) && p.test(it[0], it[1] || '')) { itemGrp[i].push(p.id); groupItems[p.id].push(i); } });
+    });
+    D.discounts.forEach(function (nm, i) {
+      PROMOS.forEach(function (p) { if (p.disc && p.disc.test(nm)) groupItems[p.id].push(i); });
     });
   }
   function val(cell) { return ST.meas === 'g' ? cell[2] : cell[1]; }
   // sum for a predicate over items, for site filter, per week index -> number
-  function series(pred) {
+  function series(pred, src) {
+    var C = src === 'd' ? D.dcells : D.cells;
     var out = D.weeks.map(function () { return 0; });
-    Object.keys(D.cells).forEach(function (si) {
+    Object.keys(C).forEach(function (si) {
       if (ST.site !== 'all' && ST.site !== si) return;
-      var wk = D.cells[si];
+      var wk = C[si];
       Object.keys(wk).forEach(function (wi) { wk[wi].forEach(function (c) { if (pred(c[0])) out[+wi] += val(c); }); });
     });
     return out;
   }
-  function seriesBySite(pred) {
+  function seriesBySite(pred, src) {
+    var C = src === 'd' ? D.dcells : D.cells;
     var res = {};
-    Object.keys(D.cells).forEach(function (si) {
+    Object.keys(C).forEach(function (si) {
       var out = D.weeks.map(function () { return 0; }), any = false;
-      var wk = D.cells[si];
+      var wk = C[si];
       Object.keys(wk).forEach(function (wi) { wk[wi].forEach(function (c) { if (pred(c[0])) { out[+wi] += val(c); any = true; } }); });
       if (any) res[si] = out;
     });
@@ -2096,7 +2109,12 @@ td.sitecell { white-space: nowrap; }
     });
     return h + '</tbody></table>';
   }
-  function inGrp(id) { return function (i) { return itemGrp[i] && itemGrp[i].indexOf(id) >= 0; }; }
+  function inGrp(id) {
+    var p = PROMOS.filter(function (x) { return x.id === id; })[0];
+    if (p && p.disc) { var set = {}; groupItems[id].forEach(function (i) { set[i] = 1; }); return function (i) { return !!set[i]; }; }
+    return function (i) { return itemGrp[i] && itemGrp[i].indexOf(id) >= 0; };
+  }
+  function src(id) { var p = PROMOS.filter(function (x) { return x.id === id; })[0]; return p && p.disc ? 'd' : 'i'; }
 
   function render() {
     var wi = D.weeks.indexOf(ST.week);
@@ -2105,25 +2123,27 @@ td.sitecell { white-space: nowrap; }
     var k = '';
     PROMOS.forEach(function (p) {
       if (!groupItems[p.id].length) return;
-      var s = series(inGrp(p.id));
-      if (!s.some(Boolean)) return;
-      k += '<div class="kpi' + (ST.grp === p.id ? ' on' : '') + '" data-g="' + p.id + '"><div class="v">' + fmt(s[wi]) + '</div><div class="k">' + esc(p.name) + '</div><div class="d">' + delta(s[wi], wi > 0 ? s[wi - 1] : 0) + ' wow</div></div>';
+      var s = series(inGrp(p.id), src(p.id));
+      if (!s[wi] && !(wi > 0 && s[wi - 1])) return;   // not running this week or last
+      k += '<div class="kpi' + (ST.grp === p.id ? ' on' : '') + '" data-g="' + p.id + '"><div class="v">' + fmt(s[wi]) + '</div><div class="k">' + esc(p.name) + (p.disc ? ' · uses' : '') + '</div><div class="d">' + delta(s[wi], wi > 0 ? s[wi - 1] : 0) + ' wow</div></div>';
     });
     $('pm-kpis').innerHTML = k || '<div class="pm-note">No promotion items matched in Kobas for this selection.</div>';
     // P2
     var rows = [];
     PROMOS.forEach(function (p) {
       if (!groupItems[p.id].length) return;
-      var s = series(inGrp(p.id)); if (!s.some(Boolean)) return;
-      rows.push({ name: p.name, s: s, cls: 'grp' + (ST.open[p.id] ? ' open' : ''), key: p.id });
+      var sr = src(p.id), s = series(inGrp(p.id), sr); if (!s.some(Boolean)) return;
+      rows.push({ name: p.name + (p.disc ? ' (till discount uses)' : ''), s: s, cls: 'grp' + (ST.open[p.id] ? ' open' : ''), key: p.id });
       if (ST.open[p.id]) groupItems[p.id].forEach(function (i) {
-        var si = series(function (x) { return x === i; }); if (si.some(Boolean)) rows.push({ name: D.items[i][0] + (D.items[i][1] ? ' · ' + D.items[i][1] : ''), s: si, cls: 'sub' });
+        var si = series(function (x) { return x === i; }, sr);
+        var nm = sr === 'd' ? 'Discount: ' + D.discounts[i] : D.items[i][0] + (D.items[i][1] ? ' · ' + D.items[i][1] : '');
+        if (si.some(Boolean)) rows.push({ name: nm, s: si, cls: 'sub' });
       });
     });
     $('pm-weekly').innerHTML = rows.length ? table(rows, { first: 'Promotion' }) : '<div class="pm-note">Nothing to show.</div>';
     // P3
     var g = PROMOS.filter(function (p) { return p.id === ST.grp; })[0] || PROMOS[0];
-    var bs = seriesBySite(inGrp(g.id)), srows = [], tot = D.weeks.map(function () { return 0; });
+    var bs = seriesBySite(inGrp(g.id), src(g.id)), srows = [], tot = D.weeks.map(function () { return 0; });
     Object.keys(bs).sort(function (a, b) { return D.sites[+a][2].localeCompare(D.sites[+b][2]); }).forEach(function (si) {
       srows.push({ name: D.sites[+si][2] + (D.sites[+si][1] ? ' (' + D.sites[+si][1] + ')' : ''), s: bs[si] });
       bs[si].forEach(function (v, i) { tot[i] += v; });
@@ -2132,14 +2152,19 @@ td.sitecell { white-space: nowrap; }
     $('pm-sites').innerHTML = srows.length ? table(srows, { first: g.name + ' · site' }) : '<div class="pm-note">No sales of ' + esc(g.name) + ' in the data.</div>';
     // P4
     renderItems();
+    // P5 till discounts, every discount Kobas recorded, biggest first
+    var dr = D.discounts.map(function (nm, i) { return { name: nm, s: series(function (x) { return x === i; }, 'd') }; })
+      .filter(function (r) { return r.s.some(Boolean); })
+      .sort(function (a, b) { return b.s.reduce(function (x, y) { return x + y; }, 0) - a.s.reduce(function (x, y) { return x + y; }, 0); });
+    $('pm-disc').innerHTML = dr.length ? table(dr, { first: ST.meas === 'g' ? 'Discount · £ given' : 'Discount · uses' }) : '<div class="pm-note">No till discounts in the Kobas pull yet.</div>';
   }
   function renderItems() {
     var q = ST.q.trim().toLowerCase();
     if (q.length < 2) { $('pm-items').innerHTML = '<div class="pm-note">Type at least two letters to pull weekly sales for any item on the Kobas tills (all ' + D.items.length.toLocaleString('en-GB') + ' items, every site).</div>'; return; }
     var hits = []; D.items.forEach(function (it, i) { if ((it[0] + ' ' + (it[1] || '')).toLowerCase().indexOf(q) >= 0) hits.push(i); });
-    var rows = hits.map(function (i) { return { name: D.items[i][0] + (D.items[i][1] ? ' · ' + D.items[i][1] : ''), s: series(function (x) { return x === i; }) }; })
+    var rows = hits.map(function (i) { return { name: D.items[i][0] + (D.items[i][1] ? ' · ' + D.items[i][1] : ''), mod: /^of which /i.test(D.items[i][0]), s: series(function (x) { return x === i; }) }; })
       .filter(function (r) { return r.s.some(Boolean); }).sort(function (a, b) { return b.s.reduce(function (x, y) { return x + y; }, 0) - a.s.reduce(function (x, y) { return x + y; }, 0); }).slice(0, 60);
-    if (rows.length > 1) { var t = D.weeks.map(function (_, i) { return rows.reduce(function (a, r) { return a + r.s[i]; }, 0); }); rows.push({ name: 'Total of the above', s: t, cls: 'tot' }); }
+    if (rows.filter(function (r) { return !r.mod; }).length > 1) { var t = D.weeks.map(function (_, i) { return rows.reduce(function (a, r) { return a + (r.mod ? 0 : r.s[i]); }, 0); }); rows.push({ name: 'Total of the above (excluding "of which" lines)', s: t, cls: 'tot' }); }
     $('pm-items').innerHTML = rows.length ? table(rows, { first: 'Item' }) : '<div class="pm-note">No item matching "' + esc(ST.q) + '" sold in this period.</div>';
   }
 
