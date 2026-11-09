@@ -31,7 +31,7 @@ KNOWN = {3: ('M1', 'Nicolson St'), 5: ('M3', 'Fountainbridge'), 43: ('M6', 'Bath
          27: ('M12', 'Newcastle'), 28: ('M13', 'Aberdeen'), 37: ('M14', 'Meadowhall'), 41: ('M15', 'Metrocentre'),
          42: ('M16', 'Nottingham'), 49: ('M17', 'Lakeside'), 51: ('M18', 'Soho'), 58: ('M19', 'Shoreditch'),
          60: ('M20', 'Southampton'), 61: ('M21', 'Birmingham'), 57: ('NORI', 'Maki Nori'), 7: ('IKI2', 'Ikigai Ramen')}
-SCHEMA = 8   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
+SCHEMA = 9   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
 SKIP_NAME = re.compile(r'aahq|head office|\bho\b|factory|warehouse|kitchen ltd|test|training|demo|central', re.I)
 
 
@@ -85,9 +85,18 @@ DISC_NAMES = {}
 
 
 def _promos(j):
-    if isinstance(j, dict):
-        if isinstance(j.get('promos'), list): return j['promos']
-        if isinstance(j.get('data'), dict) and isinstance(j['data'].get('promos'), list): return j['data']['promos']
+    if not isinstance(j, dict): return None
+    p = j.get('promos')
+    if p is None and isinstance(j.get('data'), dict): p = j['data'].get('promos')
+    if isinstance(p, list): return p
+    if isinstance(p, dict):   # keyed by discount id (sometimes by lead type then id)
+        out = []
+        for kk, v in p.items():
+            if isinstance(v, dict) and v and all(isinstance(x, dict) for x in v.values()) and not any(
+                    x in v for x in ('count', 'qty', 'value', 'name')):
+                out += [dict(x, _id=k2) for k2, x in v.items()]
+            elif isinstance(v, dict): out.append(dict(v, _id=kk))
+        return out
     return None
 
 
@@ -104,7 +113,7 @@ def disc_parse(j):
     out = {}
     for pr in ps:
         if not isinstance(pr, dict): continue
-        pid = _first(pr, ('id', 'promo_id', 'discount_id', 'promoid', 'discountid'))
+        pid = _first(pr, ('id', 'promo_id', 'discount_id', 'promoid', 'discountid', '_id'))
         nm = str(_first(pr, ('name', 'promo_name', 'discount_name', 'public_name', 'title')) or DISC_NAMES.get(str(pid)) or pid or '').strip()
         if not nm: continue
         c = num(_first(pr, ('count', 'qty', 'quantity', 'uses', 'used', 'number', 'num', 'times', 'transactions')) or 0)
@@ -133,6 +142,7 @@ def disc_probe(k, vid, d0, d1):
         log('discounts report', r.status_code, r.headers.get('content-type', ''), len(r.text))
         j = r.json()
         log('discounts report keys', list(j)[:20] if isinstance(j, dict) else type(j).__name__)
+        log('discounts promos raw', json.dumps(j.get('promos'))[:900])
         ps = _promos(j)
         if ps: log('discounts first promo', json.dumps(ps[0])[:600])
         res = disc_parse(j)
