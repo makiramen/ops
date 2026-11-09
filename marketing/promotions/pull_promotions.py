@@ -31,7 +31,7 @@ KNOWN = {3: ('M1', 'Nicolson St'), 5: ('M3', 'Fountainbridge'), 43: ('M6', 'Bath
          27: ('M12', 'Newcastle'), 28: ('M13', 'Aberdeen'), 37: ('M14', 'Meadowhall'), 41: ('M15', 'Metrocentre'),
          42: ('M16', 'Nottingham'), 49: ('M17', 'Lakeside'), 51: ('M18', 'Soho'), 58: ('M19', 'Shoreditch'),
          60: ('M20', 'Southampton'), 61: ('M21', 'Birmingham'), 57: ('NORI', 'Maki Nori'), 7: ('IKI2', 'Ikigai Ramen')}
-SCHEMA = 4   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
+SCHEMA = 5   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
 SKIP_NAME = re.compile(r'aahq|head office|\bho\b|factory|warehouse|kitchen ltd|test|training|demo|central', re.I)
 
 
@@ -100,6 +100,28 @@ def _disc_req(k, var, vid, d0, d1, timeout=45):
 
 def disc_probe(k, vid, d0, d1):
     """Find which call shape the Discounts report answers (it is not the item-by-sales POST export)."""
+    # the report page itself: log every endpoint / form it references so the right call can be wired
+    for pg in ('/reports/discounts', '/reports/discounts/'):
+        try:
+            r = k.s.get(BASE + pg, timeout=60, headers={'X-Requested-With': None})
+            h = r.text
+            urls = sorted(set(re.findall(r'["\'`](/(?:data|api|reports?|ajax)/[^"\'`\s<>]{2,160})["\'`]', h)))
+            forms = re.findall(r'<form[^>]*>', h)[:5]
+            names = sorted(set(re.findall(r'name=["\']([^"\']{2,60})["\']', h)))[:60]
+            log('discounts page', pg, r.status_code, r.url, len(h), 'urls', urls[:60], 'forms', forms, 'fields', names)
+            for src in re.findall(r'<script[^>]+src=["\']([^"\']+)', h)[:12]:
+                u = ('https:' + src) if src.startswith('//') else ((BASE + src) if src.startswith('/') else src)
+                try:
+                    js = k.s.get(u, timeout=60).text
+                    hits = sorted(set(m for m in re.findall(r'["\'`](/[A-Za-z0-9_\-/\.${}]{3,120})["\'`]', js) if 'discount' in m.lower()))
+                    if hits: log('discounts bundle', u[-60:], hits[:40])
+                except Exception: pass
+            for u in urls:
+                if 'discount' in u.lower() and '{' not in u and '$' not in u:
+                    DISC_VARIANTS.insert(0, ('GET', u.split('?')[0], ('venueIds[]', 'fromDate', 'toDate')))
+                    DISC_VARIANTS.insert(1, ('POST', u.split('?')[0], ('venueIds[]', 'from', 'to')))
+        except Exception as e:
+            log('discounts page', pg, repr(e)[:120])
     for var in DISC_VARIANTS:
         try:
             r = _disc_req(k, var, vid, d0, d1)
