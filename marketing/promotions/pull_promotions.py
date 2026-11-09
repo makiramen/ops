@@ -31,6 +31,7 @@ KNOWN = {3: ('M1', 'Nicolson St'), 5: ('M3', 'Fountainbridge'), 43: ('M6', 'Bath
          27: ('M12', 'Newcastle'), 28: ('M13', 'Aberdeen'), 37: ('M14', 'Meadowhall'), 41: ('M15', 'Metrocentre'),
          42: ('M16', 'Nottingham'), 49: ('M17', 'Lakeside'), 51: ('M18', 'Soho'), 58: ('M19', 'Shoreditch'),
          60: ('M20', 'Southampton'), 61: ('M21', 'Birmingham'), 57: ('NORI', 'Maki Nori'), 7: ('IKI2', 'Ikigai Ramen')}
+SCHEMA = 2   # bump to force a full backfill (2: modifier "of which" lines kept)
 SKIP_NAME = re.compile(r'aahq|head office|\bho\b|factory|warehouse|kitchen ltd|test|training|demo|central', re.I)
 
 
@@ -86,14 +87,20 @@ def parse(txt):
         return None
     ii, ci, qi, gi = ix('item'), ix('category'), ix('items sold', 'qty', 'quantity'), ix('gross sales', 'gross')
     if ii is None or qi is None: raise RuntimeError('unexpected export header: ' + ','.join(rows[0][:8]))
-    out = {}
+    out = {}; parent_cat = ''
     for l in rows[1:]:
         if len(l) <= max(x for x in (ii, ci, qi, gi) if x is not None): continue
         nm = l[ii].strip()
-        if not nm or nm.lower() == 'total' or nm.lower().startswith('of which '): continue
+        if not nm or nm.lower() == 'total': continue
         q = num(l[qi]); g = num(l[gi]) if gi is not None else 0.0
         if q == 0 and g == 0: continue
         cat = l[ci].strip() if ci is not None else ''
+        if nm.lower().startswith('of which '):
+            # modifier / option line, already inside its parent item: kept under its own name for promo matching
+            # (lunch deal options, XOXO choices), category tagged so totals never add it to the parent again
+            nm = 'of which ' + nm[9:].strip(); cat = 'Modifier' + (' · ' + parent_cat if parent_cat else '')
+        else:
+            parent_cat = cat
         cur = out.setdefault(nm, [cat, 0.0, 0.0])
         cur[1] += q; cur[2] += g
     return out
@@ -122,6 +129,7 @@ def main():
     if os.path.exists(a.out):
         try:
             d = json.load(open(a.out))
+            if d.get('schema') != SCHEMA: raise ValueError(f"schema {d.get('schema')} -> {SCHEMA}")
             for vid, code, name in d['sites']: old_sites[vid] = (code, name)
             for si, wk in d['cells'].items():
                 vid = d['sites'][int(si)][0]
@@ -179,7 +187,7 @@ def main():
                 if key not in iidx: iidx[key] = len(items); items.append([nm, cat])
                 lst.append([iidx[key], round(q, 2) if q % 1 else int(q), round(g)])
             cells.setdefault(str(si), {})[str(wi)] = lst
-    outd = {'generated_at': datetime.datetime.now(UK).strftime('%Y-%m-%d %H:%M'), 'source': 'Kobas All Item Sales, weekly Mon-Sun',
+    outd = {'schema': SCHEMA, 'generated_at': datetime.datetime.now(UK).strftime('%Y-%m-%d %H:%M'), 'source': 'Kobas All Item Sales, weekly Mon-Sun',
             'weeks': weeks, 'partial': partial.isoformat() if partial else None,
             'partial_to': (today - datetime.timedelta(days=1)).isoformat() if partial else None,
             'sites': [[vid, sites_all.get(vid, ('', str(vid)))[0], sites_all.get(vid, ('', str(vid)))[1]] for vid in site_ids],
