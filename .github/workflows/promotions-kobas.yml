@@ -1,0 +1,61 @@
+name: Promotions tab (Kobas weekly item sales)
+
+# 9 Nov 2026. Feeds the Promotions tab of the Marketing Hub (marketing/index.html, last tab). Logs into Kobas as
+# the keyline bot user (secrets only), pulls All Item Sales per venue per Mon-Sun week and commits
+# marketing/promotions/data.json. Replaces the hand-filled Weekly Deals Sales sheet. Runs in the cloud, no Mac.
+# Slots sit clear of the other Kobas bot runs (kpi-auto 04:10 UTC, keyline 05:55 / 06:40 / 07:20 UTC).
+on:
+  push:
+    branches: [main]
+    paths: ['marketing/promotions/pull_promotions.py', '.github/workflows/promotions-kobas.yml']
+  schedule:
+    - cron: '5 9 * * *'
+    - cron: '5 15 * * *'
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: 'settled weeks to re-pull besides the week to date'
+        default: '2'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: promotions-kobas
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install --quiet requests
+      - name: Pull Kobas
+        env:
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+        run: |
+          python3 marketing/promotions/pull_promotions.py --out marketing/promotions/data.json --refresh "${{ inputs.refresh || '2' }}" 2> /tmp/promo.err | tee -a "$GITHUB_STEP_SUMMARY"
+          code=${PIPESTATUS[0]}
+          echo '### log tail' >> "$GITHUB_STEP_SUMMARY"; tail -n 40 /tmp/promo.err >> "$GITHUB_STEP_SUMMARY"
+          tail -n 80 /tmp/promo.err
+          exit $code
+      - name: Commit and push if changed
+        env:
+          GH_TOKEN: ${{ secrets.OPS_DEPLOY_TOKEN || github.token }}
+        run: |
+          if [ -z "$(git status --porcelain -- marketing/promotions/data.json)" ]; then echo "promotions: nothing to ship"; exit 0; fi
+          git config user.name "maki-nori"; git config user.email "michael@makiramen.com"
+          git add marketing/promotions/data.json
+          git commit -q -m "Promotions: Kobas pull $(TZ=Europe/London date +'%Y-%m-%d %H:%M') UK"
+          URL="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          for i in 1 2 3; do git push "$URL" HEAD:main && exit 0; git fetch "$URL" main && git rebase FETCH_HEAD; done
+          exit 1
