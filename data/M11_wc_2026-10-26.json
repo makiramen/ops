@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-11-03",
+  "generated_at": "2026-11-09",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-10-26 \u2013 2026-11-01",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": 36.44,
+          "actual": 36.36,
           "target": 23.0,
           "gated": false
         },
@@ -81,14 +81,14 @@
           "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": -4.7,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-10-26"
       },
       "efficiency_score": {
-        "score": 45,
+        "score": 48,
         "rag": "red",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -112,8 +112,8 @@
           },
           "food": {
             "weight": 30,
-            "value": 8.48,
-            "basis": "36.44% vs 25% baseline, -8/pp over"
+            "value": 9.12,
+            "basis": "36.36% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -124,11 +124,14 @@
             "weight": 10,
             "value": 100.0,
             "basis": "5.00\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-4.70% inside \u00b15% band"
           }
         },
-        "components_dropped": [
-          "food_var"
-        ],
+        "components_dropped": [],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
@@ -154,7 +157,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-03."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-10-26..2026-11-01 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-09."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-10-26.json (AGMM Task List Status). Open items only.",
@@ -229,9 +232,7 @@
         "sales_estimated": false,
         "orders_estimated": false
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [
           "Covers were down 1,155 week on week and spend per head up \u00a30.50, as Saturday was quieter than expected against last year's busy Halloween payday weekend (M11 KPI Report).",
