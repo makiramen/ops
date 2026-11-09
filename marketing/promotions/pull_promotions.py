@@ -78,20 +78,24 @@ def pull_one(k, vid, d0, d1):
 
 
 SAMPLE = {'done': False}
+DISC_OFF = {'off': False, 'fails': 0}
 
 
 def pull_disc(k, vid, d0, d1):
     """Discounts report (lunch deals and other till discounts) for one venue and week: {name: [uses, value]}.
     Best effort: a failure returns None and never stops the item pull."""
+    if DISC_OFF['off']: return None
     data = [('venueIds[]', str(vid)), ('from', d0), ('to', d1), ('fromDate', d0), ('toDate', d1)]
-    for i in range(3):
-        try:
-            p = k.s.post(BASE + '/data/reports/discounts/export', data=data, timeout=180,
-                         headers={'Content-Type': 'application/x-www-form-urlencoded'})
-            if p.status_code == 200: break
-        except Exception: p = None
-        time.sleep(3 * (i + 1))
-    else:
+    t0 = time.time()
+    try:
+        p = k.s.post(BASE + '/data/reports/discounts/export', data=data, timeout=45,
+                     headers={'Content-Type': 'application/x-www-form-urlencoded'})
+    except Exception as e:
+        p = None; log('discounts export error', vid, d0, repr(e)[:120])
+    if p is None or p.status_code != 200 or time.time() - t0 > 40:
+        DISC_OFF['fails'] += 1
+        if p is not None: log('discounts export', vid, d0, 'http', p.status_code, f'{time.time() - t0:.0f}s', p.text[:160].replace('\n', ' '))
+        if DISC_OFF['fails'] >= 3: DISC_OFF['off'] = True; log('discounts export switched off for this run')
         return None
     txt = p.text.lstrip('\ufeff')
     rows = [l for l in csv.reader(io.StringIO(txt)) if any(c.strip() for c in l)]
@@ -169,10 +173,12 @@ def main():
 
     # existing data -> raw {(week, vid): {item: [cat, q, g]}}
     raw, old_sites, draw = {}, {}, {}
+    disc_ok = True   # whether the last run could read the discounts report (if not, never re-pull settled weeks for it)
     if os.path.exists(a.out):
         try:
             d = json.load(open(a.out))
             if d.get('schema') != SCHEMA: raise ValueError(f"schema {d.get('schema')} -> {SCHEMA}")
+            disc_ok = d.get('disc_ok', True)
             for vid, code, name in d['sites']: old_sites[vid] = (code, name)
             for si, wk in d['cells'].items():
                 vid = d['sites'][int(si)][0]
@@ -202,7 +208,7 @@ def main():
         w = mon.isoformat()
         end = (today - datetime.timedelta(days=1)) if mon == partial else mon + datetime.timedelta(days=6)
         for vid in vs:
-            if w in fixed and w in have and (w, vid) in raw and (w, vid) in draw: continue   # settled week already pulled
+            if w in fixed and w in have and (w, vid) in raw and ((w, vid) in draw or not disc_ok): continue   # settled week already pulled
             jobs.append((w, vid, w, end.isoformat()))
     log('jobs', len(jobs))
 
@@ -255,7 +261,7 @@ def main():
             'weeks': weeks, 'partial': partial.isoformat() if partial else None,
             'partial_to': (today - datetime.timedelta(days=1)).isoformat() if partial else None,
             'sites': [[vid, sites_all.get(vid, ('', str(vid)))[0], sites_all.get(vid, ('', str(vid)))[1]] for vid in site_ids],
-            'items': items, 'cells': cells, 'errors': len(errs), 'discounts': discs, 'dcells': dcells,
+            'items': items, 'cells': cells, 'errors': len(errs), 'discounts': discs, 'dcells': dcells, 'disc_ok': not DISC_OFF['off'],
             'empty': sorted([w, v] for (w, v), r in raw.items() if not r)}
     os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
     json.dump(outd, open(a.out, 'w'), separators=(',', ':'))
