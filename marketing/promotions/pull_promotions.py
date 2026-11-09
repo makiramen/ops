@@ -31,7 +31,7 @@ KNOWN = {3: ('M1', 'Nicolson St'), 5: ('M3', 'Fountainbridge'), 43: ('M6', 'Bath
          27: ('M12', 'Newcastle'), 28: ('M13', 'Aberdeen'), 37: ('M14', 'Meadowhall'), 41: ('M15', 'Metrocentre'),
          42: ('M16', 'Nottingham'), 49: ('M17', 'Lakeside'), 51: ('M18', 'Soho'), 58: ('M19', 'Shoreditch'),
          60: ('M20', 'Southampton'), 61: ('M21', 'Birmingham'), 57: ('NORI', 'Maki Nori'), 7: ('IKI2', 'Ikigai Ramen')}
-SCHEMA = 9   # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
+SCHEMA = 10  # bump to force a full backfill (2: modifier "of which" lines kept, 3: discounts report added)
 SKIP_NAME = re.compile(r'aahq|head office|\bho\b|factory|warehouse|kitchen ltd|test|training|demo|central', re.I)
 
 
@@ -116,8 +116,8 @@ def disc_parse(j):
         pid = _first(pr, ('id', 'promo_id', 'discount_id', 'promoid', 'discountid', '_id'))
         nm = str(_first(pr, ('name', 'promo_name', 'discount_name', 'public_name', 'title')) or DISC_NAMES.get(str(pid)) or pid or '').strip()
         if not nm: continue
-        c = num(_first(pr, ('count', 'qty', 'quantity', 'uses', 'used', 'number', 'num', 'times', 'transactions')) or 0)
-        v = abs(num(_first(pr, ('value', 'amount', 'discount', 'total', 'discount_value', 'gross', 'net')) or 0))
+        c = num(_first(pr, ('uses', 'count', 'qty', 'quantity', 'used', 'number', 'num', 'times', 'transactions')) or 0)
+        v = abs(num(_first(pr, ('revenue', 'value', 'amount', 'discount', 'total', 'discount_value', 'gross', 'net')) or 0))
         cur = out.setdefault(nm, [0.0, 0.0]); cur[0] += c; cur[1] += v
     return out
 
@@ -142,7 +142,6 @@ def disc_probe(k, vid, d0, d1):
         log('discounts report', r.status_code, r.headers.get('content-type', ''), len(r.text))
         j = r.json()
         log('discounts report keys', list(j)[:20] if isinstance(j, dict) else type(j).__name__)
-        log('discounts promos raw', json.dumps(j.get('promos'))[:900])
         ps = _promos(j)
         if ps: log('discounts first promo', json.dumps(ps[0])[:600])
         res = disc_parse(j)

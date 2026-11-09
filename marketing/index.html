@@ -2018,7 +2018,7 @@ td.sitecell { white-space: nowrap; }
   <div class="shead"><span class="n">P4</span><h2>Any item</h2><span class="r"><input type="search" id="pm-q" placeholder="Search any Kobas item, e.g. matcha"></span></div>
   <div class="card scroll" id="pm-items"></div>
 
-  <div class="shead"><span class="n">P5</span><h2>Till discounts</h2><span class="r">Kobas discounts report · uses (or £ given with Measure = Gross £)</span></div>
+  <div class="shead"><span class="n">P5</span><h2>Till discounts</h2><span class="r">Kobas Discounts report · uses (Measure = Gross £ shows the £ discounted)</span></div>
   <div class="card scroll" id="pm-disc"></div>
   <p class="pm-note">Source: Kobas All Item Sales and Discounts reports, every venue, weeks Monday to Sunday, pulled automatically twice a day (no sheet, no Mac). Units include every channel (eat-in, takeaway, delivery). Modifier lines ("of which…", e.g. toppings and bento choices) are shown as their own lines but never added into a promotion or a total, so nothing is counted twice. A promotion is a set of Kobas items matched by name or category, or a till discount (lunch deals); click it in P2 to see exactly what it counts.</p>
 </div>
@@ -2031,6 +2031,11 @@ td.sitecell { white-space: nowrap; }
   // skipped unless mods:true) or a Kobas till discount (disc: pattern on the discount name). Edit here to add one.
   var PROMOS = [
     { id: 'lunch',  name: 'Lunch deals',       disc: /lunch/i },
+    { id: 'trwel',  name: 'TRIFFT welcome offers', disc: /trifft.*welcome|welcome!|welcome reward/i },
+    { id: 'stud',   name: 'Student offers',     disc: /student/i },
+    { id: 'app',    name: 'App rewards',        disc: /\(app\)|app!/i },
+    { id: 'bday',   name: 'Birthday rewards',   disc: /birthday/i },
+    { id: 'trio',   name: 'Trio deals',         disc: /3 for 24|trio/i },
     { id: 'lunchm', name: 'Lunch menu items',  test: function (n, c) { return /^l(unch)?\s*-/i.test(n) || /lunch/i.test(c); } },
     { id: 'kids',   name: 'Kids menu',          test: function (n) { return /\bkids?\b/i.test(n); } },
     { id: 'xoxo',   name: 'XOXO drinks',        test: function (n) { return /xoxo/i.test(n) && !/cocktail/i.test(n); } },
@@ -2133,7 +2138,7 @@ td.sitecell { white-space: nowrap; }
     PROMOS.forEach(function (p) {
       if (!groupItems[p.id].length) return;
       var sr = src(p.id), s = series(inGrp(p.id), sr); if (!s.some(Boolean)) return;
-      rows.push({ name: p.name + (p.disc ? ' (till discount uses)' : ''), s: s, cls: 'grp' + (ST.open[p.id] ? ' open' : ''), key: p.id });
+      rows.push({ name: p.name + (p.disc ? ' (till discount)' : ''), s: s, cls: 'grp' + (ST.open[p.id] ? ' open' : ''), key: p.id });
       if (ST.open[p.id]) groupItems[p.id].forEach(function (i) {
         var si = series(function (x) { return x === i; }, sr);
         var nm = sr === 'd' ? 'Discount: ' + D.discounts[i] : D.items[i][0] + (D.items[i][1] ? ' · ' + D.items[i][1] : '');
