@@ -6,6 +6,7 @@
 - New component «Co27» Maki Shop (custom booking and ordering web app, to build).
 - Finding: Kobas API v3 has no order, tab or payment write. Bookings and customers can be written (reservation, customer). The order write needs Deliverect Channel API or a Kobas partner push (as Preoday). Pinks 17 to 25 in questions.md.
 - Source: source/cj1-drilldown.mjs (node, writes the three SVGs). CJ1 2 v0.6 stays as the overview.
+- Board: three frames added to the right of CJ1 2 v0.6 (same row): "CJ1 2.s2 Discover drill-down to API entry points v0.1", "CJ1 2.s3 Order / book ...", "CJ1 2.s4 Pay ...", SVG from Pages.
 
 ## 2026-11-10
 - Folder created in git after Marcel's review comment (7 Nov). All existing versions committed, v0.1 questions restored (questions.md).
