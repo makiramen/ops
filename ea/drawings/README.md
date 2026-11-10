@@ -12,7 +12,7 @@ Board: https://miro.com/app/board/uXjVESfEppc=/
 - source/ holds the HTML that renders the drawings (proof pages).
 
 ## Drawing set per journey
-1 swimlane · 2 EA 5-layer view · 3 sequence diagrams · 4 ontology (class diagrams) · 5 context package
+1 swimlane · 2 EA 5-layer view (plus a level 2 drill-down per stage where needed: CJ1_2_s2, CJ1_2_s3, CJ1_2_s4) · 3 sequence diagrams · 4 ontology (class diagrams) · 5 context package
 
 ## Journeys
 - CJ1 PPC to Paying

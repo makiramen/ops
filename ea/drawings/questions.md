@@ -53,8 +53,24 @@ Ids: Q-CJ1-v0.1-nn are the original CJ1 v0.1 stickies (5 Nov 2026) that were los
 | 15 | Refunds, voids, deposits, gift vouchers treatment | OPEN |
 | 16 | Owner of the daily bank vs cash log reconciliation per venue | OPEN |
 
+## CJ1 2 drill-down of s2, s3, s4 (10 Nov 2026, custom Maki Shop between Kobas and Trifft)
+| # | Stage | Question | For | Status |
+|---|---|---|---|---|
+| 17 | s3 | Order write into Kobas: Kobas API v3 has none. (a) Deliverect generic channel, (b) a Kobas partner push like Preoday, (c) keep the Kobas CIC for submit | Kobas API specialist | OPEN |
+| 18 | s2, s3 | Table ids per venue: any Kobas endpoint? Or re-print the QRs with our own venue + table code | Kobas API specialist | OPEN |
+| 19 | s2 | Does GET /stock-item return modifiers, allergens, images and the price per venue? | Kobas API specialist | OPEN |
+| 20 | s3 | Reservations: any availability or capacity rule in Kobas? Does an API booking land pending or confirmed, and when does it show on EPoS? | Kobas API specialist | OPEN |
+| 21 | all | Maki holds no Kobas API client id / secret: request them with scope and permissions (300 customer, 305 integrations, 915 venue payments, reservation) | Kobas | OPEN |
+| 22 | s4 | Stripe: the shop's own account or the one the Kobas CIC uses, paying out to which entity? Which Kobas payment type does a shop order settle on? | Finance, Kobas | OPEN |
+| 23 | s2, s4 | Which id links a Trifft member to a Kobas customer (card, email)? One earn route only (Kobas to Trifft, or shop to Trifft) | Trifft, Georgie | OPEN |
+| 24 | s3 | Deliverect: can the Maki Shop be a channel (scope + channelLinkId per venue) for eat in orders with a table? | Deliverect | OPEN |
+| 25 | s3 | Deposits: do we take them, which sites? Cut-over plan from Dojo Bookings | Michael | OPEN |
+
+Note on CJ2 pink 1 / CJ1 pink 6 (QR acquirer): the Kobas help centre states Stripe is the only provider for Kobas online ordering payments (help.kobas.co.uk/third-party-integrations, read 10 Nov). Likely answer Stripe; Worldpay to be confirmed by finance. Status stays OPEN until confirmed.
+
 ## Marcel's review comments (Miro)
 | Date | Where | Comment | Response |
 |---|---|---|---|
 | 6 Nov 2026 | EA 5-layer view | Map the Kobas API GET / PUT REST endpoints in layer 2 to the corresponding service methods in layer 3 | Done in CJ1_2 v0.6, CJ2_2 v0.4, CJ3_2 v0.1 (Integration surfaces strip and endpoint to method arrows) |
 | 7 Nov 2026 | CJ1 swimlane | Version in git: the first version had good questions, now lost | This folder. v0.1 questions restored above and as pink stickies in the Archive frame on the board |
+| 10 Nov 2026 | Call (Gemini notes) | Revise the reverse engineered steps s2, s3, s4 so they map to Kobas API entry points, for the custom booking and ordering architecture; send before Friday | CJ1_2_s2_discover, CJ1_2_s3_order_book, CJ1_2_s4_pay v0.1 |
