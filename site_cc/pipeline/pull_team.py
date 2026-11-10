@@ -27,9 +27,12 @@ def short(first,last):
     f=re.sub(r'\s+',' ',first).strip();l=re.sub(r'\s+',' ',last).strip()
     return (f+(' '+l[0].upper() if l else '')).strip()
 tick=lambda v:str(v).strip().upper() in ('TRUE','YES','Y','DONE','✓','✔')
-team={'Management':[],'FOH and bar':[],'BOH':[]};leavers=[];onb=0;cur=None;pending=[]
+team={'Management':[],'FOH and bar':[],'BOH':[]};leavers=[];onb=0;cur=None;pending=[];docs=[]
 # 10/11/2026 (Michael): where each person sits on the tracker. pending = [name, section, [steps not ticked]] for anyone not fully onboarded.
 STEPS=((3,'HR docs'),(6,'Mapal and operational tasks'),(7,'Contract released'))
+# 10/11/2026 (Michael): documents missing per person, for the Starters and leavers card. The tracker holds one tick per group, not per document,
+# so a missing HR docs tick names the whole pack. Passport and right to work is the tick only: expiry dates and status are never read out.
+DOCS=((3,'HR docs pack'),(4,'Passport and right to work check'),(7,'Contract'))
 for r in rows:
     r=(r+['']*8)[:8];a=r[0].strip()
     if a.lower().rstrip('.') in TITLES:
@@ -39,6 +42,8 @@ for r in rows:
         else:
             team[cur].append(n)
             miss=[lab for i,lab in STEPS if not tick(r[i])]
+            dm=[lab for i,lab in DOCS if not tick(r[i])]
+            if dm:docs.append([n,cur,dm])
             if miss:pending.append([n,cur,miss])
             else:onb+=1
     elif a:
@@ -55,7 +60,7 @@ else:
     base=old.get('baseline') or old.get('pulled') or t
     prev=old.get('prev')
     if names!=oldnames:prev={'date':old.get('pulled') or base,'names':oldnames}
-out={'src':f'Maki Group Onboarding Tracker 2026, tab {tab.strip()}','pulled':t,'baseline':base,'team':team,'onboarded':onb,'pending':pending,'leavers':leavers,'prev':prev}
+out={'src':f'Maki Group Onboarding Tracker 2026, tab {tab.strip()}','pulled':t,'baseline':base,'team':team,'onboarded':onb,'pending':pending,'docs':docs,'leavers':leavers,'prev':prev}
 print(f"team {A.site}: {hc} ({', '.join(f'{len(v)} {k}' for k,v in team.items())}), onboarded {onb}/{hc}, P45 {len(leavers)}, "+
       (f"changed since {prev['date']}" if prev else 'baseline'))
 if not A.check:save(P,out,indent=1)
