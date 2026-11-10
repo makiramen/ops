@@ -1896,21 +1896,32 @@ function renderComp2(){var hasP=PPM.items&&PPM.items.length,rows=hasP?ppmRows():
   $('#ovComp').innerHTML='<div class="big" style="font-size:22px">'+red.length+' red · '+amb.length+' due soon</div>'+red.concat(amb).map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:6px;margin-top:6px"><div><b>'+x.lab+'</b><div class="small">'+esc(x.who)+' · '+(x.due?'due '+dmy(x.due):'no date on file')+'</div></div>'+TL(x.r,x.st)+'</div>'}).join('');
 }
 /* 10/11/2026 (Michael): People section of the KPI Sheet and the Onboarding tab, both off TEAM.rows (pull_team.py's carbon copy of Hanna's tracker tab:
-   sheet row, section, name, ticks for HR docs / Passport & RTW / Operational tasks / Contract released). Live, not week specific.
+   sheet row, section, name, ticks for HR docs / Passport & RTW / Operational tasks / Contract released, [RTW expiry ISO date or null, note]). Live, not week specific.
+   10/11/2026 (Michael): RTW expiry shown on both: date and days left, red when expired or inside 30 days, amber inside 90 days, green beyond,
+   neutral for "No limit" / "UK/Irish National" / blank. Days left are counted from today on the device, not baked at build time.
    A tick on the page is optimistic: shown at once, POSTed to the web app (op 'onb') which sets the cell TRUE in the tracker, reverted with a toast if the
    sheet says no. S.onb keeps ticks made on this device until the nightly build carries them; onbPull() merges the live sheet on open and every minute. */
 var ONB_COLS=(TEAM.cols&&TEAM.cols.length)?TEAM.cols:[['D','HR docs'],['E','Passport & RTW'],['G','Operational tasks'],['H','Contract released']];
 if(!S.onb||typeof S.onb!=='object')S.onb={};
 function onbRows(){var R=TEAM.rows||[];R.forEach(function(r){ONB_COLS.forEach(function(c,i){if(S.onb[r[0]+'|'+c[0]])r[3][i]=true})});return R}
+function rtwInfo(r){var x=r[4]||[null,null],d=x[0],note=x[1]||'';if(!d)return {d:null,days:null,rag:'n',txt:note||'Not on tracker',note:note};
+  var days=Math.round((new Date(d+'T00:00:00')-new Date(NOWD+'T00:00:00'))/864e5),rag=days<0?'r':days<=30?'r':days<=90?'a':'g';
+  return {d:d,days:days,rag:rag,txt:days<0?'Expired '+(-days)+'d ago':days===0?'Expires today':days+' days left',note:note}}
+function rtwCell(r){var i=rtwInfo(r);if(!i.d)return '<td class="small">'+esc(i.txt)+'</td>';
+  return '<td><span class="pill p-'+i.rag+'">'+(i.rag==='r'?'✕ ':i.rag==='a'?'! ':'✓ ')+dmy(i.d)+' · '+i.txt+'</span>'+(i.note?'<div class="mini">'+esc(i.note)+'</div>':'')+'</td>'}
+function rtwWatch(){return onbRows().map(function(r){return {r:r,i:rtwInfo(r)}}).filter(function(x){return x.i.d&&x.i.rag!=='g'}).sort(function(a,b){return a.i.days-b.i.days})}
 function onbMiss(r){return ONB_COLS.filter(function(c,i){return !r[3][i]}).map(function(c){return c[1]})}
 function onbStats(){var R=onbRows(),done=R.filter(function(r){return !onbMiss(r).length});return {hc:R.length,done:done.length,pend:R.filter(function(r){return onbMiss(r).length})}}
 function onbCell(r,i){var c=ONB_COLS[i];
   return r[3][i]?'<td><span class="pill p-g">✓ Done</span></td>':'<td><label class="onbt" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-onb="'+r[0]+'|'+c[0]+'" aria-label="Tick '+c[1]+' for '+esc(r[2])+'"><span class="pill p-r">✕ Outstanding</span></label></td>'}
-function onbTable(rows,grouped){if(!rows.length)return '';var h='<div class="tscroll"><table><thead><tr><th>Name</th><th>Team</th>'+ONB_COLS.map(function(c){return '<th>'+c[1]+'</th>'}).join('')+'</tr></thead><tbody>',last=null;
-  rows.forEach(function(r){if(grouped&&r[1]!==last){last=r[1];h+='<tr><td colspan="'+(2+ONB_COLS.length)+'" class="mini" style="background:var(--maki-orange-bg);color:var(--maki-ink);font-weight:700">'+esc(r[1])+'</td></tr>'}
-    var m=onbMiss(r);h+='<tr><td class="mname">'+esc(r[2])+(m.length?'':' <span class="pill p-g" style="margin-left:4px">Complete</span>')+'</td><td class="small">'+esc(r[1])+'</td>'+ONB_COLS.map(function(c,i){return onbCell(r,i)}).join('')+'</tr>'});
+function onbTable(rows,grouped){if(!rows.length)return '';var h='<div class="tscroll"><table><thead><tr><th>Name</th><th>Team</th>'+ONB_COLS.map(function(c){return '<th>'+c[1]+'</th>'}).join('')+'<th>RTW expiry</th></tr></thead><tbody>',last=null;
+  rows.forEach(function(r){if(grouped&&r[1]!==last){last=r[1];h+='<tr><td colspan="'+(3+ONB_COLS.length)+'" class="mini" style="background:var(--maki-orange-bg);color:var(--maki-ink);font-weight:700">'+esc(r[1])+'</td></tr>'}
+    var m=onbMiss(r);h+='<tr><td class="mname">'+esc(r[2])+(m.length?'':' <span class="pill p-g" style="margin-left:4px">Complete</span>')+'</td><td class="small">'+esc(r[1])+'</td>'+ONB_COLS.map(function(c,i){return onbCell(r,i)}).join('')+rtwCell(r)+'</tr>'});
   return h+'</tbody></table></div>'}
-function onbFoot(){return '<div class="small" style="margin-top:6px">Live from '+esc(TEAM.src||'the onboarding tracker')+(TEAM.pulled?', read '+dmy(TEAM.pulled):'')+'. Tick a document here and it is ticked in Hanna\'s tracker straight away (and the other way round, on the next build). Untick only in the tracker. HR docs = starter checklist, HMRC checklist, health record, handbook, staff guide, company policy, one tick.</div>'}
+function onbFoot(){return '<div class="small" style="margin-top:6px">Live from '+esc(TEAM.src||'the onboarding tracker')+(TEAM.pulled?', read '+dmy(TEAM.pulled):'')+'. Tick a document here and it is ticked in Hanna\'s tracker straight away (and the other way round, on the next build). Untick only in the tracker. HR docs = starter checklist, HMRC checklist, health record, handbook, staff guide, company policy, one tick. RTW expiry from column F of the tracker, days left counted from today: red when expired or inside 30 days, amber inside 90.</div>'}
+function rtwBlock(){var W=rtwWatch(),ex=W.filter(function(x){return x.i.days<0}).length,r30=W.filter(function(x){return x.i.days>=0&&x.i.days<=30}).length,a90=W.length-ex-r30;
+  var lab=!W.length?'RTW: nothing expiring inside 90 days':(ex?ex+' expired':'')+(ex&&r30?', ':'')+(r30?r30+' inside 30 days':'')+((ex||r30)&&a90?', ':'')+(a90?a90+' inside 90 days':'');
+  return '<div style="margin-top:10px"><div class="mini">Right to work expiry</div>'+TL(ex||r30?'r':a90?'a':'g',lab)+(W.length?'<div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Name</th><th>Team</th><th>RTW expiry</th></tr></thead><tbody>'+W.map(function(x){return '<tr><td class="mname">'+esc(x.r[2])+'</td><td class="small">'+esc(x.r[1])+'</td>'+rtwCell(x.r)+'</tr>'}).join('')+'</tbody></table></div>':'')+'</div>'}
 function onbTick(key,box){if(!ASH){box.checked=false;return toast('No web app link on this page, tick it in the tracker')}
   var p=key.split('|'),row=+p[0],col=p[1],r=onbRows().filter(function(x){return x[0]===row})[0];if(!r){box.checked=false;return}
   var i=ONB_COLS.map(function(c){return c[0]}).indexOf(col);S.onb[key]=nowIso();r[3][i]=true;save();renderTeam();toast('Ticked '+ONB_COLS[i][1]+' for '+r[2]+'. Writing to the tracker');
@@ -1933,18 +1944,19 @@ function renderTeam(){var T=TEAM.team,secs=Object.keys(T),hc=secs.reduce(functio
   $('#kpiOnbHead').textContent='People · onboarding tracker'+(hc?' · '+(hasRows?st.done:TEAM.onboarded)+' / '+(hasRows?st.hc:hc)+' complete':'');
   if(kb)kb.innerHTML=!hc?'<div class="small">No onboarding tracker tab for this site.</div>':
     '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px"><div><div class="mini">On the tracker</div><div class="kv" style="font-size:22px">'+(hasRows?st.hc:hc)+'</div></div><div><div class="mini">Fully onboarded</div><div class="kv" style="font-size:22px">'+(hasRows?st.done:TEAM.onboarded)+'</div></div><div><div class="mini">Not yet complete</div><div class="kv" style="font-size:22px;color:var(--'+(nd?'red-ink':'green-ink')+')">'+nd+'</div></div><div>'+TL(nd?'a':'g',nd?nd+' with documents missing':'Everyone fully onboarded')+'</div></div>'+
-    (hasRows?onbTable(st.pend,false)+onbFoot():(TEAM.pending&&TEAM.pending.length?'<div class="small">'+TEAM.pending.map(function(p){return '<b>'+esc(p[0])+'</b> ('+esc(p[1])+'): '+p[2].map(esc).join(', ')}).join('<br>')+'</div>':'')+'<div class="small" style="margin-top:6px">Tracker copy lands on the next build.</div>')+
+    (hasRows?onbTable(st.pend,false)+rtwBlock()+onbFoot():(TEAM.pending&&TEAM.pending.length?'<div class="small">'+TEAM.pending.map(function(p){return '<b>'+esc(p[0])+'</b> ('+esc(p[1])+'): '+p[2].map(esc).join(', ')}).join('<br>')+'</div>':'')+'<div class="small" style="margin-top:6px">Tracker copy lands on the next build.</div>')+
     '<div style="margin-top:8px"><button type="button" class="btn sm" data-go="onb">Open the full tracker copy</button></div>';
   /* Onboarding tab: the whole tracker tab as in the sheet, section by section, P45 list at the end */
   var ot=$('#onbCopy');if(ot){var R=onbRows();$('#onbTitle').textContent='Onboarding tracker · '+SITE.label;$('#tvOnb').textContent=hasRows&&nd?' · '+nd:'';
     $('#onbTiles').innerHTML=tile('On the tracker',hasRows?st.hc:hc,secs.map(function(k){return T[k].length+' '+k}).join(' · ')||'No tracker tab',null,'<span class="tag t-auto">AUTO</span>')+
       tile('Fully onboarded',hasRows?st.done:(TEAM.onboarded||0),'All four columns ticked',hasRows&&st.done===st.hc?'g':null)+
       tile('Not yet complete',nd,'Documents still missing',nd?'r':'g')+
-      tile('P45 list',(TEAM.leavers||[]).length+'','Leavers since opening, as in the tracker',null,'<span class="tag t-auto">AUTO</span>');
+      tile('P45 list',(TEAM.leavers||[]).length+'','Leavers since opening, as in the tracker',null,'<span class="tag t-auto">AUTO</span>')+
+      (function(){var W=rtwWatch(),ex=W.filter(function(x){return x.i.days<0}).length,r30=W.filter(function(x){return x.i.days>=0&&x.i.days<=30}).length;return tile('RTW expiry',W.length+'',!W.length?'Nothing expiring inside 90 days':(ex?ex+' expired · ':'')+(r30?r30+' inside 30 days · ':'')+(W.length-ex-r30)+' inside 90 days',ex||r30?'r':W.length?'a':'g')})();
     $('#onbSrc').textContent=(TEAM.src||'')+(TEAM.pulled?' · read '+dmy(TEAM.pulled):'');
     ot.innerHTML=!hasRows?'<div class="small">'+(hc?'Tracker copy lands on the next build.':'No onboarding tracker tab for this site.')+'</div>':onbTable(R,true)+
       '<div class="mini" style="margin-top:10px">P45 list</div><div class="roster">'+(TEAM.leavers||[]).map(function(n){return '<span>'+esc(n)+'</span>'}).join('')+'</div>'+onbFoot()+
-      '<div class="mini" style="margin-top:6px">RTW expiry dates stay in the tracker and are never copied here.</div>'}
+      '<div class="mini" style="margin-top:6px">RTW expiry is read from the tracker; it cannot be edited here, update column F in the sheet.</div>'}
   $('#teamCard').innerHTML='<div class="big">'+hc+' team</div><div class="small">'+secs.map(function(k){return T[k].length+' '+k}).join(' · ')+'</div>'+
     '<div style="margin-top:6px">'+TL(nd?'a':'g','Onboarding '+(hasRows?st.done:TEAM.onboarded)+' / '+(hasRows?st.hc:hc)+' complete')+'</div>'+mv+
     '<details style="margin-top:6px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700">Team list and '+TEAM.leavers.length+' leavers since opening</summary>'+
