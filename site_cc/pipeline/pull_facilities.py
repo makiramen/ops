@@ -21,7 +21,7 @@ NAMES={'M1':['Maki 1/2','Maki 1','Maki 2','Maki 1/2 (Nicolson St)'],'IKI2':['Iki
        'MakiNori':['Maki Nori','Maki Nori Ltd']}
 names=NAMES.get(A.site) or [C.get('label',A.site)]
 names=names+[C.get('label','')]+[n+' Ltd' for n in names]+[A.site];names=[n for n in dict.fromkeys(x for x in names if x)]
-def norm(s):return re.sub(r'[^a-z0-9]','',str(s or '').lower())
+def norm(s):return re.sub(r'[^a-z0-9/]','',str(s or '').lower())   # keep the slash: 'Maki 1/2' must not equal 'Maki 12'
 NN={norm(n) for n in names}
 def fetch_db():
     if A.db:return A.db
@@ -67,6 +67,7 @@ rows=db.execute(f'select e.{eq_site} as esite, e.{eq_name or eq_site} as ename, 
 mine=[r for r in rows if norm(r['esite']) in NN]
 allsites=sorted({r['esite'] for r in rows})
 if not mine:print(f'facilities {A.site}: no tasks for {names[:3]} in the app (sites there: {allsites}); ppm.json kept');sys.exit(0)
+if len({r['esite'] for r in mine})>1:sys.exit(f'facilities {A.site}: names {names[:3]} match more than one app site {sorted({r["esite"] for r in mine})}; ppm.json kept')
 items=[]
 for r in mine:
     last=None
