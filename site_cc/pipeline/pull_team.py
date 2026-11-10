@@ -4,7 +4,11 @@ Tab layout: section header rows in col A ("Mgmt", "FOH/Bar", "BOH" or "BOH/Sushi
 (Mr, Ms, Miss, Mrs, Mx) in col A, first name in B, last name in C. Onboarded = HR docs (D), Mapal / operational tasks (G)
 and contract released (H) all ticked; anyone short of that is listed in pending with the steps still open. Names are first name plus last initial only; RTW and document data are never read out.
 Starters and leavers: when the roster changes, the previous roster is kept as "prev" (date and names), so the card shows
-who joined and left since then. Keeps the last good file on any failure. --check reports and writes nothing."""
+who joined and left since then. Keeps the last good file on any failure. --check reports and writes nothing.
+10/11/2026 (Michael): team.json also carries 'rows', a carbon copy of the tracker tab for the page's Onboarding tab and the KPI Sheet
+People section: [sheet row number, section, short name, [HR docs, Passport & RTW, Operational tasks, Contract released] ticks].
+The row number is what the page sends back when someone ticks a document (AsanaSync.gs op 'onb' writes TRUE into that cell after
+checking the name on the row still matches). Columns F (RTW expiry date) and I (RTW expiry tracker) are never copied."""
 import argparse,json,os,re
 from common import site,save,sheet_values,today
 ap=argparse.ArgumentParser();ap.add_argument('--site',required=True);ap.add_argument('--data',required=True);ap.add_argument('--check',action='store_true')
@@ -27,13 +31,14 @@ def short(first,last):
     f=re.sub(r'\s+',' ',first).strip();l=re.sub(r'\s+',' ',last).strip()
     return (f+(' '+l[0].upper() if l else '')).strip()
 tick=lambda v:str(v).strip().upper() in ('TRUE','YES','Y','DONE','✓','✔')
-team={'Management':[],'FOH and bar':[],'BOH':[]};leavers=[];onb=0;cur=None;pending=[];docs=[]
+team={'Management':[],'FOH and bar':[],'BOH':[]};leavers=[];onb=0;cur=None;pending=[];docs=[];copy=[]
+COLS=((3,'D','HR docs'),(4,'E','Passport & RTW'),(6,'G','Operational tasks'),(7,'H','Contract released'))
 # 10/11/2026 (Michael): where each person sits on the tracker. pending = [name, section, [steps not ticked]] for anyone not fully onboarded.
 STEPS=((3,'HR docs'),(6,'Mapal and operational tasks'),(7,'Contract released'))
 # 10/11/2026 (Michael): documents missing per person, for the Starters and leavers card. The tracker holds one tick per group, not per document,
 # so a missing HR docs tick names the whole pack. Passport and right to work is the tick only: expiry dates and status are never read out.
 DOCS=((3,'HR docs pack'),(4,'Passport and right to work check'),(7,'Contract'))
-for r in rows:
+for ri,r in enumerate(rows,1):
     r=(r+['']*8)[:8];a=r[0].strip()
     if a.lower().rstrip('.') in TITLES:
         if not cur or not r[1].strip():continue
@@ -41,6 +46,7 @@ for r in rows:
         if cur=='P45':leavers.append(n)
         else:
             team[cur].append(n)
+            copy.append([ri,cur,n,[tick(r[i]) for i,_,_ in COLS]])
             miss=[lab for i,lab in STEPS if not tick(r[i])]
             dm=[lab for i,lab in DOCS if not tick(r[i])]
             if dm:docs.append([n,cur,dm])
@@ -60,7 +66,8 @@ else:
     base=old.get('baseline') or old.get('pulled') or t
     prev=old.get('prev')
     if names!=oldnames:prev={'date':old.get('pulled') or base,'names':oldnames}
-out={'src':f'Maki Group Onboarding Tracker 2026, tab {tab.strip()}','pulled':t,'baseline':base,'team':team,'onboarded':onb,'pending':pending,'docs':docs,'leavers':leavers,'prev':prev}
+out={'src':f'Maki Group Onboarding Tracker 2026, tab {tab.strip()}','tab':tab,'pulled':t,'baseline':base,'team':team,'onboarded':onb,'pending':pending,'docs':docs,'leavers':leavers,'prev':prev,
+     'cols':[[c,l] for _,c,l in COLS],'rows':copy}
 print(f"team {A.site}: {hc} ({', '.join(f'{len(v)} {k}' for k,v in team.items())}), onboarded {onb}/{hc}, P45 {len(leavers)}, "+
       (f"changed since {prev['date']}" if prev else 'baseline'))
 if not A.check:save(P,out,indent=1)

@@ -385,7 +385,8 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
       <button role="tab" data-t="droo">Deliveroo</button>
       <button role="tab" data-t="marketing">Marketing</button>
       <button role="tab" data-t="stock">Stock &amp; Cost</button>
-      <button role="tab" data-t="people">People &amp; Rota</button>
+      <button role="tab" data-t="people">Rota</button>
+      <button role="tab" data-t="onb">Onboarding<span class="tv" id="tvOnb"></span></button>
     </nav>
   </div>
 </section>
@@ -547,19 +548,33 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
       <div class="ch"><h3>1 · Financial KPIs</h3><span class="small">🔒 Wrong number? Fix it at source (Mona Lisa, Kobas, stock-take sheet)</span></div>
       <div class="tscroll"><table id="finTable"></table></div>
     </div>
+    <div class="card">
+      <div class="ch"><h3>Deliveroo operations</h3><button type="button" class="btn sm" data-go="droo">Open Deliveroo</button></div>
+      <div id="kpiDroo" class="dgrid"></div>
+    </div>
+    <!-- 10/11/2026 (Michael): Rota is its own section of the KPI Sheet. Budget rota = Mona Lisa Budget, Projected when Budget is blank (M3 since 22/09). -->
+    <div class="card">
+      <div class="ch"><h3>Rota · labour vs budget rota</h3><span class="tag t-auto">MONA LISA</span></div>
+      <div id="labBud"></div>
+      <div class="grid" style="margin-top:8px">
+        <div class="s8" style="display:flex;flex-direction:column;gap:6px"><label class="fl" for="f_rota" id="rotaLab">Over budget: explain the variance *</label>
+          <textarea id="f_rota" data-f="rota" data-own="GM" rows="2" placeholder="Only needed when actual labour is over the budget rota"></textarea></div>
+        <div class="s4" style="display:flex;flex-direction:column;gap:6px"><label class="fl" for="f_fr">Operational F/R target</label>
+          <input type="text" id="f_fr" data-f="fr" data-own="GM" placeholder="Value"></div>
+      </div>
+    </div>
+    <!-- 10/11/2026 (Michael): People is its own section: the onboarding tracker (who is not complete, which documents are missing, tick a document
+         here and it is ticked in Hanna's tracker), then Starters and leavers and Employee of the Month, moved here from the old People and Rota tab. -->
+    <div class="card">
+      <div class="ch"><h3 id="kpiOnbHead">People · onboarding tracker</h3><span class="tag t-auto" id="kpiOnbTag">HANNA TRACKER</span></div>
+      <div id="kpiOnb"></div>
+    </div>
     <div class="grid">
-      <div class="card s6">
-        <div class="ch"><h3>Deliveroo operations</h3><button type="button" class="btn sm" data-go="droo">Open Deliveroo</button></div>
-        <div id="kpiDroo" class="dgrid"></div>
-      </div>
-      <div class="card s6">
-        <div class="ch"><h3>Labour &amp; budget rota</h3><span class="tag t-auto">AUTO</span></div>
-        <div id="labBud"></div>
-        <label class="fl" for="f_rota" id="rotaLab">Over budget: explain the variance *</label>
-        <textarea id="f_rota" data-f="rota" data-own="GM" rows="2" placeholder="Only needed when actual labour is over the budget rota"></textarea>
-        <label class="fl" for="f_fr">Operational F/R target</label>
-        <input type="text" id="f_fr" data-f="fr" data-own="GM" placeholder="Value">
-      </div>
+      <div class="card s6"><div class="ch"><h3>Starters &amp; leavers</h3><span class="tag t-auto">AUTO</span></div><div id="teamCard"></div></div>
+      <div class="card s6"><div class="ch"><h3>Employee of the Month</h3><span class="tag t-auto" id="eotmTag">HANNA SHEET</span></div><div id="eotmBox"></div>
+        <details style="margin-top:8px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700">Nominate and send to Hanna</summary>
+        <form id="eotmForm" style="display:grid;gap:6px;margin-top:6px"><select id="eo_d" aria-label="Department" class="sel"><option value="FOH">Front of house</option><option value="BOH">Back of house</option></select><input type="text" id="eo_n" aria-label="Name" placeholder="Full name"><input type="text" id="eo_r" aria-label="Role" placeholder="Role"><textarea id="eo_w" rows="2" aria-label="Why" placeholder="Why they stood out this month"></textarea><button type="submit" class="btn sm pri">Send to Hanna</button></form></details>
+        <div class="small" style="margin-top:6px" id="eotmFoot">Once a month, one FOH and one BOH. Goes to Hanna and is stored in her EOTM Manual Input sheet for the site.</div></div>
     </div>
     <div class="card">
       <div class="ch"><h3>2 · Non-financial KPIs</h3></div>
@@ -571,11 +586,6 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
         <div class="s8" style="display:flex;flex-direction:column;gap:8px">
           <div class="ch"><b id="negHead">Google reviews: complaints by reason</b><span class="tag t-auto">AUTO</span></div>
           <div id="negBox"></div>
-        </div>
-        <!-- 10/11/2026 (Michael): onboarding tracker on the KPI Sheet, who is not fully onboarded and which step they are sitting on -->
-        <div class="s12" style="display:flex;flex-direction:column;gap:8px">
-          <div class="ch"><b id="kpiOnbHead">Onboarding tracker</b><span class="tag t-auto">AUTO</span></div>
-          <div id="kpiOnb"></div>
         </div>
         <div class="s12" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
           <div style="display:flex;flex-direction:column;gap:6px"><div class="ch"><label class="fl" for="f_foh">Staff updates: FOH *</label><span class="tag t-man">MANUAL · GM</span></div>
@@ -705,7 +715,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
 
   <!-- WEEK: PEOPLE -->
   <section class="pane" data-p="people" hidden>
-    <div><div class="eyebrow">People</div><h2>People &amp; rota</h2></div>
+    <div><div class="eyebrow">Rota</div><h2>Rota · labour and cover</h2></div>
     <div class="grid" id="peopleTiles"></div>
     <div class="card">
       <div class="ch"><h3>Labour vs target · last 10 weeks</h3><span class="tag t-auto">AUTO</span></div>
@@ -713,11 +723,17 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
     </div>
     <div class="grid">
       <div class="card s4"><div class="ch"><h3>Cover gaps ahead</h3><span class="tag t-man">MANUAL · GM</span></div><div id="gapList"></div><details style="margin-top:8px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700">Add a gap</summary><form id="gapForm" style="display:grid;gap:6px;margin-top:6px"><input type="text" id="gp_w" aria-label="Who or role" placeholder="Who or role, e.g. Head chef holiday"><div style="display:grid;grid-template-columns:1fr 1fr 70px;gap:6px"><input type="date" id="gp_f" aria-label="From"><input type="date" id="gp_t" aria-label="To"><input type="number" id="gp_h" min="0" aria-label="Hours a week" placeholder="hrs"></div><input type="text" id="gp_p" aria-label="Cover plan" placeholder="Cover plan (leave blank if none yet)"><button class="btn sm pri" type="submit">Add gap</button></form></details></div>
-      <div class="card s4"><div class="ch"><h3>Starters &amp; leavers</h3><span class="tag t-auto">AUTO</span></div><div id="teamCard"></div></div>
-      <div class="card s4"><div class="ch"><h3>Employee of the Month</h3><span class="tag t-auto" id="eotmTag">HANNA SHEET</span></div><div id="eotmBox"></div>
-        <details style="margin-top:8px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700">Nominate and send to Hanna</summary>
-        <form id="eotmForm" style="display:grid;gap:6px;margin-top:6px"><select id="eo_d" aria-label="Department" class="sel"><option value="FOH">Front of house</option><option value="BOH">Back of house</option></select><input type="text" id="eo_n" aria-label="Name" placeholder="Full name"><input type="text" id="eo_r" aria-label="Role" placeholder="Role"><textarea id="eo_w" rows="2" aria-label="Why" placeholder="Why they stood out this month"></textarea><button type="submit" class="btn sm pri">Send to Hanna</button></form></details>
-        <div class="small" style="margin-top:6px" id="eotmFoot">Once a month, one FOH and one BOH. Goes to Hanna and is stored in her EOTM Manual Input sheet for the site.</div></div>
+      <div class="card s8"><div class="ch"><h3>People</h3></div><div class="small">Onboarding tracker, starters and leavers and Employee of the Month now sit in the People section of the <button type="button" class="btn sm" data-go="kpi">Weekly KPI Sheet</button>, and the full tracker copy on the <button type="button" class="btn sm" data-go="onb">Onboarding</button> tab (10/11/2026).</div></div>
+    </div>
+  </section>
+
+  <!-- ONBOARDING: carbon copy of Hanna's tracker tab for this site (10/11/2026, Michael). Ticks write back to the tracker. -->
+  <section class="pane" data-p="onb" hidden>
+    <div class="row"><div><div class="eyebrow">People</div><h2 id="onbTitle">Onboarding tracker</h2></div><span class="tag t-auto">HANNA TRACKER</span></div>
+    <div class="grid" id="onbTiles"></div>
+    <div class="card">
+      <div class="ch"><h3>Tracker, as in the sheet</h3><span class="small" id="onbSrc"></span></div>
+      <div id="onbCopy"></div>
     </div>
   </section>
 
@@ -1189,7 +1205,8 @@ function overBudget(){var L=LAB.d[S.wc];return !!(L&&L[1]>L[0])}
 function renderLabBud(w){var L=LAB.d[S.wc],el=$('#labBud');
   if(!L){el.innerHTML='<div class="small">No budget rota figure in Mona Lisa for this week.</div>';}
   else{var v=L[1]-L[0],vp=v/L[0]*100;
-    el.innerHTML='<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end"><div><div class="mini">Budget rota</div><div class="kv" style="font-size:22px">'+gbp(L[0])+'</div></div><div><div class="mini">Actual labour</div><div class="kv" style="font-size:22px">'+gbp(L[1])+'</div></div><div><div class="mini">Variance</div><div class="kv" style="font-size:22px;color:var(--'+(v>0?'red-ink':'green-ink')+')">'+(v>0?'+':v<0?'−':'')+'£'+Math.abs(Math.round(v)).toLocaleString('en-GB')+'</div></div><div>'+(v>0?'<span class="pill p-r">✕ Over budget '+sgn(vp,1,'%')+'</span>':'<span class="pill p-g">✓ Within budget</span>')+'</div></div>'+
+    var pj=(LAB.proj||{})[S.wc];  /* 10/11/2026: days of the week where Mona Lisa Budget was blank and Projected was used instead */
+    el.innerHTML='<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end"><div><div class="mini">Budget rota'+(pj?' <span class="pill p-a" title="Mona Lisa Budget column blank for '+pj+' of 7 days, Projected used">Projected'+(pj<7?' '+pj+'/7':'')+'</span>':'')+'</div><div class="kv" style="font-size:22px">'+gbp(L[0])+'</div></div><div><div class="mini">Actual labour</div><div class="kv" style="font-size:22px">'+gbp(L[1])+'</div></div><div><div class="mini">Variance</div><div class="kv" style="font-size:22px;color:var(--'+(v>0?'red-ink':'green-ink')+')">'+(v>0?'+':v<0?'−':'')+'£'+Math.abs(Math.round(v)).toLocaleString('en-GB')+'</div></div><div>'+(v>0?'<span class="pill p-r">✕ Over budget '+sgn(vp,1,'%')+'</span>':'<span class="pill p-g">✓ Within budget</span>')+'</div></div>'+
     '<div class="chips" style="margin-top:8px">'+lastN(S.wc,6).map(function(x){var l=LAB.d[x.wc];if(!l)return '<span class="pill p-n">'+dm(x.wc)+' n/a</span>';var d=l[1]-l[0];return '<span class="pill p-'+(d>0?'r':'g')+'" title="Budget £'+Math.round(l[0])+', actual £'+Math.round(l[1])+'">'+dm(x.wc)+' '+(d>0?'+':'−')+'£'+Math.abs(Math.round(d))+'</span>'}).join('')+'</div>';}
   $('#rotaLab').textContent=overBudget()?'Over budget: explain the variance *':'Variance note (optional, within budget)';
 }
@@ -1870,21 +1887,58 @@ function renderComp2(){var hasP=PPM.items&&PPM.items.length,rows=hasP?ppmRows():
   var soon=red.concat(amb).slice(0,4);
   $('#ovComp').innerHTML='<div class="big" style="font-size:22px">'+red.length+' red · '+amb.length+' due soon</div>'+red.concat(amb).map(function(x){return '<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:6px;margin-top:6px"><div><b>'+x.lab+'</b><div class="small">'+esc(x.who)+' · '+(x.due?'due '+dmy(x.due):'no date on file')+'</div></div>'+TL(x.r,x.st)+'</div>'}).join('');
 }
-function renderTeam(){var T=TEAM.team,secs=Object.keys(T),hc=secs.reduce(function(t,k){return t+T[k].length},0);
+/* 10/11/2026 (Michael): People section of the KPI Sheet and the Onboarding tab, both off TEAM.rows (pull_team.py's carbon copy of Hanna's tracker tab:
+   sheet row, section, name, ticks for HR docs / Passport & RTW / Operational tasks / Contract released). Live, not week specific.
+   A tick on the page is optimistic: shown at once, POSTed to the web app (op 'onb') which sets the cell TRUE in the tracker, reverted with a toast if the
+   sheet says no. S.onb keeps ticks made on this device until the nightly build carries them; onbPull() merges the live sheet on open and every minute. */
+var ONB_COLS=(TEAM.cols&&TEAM.cols.length)?TEAM.cols:[['D','HR docs'],['E','Passport & RTW'],['G','Operational tasks'],['H','Contract released']];
+if(!S.onb||typeof S.onb!=='object')S.onb={};
+function onbRows(){var R=TEAM.rows||[];R.forEach(function(r){ONB_COLS.forEach(function(c,i){if(S.onb[r[0]+'|'+c[0]])r[3][i]=true})});return R}
+function onbMiss(r){return ONB_COLS.filter(function(c,i){return !r[3][i]}).map(function(c){return c[1]})}
+function onbStats(){var R=onbRows(),done=R.filter(function(r){return !onbMiss(r).length});return {hc:R.length,done:done.length,pend:R.filter(function(r){return onbMiss(r).length})}}
+function onbCell(r,i){var c=ONB_COLS[i];
+  return r[3][i]?'<td><span class="pill p-g">✓ Done</span></td>':'<td><label class="onbt" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-onb="'+r[0]+'|'+c[0]+'" aria-label="Tick '+c[1]+' for '+esc(r[2])+'"><span class="pill p-r">✕ Outstanding</span></label></td>'}
+function onbTable(rows,grouped){if(!rows.length)return '';var h='<div class="tscroll"><table><thead><tr><th>Name</th><th>Team</th>'+ONB_COLS.map(function(c){return '<th>'+c[1]+'</th>'}).join('')+'</tr></thead><tbody>',last=null;
+  rows.forEach(function(r){if(grouped&&r[1]!==last){last=r[1];h+='<tr><td colspan="'+(2+ONB_COLS.length)+'" class="mini" style="background:var(--maki-orange-bg);color:var(--maki-ink);font-weight:700">'+esc(r[1])+'</td></tr>'}
+    var m=onbMiss(r);h+='<tr><td class="mname">'+esc(r[2])+(m.length?'':' <span class="pill p-g" style="margin-left:4px">Complete</span>')+'</td><td class="small">'+esc(r[1])+'</td>'+ONB_COLS.map(function(c,i){return onbCell(r,i)}).join('')+'</tr>'});
+  return h+'</tbody></table></div>'}
+function onbFoot(){return '<div class="small" style="margin-top:6px">Live from '+esc(TEAM.src||'the onboarding tracker')+(TEAM.pulled?', read '+dmy(TEAM.pulled):'')+'. Tick a document here and it is ticked in Hanna\'s tracker straight away (and the other way round, on the next build). Untick only in the tracker. HR docs = starter checklist, HMRC checklist, health record, handbook, staff guide, company policy, one tick.</div>'}
+function onbTick(key,box){if(!ASH){box.checked=false;return toast('No web app link on this page, tick it in the tracker')}
+  var p=key.split('|'),row=+p[0],col=p[1],r=onbRows().filter(function(x){return x[0]===row})[0];if(!r){box.checked=false;return}
+  var i=ONB_COLS.map(function(c){return c[0]}).indexOf(col);S.onb[key]=nowIso();r[3][i]=true;save();renderTeam();toast('Ticked '+ONB_COLS[i][1]+' for '+r[2]+'. Writing to the tracker');
+  fetch(ASH,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({op:'onb',site:SCODE,row:row,col:col,name:r[2],by:S.pos||S.role||''})}).then(function(x){return x.json()}).then(function(x){
+    if(x&&x.ok){toast(x.dup?'Already ticked in the tracker':'Ticked in the tracker');return}
+    delete S.onb[key];r[3][i]=false;save();renderTeam();toast('Tracker said no: '+((x&&x.error)||'error'))
+  }).catch(function(){toast('No signal, the tick stays on this device until the tracker is reachable');})}
+function onbPull(){if(!ASH||navigator.onLine===false||!(TEAM.rows&&TEAM.rows.length))return;fetch(ASH+'?onb='+encodeURIComponent(SCODE)).then(function(r){return r.json()}).then(function(r){if(!r||!r.ok||!Array.isArray(r.rows))return;
+  var live={};r.rows.forEach(function(x){live[x[0]]=x});var ch=false;
+  TEAM.rows.forEach(function(t){var l=live[t[0]];if(!l||l[1]!==t[2])return;l[2].forEach(function(v,i){if(!!t[3][i]!==!!v){t[3][i]=!!v;ch=true}if(v)delete S.onb[t[0]+'|'+ONB_COLS[i][0]]})});
+  if(ch){save();renderTeam()}}).catch(function(){})}
+document.addEventListener('change',function(e){var b=e.target;if(b&&b.dataset&&b.dataset.onb&&b.checked)onbTick(b.dataset.onb,b)});
+function renderTeam(){var T=TEAM.team,secs=Object.keys(T),hc=secs.reduce(function(t,k){return t+T[k].length},0),st=onbStats(),hasRows=!!(TEAM.rows&&TEAM.rows.length);
   var mv='';if(TEAM.prev){var cur=[].concat.apply([],secs.map(function(k){return T[k]})),pv=TEAM.prev.names||[];
-    var st=cur.filter(function(x){return pv.indexOf(x)<0}),lv=pv.filter(function(x){return cur.indexOf(x)<0});
-    mv='<div style="margin-top:6px"><b>Since '+dmy(TEAM.prev.date)+':</b> '+(st.length?st.length+' starter'+(st.length>1?'s':'')+' ('+st.map(esc).join(', ')+')':'no starters')+', '+(lv.length?lv.length+' leaver'+(lv.length>1?'s':'')+' ('+lv.map(esc).join(', ')+')':'no leavers')+'</div>'}
+    var stt=cur.filter(function(x){return pv.indexOf(x)<0}),lv=pv.filter(function(x){return cur.indexOf(x)<0});
+    mv='<div style="margin-top:6px"><b>Since '+dmy(TEAM.prev.date)+':</b> '+(stt.length?stt.length+' starter'+(stt.length>1?'s':'')+' ('+stt.map(esc).join(', ')+')':'no starters')+', '+(lv.length?lv.length+' leaver'+(lv.length>1?'s':'')+' ('+lv.map(esc).join(', ')+')':'no leavers')+'</div>'}
   else mv='<div class="small" style="margin-top:6px">Baseline set '+dmy(TEAM.baseline)+'. Starters and leavers show from the next pull, dated to the pull they first appear in.</div>';
-  /* 10/11/2026 (Michael): KPI Sheet onboarding tracker. Live status from Hanna's tracker (not week specific): HR docs, Mapal and operational tasks, contract released. */
-  var OS=['HR docs','Mapal and operational tasks','Contract released'],pd=TEAM.pending,kb=$('#kpiOnb');
-  if(kb){$('#kpiOnbHead').textContent='Onboarding tracker'+(hc?' · '+TEAM.onboarded+' / '+hc+' complete':'');
-    kb.innerHTML=(!hc?'<div class="small">No onboarding tracker tab for this site.</div>':!pd?'<div>'+TL(TEAM.onboarded>=hc?'g':'a','Onboarding '+TEAM.onboarded+' / '+hc+' complete')+'</div>':!pd.length?'<div>'+TL('g','Everyone on the tracker is fully onboarded')+'</div>':
-      '<div class="tscroll"><table><thead><tr><th>Not fully onboarded</th><th>Team</th>'+OS.map(function(x){return '<th>'+x+'</th>'}).join('')+'</tr></thead><tbody>'+pd.map(function(p){return '<tr><td class="mname">'+esc(p[0])+'</td><td class="small">'+esc(p[1])+'</td>'+OS.map(function(x){return '<td>'+(p[2].indexOf(x)<0?'<span class="pill p-g">✓ Done</span>':'<span class="pill p-r">✕ Outstanding</span>')+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>')+
-      '<div class="small" style="margin-top:6px">Live status, not week specific. Source: '+esc(TEAM.src||'Onboarding tracker')+(TEAM.pulled?', read '+dmy(TEAM.pulled):'')+'. Tick the steps in the tracker and this clears on the next build.</div>'}
+  /* KPI Sheet People section: who has not completed onboarding and which documents are missing, tick to complete */
+  var kb=$('#kpiOnb'),nd=hasRows?st.hc-st.done:(hc-(TEAM.onboarded||0));
+  $('#kpiOnbHead').textContent='People · onboarding tracker'+(hc?' · '+(hasRows?st.done:TEAM.onboarded)+' / '+(hasRows?st.hc:hc)+' complete':'');
+  if(kb)kb.innerHTML=!hc?'<div class="small">No onboarding tracker tab for this site.</div>':
+    '<div style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;margin-bottom:8px"><div><div class="mini">On the tracker</div><div class="kv" style="font-size:22px">'+(hasRows?st.hc:hc)+'</div></div><div><div class="mini">Fully onboarded</div><div class="kv" style="font-size:22px">'+(hasRows?st.done:TEAM.onboarded)+'</div></div><div><div class="mini">Not yet complete</div><div class="kv" style="font-size:22px;color:var(--'+(nd?'red-ink':'green-ink')+')">'+nd+'</div></div><div>'+TL(nd?'a':'g',nd?nd+' with documents missing':'Everyone fully onboarded')+'</div></div>'+
+    (hasRows?onbTable(st.pend,false)+onbFoot():(TEAM.pending&&TEAM.pending.length?'<div class="small">'+TEAM.pending.map(function(p){return '<b>'+esc(p[0])+'</b> ('+esc(p[1])+'): '+p[2].map(esc).join(', ')}).join('<br>')+'</div>':'')+'<div class="small" style="margin-top:6px">Tracker copy lands on the next build.</div>')+
+    '<div style="margin-top:8px"><button type="button" class="btn sm" data-go="onb">Open the full tracker copy</button></div>';
+  /* Onboarding tab: the whole tracker tab as in the sheet, section by section, P45 list at the end */
+  var ot=$('#onbCopy');if(ot){var R=onbRows();$('#onbTitle').textContent='Onboarding tracker · '+SITE.label;$('#tvOnb').textContent=hasRows&&nd?' · '+nd:'';
+    $('#onbTiles').innerHTML=tile('On the tracker',hasRows?st.hc:hc,secs.map(function(k){return T[k].length+' '+k}).join(' · ')||'No tracker tab',null,'<span class="tag t-auto">AUTO</span>')+
+      tile('Fully onboarded',hasRows?st.done:(TEAM.onboarded||0),'All four columns ticked',hasRows&&st.done===st.hc?'g':null)+
+      tile('Not yet complete',nd,'Documents still missing',nd?'r':'g')+
+      tile('P45 list',(TEAM.leavers||[]).length+'','Leavers since opening, as in the tracker',null,'<span class="tag t-auto">AUTO</span>');
+    $('#onbSrc').textContent=(TEAM.src||'')+(TEAM.pulled?' · read '+dmy(TEAM.pulled):'');
+    ot.innerHTML=!hasRows?'<div class="small">'+(hc?'Tracker copy lands on the next build.':'No onboarding tracker tab for this site.')+'</div>':onbTable(R,true)+
+      '<div class="mini" style="margin-top:10px">P45 list</div><div class="roster">'+(TEAM.leavers||[]).map(function(n){return '<span>'+esc(n)+'</span>'}).join('')+'</div>'+onbFoot()+
+      '<div class="mini" style="margin-top:6px">RTW expiry dates stay in the tracker and are never copied here.</div>'}
   $('#teamCard').innerHTML='<div class="big">'+hc+' team</div><div class="small">'+secs.map(function(k){return T[k].length+' '+k}).join(' · ')+'</div>'+
-    '<div style="margin-top:6px">'+TL(TEAM.onboarded>=hc?'g':'a','Onboarding '+TEAM.onboarded+' / '+hc+' complete')+'</div>'+
-    /* 10/11/2026 (Michael): documents missing per person, from the tracker, refreshed on every daily build */
-    (TEAM.docs?'<div style="margin-top:8px"><b>Documents missing'+(TEAM.docs.length?' · '+TEAM.docs.length+' '+(TEAM.docs.length>1?'people':'person'):'')+'</b>'+(TEAM.docs.length?TEAM.docs.map(function(p){return '<div class="small" style="margin-top:4px"><b style="color:var(--ink)">'+esc(p[0])+'</b> · '+esc(p[1])+'<div>'+p[2].map(function(x){return '<span class="pill p-r" style="margin:2px 4px 0 0">✕ '+esc(x)+'</span>'}).join('')+'</div></div>'}).join('')+'<div class="mini" style="margin-top:6px">HR docs pack = starter checklist, HMRC checklist, health record, handbook, staff guide, company policy (one tick in the tracker). Read '+dmy(TEAM.pulled)+', updates daily.</div>':'<div style="margin-top:4px">'+TL('g','No documents missing')+'</div>')+'</div>':'')+mv+
+    '<div style="margin-top:6px">'+TL(nd?'a':'g','Onboarding '+(hasRows?st.done:TEAM.onboarded)+' / '+(hasRows?st.hc:hc)+' complete')+'</div>'+mv+
     '<details style="margin-top:6px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700">Team list and '+TEAM.leavers.length+' leavers since opening</summary>'+
     secs.map(function(k){return '<div class="mini" style="margin-top:6px">'+k+'</div><div class="roster">'+T[k].map(function(n){return '<span>'+esc(n)+'</span>'}).join('')+'</div>'}).join('')+
     '<div class="mini" style="margin-top:6px">P45 list</div><div class="roster">'+TEAM.leavers.map(function(n){return '<span>'+esc(n)+'</span>'}).join('')+'</div></details>'+
@@ -2187,9 +2241,9 @@ function stripDel(){
     Array.prototype.forEach.call(tb.rows,function(r){if(r.cells.length===n)ix.forEach(function(k){r.cells[k].hidden=true})})});
 }
 if(NODEL){var _ra=renderAll;renderAll=function(){_ra.apply(this,arguments);stripDel()};var _rm=renderMonth;renderMonth=function(){_rm.apply(this,arguments);stripDel()};var _rd=renderDaily;renderDaily=function(){_rd.apply(this,arguments);stripDel()}}
-renderAll();asanaFlush();signPull();window.addEventListener('online',function(){asanaFlush();signPull()});
+renderAll();asanaFlush();signPull();onbPull();window.addEventListener('online',function(){asanaFlush();signPull();onbPull()});
 /* 20/10/2026 (Michael): the other side's signature must land without a reload. Poll the shared log every 60 s while the tab is visible, and the moment it comes back into focus. */
-setInterval(function(){if(document.visibilityState==='visible')signPull()},60000);
+setInterval(function(){if(document.visibilityState==='visible'){signPull();onbPull()}},60000);
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')signPull()});window.addEventListener('focus',signPull);
 /* ---------- the gate (20/10/2026, Michael) ---------- */
 var GATE_LOG='__LOGURL__';

@@ -17,6 +17,38 @@ var SECTIONS = {
   M20: '1219205670910246', M21: '1219205670910247', MakiNori: '1219205670910248', IKI2: '1219205670910249'
 };
 
+/* 10/11/2026 (Michael): onboarding tracker ticks. A document ticked on the Site CC page (KPI Sheet People section or the Onboarding tab)
+ * is written straight into Hanna's "Maki Group Onboarding Tracker - 2026" (op 'onb'): the cell on that person's row in column
+ * D (HR docs), E (Passport & RTW), G (Operational tasks) or H (Contract released) is set TRUE, only after the name on the row still
+ * matches what the page sent (first name + last initial), so a row inserted in the tracker can never be ticked by mistake.
+ * Ticks only go one way (page can tick, never untick). GET ?onb=<site> returns the live ticks so every device sees them before the nightly.
+ * The web app runs as the deployer, who must have edit access to the tracker. */
+var ONB_SHEET = '1zdNRHPqwpLnUtV0FWFADtDkVrTQaN97zPyIx6WcUSao';
+var ONB_TABS = { M1: 'M1', M3: 'M3', M6: 'M6', M7: 'M7', M8: 'M8', M9: 'M9', M10: 'M10', M11: 'M11', M12: 'M12', M13: 'M13', M14: 'M14',
+  M15: 'M15', M16: 'M16', M17: 'M17', M18: 'M18', M19: 'M19 (Shoreditch)', M20: 'M20 (Shampton)', M21: 'M21 (Birmingham)', MakiNori: 'Maki Nori ' };
+var ONB_COLS = { D: 4, E: 5, G: 7, H: 8 };
+function onbShort_(first, last) {
+  var f = String(first || '').replace(/\s+/g, ' ').trim(), l = String(last || '').replace(/\s+/g, ' ').trim();
+  return (f + (l ? ' ' + l.charAt(0).toUpperCase() : '')).trim();
+}
+function onbTab_(site) {
+  var name = ONB_TABS[site]; if (!name) return null;
+  var ss = SpreadsheetApp.openById(ONB_SHEET), sh = ss.getSheetByName(name) || ss.getSheetByName(name.trim());
+  return sh || null;
+}
+function onbTick_(v) { return v === true || /^(TRUE|YES|Y|DONE|✓|✔)$/i.test(String(v == null ? '' : v).trim()); }
+function onbRows_(site) {
+  var sh = onbTab_(site); if (!sh) return null;
+  var n = sh.getLastRow(); if (n < 1) return [];
+  var v = sh.getRange(1, 1, n, 8).getValues(), out = [];
+  v.forEach(function (r, i) {
+    var t = String(r[0] || '').trim().toLowerCase().replace(/\.$/, '');
+    if (['mr', 'mrs', 'miss', 'ms', 'mx', 'dr'].indexOf(t) < 0 || !String(r[1] || '').trim()) return;
+    out.push([i + 1, onbShort_(r[1], r[2]), [onbTick_(r[3]), onbTick_(r[4]), onbTick_(r[6]), onbTick_(r[7])]]);
+  });
+  return out;
+}
+
 function out_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 function asana_(method, path, body) {
@@ -62,6 +94,11 @@ function signRows_(site) {
 }
 function doGet(e) {
   var q = (e && e.parameter) || {};
+  if (q.onb) {
+    if (!SECTIONS[q.onb]) return out_({ ok: false, error: 'unknown site' });
+    try { var rows = onbRows_(q.onb); return rows ? out_({ ok: true, site: q.onb, rows: rows }) : out_({ ok: false, error: 'no tracker tab for ' + q.onb }); }
+    catch (err) { return out_({ ok: false, error: String(err.message || err) }); }
+  }
   if (q.signoffs) {
     if (!SECTIONS[q.signoffs]) return out_({ ok: false, error: 'unknown site' });
     try { return out_({ ok: true, site: q.signoffs, rows: signRows_(q.signoffs) }); }
@@ -86,6 +123,18 @@ function doPost(e) {
                               m.fields ? JSON.stringify(m.fields).slice(0, 40000) : '', new Date().toISOString()]);
                   var last = sh.getLastRow(); sh.getRange(last, 2).setNumberFormat('@').setValue(m.wc); sh.getRange(last, 7).setNumberFormat('@').setValue(ts); }
       return out_({ ok: true, dup: dup });
+    }
+
+    if (m.op === 'onb') {
+      var row = parseInt(m.row, 10), col = ONB_COLS[String(m.col || '').toUpperCase()];
+      if (!(row > 3) || !col) return out_({ ok: false, error: 'bad row or column' });
+      var osh = onbTab_(m.site); if (!osh) return out_({ ok: false, error: 'no tracker tab for ' + m.site });
+      var line = osh.getRange(row, 1, 1, 8).getValues()[0];
+      if (onbShort_(line[1], line[2]) !== String(m.name || '').trim()) return out_({ ok: false, error: 'row ' + row + ' is not ' + clean_(m.name, 40) + ' any more, reopen the page' });
+      var cell = osh.getRange(row, col), was = onbTick_(cell.getValue());
+      if (!was) { cell.setValue(true); osh.getRange(row, 1).setNote(((osh.getRange(row, 1).getNote() || '') + '\n' +
+        'Ticked ' + (['', 'HR docs', 'Passport & RTW', '', 'Operational tasks', 'Contract released'][col - 3] || m.col) + ' on the Site Control Centre (' + m.site + ', ' + clean_(m.by, 20) + ') ' + new Date().toISOString().slice(0, 16).replace('T', ' ')).trim()); }
+      return out_({ ok: true, row: row, col: m.col, dup: was });
     }
 
     if (m.op === 'done') {
