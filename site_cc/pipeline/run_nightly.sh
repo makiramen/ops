@@ -31,6 +31,7 @@ for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open
   step python3 pipeline/pull_promos.py   --site "$CODE" --data "$D"                  # Marketing calendar, 20/10/2026
   step python3 pipeline/pull_eotm.py     --site "$CODE" --data "$D"
   step python3 pipeline/pull_team.py     --site "$CODE" --data "$D"
+  step python3 pipeline/pull_mix.py      --site "$CODE" --data "$D"                  # drinks / sushi / sides % from Kobas_Daily, 10/11/2026
   step python3 pipeline/pull_maintenance.py --site "$CODE" --data "$D"
   step python3 pipeline/pull_ppm.py      --site "$CODE" --data "$D"
   step python3 pipeline/pull_mapal.py    --site "$CODE" --data "$D"

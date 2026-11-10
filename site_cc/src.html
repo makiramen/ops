@@ -787,6 +787,8 @@ var NOTES=__NOTES__;
 var BROTH=__BROTH__,REV=__REV__,LAB=__LAB__,EOTM=__EOTM__;
 /* Loyalty: Ramen Royalty (Trifft) member bills at this site by day, from the Marketing Hub payload. Launched 18/08/2026; weeks wholly before launch are n/a. */
 var LOY=__LOY__,LOYD=LOY.d||{};
+/* Sales mix (10/11/2026, Michael): drinks / sushi / sides % of sales incl. VAT by week, from the KPI Auto sheet's Kobas_Daily tab (pull_mix.py). Shown under Sales on the KPI Sheet, click Sales to open. Regional targets 10 / 20 / 13.5. */
+var MIX=__MIX__||{};var MIXW=MIX.weeks||{},MIXT=MIX.targets||{drinks:10,sushi:20,sides:13.5};
 /* Budget burn (EC Daily Spend Ledger via the AM CC snapshot) and the marketing calendar, 20/10/2026 (Michael). */
 var BUD=__BUD__,BUDL=BUD.ledger||{},BUDW=BUD.wk||{};var PROMO=__PROMO__;
 function loyWeek(wc){var b=new Date(wc+'T00:00:00Z').getTime(),o={b:0,m:0,s:0,n:0,days:0};for(var i=0;i<7;i++){var k=new Date(b+i*864e5).toISOString().slice(0,10);if(k<LOY.launch||k>LOY.to)continue;o.days++;var r=LOYD[k];if(r){o.n++;o.b+=r[0];o.m+=r[1];o.s+=r[2]}}return o.days?o:null}
@@ -894,6 +896,8 @@ var M=[
  {k:'eff',lab:'Efficiency score',src:'Control Centre',f:function(w){return w.eff},fmt:function(v){return v==null?NA:Math.round(v)+''},dir:1,tgt:function(){return 90},tl:function(){return '≥ 90'},rag:function(v){return effRag(v)},gap:function(v){return sgn(v-90,0,'')},chg:'abs0'}
 ];
 if(NODEL)M=M.filter(function(m){return ['del','dr','dprep'].indexOf(m.k)<0});
+/* 10/11/2026 (Michael): IKI2 is not on the loyalty app, so a site with no Ramen Royalty venue carries no loyalty rows, tiles or card at all. */
+var NOLOY=!SITE.has.loyalty;if(NOLOY)M=M.filter(function(m){return m.k.indexOf('loy')!==0});
 function pct1(v){return v==null?NA:v.toFixed(1)+'%'}
 function pct2(v){return v==null?NA:v.toFixed(2)+'%'}
 function sgn(v,dp,suf){if(v==null||isNaN(v))return '';var s=v.toFixed(dp);if(+s===0)s=(0).toFixed(dp);return (+s>0?'+':'')+s+(suf==null?'':suf)}
@@ -1254,12 +1258,19 @@ function signPull(){if(!ASH||navigator.onLine===false)return;fetch(ASH+'?signoff
   /* backfill: any signature this device holds that the shared log does not (signed before 20/10, or while offline) goes up now; the server dedupes */
   var have={};r.rows.forEach(function(x){have[x.wc+'|'+x.r+'|'+x.act+'|'+x.ts]=1});S.signlog.forEach(function(e){var k=e.wc+'|'+e.r+'|'+e.act+'|'+e.ts,id=e.wc+'|'+e.r+'|'+e.ts;if(have[k]||S.pend.some(function(p){return p.op==='sign'&&p.id===id}))return;asanaSend({op:'sign',site:SCODE,id:id,wc:e.wc,r:e.r,n:e.n,pos:e.pos||e.r,act:e.act,ts:e.ts,late:!!e.late,fields:e.r==='GM'?(S.fields[e.wc]||{}):null})});
   if(signMerge(r.rows)){save();renderAll();toast('Sign-off log updated')}}).catch(function(){})}
+/* Sales mix blocks (10/11/2026, Michael): one block each for drinks, sushi, sides. Green at or above the regional target, amber within 2 points below, red further below. Weekly % is sales weighted over the days Kobas has posted. */
+function mixRag(v,t){if(v==null)return 'n';return v>=t?'g':v>=t-2?'a':'r'}
+function mixBlocks(w,pw){var m=MIXW[w.wc],p=pw?MIXW[pw.wc]:null,K=[['drinks','Drinks %'],['sushi','Sushi %'],['sides','Sides %']];
+  if(!m)return '<div class="small">No Kobas sales mix for w/c '+dmy(w.wc)+' yet (lands the morning after each trading day).</div>';
+  return '<div class="grid" style="gap:10px">'+K.map(function(k){var v=m[k[0]],t=MIXT[k[0]],r=mixRag(v,t),pv=p?p[k[0]]:null;
+    return '<div class="card tile s4" style="box-shadow:none;border:1px solid var(--line)"><div class="ch"><span class="lab">'+k[1]+'</span>'+(r==='n'?'':PILL[r])+'</div><div class="big">'+pct1(v)+'</div><div class="small">Target '+pct1(t)+(v!=null?' · '+sgn(v-t,1,'pp'):'')+(pv!=null&&v!=null?' <span class="chg flat">'+(v>pv?'▲ ':v<pv?'▼ ':'● ')+sgn(v-pv,1,'pp')+' vs last week</span>':'')+'</div></div>'}).join('')+
+    '</div><div class="mini" style="margin-top:6px">Share of total sales incl. VAT, every menu incl. delivery, '+m.n+' of 7 days posted. Source: Kobas All Item Sales via the KPI Auto sheet, read '+dmy(MIX.pulled)+'. Green at or above target, amber within 2 points, red below.</div>'}
 function renderKpi(){
   var w=wk(S.wc),pw=prevW(S.wc),ev=evaluate(w,pw).filter(function(e){return ['dr','dprep'].indexOf(e.m.k)<0});
   $('#kpiTitle').innerHTML='w/c '+dmy(S.wc)+gmNote();
   var ly=lyOf(w),lyt=ly?'Same '+(w.open?(w.wtd||0)+' weekday'+(w.wtd===1?'':'s'):'week')+' last year ('+ly.n+' day'+(ly.n===1?'':'s')+' cashed up)':'No cash up for this week last year';
   var h='<thead><tr><th>Metric</th><th class="r">This week</th><th class="r">Last week</th><th>WoW</th><th title="'+lyt+'">vs LY</th><th class="r">Target</th><th>vs Target</th><th>Source</th></tr></thead><tbody>';
-  ev.forEach(function(e){var lk=LYK[e.m.k];h+='<tr><td class="mname">'+e.m.lab+'</td><td class="r val">'+e.m.fmt(e.v)+'</td><td class="r small">'+(e.pv==null?NA:e.m.fmt(e.pv))+'</td><td>'+e.c.h+'</td><td>'+(lk&&ly?lyCell(e.v,ly[lk[0]],lk[1],1):'<span class="ph">·</span>')+'</td><td class="r small">'+(e.m.tl(w)||'<span class="ph">none</span>')+'</td><td>'+(e.v==null&&e.r!=='r'?TLo('n','No data'):PILL[e.r])+'</td><td><span class="tag t-auto">🔒 '+e.m.src.toUpperCase()+'</span></td></tr>'});
+  ev.forEach(function(e){var lk=LYK[e.m.k];var isS=e.m.k==='sales'&&!!MIX.pulled;h+='<tr'+(isS?' class="mixrow" style="cursor:pointer" title="Click for drinks, sushi and sides %"':'')+'><td class="mname">'+(isS?'<span style="display:inline-block;width:14px;color:var(--maki-orange-deep)">'+(S.mixOpen?'▾':'▸')+'</span>':'')+e.m.lab+(isS?'<div class="mini">Drinks, sushi, sides % · '+(S.mixOpen?'click to hide':'click to show')+'</div>':'')+'</td><td class="r val">'+e.m.fmt(e.v)+'</td><td class="r small">'+(e.pv==null?NA:e.m.fmt(e.pv))+'</td><td>'+e.c.h+'</td><td>'+(lk&&ly?lyCell(e.v,ly[lk[0]],lk[1],1):'<span class="ph">·</span>')+'</td><td class="r small">'+(e.m.tl(w)||'<span class="ph">none</span>')+'</td><td>'+(e.v==null&&e.r!=='r'?TLo('n','No data'):PILL[e.r])+'</td><td><span class="tag t-auto">🔒 '+e.m.src.toUpperCase()+'</span></td></tr>';if(isS&&S.mixOpen)h+='<tr class="mixdet"><td colspan="8" style="background:var(--surface-2);padding:10px 12px">'+mixBlocks(w,pw)+'</td></tr>'});
   h+='<tr><td class="mname">Labour hours</td><td class="r val">'+(w.hours==null?NA:w.hours.toFixed(1))+'</td><td class="r small">'+(pw&&pw.hours!=null?pw.hours.toFixed(1):NA)+'</td><td>'+(w.hours!=null&&pw&&pw.hours!=null?(function(d){return '<span class="chg flat">'+(d>0?'▲ +':d<0?'▼ ':'● ')+d.toFixed(1)+' hrs</span>'})(w.hours-pw.hours):'<span class="chg flat">no comparison</span>')+'</td><td><span class="ph">·</span></td><td class="r small">Budget rota</td><td><span class="pill p-o">Manual below</span></td><td><span class="tag t-auto">🔒 MONA LISA</span></td></tr>';
   $('#finTable').innerHTML=h+'</tbody>';
   var d=w.d,dr=drooRag(d);
@@ -1582,7 +1593,8 @@ function renderMarketing(){
   /* loyalty */
   var w=wk(S.wc)||{},pw=WK[idx(S.wc)-1],lt=$('#mkLoyTiles');
   $('#mkLoyH').textContent='Loyalty · Ramen Royalty · w/c '+dmy(S.wc);
-  if(!SITE.has.loyalty||!LOY.launch){lt.innerHTML='<div class="small" style="grid-column:span 12">No Ramen Royalty venue on file for this site.</div>';$('#mkLoyTL').innerHTML=TL('n','No feed');$('#mkLoyChart').innerHTML='';$('#mkLoyDays').innerHTML='';$('#mkLoyTable').innerHTML='';$('#mkLoyFoot').textContent='';return}
+  var lc=$('#mkLoyH').closest('.card');if(NOLOY){lc.hidden=true;$('#mkH').textContent='Marketing · promotions';return}
+  if(!LOY.launch){lt.innerHTML='<div class="small" style="grid-column:span 12">No Ramen Royalty venue on file for this site.</div>';$('#mkLoyTL').innerHTML=TL('n','No feed');$('#mkLoyChart').innerHTML='';$('#mkLoyDays').innerHTML='';$('#mkLoyTable').innerHTML='';$('#mkLoyFoot').textContent='';return}
   var sr=loyRag(w.loyShare);
   $('#mkLoyTL').innerHTML=w.loyB==null?TL('n','Before launch'):TL(sr,sr==='g'?'On target':sr==='a'?'Watch, below 10%':'Below 6%');
   var chg=function(a,b,fmt){if(a==null||b==null||!b)return '';var d=(a-b)/b*100;return ' <span class="chg flat">'+(d>0?'▲ +':d<0?'▼ ':'● ')+d.toFixed(0)+'% vs last week</span>'};
@@ -1718,7 +1730,7 @@ function renderMonth(){
   var h='<div class="row"><div><div class="eyebrow">Month view</div><h2>'+mLabel(S.month)+(closed<tot?' · in progress':'')+'</h2><div class="sub">'+closed+' of '+tot+' weeks closed. A week counts in the month its Monday falls in.'+(S.month==='2026-05'&&SCODE==='M14'?' Backfilled to w/c 04/05 on 01/10/2026; Mona Lisa weekly sales target was £57,000 until w/c 25/05 and £43,000 from w/c 01/06.':'')+'</div></div>'+
     '<div class="chips"><button type="button" class="btn sm" id="mPrev"'+(pi>=MONTHS.length?' disabled':'')+'>◀ Previous month</button><button type="button" class="btn sm" id="mNext"'+(MONTHS.indexOf(S.month)===0?' disabled':'')+'>Next month ▶</button></div></div>';
   h+=standingMonthHtml(S.month);
-  var LOYH='<h4 style="margin-top:12px">Loyalty</h4>'+(a.loyB==null?'<div class="hitem"><span class="ic ic-a">R</span><div><b>n/a</b><small>Ramen Royalty launched 18/08/2026</small></div></div>':'<div class="hitem"><span class="ic ic-'+loyRag(a.loyShare)+'">R</span><div><b>'+a.loyB.toLocaleString('en-GB')+' member bills · '+pct1(a.loyShare)+' of covers</b><small>Green 10% and above, amber 6 to 9.99% · '+(a.loyDays<a.ws.length*7?a.loyDays+' trading days since launch':'full month')+' · '+gbp(a.loyS)+' spend'+(a.sales?', '+pct1(a.loyS/a.sales*100)+' of sales':'')+'</small></div></div>');
+  var LOYH=NOLOY?'':'<h4 style="margin-top:12px">Loyalty</h4>'+(a.loyB==null?'<div class="hitem"><span class="ic ic-a">R</span><div><b>n/a</b><small>Ramen Royalty launched 18/08/2026</small></div></div>':'<div class="hitem"><span class="ic ic-'+loyRag(a.loyShare)+'">R</span><div><b>'+a.loyB.toLocaleString('en-GB')+' member bills · '+pct1(a.loyShare)+' of covers</b><small>Green 10% and above, amber 6 to 9.99% · '+(a.loyDays<a.ws.length*7?a.loyDays+' trading days since launch':'full month')+' · '+gbp(a.loyS)+' spend'+(a.sales?', '+pct1(a.loyS/a.sales*100)+' of sales':'')+'</small></div></div>');
   h+='<div class="hero"><div style="display:flex;flex-direction:column;gap:14px"><div><div class="eyebrow">'+mLabel(S.month)+'</div><h2>'+hit+' of '+tg.length+' targets hit</h2><div class="sub">'+bet+' of '+cmp+' measures better than '+(p?mLabel(p.ym):'last month')+'. Red Light in '+a.red+' of '+closed+' weeks.</div></div>'+
     '<div class="meter"><div class="lab"><span>Targets hit</span><b>'+hit+' / '+tg.length+'</b></div><div class="track"><i style="width:'+(hit/(tg.length||1)*100)+'%;background:var(--green)"></i><i style="width:'+(tg.filter(function(e){return e.r==='a'}).length/(tg.length||1)*100)+'%;background:var(--amber)"></i><i style="width:'+(tg.filter(function(e){return e.r==='r'}).length/(tg.length||1)*100)+'%;background:var(--red)"></i></div></div></div>'+
     '<div class="hlist"><h4>Sales</h4><div class="hitem"><span class="ic ic-'+(a.sales==null?'a':a.sales>=a.target?'g':'r')+'">£</span><div><b>'+gbp(a.sales)+'</b><small>Target '+gbp(a.target)+(a.sales!=null?' · '+pctS((a.sales-a.target)/a.target*100):'')+'</small></div></div>'+
@@ -2160,6 +2172,7 @@ $('#siteName').textContent=SITE.label+' · '+SITE.name;   /* 08/10/2026 (Michael
 document.addEventListener('toggle',function(e){var d=e.target;if(d.tagName==='DETAILS'&&d.classList.contains('review')&&d.dataset.rvid){S.rvOpen=S.rvOpen||{};if(d.open)S.rvOpen[d.dataset.rvid]=1;else delete S.rvOpen[d.dataset.rvid];save()}},true);
 document.addEventListener('click',function(e){
   if(e.target.closest('[data-repx]')||e.target.id==='repOvl'){repClose();e.stopImmediatePropagation();return}
+  var mr=e.target.closest('tr.mixrow');if(mr){S.mixOpen=!S.mixOpen;save();renderKpi();e.stopImmediatePropagation();return}
   var z=e.target.closest('[data-zoom]');if(z){z.classList.toggle('big');e.stopImmediatePropagation();return}
   var m=e.target.closest('[data-mrep]');if(m){var q=m.dataset.mrep.split('|');repOpen(+q[0],q.slice(1).join('|'));e.stopImmediatePropagation();return}
   var fh=e.target.closest('h3[data-fold]');if(fh){S.fold[fh.dataset.fold]=!S.fold[fh.dataset.fold];save();renderFold();e.stopImmediatePropagation();return}

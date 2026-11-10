@@ -133,10 +133,10 @@ FEEDS=[  # name, as of, max age days
  ('Labour budget',wkend(J('labour.json')['d']),9),('Efficiency',wkend(J('eff.json')),9),('Estate ladder',wkend(J('effall.json')),9),
  ('Broth',d10(br.get('to')),2),('Budget burn',d10(BUD.get('through')),3),('Marketing calendar',d10(PRM.get('pulled')),3),('Last year',d10(LY.get('pulled')),3),('Google reviews',d10(rv.get('built')),2),('Loyalty',d10(loy.get('to')),2),
  ('Key lines',kobas(J('keyline.json').get('pulled')),2),('Meeting notes',wkend(N)+datetime.timedelta(2) if N else None,10),('Reviews intelligence',d10(RI.get('built')),3),('Mapal compliance',d10(JD('mcomp.json',{}).get('to')),9),
- ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3),('Maintenance',d10(MT.get('pulled')),2),('PPM schedule',d10(PPM.get('asof')),35),('Asana actions',d10(AS.get('pulled')),2)]
+ ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('Sales mix',d10(JD('mix.json',{}).get('pulled')),3),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3),('Maintenance',d10(MT.get('pulled')),2),('PPM schedule',d10(PPM.get('asof')),35),('Asana actions',d10(AS.get('pulled')),2)]
 # Feeds that do not exist for this site (no source in sites.json) are n/a, not late
 NA={'Deliveroo weekly':not SITE['has']['delivery'],'Delivery sales':not SITE['has']['delivery'],'Deliveroo daily':not SITE['has']['delivery'],'Loyalty':not SITE['has']['loyalty'],'Broth':not SITE['has']['broth'],'Mapal forms':not SITE['has']['mapal'],'Mapal compliance':not SITE['has']['mapal'],'Compliance':not J('compliance.json').get('pulled'),'Last year':not LY.get('d'),'Budget burn':not BUD.get('ledger'),'Marketing calendar':not PRM.get('pulled'),
-    'Team':not J('team.json').get('pulled'),'Key lines':not J('keyline.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled'),'PPM schedule':not PPM.get('items'),'Asana actions':not (SC.get('asana_section') and AS)}
+    'Team':not J('team.json').get('pulled'),'Sales mix':not JD('mix.json',{}).get('pulled'),'Key lines':not J('keyline.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled'),'PPM schedule':not PPM.get('items'),'Asana actions':not (SC.get('asana_section') and AS)}
 LOG=[];STALE=[]
 for n,asof,mx in FEEDS:
     if NA.get(n) and (asof is None or n in ('Deliveroo weekly','Delivery sales','Deliveroo daily')):LOG.append({'feed':n,'asof':None,'status':'n/a'});continue
@@ -147,7 +147,7 @@ for n,asof,mx in FEEDS:
 
 C=lambda o:json.dumps(o,ensure_ascii=False,separators=(',',':'))
 T={'__TODAY__':TODAY.isoformat(),'__WK__':json.dumps(WK,separators=(',',':')),'__STAND__':R('stand.json'),'__EALL__':R('effall.json'),
-   '__EFF__':R('eff.json').replace(' \u2014 ',', ').replace('\u2014',', '),'__LOY__':R('loyalty.json'),'__COV__':R('covers.json'),'__DEL__':C(dlv),'__DROO__':C(DD),
+   '__EFF__':R('eff.json').replace(' \u2014 ',', ').replace('\u2014',', '),'__LOY__':R('loyalty.json'),'__MIX__':C(JD('mix.json',{})),'__COV__':R('covers.json'),'__DEL__':C(dlv),'__DROO__':C(DD),
    '__ACTS__':C(ACTS),'__COMP__':C(J('compliance.json')),'__TEAM__':C(J('team.json')),'__GAPS__':C(J('gaps.json')),'__DAILY__':R('daily.json'),
    '__KL__':C(J('keyline.json')),'__BROTH__':C(br),'__LY__':C(LY),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__MCOMP__':C(MCOMP),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE),'__MAINT__':C(MT).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__PPM__':C(PPM),'__BUD__':C(BUD).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013',' to '),'__PROMO__':C(PRM).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')}
 s=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src.html')).read()
