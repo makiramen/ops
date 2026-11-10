@@ -11,7 +11,7 @@ from common import site,save,sheet_values
 ap=argparse.ArgumentParser();ap.add_argument('--site',required=True);ap.add_argument('--data',required=True)
 ap.add_argument('--check',action='store_true');ap.add_argument('--csv')
 A=ap.parse_args()
-S,C=site(A.site);SRC=S['sources'].get('mapal_compliance');LOC=C.get('mapal_location')
+S,C=site(A.site);SRC=S['sources'].get('mapal_compliance');LOC=C.get('mapal_location');LOCS={LOC,*C.get('mapal_aliases',[])}   # aliases = old Mapal names of the same site
 if not LOC or not SRC:print(f'mapal compliance {A.site}: no Mapal location or source in sites.json, feed stays n/a');sys.exit(0)
 rows=list(csv.reader(open(A.csv,encoding='utf-8'))) if A.csv else sheet_values(SRC['id'],"A:K")
 if not rows or [x.strip() for x in rows[0][:4]]!=['Week_Start','Week_End','Scope','Site']:sys.exit('tracker layout changed; last good file kept')
@@ -29,7 +29,7 @@ for r in rows[1:]:
     ot,dev=num(r[8]),num(r[9])
     row=[ws,ot,int(dev) if dev is not None else None,r[10] or flag(ot,dev),num(r[4]),num(r[6]),num(r[7])]
     if sc=='CHAIN':chain_w[ws]=row
-    elif sc=='SITE' and nm==LOC:site_w[ws]=row
+    elif sc=='SITE' and nm in LOCS:site_w[ws]=row
 if not site_w:sys.exit(f'no tracker rows for {LOC!r}; last good file kept')
 w=[site_w[k] for k in sorted(site_w)];ch=[chain_w[k] for k in sorted(chain_w)]
 out={'src':'Mapal Weekly Compliance Tracker (Mapal Compliance Hub, weekly pull every Monday)','pulled':datetime.date.today().isoformat(),
