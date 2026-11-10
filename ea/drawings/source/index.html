@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ1 PPC to Paying, swimlane proof v0.3</title>
+<style>
+  html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+  header{padding:14px 20px;background:#fff;border-bottom:1px solid #ddd;display:flex;gap:28px;align-items:center;flex-wrap:wrap}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header .k{display:flex;gap:14px;font-size:12px;align-items:center;flex-wrap:wrap}
+  .sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:4px;border:1px solid rgba(0,0,0,.25)}
+  #wrap{overflow:auto;padding:16px 20px 40px}
+  svg{display:block;background:#fff;border:1px solid #cfcfcf}
+  .lane-bg{fill:#fafaf8;stroke:#9a9a9a;stroke-width:1.2}
+  .lane-alt{fill:#f1f1ee}
+  .lane-label{font-size:13px;font-weight:700;fill:#333}
+  .lane-sub{font-size:11px;fill:#555}
+  .col-head{font-size:11px;fill:#666;font-weight:600;letter-spacing:.5px}
+  .screen{fill:#e9e9e9;stroke:#888;stroke-width:1;stroke-dasharray:4 3}
+  .screen-t{font-size:10px;fill:#444}
+  .story{fill:#bfe6b8;stroke:#3f8a3a;stroke-width:1.5}
+  .story-t{font-size:11px;fill:#143d12;font-weight:600}
+  .story-id{font-size:9.5px;fill:#2e6b2a}
+  .der{fill:#fff1a8;stroke:#b8960c;stroke-width:1.2}
+  .der-t{font-size:10px;fill:#4a3b00}
+  .der-id{font-size:9px;fill:#7a6200}
+  .op{font-size:9.5px;fill:#1f7a1f;font-family:Menlo,Consolas,monospace}
+  .se{fill:#d4efcf;stroke:#2f7d2b;stroke-width:1.5}
+  .se-t{font-size:10.5px;fill:#163a14;font-weight:700}
+  .se-s{font-size:9.5px;fill:#2b5a28}
+  .co{fill:#fbd8b0;stroke:#d97a16;stroke-width:1.4}
+  .co-t{font-size:10px;fill:#5a3000;font-weight:700}
+  .co-s{font-size:9px;fill:#6b4a1a}
+  .infra{fill:#cfe3f7;stroke:#2a6db5;stroke-width:1.2}
+  .infra-t{font-size:9.5px;fill:#123a66}
+  .pink{fill:#f9b7cf;stroke:#d8588a;stroke-width:1}
+  .pink-t{font-size:9.6px;fill:#4a1230}
+  .note{fill:#fff6b3;stroke:#c9ad2a;stroke-width:1}
+  .note-t{font-size:9.6px;fill:#4a3d00}
+  .flow{fill:none;stroke:#333;stroke-width:2.2}
+  .inc{fill:none;stroke:#6b6b6b;stroke-width:1;stroke-dasharray:4 3}
+  .prov{fill:none;stroke:#2f7d2b;stroke-width:1.1;stroke-dasharray:3 3}
+  .uses{fill:none;stroke:#d97a16;stroke-width:1.1;stroke-dasharray:3 3}
+  .stereo{font-size:8.5px;fill:#666;font-style:italic}
+  .actor{stroke:#222;stroke-width:1.6;fill:none}
+  .actor-t{font-size:10px;fill:#222;font-weight:600}
+  .lolli{fill:#fff;stroke:#1f7a1f;stroke-width:1.2}
+</style>
+</head>
+<body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><a style="color:#555;margin-right:14px;font-size:11px" href="cap-all.html">captures</a><span style="color:#f90;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj2-context.html">5 Context</a></nav>
+<header>
+  <h1>CJ1 "PPC to Paying" · Enterprise Architecture swimlane · proof v0.4 (6 Nov 2026: every order lands in Kobas: QR, iPad and till natively, Slerp and Deliveroo via Deliverect; Michael's answers of 6 Nov folded in)</h1>
+  <div class="k">
+    <span><i class="sw" style="background:#e9e9e9"></i>Screen (lane column 1, screenshot to drop in)</span>
+    <span><i class="sw" style="background:#bfe6b8;border-radius:50%"></i>Top level story</span>
+    <span><i class="sw" style="background:#fff1a8;border-radius:50%"></i>Derived story («includes»)</span>
+    <span><i class="sw" style="background:#d4efcf"></i>«Se» Service</span>
+    <span><i class="sw" style="background:#fbd8b0"></i>«Co» Component</span>
+    <span><i class="sw" style="background:#cfe3f7"></i>Infrastructure</span>
+    <span><i class="sw" style="background:#f9b7cf"></i>Clarification required</span>
+    <span><i class="sw" style="background:#fff6b3"></i>Assumption / answered by Kobas extraction</span>
+    <span>Thick black arrow = journey flow, lane to lane</span>
+  </div>
+</header>
+<div id="wrap"><svg id="board" xmlns="http://www.w3.org/2000/svg"></svg></div>
+
+<script>
+// ---------- DATA (from claude/cj1-ppc-to-paying-draft.md + Kobas extraction, 5 Nov 2026) ----------
+const stages = [
+ {id:"s1", name:"Ad / lead gen", actors:["A1 Guest","A3 Marketing"],
+  screens:["Meta ad","Google ad","TikTok ad"],
+  stories:[
+   {id:"CJ1.s1.u1", t:"Guest sees an ad and taps it", main:true, der:[
+     {id:".1", t:"Serve ad to a targeted audience", op:"serveAd(Audience, Creative): Impression"},
+     {id:".2", t:"Record the click, attribute to campaign", op:"recordClick(AdId, Session): Attribution"},
+     {id:".3", t:"Redirect to landing page with UTM", op:"redirect(LandingUrl, UTM): Session"}]}],
+  services:[
+   {id:"Se01", t:"Ad Delivery Service", co:["Co1 Meta Ads","Co2 Google Ads","Co3 TikTok Ads"]},
+   {id:"Se02", t:"Attribution Service", co:["Co4 Meta Pixel / Google Tag / TikTok Pixel (on website)"]}],
+  pink:["5. Landing page per campaign, UTM convention, any ad click joined to a sale: Michael does not know, marketing to answer."],
+  notes:[]},
+
+ {id:"s2", name:"Discover", actors:["A1 Guest"],
+  screens:["makiramen.com page","Google Business Profile","Instagram profile"],
+  stories:[
+   {id:"CJ1.s2.u1", t:"Guest finds nearest venue, menu, hours", main:true, der:[
+     {id:".1", t:"List venues, show the nearest", op:"listVenues(Location): Venue[]"},
+     {id:".2", t:"Show the menu for a venue", op:"getMenu(VenueId, Channel): Menu"},
+     {id:".3", t:"Show hours, address, rating", op:"getVenueProfile(VenueId): VenueProfile"}]}],
+  services:[
+   {id:"Se03", t:"Venue Information Service", co:["Co5 Website (WordPress)","Co6 Google Business Profile (marketing owns)"]},
+   {id:"Se04", t:"Menu Service", co:["Co7 Kobas (items, price bands, menu, allergens)","Co8 Slerp (own copy)","Co9 Deliveroo (own copy)","Co22 Mapal (allergens, specs)"]}],
+  pink:[],
+  notes:["Menu lives three times (Kobas, Slerp, Deliveroo), kept in step by hand. Allergens live in Kobas, Mapal, Slerp, Trifft and pay-at-table (Michael, 6 Nov). Kobas side confirmed: menu_id per venue, item_category, price_band entities."]},
+
+ {id:"s3", name:"Order / book  (everything lands in Kobas)", actors:["A1 Guest","A2 Site team"],
+  screens:["Kobas QR page (guest phone)","Kobas iPad (staff)","Kobas till (walk-in)","Slerp shop (delivery)","Deliveroo app","Table booking widget"],
+  stories:[
+   {id:"CJ1.s3.u3", t:"Guest orders in venue: QR, iPad with site team, or till", main:true, der:[
+     {id:".0", t:"Scan QR, open Kobas order page", op:"openQrSession(Venue, Table): Tab"},
+     {id:".1", t:"Open tab / table, add items", op:"openTab(Venue, Table, Covers): Tab; addItems(..)"},
+     {id:".2", t:"Kobas sends it to the kitchen", op:"dispatchToKitchen(Order): KitchenTicket"}]},
+   {id:"CJ1.s3.u1", t:"Guest orders delivery / collection (Slerp, Deliveroo)", der:[
+     {id:".1", t:"Build a basket from the channel menu", op:"createBasket(VenueId, Items[]): Basket"},
+     {id:".2", t:"Apply a promotion or voucher", op:"applyPromotion(Basket, Code): Basket"},
+     {id:".3", t:"Place the order, Deliverect injects into Kobas", op:"placeOrder(Basket, Guest): Order"},
+     {id:".4", t:"Kobas prints the kitchen ticket", op:"dispatchToKitchen(Order): KitchenTicket"}]},
+   {id:"CJ1.s3.u2", t:"Guest books a table", der:[
+     {id:".1", t:"Check availability (venue, date, covers)", op:"getAvailability(Venue, Date, Covers): Slot[]"},
+     {id:".2", t:"Confirm booking, send confirmation", op:"createBooking(Slot, Guest): Booking"}]}],
+  services:[
+   {id:"Se08", t:"EPoS Order Service: the hub, every channel lands here", co:["Co7 Kobas front end: tills, iPads, QR page, tabs, tables"]},
+   {id:"Se09", t:"Kitchen Ticket Service", co:["Co7 Kobas to kitchen printers (no KDS, all sites)"]},
+   {id:"Se05", t:"Delivery / Collection Ordering Service, feeds Se08 via Deliverect", co:["Co8 Slerp (web shop, Stripe)","Co19 Deliverect (injects into Kobas)"]},
+   {id:"Se06", t:"Marketplace Ordering Service, feeds Se08", co:["Co9 Deliveroo","Co19 Deliverect (injects into Kobas)"]},
+   {id:"Se07", t:"Booking Service", co:["Co12 Dojo Bookings (does not write into Kobas)"]}],
+  pink:["6. QR payment acquirer: Worldpay, Stripe or Slerp? Three answers given on 6 Nov, one to stand."],
+  notes:["Michael, 6 Nov: QR = Kobas own order-at-table module, all sites; iPads = Kobas EPoS front end, staff send the full order at once; till = Kobas. Slerp and Deliveroo both come in via Deliverect into Kobas and straight to the printer. Deliverect carries Deliveroo and Slerp only; no Uber Eats / Just Eat. Bookings: Dojo, not written into Kobas.",
+         "Extraction: meta_deliverect_enabled = 1 per venue, auto accept / finalise / print. Deliveroo reaches the till via Deliverect, no re-keying."]},
+
+ {id:"s4", name:"Pay  (level 2 first, Marcel's ask)", actors:["A1 Guest","A2 Site team"],
+  screens:["Card terminal (till / iPad)","Kobas QR checkout","Slerp checkout (Stripe)","Deliveroo checkout","Till payment screen"],
+  stories:[
+   {id:"CJ1.s4.u1", t:"Guest pays", main:true, der:[
+     {id:".1", t:"Card payment at terminal, settle on tab", op:"takePayment(Tab, Amount, Method): Payment"},
+     {id:".2", t:"Online payment (QR, Slerp, Deliveroo)", op:"charge(Order, PaymentMethod): Payment"},
+     {id:".3", t:"Record sale, close tab, issue receipt", op:"closeTab(Tab, Payment[]): Receipt"},
+     {id:".4", t:"Apply discount / voucher / reward", op:"applyDiscount(Tab, Discount): Tab"},
+     {id:".5", t:"Settle funds to company bank (T+n)", op:"settle(Batch): Settlement"}]}],
+  services:[
+   {id:"Se10", t:"Payment Service", co:["Co13 Paymentsense / Dojo terminals (Kobas Connect)","Co20 Worldpay (Kobas order-at-table; pink 6)","Co14 Stripe (via Slerp)","Co9 Deliveroo (marketplace payout)"]},
+   {id:"Se11", t:"Sales Ledger Service", co:["Co7 Kobas (sales, payments, Z report, cash log)","Co15 Xero (per venue, xero_organisation_id; 6 orgs seen)","Co18 makiramen/ops (Auto Cash Up feed)"]}],
+  pink:["7. Which Xero org does each venue post to (6 seen)? Where do the Slerp / Stripe and Deliveroo payouts land in Xero?"],
+  notes:["Michael, 6 Nov: tab / payment / receipt records exist in Kobas under Customers and can be extracted: widen the bot user's permissions (pink 8 closed).",
+         "Extraction: meta_paymentsense_connect_enabled = 1, pdq counts per venue, stand-alone PDQ allowed on some. Terminals are integrated with the till. Dojo as acquirer of record still to confirm on bank statements.",
+         "Michael, 6 Nov: Kobas order-at-table acquirer is Worldpay (all sites); Slerp pays via Stripe; Slerp and Deliveroo sales appear in the Kobas cash log under Delivery; marketing reconciles the payouts.",
+         "Extraction: xero_enabled per venue. Xero is fed from Kobas directly, not only via the cash up. Cash log report = Payment and Settlement vocabulary (Cash, PDQ, Other, Gift vouchers, Deposits, variances, Xero flag)."]},
+
+ {id:"s5", name:"Loyalty", actors:["A1 Guest","A2 Site team"],
+  screens:["Trifft app home","QR scan at till","Reward screen"],
+  stories:[
+   {id:"CJ1.s5.u1", t:"Guest shows Trifft QR, earns / redeems", main:true, der:[
+     {id:".1", t:"Identify the member from the QR", op:"identifyMember(QR): Member"},
+     {id:".2", t:"Earn points / stamps for the sale", op:"earn(Member, Sale): Balance"},
+     {id:".3", t:"Redeem a reward as a discount on the tab", op:"redeem(Member, Reward): Discount"}]},
+   {id:"CJ1.s5.u2", t:"Guest signs up (£5 voucher, bag insert)", der:[
+     {id:".1", t:"Create member, issue welcome reward", op:"createMember(Guest): Member"}]}],
+  services:[
+   {id:"Se12", t:"Loyalty Service", co:["Co16 Trifft (app stores, QR)","Co7 Kobas customer (loyalty cards, net_points)","Co17 Klaviyo (welcome / win-back)"]}],
+  pink:[],
+  notes:["Michael, 6 Nov: Trifft reward is auto-applied on the till and lands in Kobas as an auto-applied discount.",
+         "Extraction: meta_trifft_location_id per venue, epos_loyalty_prompts; Kobas customer = loyalty member; reservation.loyalty_customer_id links bookings. Discount entity holds the £5 / £10 / £20 vouchers."]},
+
+ {id:"s6", name:"Review", actors:["A1 Guest"],
+  screens:["Google review prompt","Review card / post-it","Deliveroo rating"],
+  stories:[
+   {id:"CJ1.s6.u1", t:"Guest leaves a review", main:true, der:[
+     {id:".1", t:"Prompt for a review after the visit", op:"requestReview(Visit): Prompt"},
+     {id:".2", t:"Collect and classify the review", op:"collectReview(VenueId): Review · classify(Review)"}]}],
+  services:[
+   {id:"Se13", t:"Review Service", co:["Co6 Google Business Profile","Co9 Deliveroo ratings","Co18 makiramen/ops nightly reviews pull","Co17 Klaviyo (review ask)"]}],
+  pink:[],
+  notes:["Klaviyo email / SMS sits across s2, s5 and s6; shown once as Co17."]}
+];
+
+// ---------- LAYOUT ----------
+const X = {label:0, screen:150, story:300, svc:1120, pink:1500, end:1830};
+const W = X.end;
+const STORY_W = 215, STORY_H = 44, DER_W = 215, DER_H = 34, OP_H = 14, DER_GAP = 8;
+const SE_W = 330, SE_H = 32, CO_H = 20, CO_GAP = 4;
+const STICK_W = 300;
+const SCREEN_W = 130, SCREEN_H = 42;
+const PAD = 22, HEAD = 46;
+
+function wrap(t, maxChars){ const w=t.split(" "), lines=[]; let cur=""; for(const x of w){ if((cur+" "+x).trim().length>maxChars){lines.push(cur.trim());cur=x;} else cur=(cur+" "+x);} if(cur.trim())lines.push(cur.trim()); return lines; }
+function esc(s){return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+let out = [];
+let y = HEAD;
+const mainStoryPos = []; // [{x,y,h}] for flow arrows
+const laneTops = [];
+
+stages.forEach((s, i) => {
+  // heights of each column
+  const colsN = Math.min(s.stories.length, 3);
+  let storyH = 0;
+  s.stories.forEach(st => { const h = STORY_H + 10 + st.der.length*(DER_H+OP_H+DER_GAP); storyH = Math.max(storyH, h); });
+  let svcH = 0; s.services.forEach(se => { svcH += SE_H + se.co.length*(CO_H+CO_GAP) + 14; });
+  let stickH = 0;
+  const stickies = [...s.pink.map(p=>({k:"pink",t:p})), ...s.notes.map(n=>({k:"note",t:n}))];
+  const stickLines = stickies.map(st => wrap(st.t, 48));
+  stickLines.forEach(l => stickH += l.length*12 + 18);
+  let scrH = s.screens.length*(SCREEN_H+8);
+  const laneH = Math.max(storyH, svcH, stickH, scrH, 150) + PAD*2;
+  laneTops.push(y);
+
+  // lane background
+  out.push(`<rect class="lane-bg ${i%2?'lane-alt':''}" x="0" y="${y}" width="${W}" height="${laneH}"/>`);
+  out.push(`<line x1="${X.screen}" y1="${y}" x2="${X.screen}" y2="${y+laneH}" stroke="#bbb"/>`);
+  out.push(`<line x1="${X.story}" y1="${y}" x2="${X.story}" y2="${y+laneH}" stroke="#bbb"/>`);
+  out.push(`<line x1="${X.svc}" y1="${y}" x2="${X.svc}" y2="${y+laneH}" stroke="#bbb"/>`);
+  out.push(`<line x1="${X.pink}" y1="${y}" x2="${X.pink}" y2="${y+laneH}" stroke="#bbb"/>`);
+
+  // lane label + actors
+  out.push(`<text class="lane-label" x="14" y="${y+24}">${s.id.toUpperCase()}</text>`);
+  wrap(s.name, 18).forEach((l,k)=> out.push(`<text class="lane-sub" x="14" y="${y+42+k*13}">${esc(l)}</text>`));
+  s.actors.forEach((a,k)=>{ const ax=30+k*60, ay=y+laneH-72;
+    out.push(`<g class="actor"><circle cx="${ax}" cy="${ay}" r="6"/><line x1="${ax}" y1="${ay+6}" x2="${ax}" y2="${ay+24}"/><line x1="${ax-10}" y1="${ay+12}" x2="${ax+10}" y2="${ay+12}"/><line x1="${ax}" y1="${ay+24}" x2="${ax-8}" y2="${ay+36}"/><line x1="${ax}" y1="${ay+24}" x2="${ax+8}" y2="${ay+36}"/></g>`);
+    const [id,...rest]=a.split(" ");
+    out.push(`<text class="actor-t" x="${ax}" y="${ay+48}" text-anchor="middle">${id}</text><text class="lane-sub" x="${ax}" y="${ay+59}" text-anchor="middle">${esc(rest.join(" "))}</text>`);
+  });
+
+  // screens
+  s.screens.forEach((sc,k)=>{ const sy=y+PAD+k*(SCREEN_H+8);
+    out.push(`<rect class="screen" x="${X.screen+10}" y="${sy}" width="${SCREEN_W}" height="${SCREEN_H}" rx="3"/>`);
+    out.push(`<text class="screen-t" x="${X.screen+10+SCREEN_W/2}" y="${sy+18}" text-anchor="middle">screenshot:</text>`);
+    out.push(`<text class="screen-t" x="${X.screen+10+SCREEN_W/2}" y="${sy+31}" text-anchor="middle" font-weight="600">${esc(sc)}</text>`);
+  });
+
+  // stories
+  s.stories.forEach((st,k)=>{
+    const sx = X.story + 14 + k*(STORY_W+58), sy = y+PAD;
+    const cx = sx+STORY_W/2, cy = sy+STORY_H/2;
+    out.push(`<ellipse class="story" cx="${cx}" cy="${cy}" rx="${STORY_W/2}" ry="${STORY_H/2}"/>`);
+    out.push(`<text class="story-id" x="${cx}" y="${cy-8}" text-anchor="middle">${st.id}</text>`);
+    const tl = wrap(st.t, 34);
+    tl.forEach((l,j)=> out.push(`<text class="story-t" x="${cx}" y="${cy+5+j*11}" text-anchor="middle">${esc(l)}</text>`));
+    if(st.main) mainStoryPos.push({x:cx, top:sy, bottom:sy+STORY_H});
+    // derived
+    st.der.forEach((d,j)=>{
+      const dy = sy+STORY_H+10 + j*(DER_H+OP_H+DER_GAP);
+      const dcx = cx, dcy = dy+DER_H/2;
+      // includes arrow from story bottom to derived top
+      out.push(`<path class="inc" d="M${cx-STORY_W/2+22} ${sy+STORY_H-4} H${cx-STORY_W/2-8} V${dcy} H${dcx-DER_W/2-1}" marker-end="url(#arrG)"/>`);
+      out.push(`<ellipse class="der" cx="${dcx}" cy="${dcy}" rx="${DER_W/2}" ry="${DER_H/2}"/>`);
+      out.push(`<text class="der-id" x="${dcx}" y="${dcy-5}" text-anchor="middle">${st.id}${d.id}</text>`);
+      out.push(`<text class="der-t" x="${dcx}" y="${dcy+7}" text-anchor="middle">${esc(d.t)}</text>`);
+      out.push(`<text class="op" x="${dcx-DER_W/2}" y="${dy+DER_H+11}">${esc(d.op)}</text>`);
+      out.push(`<line class="prov" x1="${dcx+DER_W/2}" y1="${dcy}" x2="${dcx+DER_W/2+12}" y2="${dcy}"/><circle class="lolli" cx="${dcx+DER_W/2+15}" cy="${dcy}" r="3.5"/>`);
+    });
+    if(j0(st)) out.push(`<text class="stereo" x="${cx-STORY_W/2-4}" y="${sy+STORY_H+10}">«includes»</text>`);
+  });
+  function j0(st){return st.der.length>0;}
+
+  // services + components
+  let sy = y+PAD;
+  s.services.forEach(se=>{
+    const sx = X.svc+14;
+    out.push(`<rect class="se" x="${sx}" y="${sy}" width="${SE_W}" height="${SE_H}" rx="2"/>`);
+    out.push(`<text class="se-t" x="${sx+8}" y="${sy+13}">«${se.id}»</text><text class="se-s" x="${sx+8}" y="${sy+26}">${esc(se.t)}</text>`);
+    out.push(`<text class="stereo" x="${sx+SE_W-60}" y="${sy+12}">«provides»</text>`);
+    let cy = sy+SE_H+6;
+    se.co.forEach((c,j)=>{
+      out.push(`<path class="uses" d="M${sx+18} ${sy+SE_H} V${cy+CO_H/2} H${sx+34}"/>`);
+      out.push(`<rect class="co" x="${sx+34}" y="${cy}" width="${SE_W-34}" height="${CO_H}" rx="2"/>`);
+      const [cid,...rest]=c.split(" ");
+      out.push(`<text class="co-t" x="${sx+40}" y="${cy+14}">«${cid}»</text><text class="co-s" x="${sx+86}" y="${cy+14}">${esc(rest.join(" "))}</text>`);
+      cy += CO_H+CO_GAP;
+    });
+    out.push(`<text class="stereo" x="${sx+36}" y="${sy+SE_H+5}">«uses»</text>`);
+    sy = cy + 10;
+  });
+
+  // stickies
+  let py = y+PAD;
+  stickies.forEach((st,k)=>{
+    const lines = stickLines[k], h = lines.length*12+14;
+    out.push(`<rect class="${st.k}" x="${X.pink+14}" y="${py}" width="${STICK_W}" height="${h}" rx="1"/>`);
+    lines.forEach((l,j)=> out.push(`<text class="${st.k}-t" x="${X.pink+22}" y="${py+13+j*12}">${esc(l)}</text>`));
+    py += h+6;
+  });
+
+  y += laneH;
+});
+
+// infrastructure strip at the bottom
+const infraY = y;
+out.push(`<rect class="lane-bg" x="0" y="${infraY}" width="${W}" height="56"/>`);
+out.push(`<text class="lane-label" x="14" y="${infraY+24}">Infra</text><text class="lane-sub" x="14" y="${infraY+40}">lane 1</text>`);
+[["Vendor cloud (all SaaS: Meta, Google, TikTok, Kobas, Slerp, Deliveroo, Deliverect, Dojo, Stripe, Xero, Trifft, Klaviyo)", 760],["GitHub cloud (makiramen/ops Pages + Actions)", 300],["Service Contracts: none yet, candidates on drawing 2", 300]].forEach((b,k)=>{
+  const bx = X.screen+10 + (k? (k==1?780:1100):0);
+  out.push(`<rect class="infra" x="${bx}" y="${infraY+14}" width="${b[1]}" height="28" rx="3"/><text class="infra-t" x="${bx+10}" y="${infraY+32}">${esc(b[0])}</text>`);
+});
+y = infraY+56;
+
+// column headers
+const heads=[["STAGE / ACTOR",X.label],["SCREENS (UX)",X.screen],["STORIES (PROCESS)  green = top level, yellow = derived, green text = interface operation",X.story],["SERVICES «Se» and COMPONENTS «Co» (SYSTEM)",X.svc],["CLARIFICATIONS and ASSUMPTIONS",X.pink]];
+let hdr = heads.map(h=>`<text class="col-head" x="${h[1]+14}" y="30">${esc(h[0])}</text>`).join("");
+
+// flow arrows lane to lane (main story to main story)
+let flows = "";
+for(let i=0;i<mainStoryPos.length-1;i++){
+  const a=mainStoryPos[i], b=mainStoryPos[i+1];
+  const midY = (a.bottom + laneTops[i+1])/2 + (laneTops[i+1]-a.bottom)/2;
+  flows += `<path class="flow" d="M${a.x-STORY_W/2-6} ${a.top+STORY_H/2} H${X.story+6} V${b.top+STORY_H/2} H${b.x-STORY_W/2-2}" marker-end="url(#arrB)"/>`;
+}
+
+const svg=document.getElementById("board");
+svg.setAttribute("width",W); svg.setAttribute("height",y);
+svg.innerHTML = `<defs>
+ <marker id="arrB" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#333"/></marker>
+ <marker id="arrG" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6b6b6b"/></marker>
+</defs>
+<rect x="0" y="0" width="${W}" height="${HEAD}" fill="#eeeeea"/>${hdr}${out.join("")}${flows}`;
+</script>
+</body>
+</html>

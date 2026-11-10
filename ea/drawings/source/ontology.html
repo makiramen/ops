@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ1 ontology class diagram (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+main{padding:16px 20px 40px}section{background:#fff;border:1px solid #cfcfcf;padding:12px 16px;margin-bottom:18px;overflow:auto}
+h2{font-size:14px;margin:0 0 6px}.sub{font-size:12px;color:#555;margin:0 0 10px}
+.pink{display:inline-block;background:#f9b7cf;border:1px solid #d8588a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.note{display:inline-block;background:#fff6b3;border:1px solid #c9ad2a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.mermaid{font-size:13px}
+</style>
+<script src="mermaid.min.js"></script>
+</head><body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj2-context.html">5 Context</a></nav>
+<header><h1>CJ1 ontology · domain model (PIM) · proof v0.2</h1><p>Plain English names, only what CJ1 touches (Michael's ruling, 5 Nov). Each class notes the Kobas entity (PSM) that holds it, from the extraction (17 entities, 34 edges) or "not in Kobas" where another vendor owns it. Not a formal ontology.</p></header>
+<main>
+<section><h2>4a · Domain classes and relationships</h2>
+<pre class="mermaid">
+classDiagram
+  direction TB
+  class Brand { Kobas territory or venue brand, to confirm }
+  class Venue { Kobas venue, menu_id, franchisee_id, territory_id, flags }
+  class Guest { walk-in, anonymous unless a Member }
+  class Member { Kobas customer, loyalty cards, net_points, plus Trifft member }
+  class Channel { walk-in, QR, Slerp, Deliveroo, booking }
+  class Menu { Kobas menu, one per venue }
+  class Item { Kobas item, item_category }
+  class PriceBand { Kobas price_band }
+  class Basket { Slerp or Deliveroo side, not in Kobas }
+  class Order { Kobas tab, via Deliverect for marketplaces }
+  class Booking { Kobas reservation, near empty, live system PINK 1 }
+  class Tab { Kobas tab and table, record level not exposed, PINK 8 }
+  class KitchenTicket { Kobas till print or KDS }
+  class Payment { Kobas payment, Cash, PDQ, Other, Gift voucher, Deposit }
+  class PaymentMethod { Dojo card, Stripe, Deliveroo, cash }
+  class Discount { Kobas discount, fixed or percent, item or order, consumption modes, single use }
+  class Receipt { Kobas closed tab, Sale in cash log }
+  class Settlement { acquirer batch, bank feed line in Xero }
+  class Review { Google or Deliveroo, ops reviews pull }
+  class Campaign { Meta, Google, TikTok, attribution at pixel only }
+  Brand "1" --> "*" Venue
+  Venue "1" --> "1" Menu
+  Menu "1" --> "*" Item
+  Item "*" --> "*" PriceBand
+  Guest --> Member : may be
+  Guest --> Channel : uses
+  Channel --> Basket : builds
+  Basket --> Order : becomes
+  Order --> Tab : lands as
+  Tab "1" --> "*" Item : contains
+  Tab "1" --> "1" KitchenTicket
+  Tab "1" --> "*" Payment
+  Payment --> PaymentMethod
+  Tab "*" --> "*" Discount : applies
+  Tab --> Receipt : closes to
+  Payment "*" --> "1" Settlement : batched into
+  Member --> Discount : redeems as
+  Member --> Booking : loyalty_customer_id
+  Booking --> Venue
+  Booking --> Tab : may open
+  Guest --> Review : leaves
+  Review --> Venue
+  Campaign --> Guest : brings
+  Venue --> Settlement : xero_organisation_id
+</pre>
+</section>
+<section><h2>4b · Where each concept lives (owner system)</h2>
+<pre class="mermaid">
+flowchart LR
+  subgraph Kobas["Co7 Kobas (PSM)"]
+    venue --- territory --- territory_region
+    venue --- menu --- item --- item_category
+    item --- price_band
+    venue --- till --- till_page
+    customer
+    reservation --- customer
+    discount
+    tab["tab / payment / receipt (not exposed to bot, PINK 8)"]
+  end
+  subgraph Trifft["Co16 Trifft"]
+    member
+  end
+  subgraph Slerp["Co8 Slerp / Co9 Deliveroo"]
+    basket --- order
+  end
+  subgraph Dojo["Co13 Dojo / Co14 Stripe"]
+    settlement
+  end
+  subgraph Xero["Co15 Xero (6 orgs)"]
+    bankfeed["bank feed line"]
+    journal["sales journal"]
+  end
+  member -. meta_trifft_location_id .- customer
+  order -. Deliverect .- tab
+  settlement --> bankfeed
+  venue -. xero_organisation_id .-> journal
+</pre>
+<span class="pink">8 Freeze the ontology only after Kobas confirms tab / payment / receipt fields, or widens the bot's report permissions</span><span class="note">Legacy flags in Kobas: Sage, SagePay, Preoday, Mailchimp, Loke, Fourth: all off or empty; not in the model</span>
+</section>
+</main>
+<script>mermaid.initialize({startOnLoad:true,theme:"neutral",class:{useMaxWidth:false},flowchart:{useMaxWidth:false}});</script>
+</body></html>

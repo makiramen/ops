@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ1 context package (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+#wrap{overflow:auto;padding:16px 20px 40px}svg{display:block;background:#fff;border:1px solid #cfcfcf}
+.grp{fill:#fafaf8;stroke:#999;stroke-width:1.2}.grp-t{font-size:12px;font-weight:700;fill:#444}
+.co{fill:#fbd8b0;stroke:#d97a16;stroke-width:1.3}.co-t{font-size:10.5px;fill:#5a3000;font-weight:700}.co-s{font-size:9.5px;fill:#6b4a1a}
+.se{fill:#d4efcf;stroke:#2f7d2b;stroke-width:1.3}.se-t{font-size:10px;fill:#163a14}
+.inf{fill:#cfe3f7;stroke:#2a6db5}.inf-t{font-size:10px;fill:#123a66}
+.pk{fill:#f9b7cf;stroke:#d8588a}.pk-t{font-size:9.5px;fill:#4a1230}
+.e{fill:none;stroke:#444;stroke-width:1.6}.ed{fill:none;stroke:#b03060;stroke-width:1.4;stroke-dasharray:5 4}.em{fill:none;stroke:#999;stroke-width:1.2;stroke-dasharray:2 3}
+.el{font-size:9px;fill:#333;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.eld{font-size:9px;fill:#b03060;paint-order:stroke;stroke:#fff;stroke-width:3px}
+</style></head>
+<body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj2-context.html">5 Context</a></nav>
+<header><h1>CJ1 «context» package · components and integration paths · proof v0.2</h1>
+<p>Orange = «Co» component (vendor system), green = «Se» services it provides, blue = infrastructure. Solid arrow = integration confirmed by the Kobas extraction (flag named on the arrow). Dashed red = unconfirmed, pink number = open clarification. Grey dotted = kept in step by hand.</p></header>
+<div id="wrap"><svg id="b" xmlns="http://www.w3.org/2000/svg" width="1500" height="900"></svg></div>
+<script>
+const G=[ // groups: id, title, x,y,w,h
+ ["acq","Acquisition (s1)",20,60,300,250],["disc","Discovery (s2)",20,340,300,220],["ord","Ordering and booking (s3)",380,60,420,250],
+ ["core","Core EPoS",560,370,340,200],["pay","Payment and accounting (s4)",960,60,500,300],["loy","Loyalty and reviews (s5, s6)",960,400,500,250],
+ ["ops","In-house",380,620,420,110]];
+const C={ // components: id -> [label, sub, x,y,w,h]
+ Co1:["Co1","Meta Ads + Pixel",40,90,260,30],Co2:["Co2","Google Ads + Tag",40,130,260,30],Co3:["Co3","TikTok Ads + Pixel",40,170,260,30],
+ Co5:["Co5","Website (CMS ? pink 4)",40,370,260,30],Co6:["Co6","Google Business Profile",40,410,260,30],
+ Co8:["Co8","Slerp (web shop, Stripe checkout)",400,90,180,30],Co9:["Co9","Deliveroo (marketplace)",600,90,180,30],
+ Co19:["Co19","Deliverect (order injection)",500,160,200,30],Co12:["Co12","Table booking system ? (pink 1)",400,230,180,30],
+ Co7:["Co7","Kobas: venue, menu, item, price band, till, tab, customer, discount, reservation, cash log, reports",580,400,300,44],
+ Co13:["Co13","Dojo / Paymentsense terminals (Kobas Connect)",980,90,220,30],Co14:["Co14","Stripe (via Slerp)",1220,90,220,30],
+ Co15:["Co15","Xero (6 organisations)",1100,190,220,30],Bank:["Bank","Company bank accounts",1100,260,220,30],
+ Co16:["Co16","Trifft (loyalty app)",980,500,220,30],Co17:["Co17","Klaviyo (email / SMS)",1240,500,220,30],
+ Co18:["Co18","makiramen/ops (GitHub Pages + Actions: reviews pull, KPI, Auto Cash Up, EA extraction)",400,650,380,44]};
+const S=[ // services inside groups
+ ["Se01 Ad Delivery · Se02 Attribution",40,250,260],["Se03 Venue Information · Se04 Menu",40,490,260],["Se05 Online · Se06 Marketplace · Se07 Booking",400,275,380],
+ ["Se08 EPoS Order · Se09 Kitchen Ticket · Se11 Sales Ledger",580,510,300],["Se10 Payment",980,320,460],["Se12 Loyalty · Se13 Review",980,590,460]];
+const E=[ // edges: from,to,label,kind, optional path override
+ ["Co1","Co5","ad click, UTM","e"],["Co2","Co5","","e"],["Co3","Co5","","e"],
+ ["Co5","Co7","menu copy by hand","m"],["Co9","Co19","orders","e"],["Co19","Co7","meta_deliverect_enabled, location_id","e"],
+ ["Co8","Co19","pink 2: via Deliverect, direct, or re-keyed?","d"],["Co12","Co7","pink 1: does it write to Kobas?","d"],
+ ["Co13","Co7","meta_paymentsense_connect_enabled, pdq","e"],["Co8","Co14","charge","e"],["Co14","Bank","payout (pink 7)","d"],["Co13","Bank","settlement T+n (pink 7)","d"],
+ ["Bank","Co15","bank feed","e"],["Co7","Co15","xero_enabled, xero_organisation_id per venue","e"],["Co7","Co18","reports via /data (bot user)","e"],
+ ["Co16","Co7","meta_trifft_location_id, loyalty prompts","e"],["Co16","Co17","member events","e"],["Co6","Co18","nightly reviews pull","e"],["Co9","Co18","ratings","e"],["Co17","Co5","win-back / review ask","e"]];
+let o=[];
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+G.forEach(g=>o.push(`<rect class="grp" x="${g[2]}" y="${g[3]}" width="${g[4]}" height="${g[5]}" rx="4"/><text class="grp-t" x="${g[2]+10}" y="${g[3]+18}">«context» ${esc(g[1])}</text>`));
+const ctr=id=>{const c=C[id];return {x:c[2]+c[4]/2,y:c[3]+c[5]/2,l:c[2],r:c[2]+c[4],t:c[3],b:c[3]+c[5]}};
+E.forEach(e=>{const a=ctr(e[0]),b=ctr(e[1]);let x1,y1,x2,y2;
+  if(Math.abs(a.x-b.x)>Math.abs(a.y-b.y)){ if(a.x<b.x){x1=a.r;x2=b.l}else{x1=a.l;x2=b.r} y1=a.y;y2=b.y; }
+  else { if(a.y<b.y){y1=a.b;y2=b.t}else{y1=a.t;y2=b.b} x1=a.x;x2=b.x; }
+  const mx=(x1+x2)/2,my=(y1+y2)/2; const cls=e[3]=="e"?"e":e[3]=="d"?"ed":"em";
+  o.push(`<path class="${cls}" d="M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" marker-end="url(#${cls=="ed"?"ad":"a"})"/>`);
+  if(e[2]) o.push(`<text class="${cls=="ed"?"eld":"el"}" x="${mx}" y="${my-3}" text-anchor="middle">${esc(e[2])}</text>`);
+});
+Object.values(C).forEach(c=>{o.push(`<rect class="co" x="${c[2]}" y="${c[3]}" width="${c[4]}" height="${c[5]}" rx="2"/><text class="co-t" x="${c[2]+8}" y="${c[3]+13}">«${c[0]}»</text>`);
+  const lines=c[5]>30?[c[1].slice(0,c[1].indexOf(",",40)+1),c[1].slice(c[1].indexOf(",",40)+1).trim()]:[c[1]];
+  lines.forEach((l,k)=>o.push(`<text class="co-s" x="${c[2]+8}" y="${c[3]+26+k*11}">${esc(l)}</text>`));});
+S.forEach(s=>o.push(`<rect class="se" x="${s[1]}" y="${s[2]}" width="${s[3]}" height="24" rx="2"/><text class="se-t" x="${s[1]+8}" y="${s[2]+16}">«provides» ${esc(s[0])}</text>`));
+o.push(`<rect class="inf" x="20" y="780" width="1440" height="34" rx="3"/><text class="inf-t" x="32" y="801">Infrastructure (lane 1): vendor cloud for every «Co» above (Meta, Google, TikTok, Kobas, Slerp, Deliveroo, Deliverect, Dojo, Stripe, Xero, Trifft, Klaviyo) · GitHub cloud for Co18 · Service Contracts: none yet, candidates on page 2</text>`);
+o.push(`<rect class="pk" x="20" y="830" width="1440" height="40" rx="2"/><text class="pk-t" x="32" y="846">Open before this package is final: 1 booking system · 2 Slerp path into Kobas · 4 website CMS · 6 QR / Uber Eats / Just Eat · 7 Dojo and Stripe settlement into which Xero org, who reconciles · 8 tab / payment / receipt records not exposed to the bot user</text><text class="pk-t" x="32" y="861">Answered by the extraction: Dojo terminals integrated (Connect), Deliveroo via Deliverect, Trifft wired at venue level, Xero fed per venue, legacy Sage / Preoday / Mailchimp / Loke / Fourth all off</text>`);
+document.getElementById("b").innerHTML=`<defs><marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9z" fill="#444"/></marker><marker id="ad" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9z" fill="#b03060"/></marker></defs>`+o.join("");
+</script>
+</body></html>

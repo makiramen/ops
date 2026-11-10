@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ2 sequence diagrams (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+main{padding:16px 20px 40px}section{background:#fff;border:1px solid #cfcfcf;padding:12px 16px;margin-bottom:18px;overflow:auto}
+h2{font-size:14px;margin:0 0 6px}.sub{font-size:12px;color:#555;margin:0 0 10px}
+.pink{display:inline-block;background:#f9b7cf;border:1px solid #d8588a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.note{display:inline-block;background:#fff6b3;border:1px solid #c9ad2a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.mermaid{font-size:13px}
+</style>
+<script src="mermaid.min.js"></script>
+</head><body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ2</span><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="{cur}">3 Sequences</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-context.html">5 Context</a></nav>
+<header><h1>CJ2 sequence diagrams · proof v0.2</h1><p>One per entry point plus the kitchen and handover flows. Participants are the «Co» components. Pink = clarification, yellow = assumption / answer. Michael, 6 Nov: QR, iPad and till are Kobas natively; Slerp and Deliveroo come in via Deliverect into Kobas and straight to the printer.</p></header>
+<main>
+<section><h2>3a · s1 level 2: QR order-at-table on the guest's phone (Kobas)</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant Q as Co7 Kobas QR order page
+  participant K as Co7 Kobas front end (tab)
+  participant Pay as Co20 Worldpay (PINK 1: or Stripe / Slerp?)
+  participant P as Co21 Kitchen printer
+  actor A4 as A4 Kitchen
+  A1->>Q: scan table QR
+  Q->>K: openQrSession(Venue, Table): Tab
+  A1->>Q: addItems(Items, Modifiers, notes)
+  A1->>Q: pay
+  Q->>Pay: charge(Tab, Method)
+  Pay-->>Q: paid
+  Q->>K: submitOrder(Tab): Order (Payment recorded on the tab)
+  K->>P: dispatchToKitchen(Order): KitchenTicket[] per station
+  P-->>A4: ticket
+  Note over Q,Pay: Kobas own order-at-table module, all sites. PINK 1: acquirer named as Worldpay, Stripe and Slerp in three answers
+  Note over K: seat number captured on the order (Michael)
+</pre>
+<span class="pink">1 QR acquirer: Worldpay, Stripe or Slerp</span><span class="note">Kobas own module, all sites, seat number captured</span><span class="note">QR orders are paid before they reach the kitchen, so s6 closeTab is already settled for them</span>
+</section>
+
+<section><h2>3b · s1 level 2: FOH takes the order on the Kobas iPad (or till)</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  actor A2 as A2 FOH
+  participant I as Co7 Kobas iPad app / till
+  participant K as Co7 Kobas front end (tab)
+  participant P as Co21 Kitchen printer
+  actor A4 as A4 Kitchen
+  A2->>I: openTab(Venue, Table, Covers), consumption mode
+  A1->>A2: orders
+  A2->>I: addItems(Items, Modifiers, allergen notes)
+  A2->>I: send
+  I->>K: sendOrder(Tab): Order
+  K->>P: dispatchToKitchen(Order): KitchenTicket[] per station
+  P-->>A4: ticket
+  Note over I,K: send fires the full order to the kitchen at once (Michael), seat number on the order
+  opt later round
+    A2->>I: addItems (same tab)
+    K->>P: ticket for the round only
+  end
+</pre>
+<span class="note">Send fires the full order at once, no course hold</span><span class="note">Extraction: till and till_page entities per venue; consumption modes eatin / takeaway / delivery</span>
+</section>
+
+<section><h2>3c · s1 + s3 + s5: Slerp delivery / collection order, via Deliverect into Kobas</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant S as Co8 Slerp web shop
+  participant St as Co14 Stripe
+  participant V as Co19 Deliverect
+  participant K as Co7 Kobas front end
+  participant P as Co21 Kitchen printer
+  actor A4 as A4 Kitchen
+  actor A5 as A5 Deliveroo courier
+  A1->>S: createBasket, applyPromotion, placeOrder
+  S->>St: charge(Order, PaymentMethod)
+  St-->>S: paid
+  S-->>A1: confirmation (collection time or delivery slot)
+  S->>V: order
+  V->>K: injectOrder(Order, location_id): Tab (consumption mode delivery)
+  K->>P: dispatchToKitchen(Order)
+  P-->>A4: ticket
+  alt collection
+    A4->>S: ready
+    S-->>A1: notifyReady
+    A1->>A4: handover(Order): Collected
+  else delivery
+    S->>A5: assignCourier(Order)
+    A4->>A5: ready, pickup(Order) (courier gets the statuses)
+    A5-->>A1: deliver(Order): Delivered
+  end
+  Note over K: sale appears in the Kobas cash log under Delivery (Michael, 6 Nov)
+</pre>
+<span class="note">Slerp via Deliverect, linked to Kobas, straight to the printer (Michael, 6 Nov)</span><span class="note">Deliveroo couriers deliver Slerp orders and receive ready / picked-up statuses</span>
+</section>
+
+<section><h2>3d · s1 + s3 + s5: Deliveroo order via Deliverect into Kobas, rider pickup</h2>
+<p class="sub">Extraction: meta_deliverect_enabled = 1, meta_deliverect_location_id per venue, auto accept / auto finalise / print orders.</p>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant D as Co9 Deliveroo
+  participant V as Co19 Deliverect
+  participant K as Co7 Kobas front end
+  participant P as Co21 Kitchen printer
+  actor A4 as A4 Kitchen
+  actor A5 as A5 Rider
+  A1->>D: order and pay (Deliveroo checkout)
+  D->>V: order webhook
+  V->>K: injectOrder(MktOrder, location_id): Tab (consumption mode delivery)
+  K->>K: auto accept, auto finalise (Payment type Other: delivery partner)
+  K->>P: dispatchToKitchen(Order), pickup time on ticket
+  P-->>A4: ticket
+  D->>A5: assignRider(Order)
+  A4->>A5: pickup(Order) at the counter
+  A5-->>A1: deliver(Order)
+  Note over D,K: Deliverect carries Deliveroo and Slerp only, no Uber Eats / Just Eat (Michael, 6 Nov)
+</pre>
+<span class="note">Deliverect scope: Deliveroo and Slerp only</span>
+</section>
+
+<section><h2>3e · s3 to s6: kitchen ticket to served to tab closed (in venue)</h2>
+<pre class="mermaid">
+sequenceDiagram
+  participant K as Co7 Kobas front end
+  participant P as Co21 Kitchen printers (no KDS)
+  actor A4 as A4 Kitchen
+  participant M as Co22 Mapal (spec)
+  actor A2 as A2 FOH (runner)
+  actor A1 as A1 Guest
+  participant T as Co13 Dojo terminal
+  K->>P: dispatchToKitchen(Order): tickets per station
+  A4->>M: getSpec(Item): Recipe, allergens
+  A4->>A4: cook, plate, check at the pass
+  A4->>A4: dish ready at the pass (paper ticket, no bump time captured)
+  A2->>A1: serve(KitchenTicket, Table, Seat)
+  opt void after dispatch
+    A2->>K: voidItem(Tab, Line, Reason, Manager)  (PINK 5: reason captured?)
+  end
+  A1->>A2: asks for the bill
+  A2->>K: closeTab(Tab)
+  K->>T: payment request
+  A1->>T: tap card
+  T-->>K: Payment
+  K->>K: Receipt, freeTable(Table), Orders + Covers to cash log
+  Note over K: continues as CJ1 3a (tap to bank)
+</pre>
+<span class="pink">5 Void reason captured in Kobas?</span><span class="pink">6 Station routing rules where?</span><span class="pink">7 Allergens: five copies, which is master?</span><span class="note">Managers authorise voids. Kitchen printers everywhere, no KDS, no ticket times. Allergens in Kobas, Mapal, Slerp, Trifft and pay-at-table</span>
+</section>
+</main>
+<script>mermaid.initialize({startOnLoad:true,theme:"neutral",sequence:{actorMargin:28,messageMargin:30,width:150}});</script>
+</body></html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ2 ontology class diagram (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+main{padding:16px 20px 40px}section{background:#fff;border:1px solid #cfcfcf;padding:12px 16px;margin-bottom:18px;overflow:auto}
+h2{font-size:14px;margin:0 0 6px}.sub{font-size:12px;color:#555;margin:0 0 10px}
+.pink{display:inline-block;background:#f9b7cf;border:1px solid #d8588a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.note{display:inline-block;background:#fff6b3;border:1px solid #c9ad2a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.mermaid{font-size:13px}
+</style>
+<script src="mermaid.min.js"></script>
+</head><body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ2</span><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="{cur}">4 Ontology</a><a style="color:#ddd;font-weight:400;margin-right:14px" href="cj2-context.html">5 Context</a></nav>
+<header><h1>CJ2 ontology · domain model (PIM) · proof v0.2</h1><p>Plain English names, only what CJ2 touches. Each class notes the system that holds it (PSM): Kobas for in-venue and Deliveroo, Slerp for delivery, Mapal for specs. Extends the CJ1 ontology (Tab, Payment, Receipt, Discount are the same classes). Not a formal ontology.</p></header>
+<main>
+<section><h2>4a · Domain classes and relationships</h2>
+<pre class="mermaid">
+classDiagram
+  direction TB
+  class EntryPoint { QR, iPad, till (Kobas native) · Slerp, Deliveroo via Deliverect }
+  class Guest { anonymous unless Member, CJ1 }
+  class Venue { Kobas venue, CJ1 }
+  class Table { Kobas table, on the table plan }
+  class Seat { position at the table, captured on QR and iPad orders }
+  class Tab { Kobas tab: covers, consumption mode, status }
+  class ConsumptionMode { eatin, takeaway, delivery (Kobas) · collection (Slerp) }
+  class Order { Kobas order on a tab, every channel }
+  class OrderLine { item, qty, price band, CJ1 Item }
+  class Modifier { Kobas item modifier }
+  class Note { free text, allergen note }
+  class KitchenTicket { Kobas paper ticket, kitchen printer, no KDS }
+  class Station { ramen, maki, fry, drinks: routing rules PINK 6 }
+  class Course { none: the full order is fired at once }
+  class Bump { dish ready at the pass, not recorded }
+  class Void { line removed, manager authorises, reason PINK 5 }
+  class RecipeSpec { Mapal recipe card, not Kobas }
+  class Allergen { Kobas, Mapal, Slerp, Trifft, pay-at-table: five copies, PINK 7 }
+  class Handover { served to table · collected at counter · delivered }
+  class Rider { Deliveroo courier, for Deliveroo and Slerp orders }
+  class PickupTime { on the Deliveroo ticket }
+  class Payment { Kobas payment, CJ1 · Worldpay for QR (PINK 1) · Stripe for Slerp }
+  class Receipt { closed tab, CJ1 }
+  Guest --> EntryPoint : orders through
+  EntryPoint --> Order : creates
+  Order --> Tab : lands on
+  Tab --> Table
+  Table "1" --> "*" Seat
+  Tab --> ConsumptionMode
+  Order "1" --> "*" OrderLine
+  OrderLine "*" --> "*" Modifier
+  OrderLine --> Note
+  OrderLine --> Seat
+  Order --> KitchenTicket : dispatched as
+  KitchenTicket --> Station
+  KitchenTicket --> Course
+  KitchenTicket --> Bump : ends in
+  OrderLine --> Void : may be
+  OrderLine --> RecipeSpec : made to
+  RecipeSpec --> Allergen
+  Bump --> Handover : then
+  Handover --> Rider : for delivery
+  Order --> PickupTime : delivery
+  Tab "1" --> "*" Payment
+  Tab --> Receipt : closes to
+  Venue --> Table
+</pre>
+</section>
+<section><h2>4b · Where each concept lives (owner system)</h2>
+<pre class="mermaid">
+flowchart LR
+  subgraph Kobas["Co7 Kobas (the hub: QR, iPad, till native; Slerp and Deliveroo via Deliverect)"]
+    qr["QR order page"] --- tab
+    ipad["iPad app"] --- tab
+    till --- tab
+    tab --- table --- venue
+    tab --- order --- orderline --- item
+    orderline --- modifier
+    order --- ticket["kitchen ticket (paper, printer)"]
+    tab --- payment --- receipt
+    void
+    cashlog["cash log: Orders taken, Covers, Other payments"]
+  end
+  subgraph Slerp["Co8 Slerp (delivery / collection front end)"]
+    basket --- sorder["order"]
+    sorder --- handover["collected / delivered"]
+  end
+  subgraph Deliveroo["Co9 Deliveroo"]
+    dorder["order"] --- rider --- pickup["pickup time"]
+  end
+  subgraph Mapal["Co22 Mapal"]
+    recipe["recipe spec"] --- allergen
+  end
+  subgraph Pay["Co13 Dojo / Co20 Worldpay / Co14 Stripe"]
+    settlement
+  end
+  dorder -. Co19 Deliverect .-> tab
+  sorder -. Co19 Deliverect .-> tab
+  sorder -. "cash log: Delivery" .-> cashlog
+  rider -. "also Slerp orders" .- sorder
+  payment --> settlement
+  sorder --> settlement
+  item -. "PINK 7" .- allergen
+</pre>
+<span class="pink">Freeze after pinks 1, 5, 6, 7 are answered</span><span class="note">Tab / payment / receipt records sit in Kobas under Customers and can be extracted (Michael, 6 Nov): widen the bot user</span>
+</section>
+</main>
+<script>mermaid.initialize({startOnLoad:true,theme:"neutral",class:{useMaxWidth:false},flowchart:{useMaxWidth:false}});</script>
+</body></html>

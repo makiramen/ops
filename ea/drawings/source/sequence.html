@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ1 sequence diagrams (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+main{padding:16px 20px 40px}section{background:#fff;border:1px solid #cfcfcf;padding:12px 16px;margin-bottom:18px;overflow:auto}
+h2{font-size:14px;margin:0 0 6px}.sub{font-size:12px;color:#555;margin:0 0 10px}
+.pink{display:inline-block;background:#f9b7cf;border:1px solid #d8588a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.note{display:inline-block;background:#fff6b3;border:1px solid #c9ad2a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.mermaid{font-size:13px}
+</style>
+<script src="mermaid.min.js"></script>
+</head><body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj2-context.html">5 Context</a></nav>
+<header><h1>CJ1 sequence diagrams · proof v0.2</h1><p>One per flow, Marcel's notation. Participants are the «Co» components. Pink = clarification, yellow = assumption / extraction finding.</p></header>
+<main>
+<section><h2>3a · s4 Pay, level 2: walk-in card payment, tap to bank (Marcel's priority)</h2>
+<p class="sub">Updated after the Kobas extraction: terminals integrated via Kobas Connect (meta_paymentsense_connect_enabled = 1); Xero fed per venue (xero_enabled, 6 orgs).</p>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  actor A2 as A2 Site team
+  participant K as Co7 Kobas EPoS
+  participant T as Co13 Dojo terminal (Kobas Connect)
+  participant Q as Co13 Dojo acquirer
+  participant B as Company bank
+  participant X as Co15 Xero (venue org)
+  participant O as Co18 ops Auto Cash Up
+  A2->>K: closeTab(Tab): total
+  K->>T: payment request (amount)
+  A1->>T: tap card
+  T->>Q: authorise(card, amount)
+  Q-->>T: approved
+  T-->>K: payment result
+  K->>K: record Payment, close Tab, issue Receipt
+  K-->>A1: receipt
+  Note over T,B: batch and settle T+n (PINK 7: timing, fees)
+  Q->>B: settlement (net of fees)
+  B-->>X: bank feed line
+  K->>X: daily sales / payments journal (xero_enabled per venue)
+  Note over K,X: PINK 7: which Xero org per venue, who reconciles bank feed vs Kobas cash log
+  K-->>O: cash log report (declared PDQ, variances, Xero flag)
+</pre>
+<span class="pink">7 Dojo as acquirer of record: confirm on bank statements</span><span class="pink">8 Tab / Payment / Receipt not exposed to the bot via /data</span><span class="note">Stand-alone PDQ allowed on some venues (accept_stand_alone_pdq_payments): a second, manual branch where the amount is keyed on the terminal and declared at cash up</span>
+</section>
+
+<section><h2>3b · s3 + s4: Deliveroo order into the till, via Deliverect</h2>
+<p class="sub">Extraction: meta_deliverect_enabled = 1, meta_deliverect_location_id per venue, auto accept / auto finalise / print orders.</p>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant D as Co9 Deliveroo
+  participant V as Co19 Deliverect
+  participant K as Co7 Kobas EPoS
+  participant P as Kitchen printer / KDS
+  participant X as Co15 Xero
+  A1->>D: createBasket, placeOrder, charge (Deliveroo checkout)
+  D-->>A1: order confirmed
+  D->>V: order webhook
+  V->>K: inject order (location_id)
+  K->>K: auto accept, create Tab (consumption mode: delivery)
+  K->>P: dispatchToKitchen(Order)
+  K->>K: auto finalise, Payment type = Other (delivery partner)
+  Note over D,X: Deliveroo pays out weekly, net of commission. PINK: how the payout is matched to Kobas "Other" payments in Xero
+  D->>X: payout to bank, bank feed line
+</pre>
+<span class="pink">2 Slerp: same path via Deliverect, direct Slerp integration, or re-keyed?</span><span class="pink">6 Uber Eats / Just Eat on Deliverect anywhere?</span>
+</section>
+
+<section><h2>3c · s4: Slerp online order, Stripe payment</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant S as Co8 Slerp
+  participant St as Co14 Stripe
+  participant K as Co7 Kobas EPoS
+  participant X as Co15 Xero
+  A1->>S: createBasket(Venue, Items), applyPromotion(Code)
+  A1->>S: placeOrder
+  S->>St: charge(Order, PaymentMethod)
+  St-->>S: paid
+  S-->>A1: confirmation (collection / delivery)
+  S-->>K: order to venue  (PINK 2: via Deliverect, direct, or printed and re-keyed)
+  K->>K: Tab, kitchen ticket, Payment type = Other (Slerp)
+  St->>X: Stripe payout, bank feed line (PINK 7: where it lands, which org)
+</pre>
+</section>
+
+<section><h2>3d · s5: Trifft loyalty at the till (earn and redeem)</h2>
+<p class="sub">Extraction: meta_trifft_location_id per venue, epos_loyalty_prompts, Kobas customer holds loyalty cards and net_points, discount entity holds the vouchers.</p>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  actor A2 as A2 Site team
+  participant K as Co7 Kobas EPoS
+  participant Tr as Co16 Trifft
+  participant Kl as Co17 Klaviyo
+  A1->>A2: shows Trifft QR
+  A2->>K: scan QR on till (loyalty prompt)
+  K->>Tr: identifyMember(QR)
+  Tr-->>K: Member
+  alt redeem
+    K->>Tr: redeem(Member, Reward)
+    Tr-->>K: Discount
+    K->>K: applyDiscount(Tab, Discount)  (PINK 3: automatic, or keyed as a Kobas discount)
+  end
+  K->>K: closeTab, Payment
+  K->>Tr: earn(Member, Sale)
+  Tr-->>A1: balance / stamp in app
+  Tr->>Kl: member event (welcome, win-back)
+</pre>
+<span class="pink">3 Is the Trifft reward applied automatically on the till?</span><span class="note">Kobas customer = loyalty member (loyalty cards, net_points, RFID flags); reservation.loyalty_customer_id links bookings to it</span>
+</section>
+
+<section><h2>3e · s1 + s2: ad click to website (attribution)</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant M as Ad platform (Co1, Co2, Co3)
+  participant W as Co5 Website
+  participant Px as Co4 Pixel or Tag
+  participant G as Co6 Google Business Profile
+  M->>A1: serveAd(Audience, Creative)
+  A1->>M: tap
+  M->>W: redirect(LandingUrl, UTM)
+  W->>Px: recordClick(AdId, Session)
+  Px-->>M: Attribution (pixel event)
+  A1->>W: listVenues, getMenu, getVenueProfile
+  A1->>G: hours, address, rating, directions
+  Note over M,G: PINK 5: attribution stops at the pixel, no join to a Kobas sale today
+</pre>
+</section>
+</main>
+<script>mermaid.initialize({startOnLoad:true,theme:"neutral",sequence:{actorMargin:28,messageMargin:30,width:150}});</script>
+</body></html>

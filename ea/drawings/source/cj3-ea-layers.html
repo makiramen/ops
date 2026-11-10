@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ3 · Enterprise Architecture 5-layer view (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+#wrap{overflow:auto;padding:16px 20px 40px}svg{display:block;background:#fff;border:1px solid #cfcfcf}
+.lane{stroke:#8a8a8a;stroke-width:1.2}.lab{fill:#f1f1ee;stroke:#8a8a8a}
+.lt{font-size:12px;font-weight:700;fill:#333}.ls{font-size:10px;fill:#666}
+.col{font-size:10.5px;font-weight:700;fill:#444}
+.scr{fill:#e9e9e9;stroke:#888;stroke-dasharray:4 3}.scr-t{font-size:9.5px;fill:#444}
+.st{fill:#bfe6b8;stroke:#3f8a3a;stroke-width:1.4}.st-t{font-size:10px;fill:#143d12;font-weight:600}.st-i{font-size:8.5px;fill:#2e6b2a}
+.sc{fill:#fff;stroke:#2f7d2b;stroke-width:1.3;stroke-dasharray:5 3}.sc-t{font-size:9.5px;fill:#163a14;font-weight:700}.sc-o{font-size:8.5px;fill:#1f7a1f;font-family:Menlo,Consolas,monospace}
+.co{fill:#fbd8b0;stroke:#d97a16;stroke-width:1.3}.co-t{font-size:9.5px;fill:#5a3000;font-weight:700}.co-s{font-size:8.5px;fill:#6b4a1a}
+.api{fill:#fff8f0;stroke:#d97a16;stroke-width:1.2;stroke-dasharray:6 3}.api-h{font-size:9px;font-weight:700;fill:#8a4a00;letter-spacing:.4px}.api-t{font-size:9.5px;fill:#5a3000;font-weight:700}.api-s{font-size:8.3px;fill:#4a3a2a}.api-u{font-size:8px;fill:#1f5fa8;font-family:Menlo,Consolas,monospace}
+.map{fill:#fffdf7;stroke:#b5651d;stroke-width:1.1}.map-h{font-size:8.5px;font-weight:700;fill:#8a4a00}.map-ep{font-size:8.5px;fill:#3a2a1a;font-family:Menlo,Consolas,monospace;font-weight:700}.map-op{font-size:8.3px;fill:#1f7a1f;font-family:Menlo,Consolas,monospace}.map-none{font-size:8px;fill:#8a7a6a;font-style:italic}.maplink{fill:none;stroke:#b5651d;stroke-width:1;stroke-dasharray:3 2;opacity:.85}
+.inf{fill:#cfe3f7;stroke:#2a6db5}.inf-t{font-size:9.5px;fill:#123a66}
+.pink{fill:#f9b7cf;stroke:#d8588a}.pink-t{font-size:9.5px;fill:#4a1230}
+.note{fill:#fff6b3;stroke:#c9ad2a}.note-t{font-size:9.5px;fill:#4a3d00}
+.flow{fill:none;stroke:#333;stroke-width:2}
+</style>
+</head>
+<body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#888;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="cj2-context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ3</span><a style="color:#ddd;margin-right:14px" href="cj3-index.html">1 Swimlane</a><a style="color:#fff;font-weight:700;margin-right:14px" href="cj3-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj3-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj3-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj3-context.html">5 Context</a></nav>
+<header><h1>CJ3 "Sale to Bank to Books" on Marcel's 5-layer Enterprise Architecture template · proof v0.1 (6 Nov 2026)</h1>
+<p>Lanes as on the Maki Miro template (top to bottom): UX Workflow · Business Processes · Service Contracts · System · Infrastructure. Columns = journey stages. <b>Service Contracts lane: Maki has none yet.</b> Dashed boxes are CANDIDATE contracts derived from the CJ3 derived stories; CJ1 candidates reused where the same service is meant (Se10, Se11). New candidates Se18 to Se22. The System lane now carries the <b>integration surfaces</b> strip (Kobas API v3, Slerp order webhook, Trifft API) that layer 3 domain services can be built on.</p></header>
+<div id="wrap"><svg id="b" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<script src="ea-api-surfaces.js"></script>
+<script>
+window.EA={
+ stages:["s1 Sale settled on the tab","s2 Day cashed up","s3 Funds settled","s4 Bank receives","s5 Books posted","s6 Reconciled / reported"],
+ ux:[["Kobas payment screen","Dojo terminal","Kobas QR checkout","Receipt"],["Kobas cash log","Z report","Safe / float sheet"],["Dojo portal","Stripe dashboard","Deliveroo Hub","Worldpay portal"],["Bank statement","Xero bank feed"],["Xero sales journal","Xero bank rec","Hubdoc (off flow)"],["Xero rec report","Auto Cash Up sheet","Site KPI sheet","Management accounts"]],
+ proc:[[["CJ3.s1.u1","Tab settled, payment types recorded"]],[["CJ3.s2.u1","Site manager declares, closes the day"]],[["CJ3.s3.u1","Acquirers batch and pay out (T+n)"]],[["CJ3.s4.u1","Money lands in the entity account"]],[["CJ3.s5.u1","Sales and payments posted per org"]],[["CJ3.s6.u1","Finance reconciles, closes the month"],["CJ3.s6.u2","Ops: Auto Cash Up and KPI sheets"]]],
+ contracts:[
+  [["Se10 Payment (CJ1)",["takePayment(Tab,Amount,Method)","recordExternalPayment(Tab,Partner)","addGratuity(Tab,Tip,ServiceCharge)"]],["Se11 Sales Ledger (CJ1)",["closeTab(Tab,Payment[]): Receipt","applyDiscount(Tab,Discount)"]]],
+  [["Se18 Cash Up",["declarePayments(Venue,Session,Declared[])","computeVariance(Expected,Declared)","closeSession(Venue,Date): ZReport"]]],
+  [["Se19 Settlement",["settle(Batch): Settlement","payout(Period,Channel): Payout","reconcilePayout(Payout,CashLogDelivery)"]]],
+  [["Se20 Banking",["receiveFunds(Account,Settlement|CashDeposit)","feed(Account): BankTransaction[]"]]],
+  [["Se21 Ledger Posting",["postSalesJournal(Venue,Date)","keySales(Venue,Date)","matchBankLine(BankTxn,Settlement)"]]],
+  [["Se22 Reconciliation and Reporting",["reconcile(Venue,Day): Exceptions","closeMonth(Entity,Period): MA","feedCashUp(Kobas_Daily)","flagVariance(Venue,Day)"]]]],
+ sys:[["Co7 Kobas tab, payments, discounts, receipts","Co13 Dojo terminals (Kobas Connect, PDQ)","Co20 Worldpay (QR; pink 1)","Co14 Stripe (Slerp) · Co9 Deliveroo"],["Co7 Kobas cash log (declared vs expected)","Co18 ops Kobas_Daily pull"],["Co13 Dojo settlement (pink 9)","Co14 Stripe payout (pink 10)","Co9 Deliveroo statement (pink 11)","Co20 Worldpay settlement"],["Co23 Bank accounts per entity (pink 12)","Co15 Xero bank feeds"],["Co7 Kobas Xero importer per venue","Co15 Xero, 6 orgs (pink 7)","Co24 Hubdoc (purchases, off flow)"],["Co15 Xero reconciliation, MA","Co18 ops kpi_auto, cashup_feed","Co26 Sheets: Auto Cash Up, Z, KPI"]],
+ pinks:[["14 tips / service charge posting","15 refunds, deposits, vouchers"],["8 cash counting and banking route"],["9 10 11 settlement timing, fees, invoices"],["12 which bank, account per entity"],["7 venue to Xero org map · 13 importer"],["16 who owns daily rec per venue"]],
+ apiMap:[
+  [{m:"GET",p:"/venue/payments",to:"Se11",op:"getPayments(Venue, Day): Payment[] cash, card, other, tips"},
+   {m:"GET",p:"/integrations/venue-sales",to:"Se11",op:"getSales(Venue, Hour): Order[] items, lead type, tax"},
+   {m:"GET",p:"/discount",to:"Se11",op:"listDiscounts(): Discount[]"},
+   {m:"GET/POST/PUT",p:"/gift-card[/:id]",to:"Se10",op:"issueGiftCard / redeemGiftCard(Card)"},
+   {none:"no API for takePayment / closeTab: EPoS only"}],
+  [{m:"GET",p:"/venue[/:id]",to:"Se18",op:"listVenues(operating): Venue[]"},
+   {none:"no API for declarePayments / closeSession: UI only",note:"cash log read via /data/reports/cash-log (bot user, Co18)"}],
+  [{none:"no Kobas endpoint: settlement is at the acquirers",note:"GET /venue/payments gives the expected side per day"}],
+  [{none:"no Kobas endpoint: bank feeds are Xero's"}],
+  [{m:"GET",p:"/integrations/cognos/till-order",to:"Se21",op:"exportSales(Venue, Period): SalesExport (Cognos)"},
+   {none:"Xero importer is internal: no endpoint (xero_enabled)"}],
+  [{m:"GET",p:"/venue/payments",to:"Se22",op:"reconcile(Venue, Day): expected side, payments"},
+   {m:"GET",p:"/integrations/venue-sales",to:"Se22",op:"reconcile(Venue, Day): sales side, hour by hour"},
+   {m:"GET",p:"/staff/pay-details/:date",to:"Se22",op:"tronc check (pink 14): gratuity vs payroll"}]
+ ],
+ api:window.EA_API,
+ infra:["Vendor cloud (Kobas, Dojo, Worldpay, Stripe, Deliveroo, Xero, Hubdoc) and bank portals / feeds; on-site: tills, terminals, safe. Data entities per vendor, see Ontology page.","GitHub cloud: makiramen/ops Actions · Google Sheets"],
+ procH:165, contractH:130, contractSub:"lane 3 · NONE YET · candidates derived from CJ3"
+};
+</script>
+<script src="ea-layers-render.js"></script>
+</body></html>

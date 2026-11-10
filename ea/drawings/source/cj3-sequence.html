@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ3 sequence diagrams (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+main{padding:16px 20px 40px}section{background:#fff;border:1px solid #cfcfcf;padding:12px 16px;margin-bottom:18px;overflow:auto}
+h2{font-size:14px;margin:0 0 6px}.sub{font-size:12px;color:#555;margin:0 0 10px}
+.pink{display:inline-block;background:#f9b7cf;border:1px solid #d8588a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.note{display:inline-block;background:#fff6b3;border:1px solid #c9ad2a;padding:2px 6px;font-size:11px;margin:2px 4px 2px 0}
+.mermaid{font-size:13px}
+</style>
+<script src="mermaid.min.js"></script>
+</head>
+<body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#888;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="cj2-context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ3</span><a style="color:#ddd;margin-right:14px" href="cj3-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj3-ea-layers.html">2 EA layers</a><a style="color:#fff;font-weight:700;margin-right:14px" href="cj3-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj3-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj3-context.html">5 Context</a></nav>
+<header><h1>CJ3 sequence diagrams · proof v0.1</h1><p>One per money path: card at the terminal (Marcel's level 2 ask from CJ1 s4), QR and Slerp online card, Deliveroo marketplace, the daily cash up into Xero, and cash. Participants are the «Co» components. Pink = clarification, yellow = assumption / answer. Fee treatment, settlement timing and bank accounts are the open points (pinks 8 to 13).</p></header>
+<main>
+<section><h2>3a · s1 + s3 + s4 + s5: card at the terminal, tap to bank to books (Dojo Connect)</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  actor A2 as A2 FOH
+  participant K as Co7 Kobas tab
+  participant T as Co13 Dojo terminal (Connect)
+  participant Q as Co13 Dojo acquiring
+  participant B as Co23 Entity bank account
+  participant X as Co15 Xero org
+  A2->>K: closeTab request (tab total, tip, service charge)
+  K->>T: payment request (amount)
+  A1->>T: tap card
+  T->>Q: authorise(card, amount)
+  Q-->>T: approved
+  T-->>K: takePayment(Tab, Amount, PDQ): Payment
+  K->>K: close Tab, Receipt, cash log PDQ declared
+  K-->>A1: receipt
+  Q->>Q: settle(Batch) T+n (PINK 9: timing, gross or net of fees)
+  Q->>B: receiveFunds(Account, Settlement) (PINK 12: which account)
+  B->>X: feed(Account): BankTransaction
+  K->>X: postSalesJournal(Venue, Date) via Kobas Xero importer (PINK 13)
+  X->>X: matchBankLine(BankTransaction, Settlement)
+  Note over K: Kobas rule: Payments = Sales per day for the importer, open tabs carry Tab Credit
+  Note over Q,B: stand-alone PDQ on some venues (extraction): keyed on the tab by hand
+</pre>
+<span class="pink">9 Dojo settlement timing, fees</span><span class="pink">12 which bank account</span><span class="pink">13 Kobas Xero importer scope</span><span class="note">Extraction: meta_paymentsense_connect_enabled per venue, pdq counts, accept_stand_alone_pdq_payments</span>
+</section>
+
+<section><h2>3b · online card: Kobas QR (Worldpay) and Slerp (Stripe) to bank</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant Q as Co7 Kobas QR page
+  participant W as Co20 Worldpay (PINK 1)
+  participant S as Co8 Slerp shop
+  participant St as Co14 Stripe
+  participant K as Co7 Kobas tab / cash log
+  participant B as Co23 Entity bank account
+  participant X as Co15 Xero org
+  actor A3 as A3 Marketing
+  alt QR order-at-table
+    A1->>Q: pay in the QR flow
+    Q->>W: charge(Tab, Card): Payment
+    W-->>K: payment recorded on the tab (paid before the kitchen)
+    W->>B: settle(Batch) (PINK 9: cadence, fees)
+  else Slerp delivery / collection
+    A1->>S: checkout
+    S->>St: charge(Order, Card)
+    St-->>S: paid
+    S-->>K: order via Deliverect, cash log Other: Delivery
+    St->>B: payout(Period, Slerp): Payout (PINK 10: cadence, account)
+    S-->>A3: order webhook / Slerp insights (totals, tips, storeFee)
+  end
+  B->>X: feed(Account): BankTransaction
+  A3->>K: reconcilePayout(Payout, CashLogDelivery): Exceptions
+  X->>X: matchBankLine(BankTransaction, Payout)
+  Note over K,X: Kobas posts the sale (Delivery) on the day, the bank line arrives days later net of fees: the gap is the reconciliation
+</pre>
+<span class="pink">1 QR acquirer</span><span class="pink">10 Stripe payout cadence and account</span><span class="note">Slerp webhook summary carries subtotal, delivery, storeFee, tip, total per order; no payment or discount object (see layer 2 strip)</span>
+</section>
+
+<section><h2>3c · Deliveroo: order to weekly statement to bank</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  participant D as Co9 Deliveroo
+  participant V as Co19 Deliverect
+  participant K as Co7 Kobas tab / cash log
+  participant B as Co23 Entity bank account
+  participant H as Co24 Hubdoc
+  participant X as Co15 Xero org
+  actor A3 as A3 Marketing
+  A1->>D: order and pay (Deliveroo holds the money)
+  D->>V: order
+  V->>K: injectOrder: Tab, Payment type Other (delivery partner), auto finalise
+  K->>K: cash log Other: Delivery (gross sale)
+  D->>D: weekly statement: sales, commission, VAT, refunds, adjustments (PINK 11)
+  D->>B: payout(Week, Deliveroo): Payout net of commission
+  D-->>H: self-billing invoice / statement PDF (PINK 11: captured?)
+  H->>X: commission invoice posted
+  B->>X: feed(Account): BankTransaction
+  A3->>K: reconcilePayout(Payout, CashLogDelivery): Exceptions
+  X->>X: match payout + commission invoice to gross sales
+  Note over K,X: gross sale in Kobas, net cash in the bank: commission must be posted as a cost or the sales ledger never reconciles
+</pre>
+<span class="pink">11 Deliveroo statement, commission, VAT, capture</span><span class="note">Michael, 6 Nov: Deliveroo and Slerp sales sit in the cash log under Delivery; marketing reconciles the payouts</span>
+</section>
+
+<section><h2>3d · s2 + s5 + s6: daily cash up into Xero and the ops sheets</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A6 as A6 Site manager
+  participant K as Co7 Kobas cash log
+  participant X as Co15 Xero org (per venue map, PINK 7)
+  participant O as Co18 makiramen/ops (Kobas_Daily)
+  participant G as Co26 Auto Cash Up / Z / KPI sheets
+  actor A7 as A7 Finance
+  A6->>K: declarePayments(Venue, Session, Declared[]): cash, PDQ, other, vouchers, deposits
+  K->>K: computeVariance(Expected, Declared), float, petty cash
+  A6->>K: closeSession(Venue, Date): Z report, Xero flag
+  K->>X: postSalesJournal(Venue, Date): sales by lead type, tax, payments (importer, PINK 13)
+  O->>K: pull report__cash_log, sales mix, item sales (bot user, /data)
+  O->>G: feedCashUp(Kobas_Daily): Auto Cash Up, Daily Z Reports, site KPI sheets
+  G-->>A6: flagVariance(Venue, Day)
+  A7->>X: reconcile(Venue, Day): bank lines vs sales vs payouts (PINK 16: owner)
+  A7->>X: closeMonth(Entity, Period): MA by the 7th
+  Note over K,X: 6 Xero orgs seen (xero_organisation_id per venue). Known: Maki NE1 Ltd, South Ikigai Delight Ltd
+  Note over O,G: target: no manual step, no dependency on Matt (Michael)
+</pre>
+<span class="pink">7 venue to Xero org map</span><span class="pink">13 importer scope</span><span class="pink">16 daily reconciliation owner</span><span class="note">kpi-auto rulings 29 Oct: Auto Cash Up tabs fed direct from Kobas_Daily; covers = Kobas covers + tabs without covers + ROUND(Stripe £ / 22)</span>
+</section>
+
+<section><h2>3e · cash: till to safe to bank (mostly unknown)</h2>
+<pre class="mermaid">
+sequenceDiagram
+  actor A1 as A1 Guest
+  actor A2 as A2 FOH
+  actor A6 as A6 Site manager
+  participant K as Co7 Kobas tab / cash log
+  participant S as Safe (site process)
+  participant B as Co23 Entity bank account
+  participant X as Co15 Xero org
+  A1->>A2: pays cash
+  A2->>K: takePayment(Tab, Amount, Cash): Payment
+  A6->>K: declare cash at close, cash variance, float retained
+  A6->>S: cash to safe (PINK 8: who counts, double sign?)
+  S->>B: bank deposit (PINK 8: branch, collection service, cadence)
+  B->>X: feed(Account): BankTransaction (deposit)
+  X->>X: match deposit to cash log Cash declared (days apart)
+  Note over S,B: petty cash and expenses (Pleo, Random Buy Request) reduce the cash to bank: where is that posted?
+</pre>
+<span class="pink">8 cash route and cadence</span><span class="note">Cash log carries Cash declared, Cash variance, Float variance, Petty cash</span>
+</section>
+</main>
+<script>mermaid.initialize({startOnLoad:true,theme:"neutral",themeVariables:{noteBkgColor:"#fff6b3",noteTextColor:"#4a3d00",noteBorderColor:"#c9ad2a"},sequence:{actorMargin:28,messageMargin:30,width:150,wrap:true,noteMargin:8}});</script>
+</body></html>

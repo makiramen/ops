@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ2 · Enterprise Architecture 5-layer view (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+#wrap{overflow:auto;padding:16px 20px 40px}svg{display:block;background:#fff;border:1px solid #cfcfcf}
+.lane{stroke:#8a8a8a;stroke-width:1.2}.lab{fill:#f1f1ee;stroke:#8a8a8a}
+.lt{font-size:12px;font-weight:700;fill:#333}.ls{font-size:10px;fill:#666}
+.col{font-size:10.5px;font-weight:700;fill:#444}
+.scr{fill:#e9e9e9;stroke:#888;stroke-dasharray:4 3}.scr-t{font-size:9.5px;fill:#444}
+.st{fill:#bfe6b8;stroke:#3f8a3a;stroke-width:1.4}.st-t{font-size:10px;fill:#143d12;font-weight:600}.st-i{font-size:8.5px;fill:#2e6b2a}
+.sc{fill:#fff;stroke:#2f7d2b;stroke-width:1.3;stroke-dasharray:5 3}.sc-t{font-size:9.5px;fill:#163a14;font-weight:700}.sc-o{font-size:8.5px;fill:#1f7a1f;font-family:Menlo,Consolas,monospace}
+.co{fill:#fbd8b0;stroke:#d97a16;stroke-width:1.3}.co-t{font-size:9.5px;fill:#5a3000;font-weight:700}.co-s{font-size:8.5px;fill:#6b4a1a}
+.api{fill:#fff8f0;stroke:#d97a16;stroke-width:1.2;stroke-dasharray:6 3}.api-h{font-size:9px;font-weight:700;fill:#8a4a00;letter-spacing:.4px}.api-t{font-size:9.5px;fill:#5a3000;font-weight:700}.api-s{font-size:8.3px;fill:#4a3a2a}.api-u{font-size:8px;fill:#1f5fa8;font-family:Menlo,Consolas,monospace}
+.map{fill:#fffdf7;stroke:#b5651d;stroke-width:1.1}.map-h{font-size:8.5px;font-weight:700;fill:#8a4a00}.map-ep{font-size:8.5px;fill:#3a2a1a;font-family:Menlo,Consolas,monospace;font-weight:700}.map-op{font-size:8.3px;fill:#1f7a1f;font-family:Menlo,Consolas,monospace}.map-none{font-size:8px;fill:#8a7a6a;font-style:italic}.maplink{fill:none;stroke:#b5651d;stroke-width:1;stroke-dasharray:3 2;opacity:.85}
+.inf{fill:#cfe3f7;stroke:#2a6db5}.inf-t{font-size:9.5px;fill:#123a66}
+.pink{fill:#f9b7cf;stroke:#d8588a}.pink-t{font-size:9.5px;fill:#4a1230}
+.note{fill:#fff6b3;stroke:#c9ad2a}.note-t{font-size:9.5px;fill:#4a3d00}
+.flow{fill:none;stroke:#333;stroke-width:2}
+</style>
+</head>
+<body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#888;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#fff;font-weight:700;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="cj2-context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ3</span><a style="color:#ddd;margin-right:14px" href="cj3-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj3-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj3-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj3-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj3-context.html">5 Context</a></nav>
+<header><h1>CJ2 "Order to Kitchen to Served" on Marcel's 5-layer Enterprise Architecture template · proof v0.4 (6 Nov 2026: Kobas API endpoints mapped to layer 3 methods, integration surfaces)</h1>
+<p>Lanes as on the Maki Miro template (top to bottom): UX Workflow · Business Processes · Service Contracts · System · Infrastructure. Columns = journey stages. <b>Service Contracts lane: Maki has none yet.</b> Dashed boxes are CANDIDATE contracts derived from the CJ2 derived stories; CJ1 candidates reused where the same service is meant (Se05, Se06, Se08, Se09, Se11). v0.3 adds the <b>integration surfaces</b> strip: Kobas API v3, Slerp order webhook, Trifft API.</p></header>
+<div id="wrap"><svg id="b" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<script src="ea-api-surfaces.js"></script>
+<script>
+window.EA={
+ stages:["s1 Order captured","s2 Tab and table","s3 Kitchen ticket","s4 Prepared","s5 Served / handed over","s6 Tab closed"],
+ ux:[["Kobas QR page","Kobas iPad","Kobas till","Slerp shop","Deliveroo app"],["Kobas table plan","Open tabs"],["Printer ticket","Slerp feed"],["Pass / expo","Mapal spec"],["Table service","Collection counter","Rider handover"],["Kobas payment","Receipt","Cash log"]],
+ proc:[[["CJ2.s1.u1","Orders by QR (Kobas)"],["CJ2.s1.u2","FOH takes order, iPad / till"],["CJ2.s1.u4","Delivery via Deliverect into Kobas"]],[["CJ2.s2.u1","Tab and table kept right"]],[["CJ2.s3.u1","Order reaches the kitchen"]],[["CJ2.s4.u1","Made to spec, bumped"]],[["CJ2.s5.u1","Guest receives the food"]],[["CJ2.s6.u1","Tab settled, table turned"]]],
+ contracts:[
+  [["Se08 EPoS Order (hub)",["openTab(Venue,Table,Covers)","addItems(Tab,Items[],Modifiers[])","sendOrder(Tab)"]],["Se14 QR Order-at-Table",["openQrSession(Venue,Table)","charge(Tab,Method)","submitOrder(Tab)"]],["Se05 Delivery Ordering (Slerp)",["placeOrder(Basket,Guest) via Deliverect"]],["Se06 Marketplace Ordering (Deliveroo)",["injectOrder(MktOrder,LocationId)"]]],
+  [["Se15 Table Management",["transferTab(Tab,Table)","splitTab(Tab,Parts)","voidItem(Tab,Line,Reason,Authoriser)"]]],
+  [["Se09 Kitchen Ticket",["dispatchToKitchen(Order): Ticket[] to printers"]]],
+  [["Se16 Recipe / Spec",["getSpec(Item): Recipe","bumpTicket(Ticket)"]]],
+  [["Se17 Fulfilment / Handover",["serve(Ticket,Table,Seat)","notifyReady(Order)","handover(Order)","assignCourier / pickup / deliver(Order)"]]],
+  [["Se11 Sales Ledger",["closeTab(Tab,Payment[])","freeTable(Table)","settle(Batch)"]]]],
+ sys:[["Co7 Kobas front end: QR, iPad, till","Co8 Slerp (via Deliverect)","Co9 Deliveroo (via Deliverect)","Co19 Deliverect (into Kobas)","Co20 Worldpay (QR; pink 1)","Co14 Stripe (Slerp)"],["Co7 Kobas tables / tabs"],["Co7 Kobas kitchen print","Co21 Kitchen printers (no KDS)"],["Co22 Mapal (recipes, allergens)","Co7 Kobas allergens (+ Slerp, Trifft copies)"],["Co9 Deliveroo couriers (Deliveroo + Slerp)","Co8 Slerp collection notifications"],["Co7 Kobas cash log (Delivery = Slerp + Deliveroo)","Co13 Dojo terminals","Co15 Xero","Co18 ops Auto Cash Up"]],
+ pinks:[["1 QR acquirer: Worldpay, Stripe or Slerp?"],["5 void reason captured?"],["6 station routing rules where?"],["7 allergen master of five copies?"],[],[]],
+ apiMap:[
+  [{m:"GET",p:"/integrations/venue-sales",to:"Se08",op:"getOrders(Venue, Hour): Order[] source, mode, tab, items"},
+   {none:"no API for openQrSession / openTab / addItems / sendOrder:",note:"orders enter only through the Kobas front end and Deliverect"}],
+  [{m:"GET/POST/PUT",p:"/reservation[/:id]",to:"Se15",op:"bookings only (Kobas module unused; Dojo is live)"},
+   {none:"no API for transferTab / splitTab / voidItem: EPoS only"}],
+  [{none:"no API for dispatchToKitchen: Kobas prints internally"}],
+  [{m:"GET",p:"/stock-item[/:id]",to:"Se16",op:"getItem(Item): PLU, category (allergen copy?)"},
+   {m:"GET",p:"/integrations/venue-sales (recipe=1)",to:"Se16",op:"getSpec(Item): recipe lines as sold"}],
+  [{none:"no Kobas endpoint: handover is Slerp (webhook) and Deliveroo"}],
+  [{m:"GET",p:"/venue/payments",to:"Se11",op:"closeTab read-back: Payment[] per tab, tips"},
+   {m:"GET",p:"/integrations/venue-sales",to:"Se11",op:"getSales(Venue, Hour): Order[] payments, discounts"}]
+ ],
+ api:window.EA_API,
+ infra:["Vendor cloud (Kobas, Slerp, Deliveroo, Deliverect, Dojo, Worldpay, Stripe, Mapal, Xero) plus on-site devices: iPads, tills, kitchen printers (no KDS). Data entities per vendor, see Ontology page.","GitHub cloud: makiramen/ops Pages + Actions"],
+ procH:230, contractH:215, contractSub:"lane 3 · NONE YET · candidates derived from CJ2"
+};
+</script>
+<script src="ea-layers-render.js"></script>
+</body></html>

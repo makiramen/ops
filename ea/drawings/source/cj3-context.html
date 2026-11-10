@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ3 context package (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+#wrap{overflow:auto;padding:16px 20px 40px}svg{display:block;background:#fff;border:1px solid #cfcfcf}
+.grp{fill:#fafaf8;stroke:#999;stroke-width:1.2}.grp-t{font-size:12px;font-weight:700;fill:#444}
+.co{fill:#fbd8b0;stroke:#d97a16;stroke-width:1.3}.co-t{font-size:10.5px;fill:#5a3000;font-weight:700}.co-s{font-size:9.5px;fill:#6b4a1a}
+.se{fill:#d4efcf;stroke:#2f7d2b;stroke-width:1.3}.se-t{font-size:10px;fill:#163a14}
+.inf{fill:#cfe3f7;stroke:#2a6db5}.inf-t{font-size:10px;fill:#123a66}
+.pk{fill:#f9b7cf;stroke:#d8588a}.pk-t{font-size:9.5px;fill:#4a1230}
+.e{fill:none;stroke:#444;stroke-width:1.6}.ed{fill:none;stroke:#b03060;stroke-width:1.4;stroke-dasharray:5 4}.em{fill:none;stroke:#999;stroke-width:1.2;stroke-dasharray:2 3}
+.el{font-size:9px;fill:#333;paint-order:stroke;stroke:#fff;stroke-width:3px}
+.eld{font-size:9px;fill:#b03060;paint-order:stroke;stroke:#fff;stroke-width:3px}
+</style>
+</head>
+<body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#888;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="cj2-context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ3</span><a style="color:#ddd;margin-right:14px" href="cj3-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj3-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj3-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj3-ontology.html">4 Ontology</a><a style="color:#fff;font-weight:700;margin-right:14px" href="cj3-context.html">5 Context</a></nav>
+<header><h1>CJ3 «context» package · components and money paths · proof v0.1 (6 Nov 2026)</h1>
+<p>Orange = «Co» component, green = «Se» services it provides, blue = infrastructure. Solid arrow = confirmed (Michael, Finance Task Manual, or Kobas extraction flag). Dashed red = unconfirmed, pink number = open clarification. Gross sales live in Kobas on the day; net money arrives in the banks days later: the journey is the reconciliation between the two.</p></header>
+<div id="wrap"><svg id="b" xmlns="http://www.w3.org/2000/svg" width="1260" height="900"></svg></div>
+<script>
+const G=[
+ ["pos","Point of sale (s1, s2)",20,60,320,330],["onl","Online and marketplace (s1, s3)",20,430,320,290],
+ ["acq","Acquiring and settlement (s3)",380,60,400,200],["bank","Banking (s4)",380,300,400,160],["books","Books (s5, s6)",380,500,400,220],
+ ["ops","In-house reporting (s6)",820,60,400,200],["ppl","People (s2, s3, s6)",820,300,400,200],["cash","Cash (s2, s4)",820,540,400,180]];
+const C={
+ Co7:["Co7","Kobas: tab, payments by method, discounts, tips, receipts, cash log, Z, Xero importer",40,90,280,44],
+ Co13:["Co13","Dojo terminals (Kobas Connect; stand-alone PDQ on some venues)",40,150,280,30],
+ QR:["Co20","Worldpay: Kobas QR order-at-table (pink 1)",40,200,280,30],
+ Daily:["Co7","Kobas /data reports: cash log, sales mix, item sales (bot user)",40,250,280,30],
+ Co8:["Co8","Slerp: shop, Stripe checkout, order webhook",40,460,280,30],
+ Co14:["Co14","Stripe: Slerp payouts (pink 10)",40,510,280,30],
+ Co9:["Co9","Deliveroo: holds guest payment, weekly statement net of commission (pink 11)",40,560,280,44],
+ Co19:["Co19","Deliverect: Slerp and Deliveroo orders into Kobas (Other: delivery partner)",40,620,280,44],
+ DojoA:["Co13","Dojo acquiring: batch, settle T+n, fees (pink 9)",400,90,360,30],
+ WpA:["Co20","Worldpay settlement (QR)",400,140,360,30],
+ Partners:["Co14 / Co9","Stripe payout · Deliveroo payout",400,190,360,30],
+ Co23:["Co23","Company bank accounts, one per legal entity; which bank (pink 12)",400,330,360,44],
+ Feed:["Co15","Xero bank feeds",400,390,360,30],
+ Co15:["Co15","Xero: 6 orgs (venue to org map, pink 7): sales journal, bank rec, MA",400,530,360,44],
+ Co24:["Co24","Hubdoc: purchase, commission and fee invoices into Xero",400,590,360,30],
+ Imp:["Co7","Kobas Xero importer per venue (xero_enabled, pink 13)",400,640,360,30],
+ Co18:["Co18","makiramen/ops: Kobas_Daily pull, kpi_auto, cashup_feed (GitHub Actions)",840,90,360,44],
+ Co26:["Co26","Google Sheets: Auto Cash Up, 3 Daily Z Reports, 20 site KPI sheets",840,150,360,44],
+ GM:["site","A6 Site manager: counts, declares, closes the day",840,330,360,30],
+ Fin:["site","A7 Finance: Monica directs, Junna sales input, Lee Ting checks; MA by the 7th",840,380,360,44],
+ Mkt:["site","A3 Marketing: reconciles Slerp and Deliveroo payouts",840,440,360,30],
+ Safe:["site","Safe, float, petty cash at the site (pink 8)",840,570,360,30],
+ Dep:["Bank","Cash deposit route: branch or collection (pink 8)",840,620,360,30]};
+const S=[["Se10 Payment · Se11 Sales Ledger · Se18 Cash Up",40,300,280],["Se19 Settlement",400,230,360],["Se20 Banking",400,430,360],["Se21 Ledger Posting",400,680,360],["Se22 Reconciliation and Reporting",840,230,360],["Se22 (people side)",840,490,360]];
+const E=[
+ ["Co13","Co7","takePayment PDQ","e"],["QR","Co7","payment on the tab","e"],["Co19","Co7","injectOrder, Payment type Other","e"],["Co8","Co19","orders","e"],["Co9","Co19","orders","e"],["Co8","Co14","charge","e"],
+ ["Co13","DojoA","batch","e"],["QR","WpA","batch","d"],["Co14","Partners","payout","e"],["Co9","Partners","payout net","e"],
+ ["DojoA","Co23","settle T+n","d"],["WpA","Co23","settle","d"],["Partners","Co23","payout (pink 10, 11)","d"],
+ ["Co23","Feed","bank feed","e"],["Feed","Co15","bank transactions","e"],
+ ["Co7","Imp","cash log per venue","e"],["Imp","Co15","sales journal (pink 7, 13)","d"],["Co24","Co15","invoices","e"],["Co9","Co24","statement (pink 11)","d"],
+ ["Daily","Co18","/data pull","e"],["Co18","Co26","feedCashUp","e"],["Co26","GM","flagVariance","m"],
+ ["GM","Co7","declarePayments, closeSession","e"],["Fin","Co15","reconcile, closeMonth","e"],["Mkt","Partners","reconcilePayout","e"],
+ ["GM","Safe","cash to safe","d"],["Safe","Dep","deposit","d"],["Dep","Co23","credited","d"]];
+let o=[];
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+G.forEach(g=>o.push(`<rect class="grp" x="${g[2]}" y="${g[3]}" width="${g[4]}" height="${g[5]}" rx="4"/><text class="grp-t" x="${g[2]+10}" y="${g[3]+18}">«context» ${esc(g[1])}</text>`));
+const ctr=id=>{const c=C[id];return {x:c[2]+c[4]/2,y:c[3]+c[5]/2,l:c[2],r:c[2]+c[4],t:c[3],b:c[3]+c[5]}};
+E.forEach(e=>{const a=ctr(e[0]),b=ctr(e[1]);let x1,y1,x2,y2;
+  if(Math.abs(a.x-b.x)>Math.abs(a.y-b.y)){ if(a.x<b.x){x1=a.r;x2=b.l}else{x1=a.l;x2=b.r} y1=a.y;y2=b.y; }
+  else { if(a.y<b.y){y1=a.b;y2=b.t}else{y1=a.t;y2=b.b} x1=a.x;x2=b.x; }
+  const mx=(x1+x2)/2,my=(y1+y2)/2; const cls=e[3]=="e"?"e":e[3]=="d"?"ed":"em";
+  o.push(`<path class="${cls}" d="M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}" marker-end="url(#${cls=="ed"?"ad":"a"})"/>`);
+  if(e[2]) o.push(`<text class="${cls=="ed"?"eld":"el"}" x="${mx}" y="${my-3}" text-anchor="middle">${esc(e[2])}</text>`);
+});
+Object.values(C).forEach(c=>{o.push(`<rect class="co" x="${c[2]}" y="${c[3]}" width="${c[4]}" height="${c[5]}" rx="2"/><text class="co-t" x="${c[2]+8}" y="${c[3]+13}">«${c[0]}»</text>`);
+  let lines=[c[1]]; if(c[5]>30){const i=c[1].indexOf(",",38)>0?c[1].indexOf(",",38)+1:c[1].indexOf(" ",44); lines=[c[1].slice(0,i),c[1].slice(i).trim()];}
+  lines.forEach((l,k)=>o.push(`<text class="co-s" x="${c[2]+8}" y="${c[3]+26+k*11}">${esc(l)}</text>`));});
+S.forEach(s=>o.push(`<rect class="se" x="${s[1]}" y="${s[2]}" width="${s[3]}" height="24" rx="2"/><text class="se-t" x="${s[1]+8}" y="${s[2]+16}">«provides» ${esc(s[0])}</text>`));
+o.push(`<rect class="inf" x="20" y="760" width="1200" height="34" rx="3"/><text class="inf-t" x="32" y="781">Infrastructure (lane 1): vendor cloud for Kobas, Dojo, Worldpay, Stripe, Deliveroo, Deliverect, Xero, Hubdoc · bank portals and feeds · on-site: tills, terminals, safe · GitHub cloud and Google Sheets for Co18 / Co26 · Service Contracts: none yet, candidates on page 2</text>`);
+o.push(`<rect class="pk" x="20" y="810" width="1200" height="54" rx="2"/><text class="pk-t" x="32" y="826">Open before this package is final: 7 venue to Xero org map · 8 cash route · 9 Dojo settlement and fees · 10 Stripe payout · 11 Deliveroo statement and capture · 12 bank accounts per entity · 13 Kobas Xero importer scope</text><text class="pk-t" x="32" y="841">14 tips / service charge posting · 15 refunds, deposits, vouchers · 16 daily reconciliation owner · 1 QR acquirer (CJ2)</text><text class="pk-t" x="32" y="856">Confirmed: Dojo via Kobas Connect (extraction); xero_enabled per venue, 6 orgs (extraction); Slerp and Deliveroo in the cash log under Delivery, marketing reconciles payouts (Michael 6 Nov); Payments = Sales rule (Kobas help); MA by the 7th, Junna sales input (Finance Task Manual).</text>`);
+document.getElementById("b").innerHTML=`<defs><marker id="a" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9z" fill="#444"/></marker><marker id="ad" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto"><path d="M0,0 L9,4.5 L0,9z" fill="#b03060"/></marker></defs>`+o.join("");
+</script>
+</body></html>

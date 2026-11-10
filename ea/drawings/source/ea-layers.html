@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CJ1 · Enterprise Architecture 5-layer view (proof)</title>
+<style>
+html,body{margin:0;background:#f4f4f2;font-family:"Helvetica Neue",Arial,sans-serif;color:#222}
+nav{padding:8px 20px;background:#222;font-size:13px}nav a{color:#ddd;margin-right:18px;text-decoration:none}nav a.on{color:#fff;font-weight:700}
+header{padding:12px 20px;background:#fff;border-bottom:1px solid #ddd}header h1{font-size:16px;margin:0 0 4px;font-weight:600}header p{margin:0;font-size:12px;color:#555}
+#wrap{overflow:auto;padding:16px 20px 40px}svg{display:block;background:#fff;border:1px solid #cfcfcf}
+.lane{stroke:#8a8a8a;stroke-width:1.2}.lab{fill:#f1f1ee;stroke:#8a8a8a}
+.lt{font-size:12px;font-weight:700;fill:#333}.ls{font-size:10px;fill:#666}
+.col{font-size:10.5px;font-weight:700;fill:#444}
+.scr{fill:#e9e9e9;stroke:#888;stroke-dasharray:4 3}.scr-t{font-size:9.5px;fill:#444}
+.st{fill:#bfe6b8;stroke:#3f8a3a;stroke-width:1.4}.st-t{font-size:10px;fill:#143d12;font-weight:600}.st-i{font-size:8.5px;fill:#2e6b2a}
+.sc{fill:#fff;stroke:#2f7d2b;stroke-width:1.3;stroke-dasharray:5 3}.sc-t{font-size:9.5px;fill:#163a14;font-weight:700}.sc-o{font-size:8.5px;fill:#1f7a1f;font-family:Menlo,Consolas,monospace}
+.co{fill:#fbd8b0;stroke:#d97a16;stroke-width:1.3}.co-t{font-size:9.5px;fill:#5a3000;font-weight:700}.co-s{font-size:8.5px;fill:#6b4a1a}
+.api{fill:#fff8f0;stroke:#d97a16;stroke-width:1.2;stroke-dasharray:6 3}.api-h{font-size:9px;font-weight:700;fill:#8a4a00;letter-spacing:.4px}.api-t{font-size:9.5px;fill:#5a3000;font-weight:700}.api-s{font-size:8.3px;fill:#4a3a2a}.api-u{font-size:8px;fill:#1f5fa8;font-family:Menlo,Consolas,monospace}
+.map{fill:#fffdf7;stroke:#b5651d;stroke-width:1.1}.map-h{font-size:8.5px;font-weight:700;fill:#8a4a00}.map-ep{font-size:8.5px;fill:#3a2a1a;font-family:Menlo,Consolas,monospace;font-weight:700}.map-op{font-size:8.3px;fill:#1f7a1f;font-family:Menlo,Consolas,monospace}.map-none{font-size:8px;fill:#8a7a6a;font-style:italic}.maplink{fill:none;stroke:#b5651d;stroke-width:1;stroke-dasharray:3 2;opacity:.85}
+.inf{fill:#cfe3f7;stroke:#2a6db5}.inf-t{font-size:9.5px;fill:#123a66}
+.pink{fill:#f9b7cf;stroke:#d8588a}.pink-t{font-size:9.5px;fill:#4a1230}
+.note{fill:#fff6b3;stroke:#c9ad2a}.note-t{font-size:9.5px;fill:#4a3d00}
+.flow{fill:none;stroke:#333;stroke-width:2}
+</style>
+</head>
+<body>
+<nav style="padding:8px 20px;background:#222;font-size:13px;line-height:2"><span style="color:#888;margin-right:10px">CJ1</span><a style="color:#ddd;margin-right:14px" href="index.html">1 Swimlane</a><a style="color:#fff;font-weight:700;margin-right:14px" href="ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="context.html">5 Context</a><span style="color:#888;margin-right:10px">CJ2</span><a style="color:#ddd;margin-right:14px" href="cj2-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj2-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj2-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj2-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:24px" href="cj2-context.html">5 Context</a><span style="color:#f90;margin-right:10px">CJ3</span><a style="color:#ddd;margin-right:14px" href="cj3-index.html">1 Swimlane</a><a style="color:#ddd;margin-right:14px" href="cj3-ea-layers.html">2 EA layers</a><a style="color:#ddd;margin-right:14px" href="cj3-sequence.html">3 Sequences</a><a style="color:#ddd;margin-right:14px" href="cj3-ontology.html">4 Ontology</a><a style="color:#ddd;margin-right:14px" href="cj3-context.html">5 Context</a></nav>
+<header><h1>CJ1 "PPC to Paying" on Marcel's 5-layer Enterprise Architecture template · proof v0.6 (6 Nov 2026: Kobas API endpoints mapped to layer 3 methods, integration surfaces)</h1>
+<p>Lanes as on the Maki Miro template (top to bottom): UX Workflow · Business Processes (Channels and Customer Relationship) · Service Contracts · System · Infrastructure. Columns = journey stages. <b>Service Contracts lane: Maki has none yet.</b> The dashed boxes are CANDIDATE contracts derived from the CJ1 derived stories (one per «Se», operations in green). v0.5 adds the <b>integration surfaces</b> strip: Kobas API v3, Slerp order webhook, Trifft API, the layer 2 interfaces that layer 3 domain services can be built on.</p></header>
+<div id="wrap"><svg id="b" xmlns="http://www.w3.org/2000/svg"></svg></div>
+<script src="ea-api-surfaces.js"></script>
+<script>
+window.EA={
+ stages:["s1 Ad / lead gen","s2 Discover","s3 Order / book","s4 Pay","s5 Loyalty","s6 Review"],
+ ux:[["Meta ad","Google ad","TikTok ad"],["makiramen.com","Google Business Profile","Instagram"],["Kobas QR at table","Kobas iPad (staff)","Kobas till","Slerp shop","Deliveroo app","Booking widget"],["Card terminal","Kobas QR checkout","Slerp checkout","Deliveroo checkout","Till payment"],["Trifft app","QR scan at till","Reward screen"],["Google review prompt","Review card","Deliveroo rating"]],
+ proc:[[["CJ1.s1.u1","Sees an ad, taps it"]],[["CJ1.s2.u1","Finds venue, menu, hours"]],[["CJ1.s3.u3","Orders in venue: QR / iPad / till"],["CJ1.s3.u1","Orders delivery (Slerp, Deliveroo) via Deliverect"],["CJ1.s3.u2","Books a table"]],[["CJ1.s4.u1","Pays"]],[["CJ1.s5.u1","Shows Trifft QR, earns / redeems"],["CJ1.s5.u2","Signs up"]],[["CJ1.s6.u1","Leaves a review"]]],
+ contracts:[
+  [["Se01 Ad Delivery",["serveAd(Audience,Creative)","recordClick(AdId,Session)"]],["Se02 Attribution",["redirect(LandingUrl,UTM)"]]],
+  [["Se03 Venue Information",["listVenues(Location)","getVenueProfile(VenueId)"]],["Se04 Menu",["getMenu(VenueId,Channel)"]]],
+  [["Se08 EPoS Order (hub, Kobas)",["openQrSession(Venue,Table)","openTab(..)","addItems(..)","receiveOrder(Order) from Deliverect"]],["Se09 Kitchen Ticket",["dispatchToKitchen(Order) to printers"]],["Se05 Delivery Ordering (Slerp) feeds Se08",["createBasket(..)","applyPromotion(..)","placeOrder(..) via Deliverect"]],["Se06 Marketplace Ordering feeds Se08",["placeOrder(..) via Deliverect"]],["Se07 Booking",["getAvailability(..)","createBooking(..)"]]],
+  [["Se10 Payment",["takePayment(Tab,Amount,Method)","charge(Order,PaymentMethod)","settle(Batch)"]],["Se11 Sales Ledger",["closeTab(Tab,Payment[])","applyDiscount(Tab,Discount)"]]],
+  [["Se12 Loyalty",["identifyMember(QR)","earn(Member,Sale)","redeem(Member,Reward)","createMember(Guest)"]]],
+  [["Se13 Review",["requestReview(Visit)","collectReview(VenueId)","classify(Review)"]]]],
+ sys:[["Co1 Meta Ads + Pixel","Co2 Google Ads + Tag","Co3 TikTok Ads + Pixel"],["Co5 Website (WordPress)","Co6 Google Business Profile","Co7 Kobas (menu, items, price bands)"],["Co7 Kobas front end: QR, iPads, tills, tabs (hub)","Co8 Slerp (via Deliverect into Kobas)","Co9 Deliveroo","Co19 Deliverect (into Kobas)","Co12 Dojo Bookings (not into Kobas)"],["Co7 Kobas (all payments on the tab, cash log)","Co13 Dojo terminals (Kobas Connect)","Co20 Worldpay (order-at-table)","Co14 Stripe (via Slerp)","Co15 Xero (per venue)","Co18 ops Auto Cash Up"],["Co16 Trifft","Co7 Kobas customer / discount","Co17 Klaviyo"],["Co6 Google Business Profile","Co9 Deliveroo ratings","Co18 ops reviews pull","Co17 Klaviyo"]],
+ pinks:[["5 landing page / UTM / closed loop: marketing to answer"],[],["6 QR payment acquirer: Worldpay, Stripe or Slerp?"],["7 which Xero org per venue, where payouts land: see CJ3"],[],[]],
+ apiMap:[
+  [{none:"no Kobas endpoint: ads and pixels are Meta, Google, TikTok"}],
+  [{m:"GET",p:"/venue[/:id]",to:"Se03",op:"listVenues(Location) / getVenueProfile(VenueId)"},
+   {m:"GET",p:"/stock-item[/:id]",to:"Se04",op:"getMenu(VenueId, Channel): Item[] PLU, price band"},
+   {m:"GET",p:"/system-option/value/:o_name",to:"Se03",op:"getVenueProfile: options"}],
+  [{m:"GET/POST/PUT",p:"/reservation[/:id]",to:"Se07",op:"createBooking / updateBooking (Kobas module, unused)"},
+   {m:"PUT",p:"/reservation/:id/status/:status",to:"Se07",op:"cancel / noshow(Booking)"},
+   {m:"GET",p:"/integrations/venue-sales",to:"Se08",op:"getOrders(Venue, Hour): Order[] source, mode, tab"},
+   {none:"no API for openTab / addItems / sendOrder: EPoS, QR, Deliverect"}],
+  [{m:"GET",p:"/venue/payments",to:"Se11",op:"getPayments(Venue, Day): Payment[] cash, card, other"},
+   {m:"GET",p:"/discount",to:"Se11",op:"listDiscounts(): Discount[] £5 / £10 / £20 vouchers"},
+   {m:"GET/POST/PUT",p:"/gift-card[/:id]",to:"Se10",op:"issueGiftCard / redeemGiftCard(Card)"},
+   {none:"no API for takePayment / charge / settle: acquirers"}],
+  [{m:"GET/POST/PUT",p:"/customer[/:id]",to:"Se12",op:"createMember(Guest) / updateMember / search"},
+   {m:"POST",p:"/customer/:id/voucher",to:"Se12",op:"redeem(Member, Reward): Voucher on the customer"},
+   {m:"POST/DELETE",p:"/customer/:id/identity",to:"Se12",op:"identifyMember(QR): link an identity"},
+   {m:"GET/POST/PUT",p:"/loyalty-tag[/:id]",to:"Se12",op:"tagMember(Member, Tag) (segments)"}],
+  [{none:"no Kobas endpoint: reviews are Google and Deliveroo"}]
+ ],
+ api:window.EA_API,
+ infra:["Vendor cloud: every component above is SaaS run by its vendor (Meta, Google, TikTok, Kobas, Slerp, Deliveroo, Deliverect, Dojo, Stripe, Xero, Trifft, Klaviyo). Data entities per vendor, see Ontology page.","GitHub cloud: makiramen/ops Pages + Actions"],
+ procH:215, contractH:345, contractSub:"lane 3 · NONE YET · candidates derived from CJ1"
+};
+</script>
+<script src="ea-layers-render.js"></script>
+</body></html>
