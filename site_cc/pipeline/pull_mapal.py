@@ -15,7 +15,7 @@ from common import site,save,sheet_values
 ap=argparse.ArgumentParser();ap.add_argument('--site',required=True);ap.add_argument('--data',required=True)
 ap.add_argument('--check',action='store_true');ap.add_argument('--csv');ap.add_argument('--csv-answers')
 A=ap.parse_args()
-S,C=site(A.site);SRC=S['sources']['mapal_broker'];LOC=C.get('mapal_location')
+S,C=site(A.site);SRC=S['sources']['mapal_broker'];LOC=C.get('mapal_location');LOCS={LOC,*C.get('mapal_aliases',[])}   # aliases = old Mapal names of the same site (Newcastle renamed Maki NE1 Ltd 08/10/2026)
 if not LOC:print(f'mapal {A.site}: no Mapal location in sites.json, feed stays n/a');sys.exit(0)
 rows=list(csv.reader(open(A.csv,encoding='utf-8'))) if A.csv else sheet_values(SRC['id'],"'forms'!A:O")
 if not rows or rows[0][:4]!=['form_id','form_name','location','date']:sys.exit('forms tab missing or layout changed; last good file kept')
@@ -28,7 +28,7 @@ def clean(x):return re.sub(r'\s{2,}',' ',re.sub(r'\s*[—–]\s*',', ',str(x or 
 num=lambda x:float(x) if str(x).strip() not in ('',) else None
 f=[]
 for r in R:
-    if r['location'].strip()!=LOC:continue
+    if r['location'].strip() not in LOCS:continue
     f.append([r['date'][:10],r['form_name'].strip(),num(r['pct']),num(r['score']),num(r['max_score']),int(num(r['deviations']) or 0),
               int(num(r['open_deviations']) or 0),r['auditor'].strip(),[tidy(x) for x in r['deviation_items'].split('|') if x.strip()],str(r['form_id']).strip(),r.get('url','').strip()])
 f.sort(key=lambda x:(x[0],x[1]))
