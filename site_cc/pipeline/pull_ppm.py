@@ -20,13 +20,13 @@ def addm(d,m):
     y,mo=d.year,d.month+int(m);y+=(mo-1)//12;mo=(mo-1)%12+1
     try:return d.replace(year=y,month=mo)
     except ValueError:return d.replace(year=y,month=mo,day=28)
-LOC=C.get('mapal_location');hits=0;asof=src['asof']
+LOC=C.get('mapal_location');LOCS={LOC,*C.get('mapal_aliases',[])};hits=0;asof=src['asof']
 if LOC and it:
     try:rows=sheet_values(S['sources']['mapal_broker']['id'],"'certs'!A:H")
     except Exception as e:rows=[];print('certs tab not readable, schedule dates kept:',str(e)[:120])
     if rows and rows[0][:4]==['form_id','form_name','location','date']:
         H=rows[0];F=[dict(zip(H,r+['']*(len(H)-len(r)))) for r in rows[1:] if r and r[0]]
-        mine=[f for f in F if f['location'].strip()==LOC and f['date'][:10]]
+        mine=[f for f in F if f['location'].strip() in LOCS and f['date'][:10]]
         for x in it:
             key=x[0].lower();best=None
             for pk,fk in MATCH:
