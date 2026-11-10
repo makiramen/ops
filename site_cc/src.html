@@ -132,6 +132,8 @@ h2{margin:2px 0 0;font-size:22px;font-weight:800;letter-spacing:-.01em;text-wrap
 
 /* scorecard */
 .tscroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+/* 10/11/2026 (Michael): onboarding tracker table, plain ticks centred under each column, subtitles explain what each tick covers */
+.onbtab th.c,.onbtab td.c{text-align:center}.onbtab th .sub{display:block;font-weight:500;font-size:10px;letter-spacing:0;text-transform:none;color:var(--ink-3);margin-top:2px;white-space:normal;max-width:150px;margin-left:auto;margin-right:auto}.onbtab .tk{display:inline-block;width:22px;height:22px;line-height:22px;border-radius:999px;font-weight:800;font-size:13px}.onbtab .tk-y{background:var(--green-bg);color:var(--green-ink)}.onbtab .tk-n{background:var(--red-bg);color:var(--red-ink)}.onbtab input[type=checkbox]{width:16px;height:16px;accent-color:var(--maki-orange);cursor:pointer;vertical-align:middle}.onbtab .rtw{font-weight:700;white-space:nowrap}.onbtab .rtw-r{color:var(--red-ink)}.onbtab .rtw-a{color:var(--amber-ink)}.onbtab .rtw-g{color:var(--green-ink)}.onbtab .rtw-n{color:var(--ink-3);font-weight:500}
 table{width:100%;border-collapse:collapse;font-size:13.5px}
 th{text-align:left;font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-2);font-weight:800;padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
 td{padding:10px;border-bottom:1px solid #eef1f6;vertical-align:middle}
@@ -1894,26 +1896,27 @@ function renderComp2(){var hasP=PPM.items&&PPM.items.length,rows=hasP?ppmRows():
    A tick on the page is optimistic: shown at once, POSTed to the web app (op 'onb') which sets the cell TRUE in the tracker, reverted with a toast if the
    sheet says no. S.onb keeps ticks made on this device until the nightly build carries them; onbPull() merges the live sheet on open and every minute. */
 var ONB_COLS=(TEAM.cols&&TEAM.cols.length)?TEAM.cols:[['D','HR docs'],['E','Passport & RTW'],['G','Operational tasks'],['H','Contract released']];
+var ONB_SUB={'D':'Starter and HMRC checklists, health record, handbook, staff guide, company policy','E':'Document seen and checked','G':'Mapal account (allergen and alcohol), Kobas account, MRSOS flow training','H':'Hiring complete'};
 if(!S.onb||typeof S.onb!=='object')S.onb={};
 function onbRows(){var R=TEAM.rows||[];R.forEach(function(r){ONB_COLS.forEach(function(c,i){if(S.onb[r[0]+'|'+c[0]])r[3][i]=true})});return R}
 function rtwInfo(r){var x=r[4]||[null,null],d=x[0],note=x[1]||'';if(!d)return {d:null,days:null,rag:'n',txt:note||'Not on tracker',note:note};
   var days=Math.round((new Date(d+'T00:00:00')-new Date(NOWD+'T00:00:00'))/864e5),rag=days<0?'r':days<=30?'r':days<=90?'a':'g';
   return {d:d,days:days,rag:rag,txt:days<0?'Expired '+(-days)+'d ago':days===0?'Expires today':days+' days left',note:note}}
-function rtwCell(r){var i=rtwInfo(r);if(!i.d)return '<td class="small">'+esc(i.txt)+'</td>';
-  return '<td><span class="pill p-'+i.rag+'">'+(i.rag==='r'?'✕ ':i.rag==='a'?'! ':'✓ ')+dmy(i.d)+' · '+i.txt+'</span>'+(i.note?'<div class="mini">'+esc(i.note)+'</div>':'')+'</td>'}
+function rtwCell(r){var i=rtwInfo(r);if(!i.d)return '<td class="c"><span class="rtw rtw-n">'+esc(i.txt)+'</span></td>';
+  return '<td class="c"><span class="rtw rtw-'+i.rag+'">'+dmy(i.d)+'</span><div class="mini">'+i.txt+'</div>'+(i.note?'<div class="mini">'+esc(i.note)+'</div>':'')+'</td>'}
 function rtwWatch(){return onbRows().map(function(r){return {r:r,i:rtwInfo(r)}}).filter(function(x){return x.i.d&&x.i.rag!=='g'}).sort(function(a,b){return a.i.days-b.i.days})}
 function onbMiss(r){return ONB_COLS.filter(function(c,i){return !r[3][i]}).map(function(c){return c[1]})}
 function onbStats(){var R=onbRows(),done=R.filter(function(r){return !onbMiss(r).length});return {hc:R.length,done:done.length,pend:R.filter(function(r){return onbMiss(r).length})}}
 function onbCell(r,i){var c=ONB_COLS[i];
-  return r[3][i]?'<td><span class="pill p-g">✓ Done</span></td>':'<td><label class="onbt" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-onb="'+r[0]+'|'+c[0]+'" aria-label="Tick '+c[1]+' for '+esc(r[2])+'"><span class="pill p-r">✕ Outstanding</span></label></td>'}
-function onbTable(rows,grouped){if(!rows.length)return '';var h='<div class="tscroll"><table><thead><tr><th>Name</th><th>Team</th>'+ONB_COLS.map(function(c){return '<th>'+c[1]+'</th>'}).join('')+'<th>RTW expiry</th></tr></thead><tbody>',last=null;
+  return r[3][i]?'<td class="c"><span class="tk tk-y" title="'+c[1]+' done">✓</span></td>':'<td class="c"><label class="onbt" title="Tick '+c[1]+' for '+esc(r[2])+'" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><span class="tk tk-n" aria-hidden="true">✕</span><input type="checkbox" data-onb="'+r[0]+'|'+c[0]+'" aria-label="Tick '+c[1]+' for '+esc(r[2])+'"></label></td>'}
+function onbTable(rows,grouped){if(!rows.length)return '';var h='<div class="tscroll"><table class="onbtab"><thead><tr><th>Name</th><th>Team</th>'+ONB_COLS.map(function(c){return '<th class="c">'+c[1]+(ONB_SUB[c[0]]?'<span class="sub">'+ONB_SUB[c[0]]+'</span>':'')+'</th>'}).join('')+'<th class="c">RTW expiry<span class="sub">Red: expired or inside 30 days. Amber: inside 90</span></th></tr></thead><tbody>',last=null;
   rows.forEach(function(r){if(grouped&&r[1]!==last){last=r[1];h+='<tr><td colspan="'+(3+ONB_COLS.length)+'" class="mini" style="background:var(--maki-orange-bg);color:var(--maki-ink);font-weight:700">'+esc(r[1])+'</td></tr>'}
-    var m=onbMiss(r);h+='<tr><td class="mname">'+esc(r[2])+(m.length?'':' <span class="pill p-g" style="margin-left:4px">Complete</span>')+'</td><td class="small">'+esc(r[1])+'</td>'+ONB_COLS.map(function(c,i){return onbCell(r,i)}).join('')+rtwCell(r)+'</tr>'});
+    h+='<tr><td class="mname">'+esc(r[2])+'</td><td class="small">'+esc(r[1])+'</td>'+ONB_COLS.map(function(c,i){return onbCell(r,i)}).join('')+rtwCell(r)+'</tr>'});
   return h+'</tbody></table></div>'}
 function onbFoot(){return '<div class="small" style="margin-top:6px">Live from '+esc(TEAM.src||'the onboarding tracker')+(TEAM.pulled?', read '+dmy(TEAM.pulled):'')+'. Tick a document here and it is ticked in Hanna\'s tracker straight away (and the other way round, on the next build). Untick only in the tracker. HR docs = starter checklist, HMRC checklist, health record, handbook, staff guide, company policy, one tick. RTW expiry from column F of the tracker, days left counted from today: red when expired or inside 30 days, amber inside 90.</div>'}
 function rtwBlock(){var W=rtwWatch(),ex=W.filter(function(x){return x.i.days<0}).length,r30=W.filter(function(x){return x.i.days>=0&&x.i.days<=30}).length,a90=W.length-ex-r30;
   var lab=!W.length?'RTW: nothing expiring inside 90 days':(ex?ex+' expired':'')+(ex&&r30?', ':'')+(r30?r30+' inside 30 days':'')+((ex||r30)&&a90?', ':'')+(a90?a90+' inside 90 days':'');
-  return '<div style="margin-top:10px"><div class="mini">Right to work expiry</div>'+TL(ex||r30?'r':a90?'a':'g',lab)+(W.length?'<div class="tscroll" style="margin-top:6px"><table><thead><tr><th>Name</th><th>Team</th><th>RTW expiry</th></tr></thead><tbody>'+W.map(function(x){return '<tr><td class="mname">'+esc(x.r[2])+'</td><td class="small">'+esc(x.r[1])+'</td>'+rtwCell(x.r)+'</tr>'}).join('')+'</tbody></table></div>':'')+'</div>'}
+  return '<div style="margin-top:10px"><div class="mini">Right to work expiry</div>'+TL(ex||r30?'r':a90?'a':'g',lab)+(W.length?'<div class="tscroll" style="margin-top:6px"><table class="onbtab"><thead><tr><th>Name</th><th>Team</th><th class="c">RTW expiry</th></tr></thead><tbody>'+W.map(function(x){return '<tr><td class="mname">'+esc(x.r[2])+'</td><td class="small">'+esc(x.r[1])+'</td>'+rtwCell(x.r)+'</tr>'}).join('')+'</tbody></table></div>':'')+'</div>'}
 function onbTick(key,box){if(!ASH){box.checked=false;return toast('No web app link on this page, tick it in the tracker')}
   var p=key.split('|'),row=+p[0],col=p[1],r=onbRows().filter(function(x){return x[0]===row})[0];if(!r){box.checked=false;return}
   var i=ONB_COLS.map(function(c){return c[0]}).indexOf(col);S.onb[key]=nowIso();r[3][i]=true;save();renderTeam();toast('Ticked '+ONB_COLS[i][1]+' for '+r[2]+'. Writing to the tracker');
