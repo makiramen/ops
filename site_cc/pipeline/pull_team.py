@@ -8,7 +8,11 @@ who joined and left since then. Keeps the last good file on any failure. --check
 10/11/2026 (Michael): team.json also carries 'rows', a carbon copy of the tracker tab for the page's Onboarding tab and the KPI Sheet
 People section: [sheet row number, section, short name, [HR docs, Passport & RTW, Operational tasks, Contract released] ticks].
 The row number is what the page sends back when someone ticks a document (AsanaSync.gs op 'onb' writes TRUE into that cell after
-checking the name on the row still matches). Columns F (RTW expiry date) and I (RTW expiry tracker) are never copied."""
+checking the name on the row still matches).
+10/11/2026 (Michael): RTW expiry (col F) is now carried too, as a 5th element on each row: ISO date when F holds a date, otherwise the text as typed
+("No limit", "UK/Irish National", "N/A") or null when blank. Col I (the sheet's own "N days left" / "Expired" formula) is read only to pass
+through its non-numeric notes (e.g. "Expired", "Been fired, no RTW"); days left are worked out on the page from today's date, so they stay live.
+Passport and RTW document data beyond the expiry date are still never read out."""
 import argparse,json,os,re
 from common import site,save,sheet_values,today
 ap=argparse.ArgumentParser();ap.add_argument('--site',required=True);ap.add_argument('--data',required=True);ap.add_argument('--check',action='store_true')
@@ -18,7 +22,18 @@ tab=C.get('onboarding_tab')
 if not tab:print(f'team: no onboarding tab for {A.site}, feed shows n/a');raise SystemExit(0)
 P=os.path.join(A.data,'team.json');old=json.load(open(P)) if os.path.exists(P) else {}
 sid=S['sources']['onboarding']['id']
-rows=sheet_values(sid,f"'{tab}'!A1:H200")
+rows=sheet_values(sid,f"'{tab}'!A1:I200")
+import datetime
+def rtw(f,i):
+    """[iso date or None, note text or None]: F parsed as a date in any of the formats Hanna's tabs use; text in F kept as the note; a note in I
+    that is not the sheet's own 'N days left' (e.g. 'Expired', 'Moved to Soho') is appended so the page can show it."""
+    f=re.sub(r'\s+',' ',str(f or '')).strip();i=re.sub(r'\s+',' ',str(i or '')).strip();d=None;note=None
+    for fmt in ('%d/%m/%Y','%d/%m/%y','%d-%m-%Y','%d.%m.%Y','%Y-%m-%d','%d %b %Y','%d %B %Y'):
+        try:d=datetime.datetime.strptime(f,fmt).date().isoformat();break
+        except ValueError:pass
+    if d is None and f:note=f
+    if i and not re.match(r'^-?\d+ days?( left)?$',i,re.I) and not i.startswith('#'):note=(note+' · ' if note else '')+i
+    return [d,note]
 TITLES={'mr','mrs','miss','ms','mx','dr'}
 def sect(a):
     s=a.lower()
@@ -36,17 +51,17 @@ COLS=((3,'D','HR docs'),(4,'E','Passport & RTW'),(6,'G','Operational tasks'),(7,
 # 10/11/2026 (Michael): where each person sits on the tracker. pending = [name, section, [steps not ticked]] for anyone not fully onboarded.
 STEPS=((3,'HR docs'),(6,'Mapal and operational tasks'),(7,'Contract released'))
 # 10/11/2026 (Michael): documents missing per person, for the Starters and leavers card. The tracker holds one tick per group, not per document,
-# so a missing HR docs tick names the whole pack. Passport and right to work is the tick only: expiry dates and status are never read out.
+# so a missing HR docs tick names the whole pack. Passport and right to work is the tick here; the expiry date rides on rows[][4] (10/11/2026).
 DOCS=((3,'HR docs pack'),(4,'Passport and right to work check'),(7,'Contract'))
 for ri,r in enumerate(rows,1):
-    r=(r+['']*8)[:8];a=r[0].strip()
+    r=(r+['']*9)[:9];a=r[0].strip()
     if a.lower().rstrip('.') in TITLES:
         if not cur or not r[1].strip():continue
         n=short(r[1],r[2])
         if cur=='P45':leavers.append(n)
         else:
             team[cur].append(n)
-            copy.append([ri,cur,n,[tick(r[i]) for i,_,_ in COLS]])
+            copy.append([ri,cur,n,[tick(r[i]) for i,_,_ in COLS],rtw(r[5],r[8])])
             miss=[lab for i,lab in STEPS if not tick(r[i])]
             dm=[lab for i,lab in DOCS if not tick(r[i])]
             if dm:docs.append([n,cur,dm])
@@ -67,7 +82,8 @@ else:
     prev=old.get('prev')
     if names!=oldnames:prev={'date':old.get('pulled') or base,'names':oldnames}
 out={'src':f'Maki Group Onboarding Tracker 2026, tab {tab.strip()}','tab':tab,'pulled':t,'baseline':base,'team':team,'onboarded':onb,'pending':pending,'docs':docs,'leavers':leavers,'prev':prev,
-     'cols':[[c,l] for _,c,l in COLS],'rows':copy}
+     'cols':[[c,l] for _,c,l in COLS],'rows':copy,'rtw_col':'F',
+     'rtw':{'expired':sum(1 for c in copy if c[4][0] and c[4][0]<t),'due90':sum(1 for c in copy if c[4][0] and t<=c[4][0]<=(today()+datetime.timedelta(days=90)).isoformat())}}
 print(f"team {A.site}: {hc} ({', '.join(f'{len(v)} {k}' for k,v in team.items())}), onboarded {onb}/{hc}, P45 {len(leavers)}, "+
       (f"changed since {prev['date']}" if prev else 'baseline'))
 if not A.check:save(P,out,indent=1)
