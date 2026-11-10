@@ -2,7 +2,7 @@
 (sites.json onboarding_tab). The sheet is link shared, so the service account reads it without a share.
 Tab layout: section header rows in col A ("Mgmt", "FOH/Bar", "BOH" or "BOH/Sushi", "P45 List ..."), staff rows have a title
 (Mr, Ms, Miss, Mrs, Mx) in col A, first name in B, last name in C. Onboarded = HR docs (D), Mapal / operational tasks (G)
-and contract released (H) all ticked. Names are first name plus last initial only; RTW and document data are never read out.
+and contract released (H) all ticked; anyone short of that is listed in pending with the steps still open. Names are first name plus last initial only; RTW and document data are never read out.
 Starters and leavers: when the roster changes, the previous roster is kept as "prev" (date and names), so the card shows
 who joined and left since then. Keeps the last good file on any failure. --check reports and writes nothing."""
 import argparse,json,os,re
@@ -27,7 +27,9 @@ def short(first,last):
     f=re.sub(r'\s+',' ',first).strip();l=re.sub(r'\s+',' ',last).strip()
     return (f+(' '+l[0].upper() if l else '')).strip()
 tick=lambda v:str(v).strip().upper() in ('TRUE','YES','Y','DONE','✓','✔')
-team={'Management':[],'FOH and bar':[],'BOH':[]};leavers=[];onb=0;cur=None
+team={'Management':[],'FOH and bar':[],'BOH':[]};leavers=[];onb=0;cur=None;pending=[]
+# 10/11/2026 (Michael): where each person sits on the tracker. pending = [name, section, [steps not ticked]] for anyone not fully onboarded.
+STEPS=((3,'HR docs'),(6,'Mapal and operational tasks'),(7,'Contract released'))
 for r in rows:
     r=(r+['']*8)[:8];a=r[0].strip()
     if a.lower().rstrip('.') in TITLES:
@@ -36,7 +38,9 @@ for r in rows:
         if cur=='P45':leavers.append(n)
         else:
             team[cur].append(n)
-            if tick(r[3]) and tick(r[6]) and tick(r[7]):onb+=1
+            miss=[lab for i,lab in STEPS if not tick(r[i])]
+            if miss:pending.append([n,cur,miss])
+            else:onb+=1
     elif a:
         s=sect(a)
         if s:cur=s
@@ -51,7 +55,7 @@ else:
     base=old.get('baseline') or old.get('pulled') or t
     prev=old.get('prev')
     if names!=oldnames:prev={'date':old.get('pulled') or base,'names':oldnames}
-out={'src':f'Maki Group Onboarding Tracker 2026, tab {tab.strip()}','pulled':t,'baseline':base,'team':team,'onboarded':onb,'leavers':leavers,'prev':prev}
+out={'src':f'Maki Group Onboarding Tracker 2026, tab {tab.strip()}','pulled':t,'baseline':base,'team':team,'onboarded':onb,'pending':pending,'leavers':leavers,'prev':prev}
 print(f"team {A.site}: {hc} ({', '.join(f'{len(v)} {k}' for k,v in team.items())}), onboarded {onb}/{hc}, P45 {len(leavers)}, "+
       (f"changed since {prev['date']}" if prev else 'baseline'))
 if not A.check:save(P,out,indent=1)

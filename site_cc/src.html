@@ -572,6 +572,11 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
           <div class="ch"><b id="negHead">Google reviews: complaints by reason</b><span class="tag t-auto">AUTO</span></div>
           <div id="negBox"></div>
         </div>
+        <!-- 10/11/2026 (Michael): onboarding tracker on the KPI Sheet, who is not fully onboarded and which step they are sitting on -->
+        <div class="s12" style="display:flex;flex-direction:column;gap:8px">
+          <div class="ch"><b id="kpiOnbHead">Onboarding tracker</b><span class="tag t-auto">AUTO</span></div>
+          <div id="kpiOnb"></div>
+        </div>
         <div class="s12" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px">
           <div style="display:flex;flex-direction:column;gap:6px"><div class="ch"><label class="fl" for="f_foh">Staff updates: FOH *</label><span class="tag t-man">MANUAL · GM</span></div>
             <textarea id="f_foh" data-f="foh" data-own="GM" data-req="1" rows="2" placeholder="Starters, leavers, promotions, issues"></textarea></div>
@@ -1870,6 +1875,12 @@ function renderTeam(){var T=TEAM.team,secs=Object.keys(T),hc=secs.reduce(functio
     var st=cur.filter(function(x){return pv.indexOf(x)<0}),lv=pv.filter(function(x){return cur.indexOf(x)<0});
     mv='<div style="margin-top:6px"><b>Since '+dmy(TEAM.prev.date)+':</b> '+(st.length?st.length+' starter'+(st.length>1?'s':'')+' ('+st.map(esc).join(', ')+')':'no starters')+', '+(lv.length?lv.length+' leaver'+(lv.length>1?'s':'')+' ('+lv.map(esc).join(', ')+')':'no leavers')+'</div>'}
   else mv='<div class="small" style="margin-top:6px">Baseline set '+dmy(TEAM.baseline)+'. Starters and leavers show from the next pull, dated to the pull they first appear in.</div>';
+  /* 10/11/2026 (Michael): KPI Sheet onboarding tracker. Live status from Hanna's tracker (not week specific): HR docs, Mapal and operational tasks, contract released. */
+  var OS=['HR docs','Mapal and operational tasks','Contract released'],pd=TEAM.pending,kb=$('#kpiOnb');
+  if(kb){$('#kpiOnbHead').textContent='Onboarding tracker'+(hc?' · '+TEAM.onboarded+' / '+hc+' complete':'');
+    kb.innerHTML=(!hc?'<div class="small">No onboarding tracker tab for this site.</div>':!pd?'<div>'+TL(TEAM.onboarded>=hc?'g':'a','Onboarding '+TEAM.onboarded+' / '+hc+' complete')+'</div>':!pd.length?'<div>'+TL('g','Everyone on the tracker is fully onboarded')+'</div>':
+      '<div class="tscroll"><table><thead><tr><th>Not fully onboarded</th><th>Team</th>'+OS.map(function(x){return '<th>'+x+'</th>'}).join('')+'</tr></thead><tbody>'+pd.map(function(p){return '<tr><td class="mname">'+esc(p[0])+'</td><td class="small">'+esc(p[1])+'</td>'+OS.map(function(x){return '<td>'+(p[2].indexOf(x)<0?'<span class="pill p-g">✓ Done</span>':'<span class="pill p-r">✕ Outstanding</span>')+'</td>'}).join('')+'</tr>'}).join('')+'</tbody></table></div>')+
+      '<div class="small" style="margin-top:6px">Live status, not week specific. Source: '+esc(TEAM.src||'Onboarding tracker')+(TEAM.pulled?', read '+dmy(TEAM.pulled):'')+'. Tick the steps in the tracker and this clears on the next build.</div>'}
   $('#teamCard').innerHTML='<div class="big">'+hc+' team</div><div class="small">'+secs.map(function(k){return T[k].length+' '+k}).join(' · ')+'</div>'+
     '<div style="margin-top:6px">'+TL(TEAM.onboarded>=hc?'g':'a','Onboarding '+TEAM.onboarded+' / '+hc+' complete')+'</div>'+mv+
     '<details style="margin-top:6px"><summary class="small" style="cursor:pointer;color:var(--maki-orange-deep);font-weight:700">Team list and '+TEAM.leavers.length+' leavers since opening</summary>'+
