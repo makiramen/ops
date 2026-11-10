@@ -85,6 +85,7 @@ jobs:
           ASANA_TOKEN: ${{ secrets.ASANA_TOKEN }}
           GUUDJOB_EMAIL: ${{ secrets.GUUDJOB_EMAIL }}
           GUUDJOB_PASSWORD: ${{ secrets.GUUDJOB_PASSWORD }}
+          PYTHONANYWHERE_TOKEN: ${{ secrets.PYTHONANYWHERE_TOKEN }}
           OPS_ROOT: ${{ github.workspace }}
         run: bash site_cc/pipeline/run_nightly.sh
       - name: Guudjob login screenshot (only written when the login failed)
