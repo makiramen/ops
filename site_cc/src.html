@@ -473,7 +473,7 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
     <div class="card" id="rooCard"><div class="ch"><div><h3>Deliveroo · weekly and daily</h3><div class="small">Same ten columns, thresholds and tints as the Control Centre Deliveroo panel. Weekly rows are the week of the latest Deliveroo drop (week to date) and the week before; daily rows are the latest 7 posted days. Not tied to the week picker.</div></div><span class="tag t-auto">AUTO</span></div><div id="rooOps"></div></div>
     <div class="card">
       <div class="ch"><h3>Broth quality · daily check</h3><span class="tag t-auto">MAPAL</span></div>
-      <div class="small">Tonkotsu and Tori Paitan refractometer readings from the Mapal Broth Check, measured after the restaurant adds water. Spec set in sites.json (proposed 13/10/2026 from the better performing sites, pending EC sign off). Just above the range is amber; out of spec or missed turns the day red; the HC fixes it and the DEC (<span class="decName"></span>) follows up.</div>
+      <div class="small">Tonkotsu and Tori Paitan refractometer readings from the Mapal Broth Check, measured after the restaurant adds water. Spec is the AM Control Centre Broth tab spec. Out of spec or missed turns the day red; the HC fixes it and the DEC (<span class="decName"></span>) follows up.</div>
       <div class="tscroll"><table id="brothTable"></table></div>
       <div class="small" id="brothFoot"></div>
     </div>
@@ -1396,7 +1396,7 @@ function grepSend(r,text){var btn=document.querySelector('[data-gsend="'+r.id+'"
     if(!x||!x.ok){if(btn){btn.disabled=false;btn.textContent='Post to Google'}return toast('Google said no: '+((x&&x.error)||'error'))}
     S.repl[r.id]=nowIso();S.gdone=S.gdone||{};S.gdone[r.id]=1;S.gopen=null;if(S.gdraft)delete S.gdraft[r.id];queue('replied',{id:r.id,google:1});save();renderDaily();renderOb();toast('Reply posted to Google')
   }).catch(function(){if(btn){btn.disabled=false;btn.textContent='Post to Google'}toast('No signal, reply not posted. Try again')})}
-/* Broth (13/10/2026, Rory x Mike): spec from sites.json sources.broth_spec, green range plus an amber band just above it (pending EC sign off). A reading in the amber band is amber, outside both is red. */
+/* Broth (11/11/2026, Michael): spec dictated by the AM Control Centre Broth tab (build.py reads data/broth); amber band kept in code but unused. Was (13/10): sites.json sources.broth_spec, green range plus an amber band just above it (pending EC sign off). A reading in the amber band is amber, outside both is red. */
 function brothRd(v,k){if(v==null)return 'n';var g=BROTH.spec[k],a=BROTH.spec[k+'a'];v=Math.round(v*10)/10;if(v>=g[0]&&v<=g[1])return 'g';if(a&&v>=a[0]&&v<=a[1])return 'a';return 'r'}
 function brothSt(dt){if(!BROTH.from||dt<BROTH.from||dt>BROTH.to)return 'n';var b=BROTH.d[dt];if(!b||b[0]==null||b[1]==null)return 'm';var r=[brothRd(b[0],'tk'),brothRd(b[1],'tp')];return r.indexOf('r')>-1?'r':r.indexOf('a')>-1?'a':'g'}
 function brothSpecTxt(k){var g=BROTH.spec[k],a=BROTH.spec[k+'a'];return 'spec '+g[0].toFixed(1)+' to '+g[1].toFixed(1)+(a?', amber to '+a[1].toFixed(1):'')}
@@ -1446,7 +1446,7 @@ function renderDaily(){renderFold();
   var bsec=function(t){return '<tr class="sechd"><td colspan="4">'+t+'</td></tr>'};
   $('#brothTable').innerHTML='<thead><tr><th>Day</th><th>Tonkotsu · '+brothSpecTxt('tk')+'</th><th>Tori Paitan · '+brothSpecTxt('tp')+'</th><th>Day</th></tr></thead><tbody>'+bsec('Latest cash-up day')+brow(anchor)+bsec('Previous 7 days · '+(B.brn?B.br+' / '+B.brn+' in spec'+(B.bra?', '+B.bra+' amber':''):'n/a'))+prv.slice().reverse().map(brow).join('')+'</tbody>';
   var dv=(BROTH.dev||[]).filter(function(x){return x[0]>=prv[0]&&x[0]<=anchor});
-  $('#brothFoot').textContent='Source: '+BROTH.src+', '+dmy(BROTH.from)+' to '+dmy(BROTH.to)+'. A missed check counts as a fail. Amber: a reading just above the range (not a fail).'+(dv.length?' Mapal deviations in these 8 days: '+dv.map(function(x){return dm(x[0])+' '+(x[1]==='pork'?'tonkotsu':'tori paitan')+' '+x[2]+' ('+x[3]+')'}).join(', ')+'.':'');
+  $('#brothFoot').textContent='Source: '+BROTH.src+', '+dmy(BROTH.from)+' to '+dmy(BROTH.to)+'. A missed check counts as a fail. Spec from the AM Control Centre Broth tab.'+(dv.length?' Mapal deviations in these 8 days: '+dv.map(function(x){return dm(x[0])+' '+(x[1]==='pork'?'tonkotsu':'tori paitan')+' '+x[2]+' ('+x[3]+')'}).join(', ')+'.':'');
 }
 function tile(lab,val,sub,r,tag){return '<div class="card tile s3"><div class="ch"><span class="lab">'+lab+'</span>'+(r?PILL[r]:(tag||''))+'</div><div class="big">'+val+'</div><div class="small">'+sub+'</div></div>'}
 var KL=__KL__;

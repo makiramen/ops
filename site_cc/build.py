@@ -122,9 +122,20 @@ try:
     PRM['briefs']=[x for x in _pb.get('items',[]) if x.get('sites') and ('ALL' in x['sites'] or CODE in x['sites'])];PRM['briefs_read']=_pb.get('read')
 except Exception as _e:
     print('promo briefs not read:',_e);PRM['briefs']=[]
-# 13/10/2026 (Rory, M7): broth spec comes from sites.json sources.broth_spec (green range plus an amber band), pending EC sign off; the feed file's own spec is not used
-_bs=SJ['sources'].get('broth_spec')
-if _bs:br['spec']={'tk':_bs['tk']['g'],'tp':_bs['tp']['g'],'tka':_bs['tk'].get('a'),'tpa':_bs['tp'].get('a')}
+# 11/11/2026 (Michael): the AM Control Centre dictates the broth spec. Site CC reads the spec from the latest AM CC Broth tab file (data/broth/broth_wc_*.json, pork = Tonkotsu, chicken = Tori Paitan), no amber band; sites.json broth_spec is only a fallback if no AM CC file is found
+import glob as _glob
+_amb=sorted(_glob.glob(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),'data','broth','broth_wc_*.json')))
+_ams=None
+for _f in reversed(_amb):
+    try:
+        _s=json.load(open(_f,encoding='utf-8')).get('spec') or {}
+        if _s.get('pork') and _s.get('chicken'):_ams=_s;break
+    except Exception as _e:print('AM CC broth spec not read from',_f,_e)
+if _ams:br['spec']={'tk':_ams['pork'],'tp':_ams['chicken'],'tka':None,'tpa':None}
+else:
+    print('WARNING: no AM CC broth spec found, falling back to sites.json broth_spec')
+    _bs=SJ['sources'].get('broth_spec')
+    if _bs:br['spec']={'tk':_bs['tk']['g'],'tp':_bs['tp']['g'],'tka':_bs['tk'].get('a'),'tpa':_bs['tp'].get('a')}
 LY=JD('ly.json',{'src':'Auto Cash Up, Raw Data 2 (last year)','pulled':None,'from':None,'to':None,'d':{}})  # pull_cashup_ly.py: last year's days for the year on year comparison
 mx=lambda o:max(o) if o else None
 FEEDS=[  # name, as of, max age days
