@@ -8,8 +8,9 @@ async def main():
         await pg.goto('file://' + os.path.abspath('keyline-control.html')); await pg.wait_for_timeout(500)
         # force UK clock: page uses device clock; container is UTC (UK is BST = UTC+1) so evaluate stats only
         stats = await pg.evaluate("""()=>{const c={};ROWS.forEach(r=>c[r.status]=(c[r.status]||0)+1);
+          c.OUT=ROWS.filter(r=>r.light==='RED').length; c.LOW=ROWS.filter(r=>r.light==='AMBER').length; c.SHEET=ROWS.filter(inOrderSheet).length;
           return {c, rag:SITES.map(s=>s.code+':'+siteRag(s.code).rag).join(' '),
-            top:ROWS.filter(r=>['URGENT','ORDER'].includes(r.status)).map(r=>r.site+' '+r.item.name+' '+r.status+' D='+r.cover+' Rnow='+r.Rnow+' thr='+r.threshold+' '+r.sup).join('\\n'),
+            top:ROWS.filter(r=>['URGENT','ORDER'].includes(r.status)).map(r=>r.site+' '+r.item.name+' '+r.status+' '+r.light+' stock='+r.stock+' par='+r.par+' D='+r.cover+' Rnow='+r.Rnow+' thr='+r.threshold+' '+r.sup).join('\\n'),
             watch:ROWS.filter(r=>r.status==='WATCH').map(r=>r.site+' '+r.item.name+' D='+r.cover+' thr='+r.threshold+' '+r.sup+(r.assumed?' (asm)':'')).join('\\n'),
             assumed:ROWS.filter(r=>r.assumed).length}}""")
         # dump what this run is ASKING each site to order, so tomorrow can check whether it happened.

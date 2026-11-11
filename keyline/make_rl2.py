@@ -41,6 +41,7 @@ def cell(td, right=False):
             inner = esc(txt)
             if getattr(ch,'name',None)=='b' or 'font-weight:700' in style: inner='<b>'+inner+'</b>'
             if '#B3200E' in style or (getattr(ch,'name',None) and ch.find(style=re.compile('B3200E'))): inner='<font color="#B3200E">'+inner+'</font>'
+            elif '#B45309' in style or (getattr(ch,'name',None) and ch.find(style=re.compile('B45309'))): inner='<font color="#B45309">'+inner+'</font>'
             parts.append(inner)
     return Paragraph(' '.join(parts).replace('<br/> ','<br/>'), CR if right else C)
 

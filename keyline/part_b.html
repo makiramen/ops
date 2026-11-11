@@ -201,24 +201,26 @@ function nextDeliveries(route, now){
   };
 }
 
-/* ---------------- PAR levels (Sophie, "EC stock monitoring info" sheet, 09/09/2026) ----------------
-   Per site and line, the permanent holding that covers 7 days. Every keyline has a PAR; nothing is computed.
-   Sheet units: case, rump by 3kg pack. The PAR IS the Baseline. The computed fallback is kept in
-   the engine but no line uses it any more. Sheet also carries M21, held for later. */
+/* ---------------- PAR levels (EC "EC stock monitoring info" sheet, re-read 11/11/2026) ----------------
+   Sheet 13NKdrPU0UMCDB6u30lKsFfUhlVlWPRaBptraS3nNf9g. Per site and line, the holding that covers 7 days,
+   tightened by the EC team on the last 1 to 2 weeks of stock counts and the actual situation on site.
+   Every keyline has a PAR; nothing is computed. Sheet units: case, rump by 3kg pack. The PAR IS the
+   Baseline (the bottom line). The sheet also carries M21, held here until M21 joins the Kobas pull.
+   Previous table (09/09/2026) is in git history. */
 const PAR = {
-  tonkotsu: {M9:14,M10:9,M11:5,M14:10,M16:7,M17:6,M18:7,M19:5,M20:9,M21:12},
-  chkbroth: {M9:6,M10:3,M11:2,M14:4,M16:3,M17:4,M18:4,M19:3,M20:6,M21:6},
-  karaage:  {M9:19,M10:10,M11:7,M14:17,M16:10,M17:12,M18:10,M19:8,M20:14,M21:18},
-  katsu:    {M9:5,M10:3,M11:2,M14:2,M16:2,M17:2,M18:2,M19:2,M20:2,M21:3},
-  pbsliced: {M9:5,M10:3,M11:2,M14:3,M16:3,M17:3,M18:3,M19:2,M20:3,M21:3},
-  noodle:   {M9:40,M10:16,M11:15,M14:26,M16:18,M17:13,M18:23,M19:17,M20:20,M21:30},
-  rump:     {M9:17,M10:7,M11:8,M14:11,M16:7,M17:8,M18:12,M19:8,M20:20,M21:20},
-  chkfillet:{M9:2,M10:1,M11:1,M14:1,M16:1,M17:2,M18:2,M19:1,M20:2,M21:2},
-  soba:     {M9:4,M10:2,M11:2,M14:3,M16:3,M17:1,M18:2,M19:2,M20:2,M21:3},
-  teriyaki: {M9:4,M10:1,M11:2,M14:2,M16:3,M17:1,M18:1,M19:1,M20:1,M21:2},
-  tataki:   {M9:3,M10:2,M11:2,M14:2,M16:3,M17:1,M18:2,M19:2,M20:2,M21:3},
-  hell:     {M9:2,M10:2,M11:1,M14:2,M16:2,M17:1,M18:1,M19:1,M20:2,M21:2},
-  gyoza:    {M9:5,M10:2,M11:2,M14:3,M16:3,M17:3,M18:2,M19:1,M20:4,M21:4}
+  tonkotsu: {M9:15,M10:9,M11:4,M14:9,M16:11,M17:3,M18:14,M19:7,M20:8,M21:8},
+  chkbroth: {M9:15,M10:8,M11:4,M14:9,M16:10,M17:5,M18:12,M19:6,M20:10,M21:8},
+  karaage:  {M9:26,M10:15,M11:9,M14:19,M16:15,M17:12,M18:14,M19:8,M20:13,M21:14},
+  katsu:    {M9:4,M10:3,M11:2,M14:3,M16:3,M17:2,M18:3,M19:2,M20:4,M21:4},
+  pbsliced: {M9:7,M10:3,M11:3,M14:3,M16:4,M17:3,M18:5,M19:2,M20:4,M21:4},
+  noodle:   {M9:52,M10:30,M11:16,M14:24,M16:30,M17:14,M18:37,M19:18,M20:30,M21:35},
+  rump:     {M9:17,M10:13,M11:6,M14:12,M16:16,M17:12,M18:20,M19:9,M20:20,M21:13},
+  chkfillet:{M9:3,M10:2,M11:1,M14:3,M16:1,M17:2,M18:2,M19:1,M20:2,M21:2},
+  soba:     {M9:3,M10:2,M11:2,M14:5,M16:3,M17:3,M18:2,M19:2,M20:1,M21:3},
+  teriyaki: {M9:2,M10:2,M11:1,M14:2,M16:2,M17:2,M18:1,M19:1,M20:2,M21:2},
+  tataki:   {M9:5,M10:2,M11:2,M14:3,M16:5,M17:1,M18:4,M19:2,M20:4,M21:4},
+  hell:     {M9:2,M10:2,M11:1,M14:1,M16:3,M17:1,M18:2,M19:1,M20:3,M21:2},
+  gyoza:    {M9:5,M10:3,M11:3,M14:4,M16:4,M17:3,M18:3,M19:4,M20:5,M21:5}
 };
 function parFor(site,item){ const r=PAR[item]; return (r && r[site]!=null) ? r[site] : null; }
 
@@ -274,8 +276,36 @@ const USAGE8M = {"M9":{"tonkotsu":1.782,"chkbroth":0.703,"karaage":2.933,"katsu"
 const USAGE8M_DAYS = {"M9":228,"M10":228,"M11":228,"M14":228,"M16":228,"M17":192,"M18":164,"M19":51,"M20":45};
 const USAGE8M_META = {"from":"2026-01-01","to":"2026-08-16","pulled":"2026-09-07","firstTradingDay":{"M17":"2026-02-06","M18":"2026-03-06","M19":"2026-06-27","M20":"2026-07-03"},"source":"Kobas Stock Ingredient Movements, one report per site per two-month block (Jan-Feb, Mar-Apr, May-Jun, Jul to 16 Aug); Units Used x measure per unit summed across pack rows, divided by the keyline pack; trading days = days with sales > 0 in Mona Lisa"};
 
-/* ---------------- the status engine ---------------- */
+/* ---------------- the stock light (EC ruling, 11/11/2026) ----------------
+   One rule for every colour on this board, the email and the PDF:
+     RED   = stock below 1 (out of stock). Red means out of stock and nothing else.
+     AMBER = stock from 1 up to and including 50% of the PAR (running low, needs attention).
+     GREEN = stock above 50% of the PAR.
+     GREY  = no honest reading (negative Kobas stock awaiting a count, or a data fault).
+   The status (URGENT / ORDER / WATCH / OK ...) still drives what to order and by when; it no longer
+   drives any colour. Change the threshold here only. */
+const LOW_PCT = 0.5;
+const LIGHT_LABEL = {RED:'Out of stock', AMBER:'Running low', GREEN:'OK', GREY:'Check'};
+const LRANK = {RED:0, AMBER:1, GREY:2, GREEN:3};
+function lightFor(r){
+  if(r.status==='CHECK' || r.status==='DATA' || r.stock==null || r.missing) return 'GREY';
+  if(r.stock < 1) return 'RED';
+  const par = (r.baseline!=null) ? r.baseline : parFor(r.site, r.item.id);
+  if(par!=null && r.stock <= LOW_PCT * par) return 'AMBER';
+  return 'GREEN';
+}
 function evaluate(line, now){
+  const out = evaluateStatus(line, now);
+  out.light = lightFor(out);
+  out.lightLabel = (out.light==='GREY') ? LABEL[out.status] : LIGHT_LABEL[out.light];
+  if(out.par==null) out.par = parFor(out.site, out.item.id);
+  out.lowAt = (out.par!=null) ? LOW_PCT * out.par : null;
+  if(out.light==='RED') out.why = 'OUT OF STOCK: '+fmtQty(out.stock, out.item)+' in Kobas, below 1. '+out.why;
+  return out;
+}
+
+/* ---------------- the status engine (what to order and by when) ---------------- */
+function evaluateStatus(line, now){
   const item = ITEMS.find(i=>i.id===line.item);
   const sup  = SUPPLIER_OVERRIDE[line.site+'|'+line.item] || SUPPLIER_OF[line.item];
   const route= routeFor(line.site, sup);

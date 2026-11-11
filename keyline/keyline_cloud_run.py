@@ -46,9 +46,12 @@ def sh(cmd, check=True, env=None, cwd=None):
         log('CMD FAILED:', ' '.join(cmd), '\n', r.stdout[-2000:], r.stderr[-3000:]); raise SystemExit(2)
     return r
 
+ENGINE_VERSION = '2.0.0'
 def version():
     m = re.search(r'"version":\s*"([\d.]+)"', open(os.path.join(HERE, 'part_data.html')).read())
-    return os.environ.get('KEYLINE_VERSION') or (m.group(1) if m else '1.11.0')
+    # 2.0.0 (11/11/2026): new PAR table, red = out of stock only. The engine version lives here now, so a
+    # part_data.html written by an older run can never drag the page version backwards.
+    return os.environ.get('KEYLINE_VERSION') or ENGINE_VERSION
 
 def cat():
     with open(os.path.join(HERE, 'keyline-control.html'), 'w') as f:
@@ -130,6 +133,8 @@ def main():
     sh([sys.executable, 'build_asks.py', 'commit', day])
     reds = [s for s, v in (R['rag'] or {}).items() if v == 'RED']; ambers = [s for s, v in (R['rag'] or {}).items() if v == 'AMBER']
     urgent = (R['counts'] or {}).get('URGENT', 0); order = (R['counts'] or {}).get('ORDER', 0)
+    # EC ruling 11/11/2026: red = out of stock (below 1) only, amber = running low (1 to 50% of PAR)
+    n_out = (R['counts'] or {}).get('OUT', 0); n_low = (R['counts'] or {}).get('LOW', 0); n_order = urgent + order
 
     # 8. the email body and the PDF
     sh([sys.executable, 'mkmail.py'])                       # mail.html (+ a playwright PDF we replace below)
@@ -138,11 +143,11 @@ def main():
     label = re.search(r'"importedLabel": "([^"]+)"', open('part_data.html').read()).group(1)
     sh([sys.executable, 'make_rl2.py', f'{now:%d %b %Y}, {label}'])   # keyline-<date>.pdf, small, table based
     pdf = f'keyline-{day}.pdf'
-    subj = f'Keyline: {urgent} urgent, {order} to order' + (' today' if order == 0 and now.weekday() >= 5 else '') + \
+    subj = f'Keyline: {n_out} out of stock, {n_low} running low, {n_order} to order' + \
            (f' (red: {" ".join(reds)})' if reds else ' (no red sites)')
-    weekend = ' No supplier cut-off falls on a weekend, so 0 to order is expected and the short lines are on watch.' if (order == 0 and now.weekday() >= 5) else ''
-    intro = (f'<p style="margin:0 0 10px">Morning both. Red-light sites today: <b>{", ".join(reds) if reds else "none"}</b>'
-             f'{(" (amber: " + ", ".join(ambers) + ")") if ambers else ""}. Live board: <a href="{OPS_URL}">{OPS_URL}</a>.{weekend}</p>')
+    weekend = ' No supplier cut-off falls on a weekend, so nothing new falls due today and the short lines are on watch.' if (order == 0 and now.weekday() >= 5) else ''
+    intro = (f'<p style="margin:0 0 10px">Morning both. Out of stock today (red): <b>{", ".join(reds) if reds else "none"}</b>'
+             f'{(". Running low (amber): " + ", ".join(ambers)) if ambers else ""}. Live board: <a href="{OPS_URL}">{OPS_URL}</a>.{weekend}</p>')
     html = intro + open('email-compact.html').read()
     assert '—' not in html and '–' not in html, 'dash in the email body'
     R['subject'] = subj
@@ -157,7 +162,7 @@ def main():
     sh(['git', 'add', '--'] + ship, cwd=REPO)
     if not sh(['git', 'diff', '--cached', '--quiet'], check=False, cwd=REPO).returncode:
         R['result'] = 'nothing changed'; finish(0)
-    head = f'Keyline daily refresh {now:%d %b %Y}: {urgent} urgent, {order} to order, red {" ".join(reds) or "none"}'
+    head = f'Keyline daily refresh {now:%d %b %Y}: {n_out} out of stock, {n_low} running low, {n_order} to order, red {" ".join(reds) or "none"}'
     body = f'Offline run (keyline_cloud_run.py). {label}. Email {R["email"]}. Files: {", ".join(ship)}'
     sh(['git', 'commit', '-q', '-m', head, '-m', body], cwd=REPO)
     R['commit'] = sh(['git', 'rev-parse', 'HEAD'], cwd=REPO).stdout.strip()

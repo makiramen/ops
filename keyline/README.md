@@ -51,3 +51,21 @@ board, do not email) and `force` (run even if today shipped).
 compliance and closure) `part_d` (email, exceptions, boot). Edit these here; the Mac copy under
 "Keyline Control/" is no longer what runs. The page version is read from `part_data.html` meta.version
 (or `KEYLINE_VERSION` in the environment) and written back by `build_data.py`.
+
+## v2.0.0, 11 Nov 2026: new PAR table, one colour rule
+
+EC ruling. `PAR` in `part_b.html` re-read from the "EC stock monitoring info" sheet
+(`13NKdrPU0UMCDB6u30lKsFfUhlVlWPRaBptraS3nNf9g`); the EC team tightens it from the last 1 to 2 weeks of counts.
+Every colour on the page, the email and the PDF now comes from `lightFor()` in `part_b.html`:
+
+| light | rule |
+|---|---|
+| RED | stock below 1 (out of stock). Nothing else is ever red. |
+| AMBER | stock from 1 up to and including 50% of PAR (`LOW_PCT`) |
+| GREEN | stock above 50% of PAR |
+| GREY | negative Kobas stock awaiting a count, or a data fault |
+
+Site light: RED if any line is RED, AMBER if any line is AMBER or needs a count, else GREEN. The status
+(URGENT / ORDER / WATCH) still decides what goes on the order sheet and by when, but no longer colours anything.
+An out of stock line is always on the order sheet. The page version is `ENGINE_VERSION` in `keyline_cloud_run.py`.
+Subject line: `Keyline: N out of stock, N running low, N to order (red: ...)`.

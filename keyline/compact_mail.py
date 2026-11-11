@@ -3,7 +3,7 @@ table attributes instead of long repeated inline styles. Reads email-body.html, 
 import re
 from bs4 import BeautifulSoup, NavigableString
 
-G = '#6B7280'; R = '#B3200E'
+G = '#6B7280'; R = '#B3200E'; A = '#B45309'   # red = out of stock only, amber = running low (11/11/2026)
 src = open('email-body.html').read()
 soup = BeautifulSoup(src, 'html.parser')
 
@@ -25,6 +25,7 @@ def inline(node):
         inner = inline(ch) if ch.find(True) else ch.get_text(' ', strip=True)
         if n == 'b' or 'font-weight:700' in st: inner = '<b>' + inner + '</b>'
         if R in st: inner = '<font color="%s">%s</font>' % (R, inner)
+        elif A in st: inner = '<font color="%s">%s</font>' % (A, inner)
         elif G in st: inner = '<font color="%s">%s</font>' % (G, inner)
         out.append(inner)
     return ' '.join(out).replace(' <br>', '<br>').replace('<br> ', '<br>')

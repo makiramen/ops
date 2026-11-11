@@ -3,14 +3,14 @@
     <div>
       <span class="badge">Maki &amp; Ramen · Executive Chef</span>
       <h1>Keyline Control</h1>
-      <p class="sub">13 keylines &times; 9 England sites, exactly the products on the EC stock monitoring sheet. Every line carries a PAR: the permanent stock holding for that site, signed off per site on the sheet. Weeks 1 and 2 of the trading period hold it; weeks 3 and 4 may run into it. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
+      <p class="sub">13 keylines &times; 9 England sites, exactly the products on the EC stock monitoring sheet. Every line carries a PAR (the bottom line): the stock holding that covers 7 days at that site, re-set by the EC team on 11 Nov 2026 from the last 1 to 2 weeks of stock counts. <b>Red</b> means out of stock (below 1) and nothing else. <b>Amber</b> means running low (1 up to 50% of PAR). <b>Green</b> is above 50% of PAR. Refreshed from Kobas every morning, emailed 07:00 UK.</p>
     </div>
     <div class="clock"><b id="clk">--:--</b><span id="today">-</span></div>
   </div>
 
   <div id="gate"></div>
   <div id="period"></div>
-  <div class="raghd"><h2>Site red light</h2><span class="legend"><span style="background:#D1240F"></span>red: urgent or order below the floor <span style="background:#E8730C"></span>amber: top-up order, watch or count <span style="background:#1F8A4C"></span>green: fine</span></div>
+  <div class="raghd"><h2>Site red light</h2><span class="legend"><span style="background:#D1240F"></span>red: a line is out of stock (below 1) <span style="background:#E8730C"></span>amber: a line is running low (1 to 50% of PAR) or needs a count <span style="background:#1F8A4C"></span>green: every line above 50% of PAR</span></div>
   <div class="rag" id="siteRag"></div>
 
   <div class="tabs" role="tablist">
@@ -48,7 +48,7 @@
     <div class="chips" id="filterchips"></div>
     <div class="tblwrap"><table id="t-site"><thead><tr>
       <th>Site</th><th>Item</th><th class="num">In stock now</th><th class="num">Used a day</th><th class="num">Days left</th>
-      <th class="num">Left on delivery day</th><th class="num">Baseline (PAR)</th><th class="num">Order</th><th>Status</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+      <th class="num">Left on delivery day</th><th class="num">PAR (bottom line)</th><th class="num">Order</th><th>Stock light</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <section id="v-nudges" class="hide">
@@ -118,7 +118,7 @@ function recompute(){
   ROLLED = (ageH!=null && ageH > STALE_H && ageH <= DEAD_H);
   ROLL_AGE = ageH;
   ROWS = window.KEYLINE_DATA.lines.map(l => evaluate(ROLLED ? rollForward(l, ageH) : l, NOW))
-          .sort((a,b)=> RANK[a.status]-RANK[b.status] || a.site.localeCompare(b.site) || a.cover-b.cover);
+          .sort((a,b)=> LRANK[a.light]-LRANK[b.light] || RANK[a.status]-RANK[b.status] || a.site.localeCompare(b.site) || a.cover-b.cover);
   ROWS.forEach(r=>{ r.comp = (typeof complianceForRow==='function') ? complianceForRow(r) : null; });   // Kobas order history, part_e
   /* What is actually left to order once genuinely inbound stock is counted. orderQty stays the gap to the
      Baseline; netOrder is what a chef should place today. Michael's ruling 09/09/2026. */
@@ -129,6 +129,11 @@ function recompute(){
   });
 }
 const count = s => ROWS.filter(r=>r.status===s).length;
+const countLight = k => ROWS.filter(r=>r.light===k).length;
+/* one filter vocabulary for tiles, chips and the By site table: L:<light>, ACT (in the order sheet) or a status */
+const inOrderSheet = r => ['URGENT','ORDER'].includes(r.status) || r.light==='RED';
+const matchF = (r,k) => k==='ALL' ? true : (k.slice(0,2)==='L:' ? r.light===k.slice(2) : (k==='ACT' ? inOrderSheet(r) : r.status===k));
+const ACT_TAG = {URGENT:'will not last to the next delivery', ORDER:'order today', WATCH:'order at the next cut-off', OVER:'overstocked'};
 const siteName = c => (SITES.find(s=>s.code===c)||{}).name || c;
 
 /* ---------------- freshness gate ---------------- */
@@ -146,7 +151,7 @@ function gateState(){
     const nD = ROWS.filter(r=>r.rolledIn>0).length;
     problems.push({stop:false, msg:'Stock is an ESTIMATE. The Kobas import is '+Math.round(ageH)+' hours old, so '+nR+' of '+ROWS.length+' lines have been rolled forward by their own daily usage'+
       (nD ? ' and '+nD+' credited with deliveries booked in Kobas since the pull' : '')+
-      '. Order quantities are still net of what is on order. Count anything marked urgent before you place it.'});
+      '. Order quantities are still net of what is on order. Count anything out of stock or running low before you place it.'});
   }
   const routeless = count('ROUTE');
   if(routeless) problems.push({stop:false, msg:routeless+' of '+ROWS.length+' lines have no usable supplier cut-off on the delivery schedule, so they show a provisional read only.'});
@@ -182,42 +187,41 @@ function renderPeriod(){
 /* ---------------- site red light ---------------- */
 function siteRag(code){
   const rs = ROWS.filter(r=>r.site===code);
-  const u = rs.filter(r=>r.status==='URGENT').length, o = rs.filter(r=>r.status==='ORDER').length;
-  const w = rs.filter(r=>r.status==='WATCH').length,  k = rs.filter(r=>r.status==='CHECK').length;
   const st = window.KEYLINE_DATA.siteMeta[code]||{};
-  /* RED = a line can run out (urgent, or an order today that is below the run-out floor). An order today that is
-     only a Baseline top-up, with the floor still covered, is AMBER: it must be placed, but nothing runs out. */
-  const oFloor = rs.filter(r=>r.status==='ORDER' && r.belowFloor).length;
+  /* EC ruling 11/11/2026. RED = at least one line out of stock (below 1), nothing else makes a site red.
+     AMBER = at least one line running low (1 to 50% of PAR) or waiting on a physical count. GREEN = the rest. */
+  const out = rs.filter(r=>r.light==='RED').length, low = rs.filter(r=>r.light==='AMBER').length;
+  const k = rs.filter(r=>r.status==='CHECK').length;
+  const u = rs.filter(r=>r.status==='URGENT').length, o = rs.filter(r=>r.status==='ORDER').length, w = rs.filter(r=>r.status==='WATCH').length;
   let rag = 'GREEN';
-  if(u+oFloor) rag='RED'; else if(o+w+k) rag='AMBER';
+  if(out) rag='RED'; else if(low+k) rag='AMBER';
   if(st.stale && rag==='GREEN') rag='GREY';
-  const bits=[]; if(u) bits.push(u+' urgent'); if(o) bits.push(o+' order today'); if(w) bits.push(w+' watch'); if(k) bits.push(k+' count');
-  const worst = rs.filter(r=>['URGENT','ORDER'].includes(r.status)).slice(0,2).map(r=>r.item.name).join(', ');
-  return {rag,u,o,w,k,bits,worst,stale:!!st.stale};
+  const bits=[]; if(out) bits.push(out+' out of stock'); if(low) bits.push(low+' running low'); if(k) bits.push(k+' count'); if(u+o) bits.push((u+o)+' to order');
+  const worst = rs.filter(r=>r.light==='RED').concat(rs.filter(r=>r.light==='AMBER')).slice(0,2).map(r=>r.item.name).join(', ');
+  return {rag,out,low,u,o,w,k,bits,worst,stale:!!st.stale};
 }
 function renderSiteRag(){
   document.getElementById('siteRag').innerHTML = SITES.map(s=>{
     const g = siteRag(s.code);
     return '<button class="s '+g.rag+'" data-site="'+s.code+'"><b>'+s.code+'</b><i>'+s.name+'</i><small>'+
-      (g.stale?'stale count. ':'')+(g.bits.length? g.bits.join(' · ') : 'all 18 lines fine')+(g.worst? '<br>'+g.worst:'')+'</small></button>';
+      (g.stale?'stale count. ':'')+(g.bits.length? g.bits.join(' · ') : 'all '+ITEMS.length+' lines above 50% of PAR')+(g.worst? '<br>'+g.worst:'')+'</small></button>';
   }).join('');
   document.querySelectorAll('#siteRag .s').forEach(b=>b.onclick=()=>{siteFilter=b.dataset.site;statusFilter='ALL';show('sites');renderChips();renderSiteTable();});
 }
 
 /* ---------------- tiles ---------------- */
 const TILES = [
-  {k:'URGENT', l:'urgent',            c:'n-red'},
-  {k:'ORDER',  l:'order today',       c:'n-amber'},
-  {k:'WATCH',  l:'watch',             c:'n-blue'},
-  {k:'CHECK',  l:'physical check',    c:'n-red'},
-  {k:'ROUTE',  l:'route unverified',  c:'n-grey'},
-  {k:'OVER',   l:'overstocked',       c:'n-grey'},
-  {k:'OK',     l:'fine',              c:'n-green'}
+  {k:'L:RED',   l:'out of stock',      c:'n-out',  f:'Out of stock'},
+  {k:'L:AMBER', l:'running low',       c:'n-low',  f:'Running low'},
+  {k:'L:GREEN', l:'above 50% of PAR',  c:'n-ok',   f:'Above 50% of PAR'},
+  {k:'ACT',     l:'to order',          c:'n-maki', f:'To order'},
+  {k:'CHECK',   l:'physical check',    c:'n-grey', f:'Physical check'},
+  {k:'OVER',    l:'overstocked',       c:'n-grey', f:'Overstocked'}
 ];
 function renderTiles(){
   document.getElementById('tiles').innerHTML = TILES.map(t=>
     '<button class="tile" data-status="'+t.k+'" aria-pressed="'+(statusFilter===t.k)+'">'+
-    '<div class="n '+t.c+'">'+count(t.k)+'</div><div class="l">'+t.l+'</div></button>').join('');
+    '<div class="n '+t.c+'">'+ROWS.filter(r=>matchF(r,t.k)).length+'</div><div class="l">'+t.l+'</div></button>').join('');
   document.querySelectorAll('#tiles .tile').forEach(b=>b.onclick=()=>{
     statusFilter = (statusFilter===b.dataset.status) ? 'ALL' : b.dataset.status;
     siteFilter='ALL'; show('sites'); renderSiteTable(); renderChips();
@@ -252,7 +256,7 @@ const unitWord = it => it.unit==='kg' ? 'kg' : (it.unit==='pack' ? 'packs' : 'ca
 const seatOf = r => SITES.findIndex(s=>s.code===r.site);
 const hrsOf  = r => (r.del && r.del.hoursToCut!=null) ? r.del.hoursToCut : 1e9;
 const daysOf = r => (r.cover==null ? 1e9 : r.cover);
-const urgFirst = r => (r.status==='URGENT' ? 0 : 1);
+const urgFirst = r => (r.light==='RED' ? 0 : (r.status==='URGENT' ? 1 : 2));
 const cutIsToday = r => !!(r.del && r.del.cutIsToday && r.del.hoursToCut>0);
 function cutText(r){
   if(!r.del) return (r.route && r.route.note) ? r.route.note : 'cut-off not confirmed';
@@ -277,21 +281,23 @@ function cellItem(r, withSup){
       ? '<span class="og-bad">Runs out '+fmtQty(-r.atDelivery, r.item)+' short before the next delivery lands.</span>'
       : 'About '+fmtQty(r.atDelivery, r.item)+' left when the next delivery lands.';
   }
-  return '<span class="og-item'+(u?' urgent':'')+'">'+r.item.name+(u?' &#9888; urgent':'')+'</span>'+
+  const isOut = r.light==='RED';
+  if(r.par!=null && r.lowAt!=null) bits.push('low at '+fmtQty(r.lowAt, r.item)+' or under');
+  if(isOut) land = land.replace('class="og-bad"', 'class="og-out"');
+  return '<span class="og-item'+(isOut?' out':(u?' urgent':''))+'"><span class="ldot '+r.light+'" title="'+r.lightLabel+'"></span>'+r.item.name+
+      (isOut?' &middot; OUT OF STOCK':(r.light==='AMBER'?' &middot; running low':''))+(u && !isOut?' &middot; will not last to the next delivery':'')+'</span>'+
     (bits.length ? '<span class="og-sub2">'+bits.join(' &middot; ')+'</span>' : '')+
     (land ? '<span class="og-sub2">'+land+'</span>' : '')+
     (r.stale ? '<span class="stale">stale count</span>' : '');
 }
 function cellStock(r){
-  let h = '<span class="qty">'+fmtQty(r.stock, r.item)+'</span>'+
+  let h = '<span class="qty'+(r.light==='RED'?' out':'')+'">'+fmtQty(r.stock, r.item)+'</span>'+
     (r.rolled ? '<span class="sub2" title="Kobas read '+fmtQty(r.rolledFrom, r.item)+' at the pull. Less '+fmtQty(r.rolledUsed, r.item)+' used since'+(r.rolledIn>0?', plus '+fmtQty(r.rolledIn, r.item)+' delivered since':'')+'.">estimated</span>' : '');
   if(r.pctBaseline!=null){
     const pct = Math.max(0, Math.min(100, Math.round(r.pctBaseline*100)));
-    const cls = pct<60 ? ' low' : (pct<100 ? ' mid' : '');
-    h += '<span class="bar'+cls+'" title="'+pct+'% of the baseline of '+fmtQty(r.baseline,r.item)+'"><i style="width:'+pct+'%"></i></span>'+
-      '<span class="sub2'+(r.vsBaseline<0?' warn':'')+'">'+(r.vsBaseline<0
-        ? fmtQty(-r.vsBaseline, r.item)+' under baseline'
-        : fmtQty(r.vsBaseline, r.item)+' over baseline')+'</span>';
+    const cls = r.light==='RED' ? ' low' : (r.light==='AMBER' ? ' mid' : '');
+    h += '<span class="bar'+cls+'" title="'+pct+'% of the PAR of '+fmtQty(r.baseline,r.item)+'. Red below 1, amber up to 50%, green above 50%."><i style="width:'+pct+'%"></i></span>'+
+      '<span class="sub2'+(r.light==='RED'?' out':(r.light==='AMBER'?' warn':''))+'">'+pct+'% of PAR</span>';
   }
   return h;
 }
@@ -361,11 +367,12 @@ function renderFive(tblId, rows, view, emptyMsg){
       const g = siteRag(s.code), sups = {};
       rs.forEach(r=>{ (sups[r.sup] = sups[r.sup] || []).push(r); });
       const keys = Object.keys(sups).sort((a,b)=> hrsOf(sups[a][0])-hrsOf(sups[b][0]) || a.localeCompare(b));
-      const nUrg = rs.filter(r=>r.status==='URGENT').length;
+      const nUrg = rs.filter(r=>r.status==='URGENT' && r.light!=='RED').length, nOut = rs.filter(r=>r.light==='RED').length, nLow = rs.filter(r=>r.light==='AMBER').length;
       html += '<tr class="sitehd"><td colspan="'+cols+'">'+
         '<span class="dotrag '+g.rag+'"></span><b>'+s.code+' '+s.name+'</b>'+
         '<span class="sh-sub">'+rs.length+' line'+(rs.length===1?'':'s')+', '+keys.length+' supplier'+(keys.length===1?'':'s')+
-        (nUrg ? ', <b class="og-bad">'+nUrg+' urgent</b>' : '')+
+        (nOut ? ', <b class="og-out">'+nOut+' out of stock</b>' : '')+(nLow ? ', <b class="og-bad">'+nLow+' running low</b>' : '')+
+        (nUrg ? ', '+nUrg+' will not last to the next delivery' : '')+
         (g.stale ? ', <b class="og-bad">count first</b>' : '')+'</span></td></tr>';
       keys.forEach(sup=>{
         const list = sups[sup].slice().sort((a,b)=> urgFirst(a)-urgFirst(b) || daysOf(a)-daysOf(b) || a.item.name.localeCompare(b.item.name));
@@ -388,7 +395,7 @@ function renderFive(tblId, rows, view, emptyMsg){
 
 /* Called renderSupCards because the boot sequence in part_d calls it by that name. */
 function renderSupCards(){
-  const rows = ROWS.filter(r=>['URGENT','ORDER'].includes(r.status));
+  const rows = ROWS.filter(inOrderSheet);
   const sum  = document.getElementById('ogsum');
   document.getElementById('ogsortchips').innerHTML = Object.keys(OGVIEW).map(k=>
     '<button class="chip" data-ogsort="'+k+'" aria-pressed="'+(ogSort===k)+'">'+OGVIEW[k]+'</button>').join('');
@@ -401,7 +408,8 @@ function renderSupCards(){
     const nSups  = new Set(rows.map(r=>r.sup)).size;
     const todayN = new Set(rows.filter(r=>cutIsToday(r)).map(r=>r.site+'|'+r.sup)).size;
     const urg    = rows.filter(r=>r.status==='URGENT').length;
-    sum.innerHTML = '<b>'+rows.length+' line'+(rows.length===1?'':'s')+' to order</b> across '+nSites+' site'+(nSites===1?'':'s')+
+    const nOut = rows.filter(r=>r.light==='RED').length, nLow = rows.filter(r=>r.light==='AMBER').length;
+    sum.innerHTML = (nOut ? '<b class="og-out">'+nOut+' out of stock.</b> ' : '')+(nLow ? '<b class="og-bad">'+nLow+' running low.</b> ' : '')+ '<b>'+rows.length+' line'+(rows.length===1?'':'s')+' to order</b> across '+nSites+' site'+(nSites===1?'':'s')+
       ' and '+nSups+' supplier'+(nSups===1?'':'s')+'. '+
       (todayN ? '<b>'+todayN+' cut-off'+(todayN>1?'s':'')+' fall'+(todayN>1?'':'s')+' today.</b> ' : 'No cut-off falls today. ')+
       (urg ? '<b class="og-bad">'+urg+' line'+(urg>1?'s':'')+' cannot be reached by the next delivery, so call the AM as well as ordering.</b>' : '');
@@ -415,7 +423,7 @@ function renderSupCards(){
 function renderWatchTable(){
   const box = document.getElementById('watchbox');
   if(!box) return;
-  const rows = ROWS.filter(r=>r.status==='WATCH');
+  const rows = ROWS.filter(r=>r.status==='WATCH' && r.light!=='RED');
   const nSites = new Set(rows.map(r=>r.site)).size;
   document.getElementById('watchsum').innerHTML = 'Not due yet: <b>'+rows.length+' line'+(rows.length===1?'':'s')+
     '</b> to watch across '+nSites+' site'+(nSites===1?'':'s')+'. Click to open.';
@@ -424,21 +432,19 @@ function renderWatchTable(){
 
 /* ---------------- tables ---------------- */
 function rowHtml(r, withSite){
-  const pill = '<span class="pill p-'+r.status+'">'+LABEL[r.status]+'</span>';
+  const pill = '<span class="pill p-'+r.light+'">'+r.lightLabel+'</span>'+(ACT_TAG[r.status] ? '<span class="acttag">'+ACT_TAG[r.status]+'</span>' : '');
   const prov = r.provisional ? '<div class="prov">PROVISIONAL: '+r.provStatus+'</div>' : '';
   const stale = r.stale ? '<span class="stale">stale count</span>' : '';
   const asm   = r.assumed ? '<span class="asm" title="Delivery days are on the tab, the cut-off time is borrowed from the nearest tab that states one">CUT-OFF ASSUMED</span>' : '';
   const cause = (r.comp && r.comp.cause) ? '<div class="why" style="margin-top:3px"><i>Kobas orders: '+r.comp.cause+'</i></div>' : '';
 
   /* 1. what is on the shelf now, with a bar against the Baseline */
-  let stockCell = '<span class="qty">'+fmtQty(r.stock, r.item)+'</span>';
+  let stockCell = '<span class="qty'+(r.light==='RED'?' out':'')+'">'+fmtQty(r.stock, r.item)+'</span>';
   if(r.pctBaseline!=null){
     const pct = Math.max(0, Math.min(100, Math.round(r.pctBaseline*100)));
-    const cls = pct<60 ? ' low' : (pct<100 ? ' mid' : '');
-    stockCell += '<span class="bar'+cls+'" title="'+pct+'% of the Baseline of '+fmtQty(r.baseline,r.item)+'"><i style="width:'+pct+'%"></i></span>'+
-      '<span class="sub2'+(r.vsBaseline<0?' warn':'')+'">'+(r.vsBaseline<0
-        ? fmtQty(-r.vsBaseline, r.item)+' under Baseline'
-        : fmtQty(r.vsBaseline, r.item)+' over Baseline')+'</span>';
+    const cls = r.light==='RED' ? ' low' : (r.light==='AMBER' ? ' mid' : '');
+    stockCell += '<span class="bar'+cls+'" title="'+pct+'% of the PAR of '+fmtQty(r.baseline,r.item)+'. Red below 1, amber up to 50%, green above 50%."><i style="width:'+pct+'%"></i></span>'+
+      '<span class="sub2'+(r.light==='RED'?' out':(r.light==='AMBER'?' warn':''))+'">'+pct+'% of PAR</span>';
   }
 
   /* 2. usage a day */
@@ -456,7 +462,7 @@ function rowHtml(r, withSite){
   if(r.atDelivery!=null && r.del){
     const v = r.atDelivery;
     arriveCell = (v < 0)
-      ? '<span class="qty" style="color:#D1240F">runs out first</span><span class="sub2 warn">short '+fmtQty(-v, r.item)+' by '+fmtD(r.del.next.del)+'</span>'
+      ? '<span class="qty bad">runs out first</span><span class="sub2 warn">short '+fmtQty(-v, r.item)+' by '+fmtD(r.del.next.del)+'</span>'
       : '<span class="qty">'+fmtQty(v, r.item)+'</span><span class="sub2">left on '+fmtD(r.del.next.del)+'</span>';
   }
 
@@ -488,7 +494,7 @@ function renderActionTable(){
 function renderSiteTable(){
   let rows = ROWS;
   if(siteFilter!=='ALL')  rows = rows.filter(r=>r.site===siteFilter);
-  if(statusFilter!=='ALL')rows = rows.filter(r=>r.status===statusFilter);
+  if(statusFilter!=='ALL')rows = rows.filter(r=>matchF(r,statusFilter));
   const tb = document.querySelector('#t-site tbody');
   if(!rows.length){ tb.innerHTML='<tr><td colspan="10" class="empty">Nothing matches that filter.</td></tr>'; return; }
   let html='', last=null;
@@ -501,15 +507,15 @@ function renderSiteTable(){
 function renderChips(){
   document.getElementById('sitechips').innerHTML =
     ['ALL'].concat(SITES.map(s=>s.code)).map(c=>{
-      const n = c==='ALL'? ROWS.filter(r=>RANK[r.status]<3).length
-                         : ROWS.filter(r=>r.site===c && RANK[r.status]<3).length;
+      const n = c==='ALL'? ROWS.filter(r=>LRANK[r.light]<2).length
+                         : ROWS.filter(r=>r.site===c && LRANK[r.light]<2).length;
       return '<button class="chip" data-site="'+c+'" aria-pressed="'+(siteFilter===c)+'">'+
         (c==='ALL'?'All sites':c+' '+siteName(c))+'<span class="b">'+n+'</span></button>';
     }).join('');
   document.getElementById('filterchips').innerHTML =
     ['ALL'].concat(TILES.map(t=>t.k)).map(k=>
       '<button class="chip" data-status="'+k+'" aria-pressed="'+(statusFilter===k)+'">'+
-      (k==='ALL'?'All statuses':LABEL[k])+'</button>').join('');
+      (k==='ALL'?'All statuses':TILES.find(t=>t.k===k).f)+'</button>').join('');
   document.querySelectorAll('#sitechips .chip').forEach(b=>b.onclick=()=>{siteFilter=b.dataset.site;renderChips();renderSiteTable();});
   document.querySelectorAll('#filterchips .chip').forEach(b=>b.onclick=()=>{statusFilter=b.dataset.status;renderChips();renderSiteTable();renderTiles();});
 }

@@ -24,7 +24,7 @@ function nudges(){
     title:'Estate order guide',
     body:(urgent+order)===0
       ? 'Suppressed. Nothing is below its trigger, and a daily email that always arrives stops being read.'
-      : urgent+' urgent and '+order+' to order across '+new Set(ROWS.filter(r=>RANK[r.status]<2).map(r=>r.site)).size+' sites. Red-light sites first, then lines grouped by supplier with the cut-off against each. Sent as a PDF attachment as well as inline.',
+      : countLight('RED')+' out of stock, '+countLight('AMBER')+' running low and '+(urgent+order)+' to order across '+new Set(ROWS.filter(r=>RANK[r.status]<2).map(r=>r.site)).size+' sites. Red-light sites first, then lines grouped by supplier with the cut-off against each. Sent as a PDF attachment as well as inline.',
     to: RECIPIENTS.sophie,
     state: (urgent+order)===0 ? 'suppress' : (h>=7 ? 'fired' : 'pending')
   });
@@ -94,13 +94,15 @@ function renderNudges(){
 function renderMail(){
   const urgent = ROWS.filter(r=>r.status==='URGENT');
   const order  = ROWS.filter(r=>r.status==='ORDER');
+  const outRows = ROWS.filter(r=>r.light==='RED'), lowRows = ROWS.filter(r=>r.light==='AMBER');
+  const AMB = '#B45309';                       // amber ink for the email; red (#B3200E) is out of stock only
   const m = window.KEYLINE_DATA.meta;
-  if(!urgent.length && !order.length){
+  const all = ROWS.filter(inOrderSheet);
+  if(!all.length){
     document.getElementById('mailprev').innerHTML =
       '<h3>No email today</h3><p class="note">Nothing is below its trigger. The system stays silent rather than sending an all-clear, so that an email in the inbox always means something needs doing.</p>';
     return;
   }
-  const all = urgent.concat(order);
   const ragList = k => SITES.filter(s=>siteRag(s.code).rag===k).map(s=>s.code).join(' ') || 'none';
   const cutShort = r => !r.del ? 'cut-off not confirmed'
       : (r.del.cutIsToday ? 'today ' + r.del.next.cutTime
@@ -125,28 +127,30 @@ function renderMail(){
     const stuck = Math.round((c.onOrder - c.inbound)*100)/100;
     return fmtQty(c.onOrder, r.item) +
       (c.due ? '<div style="color:#6B7280;font-size:11.5px">due ' + dayShort(c.due) + '</div>' : '') +
-      (stuck>0.01 ? '<div style="color:#B3200E;font-size:11.5px">' + fmtQty(stuck, r.item) + ' overdue</div>' : '');
+      (stuck>0.01 ? '<div style="color:#6B7280;font-size:11.5px">' + fmtQty(stuck, r.item) + ' overdue</div>' : '');
   };
-  const nameTxt = r => '<b' + (r.status==='URGENT' ? ' style="color:#B3200E"' : '') + '>' + r.item.name + '</b>' +
-      (r.status==='URGENT' ? ' <span style="color:#B3200E;font-weight:700">URGENT</span>' : '');
+  const nameTxt = r => '<b' + (r.light==='RED' ? ' style="color:#B3200E"' : '') + '>' + r.item.name + '</b>' +
+      (r.light==='RED' ? ' <span style="color:#B3200E;font-weight:700">OUT OF STOCK</span>'
+        : (r.light==='AMBER' ? ' <span style="color:' + AMB + ';font-weight:700">LOW</span>' : '')) +
+      (r.status==='URGENT' && r.light!=='RED' ? ' <span style="color:' + AMB + ';font-weight:700">will not last to delivery</span>' : '');
   const stockTxt = r => fmtQty(r.stock, r.item) +
       (r.baseline!=null ? '<div style="color:#6B7280;font-size:11.5px">PAR ' + fmtQty(r.baseline, r.item) + '</div>' : '');
   const daysTxt = r => (r.cover==null) ? '-'
-      : '<span' + (r.cover<3 ? ' style="color:#B3200E;font-weight:700"' : '') + '>' + fmtDays(r.cover) + '</span>' +
+      : '<span' + (r.light==='RED' ? ' style="color:#B3200E;font-weight:700"' : (r.cover<3 ? ' style="color:' + AMB + ';font-weight:700"' : '')) + '>' + fmtDays(r.cover) + '</span>' +
         (r.runOut ? '<div style="color:#6B7280;font-size:11.5px">out ' + fmtDabs(r.runOut).replace(/^(\w{3})\w*/, '$1') + '</div>' : '');
 
   let body = '<p class="rag">RED ' + ragList('RED') +
              ' &middot; AMBER ' + ragList('AMBER') +
              ' &middot; GREEN ' + ragList('GREEN') + '</p>' +
-             '<p class="note" style="margin:0 0 14px">' + all.length + ' lines to order' +
-             (urgent.length ? ', ' + urgent.length + ' of them urgent' : '') +
-             '. Part one is your order sheet, site by site. Part two is the same lines as one list, soonest cut-off first, so nothing gets missed. On order is what Kobas already has against the line, and Order is net of it.</p>' +
+             '<p class="note" style="margin:0 0 14px">' + all.length + ' line' + (all.length===1?'':'s') + ' on the order sheet. ' +
+             outRows.length + ' out of stock (red, below 1), ' + lowRows.length + ' running low (amber, 1 to 50% of PAR)' +
+             '. PAR levels were re-set by the EC team on 11 Nov 2026. Part one is your order sheet, site by site. Part two is the same lines as one list, soonest cut-off first, so nothing gets missed. On order is what Kobas already has against the line, and Order is net of it.</p>' +
              (typeof closureLine==='function' && closureLine()
                ? '<p style="margin:0 0 14px;padding:8px 10px;background:#FBF7F0;border-left:3px solid ' +
                  ((closureSummary() && closureSummary().short.length) ? '#B3200E' : '#1F8A4C') +
                  ';font-size:13px"><b>Closing the loop.</b> ' + closureLine() + '</p>'
                : '') +
-             (ROLLED ? '<p class="note" style="margin:0 0 14px;color:#B3200E"><b>Stock in this email is an estimate.</b> The last Kobas pull is ' + Math.round(ROLL_AGE) + ' hours old, so every line has been rolled forward by its own daily usage and credited with anything booked in as delivered since. Count the urgent lines before you place them.</p>' : '');
+             (ROLLED ? '<p class="note" style="margin:0 0 14px;color:' + AMB + '"><b>Stock in this email is an estimate.</b> The last Kobas pull is ' + Math.round(ROLL_AGE) + ' hours old, so every line has been rolled forward by its own daily usage and credited with anything booked in as delivered since. Count the out of stock and low lines before you place them.</p>' : '');
 
   /* ---------- part one: by Maki site, then supplier ---------- */
   body += '<h3 style="font-size:14.5px;margin:18px 0 6px;color:#B5470B">1. By Maki site</h3>';
@@ -156,21 +160,22 @@ function renderMail(){
     const rs = bySite[s.code];
     if(!rs) return;
     const st = window.KEYLINE_DATA.siteMeta[s.code] || {};
-    const nU = rs.filter(r=>r.status==='URGENT').length;
+    const nU = rs.filter(r=>r.light==='RED').length, nL = rs.filter(r=>r.light==='AMBER').length;
     body += '<h4>' + s.code + ' ' + s.name +
       ' <span style="font-weight:500;color:#6B7280;font-size:12px">' + rs.length + ' line' + (rs.length===1?'':'s') +
-      (nU ? ', <span style="color:#B3200E;font-weight:700">' + nU + ' urgent</span>' : '') + '</span>' +
-      (st.stale ? ' <span style="color:#B3200E">count first</span>' : '') + '</h4>';
+      (nU ? ', <span style="color:#B3200E;font-weight:700">' + nU + ' out of stock</span>' : '') +
+      (nL ? ', <span style="color:' + AMB + ';font-weight:700">' + nL + ' running low</span>' : '') + '</span>' +
+      (st.stale ? ' <span style="color:' + AMB + '">count first</span>' : '') + '</h4>';
     const bySup = {};
     rs.forEach(r=>{ (bySup[r.sup] = bySup[r.sup] || []).push(r); });
     /* one table per site, the supplier is a band inside it, so the column headings appear once */
     body += '<table ' + TBL + '><tr><th ' + TH + '>Item</th><th ' + THN + '>In stock</th>' +
       '<th ' + THN + '>Days left</th><th ' + THN + '>On order</th><th ' + THN + '>Order</th></tr>';
     Object.keys(bySup).sort((a,b)=> hrs(bySup[a][0]) - hrs(bySup[b][0]) || a.localeCompare(b)).forEach(sup=>{
-      const list = bySup[sup].slice().sort((a,b)=> RANK[a.status]-RANK[b.status] || a.item.name.localeCompare(b.item.name));
+      const list = bySup[sup].slice().sort((a,b)=> LRANK[a.light]-LRANK[b.light] || RANK[a.status]-RANK[b.status] || a.item.name.localeCompare(b.item.name));
       const f = list[0], todayCut = !!(f.del && f.del.cutIsToday && f.del.hoursToCut>0);
       body += '<tr><td colspan="5" style="padding:9px 10px 5px 0;font-size:13px;border-bottom:1px solid #E7E1D6">' +
-        '<b>' + sup + '</b>, order by ' + (todayCut ? '<b style="color:#B3200E">' + cutShort(f) + '</b>' : '<b>' + cutShort(f) + '</b>') +
+        '<b>' + sup + '</b>, order by ' + '<b>' + cutShort(f) + '</b>' +
         (f.del ? '<span style="color:#6B7280"> &middot; lands ' + fmtD(f.del.next.del) + '</span>' : '') + '</td></tr>';
       body += list.map(r=>'<tr><td ' + TD + '>' + nameTxt(r) + '</td>' +
         '<td ' + TDN + '>' + stockTxt(r) + '</td>' +
@@ -184,7 +189,7 @@ function renderMail(){
   /* ---------- part two: the same lines as one list ---------- */
   const seat = r => SITES.findIndex(s=>s.code===r.site);
   const flat = all.slice().sort((a,b)=> hrs(a)-hrs(b) || seat(a)-seat(b) || a.sup.localeCompare(b.sup) ||
-    RANK[a.status]-RANK[b.status] || a.item.name.localeCompare(b.item.name));
+    LRANK[a.light]-LRANK[b.light] || RANK[a.status]-RANK[b.status] || a.item.name.localeCompare(b.item.name));
   body += '<h3 style="font-size:14.5px;margin:22px 0 6px;color:#B5470B">2. One list, soonest cut-off first</h3>' +
     '<table ' + TBL + '><tr><th ' + TH + '>Site</th><th ' + TH + '>Item</th><th ' + TH + '>Supplier</th>' +
     '<th ' + THN + '>In stock</th><th ' + THN + '>Days left</th><th ' + THN + '>On order</th><th ' + THN + '>Order</th><th ' + TH + '>Order by</th></tr>' +
@@ -197,7 +202,7 @@ function renderMail(){
         '<td ' + TDN + '>' + (r.cover==null ? '-' : fmtDays(r.cover)) + '</td>' +
         '<td ' + TDN + '>' + onOrdTxt(r) + '</td>' +
         '<td ' + TDN + '><b>' + qtyTxt(r) + '</b></td>' +
-        '<td ' + TD + (todayCut ? ' ' : '') + '><span' + (todayCut ? ' style="color:#B3200E;font-weight:700"' : '') + '>' +
+        '<td ' + TD + (todayCut ? ' ' : '') + '><span' + (todayCut ? ' style="font-weight:700"' : '') + '>' +
           cutShort(r) + '</span></td></tr>';
     }).join('') + '</table>';
 
@@ -209,16 +214,16 @@ function renderMail(){
 
   document.getElementById('mailprev').innerHTML =
     '<div class="mail"><div class="h"><b>To:</b> sophie@makiramen.com, srawut@makiramen.com<br>'+
-    '<b>Subject:</b> Keyline: '+urgent.length+' urgent, '+order.length+' to order<br>'+
+    '<b>Subject:</b> Keyline: '+outRows.length+' out of stock, '+lowRows.length+' running low, '+(urgent.length+order.length)+' to order<br>'+
     '<b>Sent:</b> 07:00 &middot; Kobas stock as at '+m.importedLabel.replace('pulled from Kobas ','')+', last full count '+m.reportDate+'</div>'+body+
-    '<p class="note">Order quantities are already net of stock in hand and of anything on its way, so order exactly what the Order column says. Days left is that site own average daily usage against the Kobas position. URGENT means the next routine delivery will not arrive in time, so order it AND call your AM. No email ever goes to a supplier.</p></div>';
+    '<p class="note">RED means out of stock (below 1) and nothing else. AMBER (LOW) means running low: from 1 up to 50% of the PAR. Anything above 50% of the PAR is green. Order quantities are already net of stock in hand and of anything on its way, so order exactly what the Order column says. Days left is that site own average daily usage against the Kobas position. Will not last to delivery means the next routine delivery will not arrive in time, so order it AND call your AM. No email ever goes to a supplier.</p></div>';
 }
 
 function renderExcep(){
   const groups = [
     ['CHECK','Negative or impossible stock','A count, not an order. Kobas and the shelf disagree.'],
     ['DATA','Data check','Days-left figures that are not credible, or lines the report did not return.'],
-    ['OVER','Overstocked','More than 21 days of stock and above the Baseline. Propose a transfer.']
+    ['OVER','Overstocked','More than 21 days of stock and above the PAR. Propose a transfer.']
   ];
   const html = groups.map(([k,t,d])=>{
     const rs = ROWS.filter(r=>r.status===k);
