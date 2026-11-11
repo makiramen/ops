@@ -18,9 +18,12 @@ Per site, per week:
   purchases  supplier deliveries delivered in the week, valued line by line, split food / wet / controllables
   stock      the stock take closing the week (completed Stock Checks logged Fri..Mon after the week start + 4; per category the
              latest count wins): counted value by food / wet / controllables
-  food cost  Kobas Stock Usage Comparison, opening -> closing stock take: food_pct = actual usage / attributed net revenue,
-  + variance stock_variance = (actual - theory) / theory, food and drinks. Proved 11/11/2026 on M1 w/c 02/11 against Mona Lisa
-             (21.48 vs 21.41) and the variance sheet (food -0.68 vs -0.6, drinks +0.07 vs +0.1)
+  food cost  food_pct = supplier deliveries delivered in the week (order totals) / gross sales: the Mona Lisa ACTUAL food cost %
+             basis (proved 11/11/2026, M1 w/c 26/10 6,944.49 / 25,925.99 = 26.79% exactly). Deliveries over 8k or over 40% of the
+             week are listed under purchases.check_these (eg M7 TRUE WORLD FOODS 51,064.76 on 31/10/2026).
+  variance   Kobas Stock Usage Comparison, stock take to stock take: stock_variance = (actual - theory usage) / theory usage,
+             food and drinks (M1 w/c 02/11: food -0.68 vs the sheet's -0.6, drinks +0.07 vs +0.1); food_cost_actual_pct = actual
+             usage / attributed net revenue (true cost of sales, beside the purchases-basis figure)
 """
 import os, re, sys, csv, io, json, glob, math, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -153,16 +156,31 @@ CATNAME = {}
 for c in CHK or []:
     for e in c['entries']:
         if len(e) > 3 and e[3] is not None: CATNAME[str(e[3])] = e[0]
-UC = {(u['site'], u['week']): u for u in (jload(os.path.join(RAW, 'usage_comparison.json'), []) or [])}
+UC = jload(os.path.join(RAW, 'usage_comparison.json'), []) or []
+COUNTED = {}                                   # (site, closing date) -> category ids counted in that day's stock checks
+for c in CHK or []:
+    site = VID2S.get(c['venue_id'])
+    if site:
+        COUNTED.setdefault((site, c['log_date'][:10]), set()).update(str(e[3]) for e in c['entries'] if len(e) > 3 and e[3] is not None)
 def usage(site, mon):
-    """Kobas Stock Usage Comparison between the two stock takes around the week. Matches Mona Lisa / the variance sheet:
-    cost % = actual usage / attributed net revenue, variance % = (actual - theory) / theory, over the categories Kobas attributes
-    sales to (net_rev > 0; packaging / controllables carry usage but no revenue and are excluded, as Kobas excludes them from GP)."""
-    u = UC.get((site, mon.isoformat()))
-    if u is None: return None
-    if u.get('error'): return {'opening_check': u.get('opening'), 'closing_check': u.get('closing'), 'error': u['error']}
+    """Kobas Stock Usage Comparison over the stock period(s) closing the week. Matches Mona Lisa's variance sheet:
+    variance % = (actual - theory usage) / theory usage; actual cost % = actual usage / attributed net revenue; both over the
+    categories Kobas attributes sales to (net_rev > 0: packaging / controllables carry usage but no revenue, Kobas excludes them
+    from GP). Sites that split the stock take over two days get one period per closing day; each category is read from the period
+    whose closing check counted it (categories counted on neither day come from the latest period, flagged)."""
+    lo, hi = (mon + datetime.timedelta(4)).isoformat(), (mon + datetime.timedelta(8)).isoformat()
+    runs = sorted([u for u in UC if u['site'] == site and lo <= (u.get('closing') or '') <= hi], key=lambda u: u['closing'])
+    if not runs: return None
+    good = [u for u in runs if not u.get('error')]
+    if not good: return {'periods': [[u.get('opening'), u.get('closing')] for u in runs], 'error': runs[-1]['error']}
+    pick, uncounted = {}, []
+    for u in good:
+        for cid, c in (u.get('categories') or {}).items():
+            if cid in COUNTED.get((site, u['closing']), set()) or cid not in pick: pick[cid] = (u, c)
+    for cid, (u, c) in pick.items():
+        if not any(cid in COUNTED.get((site, x['closing']), set()) for x in good) and (c.get('net_rev') or 0) > 0.5: uncounted.append(cid)
     agg, unk, excl = {}, [], {}
-    for cid, c in (u.get('categories') or {}).items():
+    for cid, (u, c) in pick.items():
         name = CATNAME.get(str(cid))
         if name is None: unk.append(cid)
         lt = lead_of(name) if name else 'food'
@@ -172,15 +190,26 @@ def usage(site, mon):
         a = agg.setdefault(lt, {'net_rev': 0.0, 'actual': 0.0, 'theory': 0.0, 'variance': 0.0, 'waste': 0.0, 'comp': 0.0, 'director': 0.0})
         a['net_rev'] += c['net_rev'] or 0; a['actual'] += c['usage_value'] or 0; a['theory'] += c['theory_value'] or 0
         a['variance'] += c['variance_value'] or 0; a['waste'] += c.get('cow_value') or 0; a['comp'] += c.get('coc_value') or 0; a['director'] += c.get('cod_value') or 0
-    res = {'opening_check': u['opening'], 'closing_check': u['closing'], 'kobas_heading': u.get('heading'),
-           'total_net_revenue': r2(u.get('total_net_revenue')), 'excluded_no_revenue_gbp': excl, 'unnamed_category_ids': unk}
+    res = {'periods': [[u['opening'], u['closing']] for u in good], 'total_net_revenue': r2(max(u.get('total_net_revenue') or 0 for u in good)),
+           'excluded_no_revenue_gbp': excl, 'unnamed_category_ids': unk, 'uncounted_category_ids': uncounted}
     for lt in ('food', 'wet'):
         a = agg.get(lt)
         res[lt] = None if not a else {'attributed_net_rev': r2(a['net_rev']), 'actual_usage_gbp': r2(a['actual']), 'theory_usage_gbp': r2(a['theory']),
                                       'variance_gbp': r2(a['variance']), 'cost_pct': pct(a['actual'], a['net_rev']), 'theory_cost_pct': pct(a['theory'], a['net_rev']),
-                                      'variance_pct': pct(a['variance'], a['theory']), 'variance_pct_of_revenue': pct(a['variance'], u.get('total_net_revenue')),
+                                      'variance_pct': pct(a['variance'], a['theory']),
                                       'waste_gbp': r2(a['waste']), 'comp_gbp': r2(a['comp']), 'director_gbp': r2(a['director'])}
     return res
+
+# ---------------- purchases (Mona Lisa food cost basis): supplier deliveries delivered in the week, order totals ----------------
+ORD = jload(os.path.join(RAW, 'orders.json'), None)
+def purchases(site, mon):
+    if ORD is None: return None
+    a, b = mon.isoformat(), (mon + datetime.timedelta(6)).isoformat()
+    xs = [o for o in ORD if o.get('to_venue_id') == V[site] and o.get('type') == 'delivery' and a <= str(o.get('delivered_date') or '')[:10] <= b]
+    tot = sum(num(o.get('total')) or 0 for o in xs)
+    flags = [{'order_id': o['id'], 'supplier': o.get('from_supplier_name'), 'delivered': str(o.get('delivered_date'))[:10], 'total': num(o.get('total'))}
+             for o in xs if (num(o.get('total')) or 0) > 8000 or (tot and (num(o.get('total')) or 0) > 0.4 * tot and (num(o.get('total')) or 0) > 3000)]
+    return {'deliveries': len(xs), 'total_gbp': r2(tot), 'check_these': flags}
 
 # ---------------- item mix ----------------
 def item_mix(site, mon):
@@ -291,8 +320,13 @@ for mon in weeks:
         S['transfers'] = transfers(site, mon)
         uc = usage(site, mon)
         S['usage_comparison'] = uc
-        S['food_pct'] = ((uc or {}).get('food') or {}).get('cost_pct')
-        S['wet_pct'] = ((uc or {}).get('wet') or {}).get('cost_pct')
+        pu = purchases(site, mon)
+        S['purchases'] = pu
+        # food_pct = the dashboard / Mona Lisa basis (proved 11/11/2026: Mona Lisa w/c 26/10 M1 6,944.49 / 25,925.99 = 26.79%):
+        # supplier deliveries delivered in the week / gross sales. Stock-period actual cost sits beside it.
+        S['food_pct'] = pct((pu or {}).get('total_gbp'), gross) if (pu and gross and doc['complete']) else None
+        S['food_cost_actual_pct'] = ((uc or {}).get('food') or {}).get('cost_pct')
+        S['wet_cost_actual_pct'] = ((uc or {}).get('wet') or {}).get('cost_pct')
         S['stock_variance'] = {'food_pct': ((uc or {}).get('food') or {}).get('variance_pct'), 'drinks_pct': ((uc or {}).get('wet') or {}).get('variance_pct'),
                                'target': '±5%', 'basis': '(actual - theory usage) / theory usage, Kobas Stock Usage Comparison'}
         doc['sites'][site] = S

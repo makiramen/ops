@@ -188,13 +188,18 @@ def check_full(c):
     return dict({kk: c.get(kk) for kk in ('id', 'venue_id', 'venue_name', 'name', 'log_date', 'type', 'status', 'total_value', 'c_date')}, entries=rows)
 stock = [c for c in checks if c.get('type') == 'stock' and c.get('status') == 'completed' and c.get('venue_id') in VID2S]
 save('stock_check_list.json', [{kk: c.get(kk) for kk in ('id', 'venue_id', 'log_date', 'c_date', 'total_value')} for c in stock])
-def closing_dates(vid, w):
+def uc_pairs(vid, w):
+    """Stock periods that close a week: every completed stock check date logged Fri..Tue after the week start (sites split food
+    and drinks over two days, eg M6 food Sunday, drinks Monday), each paired with that venue's check 5..9 days earlier."""
     ds = sorted({c['log_date'][:10] for c in stock if c['venue_id'] == vid})
-    cl = [d for d in ds if (w + datetime.timedelta(4)).isoformat() <= d <= (w + datetime.timedelta(7)).isoformat()]
-    if not cl: return None, None
-    op = [d for d in ds if d < cl[-1] and d >= (datetime.date.fromisoformat(cl[-1]) - datetime.timedelta(10)).isoformat()]
-    return (op[-1] if op else None), cl[-1]
-closing = [c for c in stock if any(closing_dates(c['venue_id'], w)[1] == c['log_date'][:10] for w in weeks)]
+    out = []
+    for cd in [d for d in ds if (w + datetime.timedelta(4)).isoformat() <= d <= (w + datetime.timedelta(8)).isoformat()]:
+        lo, hi = (datetime.date.fromisoformat(cd) - datetime.timedelta(9)).isoformat(), (datetime.date.fromisoformat(cd) - datetime.timedelta(5)).isoformat()
+        op = [d for d in ds if lo <= d <= hi]
+        out.append((op[-1] if op else None, cd))
+    return out
+closing_days = {(c['venue_id'], cd) for w in weeks for c in stock for _, cd in uc_pairs(c['venue_id'], w)}
+closing = [c for c in stock if (c['venue_id'], c['log_date'][:10]) in closing_days]
 with ThreadPoolExecutor(5) as ex: save('stock_checks.json', [x for x in ex.map(check_full, closing) if x])
 log['stock_checks'] = len(stock); log['closing_checks_pulled'] = len(closing)
 
@@ -205,9 +210,8 @@ def uc_const(t, name):
     j = t.find(');</script>', i)
     return json.loads(t[i + len(name) + 3:j].strip())
 def usage_comparison(job):
-    site, vid, w = job
-    a, b = closing_dates(vid, w)
-    if not (a and b): return {'site': site, 'week': w.isoformat(), 'opening': a, 'closing': b, 'error': 'no opening/closing stock check'}
+    site, vid, a, b = job
+    if not (a and b): return {'site': site, 'opening': a, 'closing': b, 'error': 'no opening stock check 5..9 days before the closing one'}
     data = {'m': 'CORE_Reports_UsageComparison', 'v': '1', 'category': '', 'venueid': str(vid), 'opening_years': a[:4], 'opening_days': a,
             'closing_years': b[:4], 'closing_days': b}
     for i in range(3):
@@ -218,12 +222,13 @@ def usage_comparison(job):
                 hd = re.search(r'Viewing report for ([^<]*)', r.text)
                 cats = {cid: {kk: v['total'].get(kk) for kk in ('net_rev', 'usage_value', 'theory_value', 'variance_value', 'cos_value', 'cow_value', 'coc_value', 'cod_value', 'actual_gp_perc', 'theory_gp_perc')}
                         for cid, v in td.items()}
-                return {'site': site, 'week': w.isoformat(), 'opening': a, 'closing': b, 'heading': hd.group(1).strip() if hd else None,
+                return {'site': site, 'opening': a, 'closing': b, 'heading': hd.group(1).strip() if hd else None,
                         'total_net_revenue': uc_const(r.text, 'total_net_revenue'), 'categories': cats}
         except Exception as e: last = repr(e)
         time.sleep(5)
-    return {'site': site, 'week': w.isoformat(), 'opening': a, 'closing': b, 'error': 'usage comparison returned no table'}
-with ThreadPoolExecutor(4) as ex: save('usage_comparison.json', list(ex.map(usage_comparison, [(s, v, w) for w in weeks for s, v in V.items()])))
+    return {'site': site, 'opening': a, 'closing': b, 'error': 'usage comparison returned no table'}
+uc_jobs = sorted({(s, v, a, b) for w in weeks for s, v in V.items() for a, b in uc_pairs(v, w)}, key=lambda x: (x[0], x[3]))
+with ThreadPoolExecutor(4) as ex: save('usage_comparison.json', list(ex.map(usage_comparison, uc_jobs)))
 
 # 4c) transfers, per week, all venues
 for w in weeks:
