@@ -1,0 +1,35 @@
+name: Kobas route probe (writes to branch kobas-probe only)
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        default: 'kobas_weekly/probe.py'
+permissions:
+  contents: write
+concurrency:
+  group: kobas-login
+  cancel-in-progress: false
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1, persist-credentials: false }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install --quiet requests
+      - name: Probe
+        env:
+          TZ: Europe/London
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+        run: mkdir -p /tmp/probe && python3 ${{ inputs.script }} /tmp/probe
+      - name: Commit dumps to branch kobas-probe
+        if: always()
+        run: |
+          cd /tmp/probe || exit 0
+          git init -q -b kobas-probe && git add -A
+          git -c user.name='kobas probe' -c user.email='ops@makiramen.com' commit -qm "probe ${{ github.run_id }}" || exit 0
+          git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} kobas-probe
