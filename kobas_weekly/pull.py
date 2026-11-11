@@ -6,7 +6,9 @@ Logs into Kobas with the keyline bot user (no Mac, no browser) and pulls, per si
   item mix         All Item Sales             /data/reports/item-by-sales/export         (one call per venue per week)
   waste/comp/dir   Stock Usage History        report-queue stock_usage_report (csv)
   purchases        Orders & Deliveries        /data/v2/stock/order (type delivery, delivered in the week) + delivery entries
-  stock            Stock Checks               /data/v2/stock/check (completed stock checks, entries valued at Kobas FIFO price)
+  stock checks     Stock Checks               /data/v2/stock/check (dates, closing counts by category)
+  food cost +      Stock Usage Comparison     POST /reports/index.php m=CORE_Reports_UsageComparison, opening/closing stock check
+  stock variance                              dates as YYYY-MM-DD (the report Matt keys into Mona Lisa / the variance sheet)
   transfers        Stock Transfers report     /data/reports/stock/transfer/totals
   targets          Rotas > Sales Budgets      /admin/budgets/ (the KPI sheet targets kpi-auto pushes into Kobas daily)
 
@@ -182,11 +184,46 @@ def check_full(c):
         cat = si.get('stock_ingredient_category_name') or si.get('stock_product_category_name') or '?'
         uvp = si.get('lilo_unit_volume_price'); uv = e.get('unit_volume') or 0
         theo = e.get('theoretical_holding_units')
-        rows.append([cat, e.get('total_value') or 0, None if (theo is None or uvp is None) else round(theo * uv * uvp, 4)])
+        rows.append([cat, e.get('total_value') or 0, None if (theo is None or uvp is None) else round(theo * uv * uvp, 4), si.get('stock_ingredient_category_id')])
     return dict({kk: c.get(kk) for kk in ('id', 'venue_id', 'venue_name', 'name', 'log_date', 'type', 'status', 'total_value', 'c_date')}, entries=rows)
 stock = [c for c in checks if c.get('type') == 'stock' and c.get('status') == 'completed' and c.get('venue_id') in VID2S]
-with ThreadPoolExecutor(5) as ex: save('stock_checks.json', [x for x in ex.map(check_full, stock) if x])
-log['stock_checks'] = len(stock)
+save('stock_check_list.json', [{kk: c.get(kk) for kk in ('id', 'venue_id', 'log_date', 'c_date', 'total_value')} for c in stock])
+def closing_dates(vid, w):
+    ds = sorted({c['log_date'][:10] for c in stock if c['venue_id'] == vid})
+    cl = [d for d in ds if (w + datetime.timedelta(4)).isoformat() <= d <= (w + datetime.timedelta(7)).isoformat()]
+    if not cl: return None, None
+    op = [d for d in ds if d < cl[-1] and d >= (datetime.date.fromisoformat(cl[-1]) - datetime.timedelta(10)).isoformat()]
+    return (op[-1] if op else None), cl[-1]
+closing = [c for c in stock if any(closing_dates(c['venue_id'], w)[1] == c['log_date'][:10] for w in weeks)]
+with ThreadPoolExecutor(5) as ex: save('stock_checks.json', [x for x in ex.map(check_full, closing) if x])
+log['stock_checks'] = len(stock); log['closing_checks_pulled'] = len(closing)
+
+# 4b2) Stock Usage Comparison per site per week (opening -> closing stock check). Parsed here, raw html not kept.
+def uc_const(t, name):
+    i = t.find(f"'{name}',")
+    if i < 0: return None
+    j = t.find(');</script>', i)
+    return json.loads(t[i + len(name) + 3:j].strip())
+def usage_comparison(job):
+    site, vid, w = job
+    a, b = closing_dates(vid, w)
+    if not (a and b): return {'site': site, 'week': w.isoformat(), 'opening': a, 'closing': b, 'error': 'no opening/closing stock check'}
+    data = {'m': 'CORE_Reports_UsageComparison', 'v': '1', 'category': '', 'venueid': str(vid), 'opening_years': a[:4], 'opening_days': a,
+            'closing_years': b[:4], 'closing_days': b}
+    for i in range(3):
+        try:
+            r = k.s.post(BASE + '/reports/index.php', data=data, timeout=300)
+            td = uc_const(r.text, 'table_data')
+            if r.status_code == 200 and td:
+                hd = re.search(r'Viewing report for ([^<]*)', r.text)
+                cats = {cid: {kk: v['total'].get(kk) for kk in ('net_rev', 'usage_value', 'theory_value', 'variance_value', 'cos_value', 'cow_value', 'coc_value', 'cod_value', 'actual_gp_perc', 'theory_gp_perc')}
+                        for cid, v in td.items()}
+                return {'site': site, 'week': w.isoformat(), 'opening': a, 'closing': b, 'heading': hd.group(1).strip() if hd else None,
+                        'total_net_revenue': uc_const(r.text, 'total_net_revenue'), 'categories': cats}
+        except Exception as e: last = repr(e)
+        time.sleep(5)
+    return {'site': site, 'week': w.isoformat(), 'opening': a, 'closing': b, 'error': 'usage comparison returned no table'}
+with ThreadPoolExecutor(4) as ex: save('usage_comparison.json', list(ex.map(usage_comparison, [(s, v, w) for w in weeks for s, v in V.items()])))
 
 # 4c) transfers, per week, all venues
 for w in weeks:

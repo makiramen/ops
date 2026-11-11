@@ -16,10 +16,11 @@ Per site, per week:
              'of which' modifier rows are excluded (trap 1); the item sum is checked against the report's own TOTAL rows
   waste      Stock Usage History net cost by usage type (waste / comp / director)
   purchases  supplier deliveries delivered in the week, valued line by line, split food / wet / controllables
-  stock      the stock take closing the week (completed Stock Checks logged Sat..Mon after the week; per category the
-             latest count wins): counted value, Kobas theoretical value, variance GBP and % (food and wet)
-  food cost  opening stock (prior week's close) + purchases + transfers in - transfers out - closing stock, by lead type,
-             divided by that lead type's net sales (actual cost of sales, the Operational Profitability method)
+  stock      the stock take closing the week (completed Stock Checks logged Fri..Mon after the week start + 4; per category the
+             latest count wins): counted value by food / wet / controllables
+  food cost  Kobas Stock Usage Comparison, opening -> closing stock take: food_pct = actual usage / attributed net revenue,
+  + variance stock_variance = (actual - theory) / theory, food and drinks. Proved 11/11/2026 on M1 w/c 02/11 against Mona Lisa
+             (21.48 vs 21.41) and the variance sheet (food -0.68 vs -0.6, drinks +0.07 vs +0.1)
 """
 import os, re, sys, csv, io, json, glob, math, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -129,13 +130,13 @@ def stock_close(site, mon):
     """Stock take that closes the week starting mon: completed checks logged Sat (mon+5) .. Mon (mon+7). Per category the
     latest count wins (re-counts and split food / drinks checks both handled)."""
     if CHK is None: return None
-    lo, hi = (mon + datetime.timedelta(5)).isoformat(), (mon + datetime.timedelta(7)).isoformat() + ' 23:59:59'
+    lo, hi = (mon + datetime.timedelta(4)).isoformat(), (mon + datetime.timedelta(7)).isoformat() + ' 23:59:59'
     cs = sorted([c for c in CHK if VID2S.get(c['venue_id']) == site and lo <= c['log_date'] <= hi], key=lambda c: (c['log_date'], c.get('c_date') or ''))
     if not cs: return None
     bycat = {}
     for c in cs:
         cats = {}
-        for cat, val, theo in c['entries']:
+        for cat, val, theo, *_ in c['entries']:
             a = cats.setdefault(cat, [0.0, 0.0, 0]); a[0] += val or 0
             if theo is not None: a[1] += theo; a[2] += 1
         for cat, a in cats.items(): bycat[cat] = (c['id'], a)
@@ -145,6 +146,40 @@ def stock_close(site, mon):
         theo = sum(a[1] for cat, (i, a) in bycat.items() if lead_of(cat) == lt)
         res[lt] = {'counted_gbp': r2(val), 'theoretical_gbp': r2(theo), 'variance_gbp': r2(val - theo) if theo else None,
                    'variance_pct': pct(val - theo, theo) if theo else None}
+    return res
+
+# ---------------- Stock Usage Comparison (food cost %, stock variance %) ----------------
+CATNAME = {}
+for c in CHK or []:
+    for e in c['entries']:
+        if len(e) > 3 and e[3] is not None: CATNAME[str(e[3])] = e[0]
+UC = {(u['site'], u['week']): u for u in (jload(os.path.join(RAW, 'usage_comparison.json'), []) or [])}
+def usage(site, mon):
+    """Kobas Stock Usage Comparison between the two stock takes around the week. Matches Mona Lisa / the variance sheet:
+    cost % = actual usage / attributed net revenue, variance % = (actual - theory) / theory, over the categories Kobas attributes
+    sales to (net_rev > 0; packaging / controllables carry usage but no revenue and are excluded, as Kobas excludes them from GP)."""
+    u = UC.get((site, mon.isoformat()))
+    if u is None: return None
+    if u.get('error'): return {'opening_check': u.get('opening'), 'closing_check': u.get('closing'), 'error': u['error']}
+    agg, unk, excl = {}, [], {}
+    for cid, c in (u.get('categories') or {}).items():
+        name = CATNAME.get(str(cid))
+        if name is None: unk.append(cid)
+        lt = lead_of(name) if name else 'food'
+        if not (c.get('net_rev') or 0) > 0.5:
+            if c.get('usage_value'): excl[name or cid] = r2(c['usage_value'])
+            continue
+        a = agg.setdefault(lt, {'net_rev': 0.0, 'actual': 0.0, 'theory': 0.0, 'variance': 0.0, 'waste': 0.0, 'comp': 0.0, 'director': 0.0})
+        a['net_rev'] += c['net_rev'] or 0; a['actual'] += c['usage_value'] or 0; a['theory'] += c['theory_value'] or 0
+        a['variance'] += c['variance_value'] or 0; a['waste'] += c.get('cow_value') or 0; a['comp'] += c.get('coc_value') or 0; a['director'] += c.get('cod_value') or 0
+    res = {'opening_check': u['opening'], 'closing_check': u['closing'], 'kobas_heading': u.get('heading'),
+           'total_net_revenue': r2(u.get('total_net_revenue')), 'excluded_no_revenue_gbp': excl, 'unnamed_category_ids': unk}
+    for lt in ('food', 'wet'):
+        a = agg.get(lt)
+        res[lt] = None if not a else {'attributed_net_rev': r2(a['net_rev']), 'actual_usage_gbp': r2(a['actual']), 'theory_usage_gbp': r2(a['theory']),
+                                      'variance_gbp': r2(a['variance']), 'cost_pct': pct(a['actual'], a['net_rev']), 'theory_cost_pct': pct(a['theory'], a['net_rev']),
+                                      'variance_pct': pct(a['variance'], a['theory']), 'variance_pct_of_revenue': pct(a['variance'], u.get('total_net_revenue')),
+                                      'waste_gbp': r2(a['waste']), 'comp_gbp': r2(a['comp']), 'director_gbp': r2(a['director'])}
     return res
 
 # ---------------- item mix ----------------
@@ -252,26 +287,19 @@ for mon in weeks:
         S['week'] = W
         S['item_mix'] = item_mix(site, mon)
         close = stock_close(site, mon)
-        opening = stock_close(site, mon - datetime.timedelta(7))
-        if opening is None: opening = ((prev.get('sites') or {}).get(site) or {}).get('stock')
         S['stock'] = close
-        trf = transfers(site, mon)
-        S['transfers'] = trf
-        fc = {}
-        for lt, sales in (('food', food_net), ('wet', wet_net)):
-            o = ((opening or {}).get(lt) or {}).get('counted_gbp'); c = ((close or {}).get(lt) or {}).get('counted_gbp')
-            p_ = (W.get('purchases') or {}).get(lt)
-            if None in (o, c, p_) or not doc['complete']:
-                fc[lt] = {'cogs_gbp': None, 'pct': None, 'why_null': ', '.join(n for n, v in (('opening stock', o), ('closing stock', c), ('purchases', p_)) if v is None) or 'week not complete'}
-                continue
-            cogs = o + p_ - c
-            fc[lt] = {'opening_gbp': o, 'purchases_gbp': p_, 'closing_gbp': c, 'transfers_net_gbp': None, 'cogs_gbp': r2(cogs), 'net_sales': sales, 'pct': pct(cogs, sales)}
-        S['cost_of_sales'] = fc
-        S['food_pct'] = fc['food'].get('pct')
+        S['transfers'] = transfers(site, mon)
+        uc = usage(site, mon)
+        S['usage_comparison'] = uc
+        S['food_pct'] = ((uc or {}).get('food') or {}).get('cost_pct')
+        S['wet_pct'] = ((uc or {}).get('wet') or {}).get('cost_pct')
+        S['stock_variance'] = {'food_pct': ((uc or {}).get('food') or {}).get('variance_pct'), 'drinks_pct': ((uc or {}).get('wet') or {}).get('variance_pct'),
+                               'target': '±5%', 'basis': '(actual - theory usage) / theory usage, Kobas Stock Usage Comparison'}
         doc['sites'][site] = S
         if site not in FRANCHISE:
-            for what, v in (('sales', gross), ('covers', covers), ('labour', hwc), ('target', target), ('item mix', S['item_mix']), ('stock take', close)):
-                if v is None and (what != 'stock take' or doc['complete']): doc['missing'].append(f'{site}: {what}')
+            for what, v in (('sales', gross), ('covers', covers), ('labour', hwc), ('target', target), ('item mix', S['item_mix']),
+                            ('stock take', close), ('food cost %', S['food_pct'])):
+                if v is None and (what not in ('stock take', 'food cost %') or doc['complete']): doc['missing'].append(f'{site}: {what}')
     doc['field_keys_seen'] = {'cash_log': CL_KEYS, 'labour': LAB_KEYS}
     fn = os.path.join(dst, f'wc_{mon.isoformat()}.json')
     json.dump(doc, open(fn, 'w'), indent=1, sort_keys=False)
