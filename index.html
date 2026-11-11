@@ -1411,7 +1411,7 @@
         return isNaN(v) ? null : v;
       }
       function rank(metricKey, dir) {
-        var rows = SITES.map(function(s){
+        var rows = SITES.filter(function(s){ return !s.franchise; }).map(function(s){
           return { code: s.code, name: s.name, v: parsePct(s.kpis && s.kpis[metricKey], metricKey), isMoney: metricKey === 'sph' };
         }).filter(function(r){ return r.v !== null && !isNaN(r.v); });
                 rows = rows.filter(function(r){ return dir === 'up' ? r.v > 0 : r.v < 0; });
@@ -1473,7 +1473,7 @@
           let wkTxt = '';
           if(key){ const mon = mondayFromKey(key); const sun = new Date(mon.getTime()+6*86400000);
             wkTxt = ' · week of ' + fmtUKShort(mon) + '–' + fmtUKShort(sun); }
-          const nSites = (typeof SITES !== 'undefined' && SITES) ? SITES.length : 17;
+          const nSites = (typeof SITES !== 'undefined' && SITES) ? SITES.filter(s => !s.franchise).length : 17;
           el.textContent = `refreshed ${nowTxt}${wkTxt} · ${nSites}-site KPI Report pipeline`;
         } catch(e){ console.warn('caption update failed', e); }
       };
@@ -2914,6 +2914,28 @@ const SITES = [
     "actions": []
   },
   {
+    "code": "MAF3",
+    "franchise": true,
+    "name": "Maki O2 Arena",
+    "cluster": "south",
+    "clusterName": "South England",
+    "am": "Lincoln",
+    "gm": "TBC",
+    "rag": "amber",
+    "vsTarget": 0,
+    "kpis": {
+      "covers": "n/a",
+      "sph": "n/a",
+      "vsTarget": "n/a",
+      "foodVar": "N/A"
+    },
+    "issues": [
+      "Franchise site (O2 Arena). Live weeks load from data/ from w/c 26/10/2026. Shown on its own card only: excluded from every fleet total, average, count, score and league (Michael, 11/11/2026)."
+    ],
+    "carryover": [],
+    "actions": []
+  },
+  {
     "code": "M21",
     "isNew": true,
     "name": "Maki 21",
@@ -3001,13 +3023,23 @@ const SITES = [
 // calls applySiteGate() once the week's manifest is in, rebuilding SITES from
 // SITES_ALL: every ungated site, plus any date-gated site that week actually has.
 // Mirrors SITE_LIVE_FROM in build_site_json.py.
-const SITE_LIVE_FROM = { "M21": "2026-08-21" };
+const SITE_LIVE_FROM = { "M21": "2026-08-21", "MAF3": "2026-10-26" };   // MAF3 O2 Arena (franchise) from w/c 26/10/2026, Michael 11/11/2026
 const SITES_ALL = SITES.slice();
 function applySiteGate(weekCodes){
   const present = new Set(weekCodes || []);
   SITES.length = 0;
   SITES_ALL.forEach(s => { if(!SITE_LIVE_FROM[s.code] || present.has(s.code)) SITES.push(s); });
 }
+
+// ===================== FRANCHISE SITES (MAF3) =====================
+// 11/11/2026, Michael: franchise sites render their own card and modal with their own
+// KPIs but are OUT of every fleet total, average, count, red-light count, efficiency
+// score, regional board and league ranking. FLEET() is the corporate estate for the
+// active week (SITES minus franchise); the card grid still iterates SITES.
+function isFranchise(code){ const x = SITES_ALL.find(z => z.code === code); return !!(x && x.franchise); }
+function FLEET(){ return SITES.filter(s => !s.franchise); }
+// Maki-orange FRANCHISE badge, same look as _delivFrBadge on the Deliveroo board.
+function frBadge(s){ return (s && s.franchise) ? ' <span title="Franchise site: shown for information, not counted in fleet or cluster figures" style="display:inline-block; margin-left:4px; padding:1px 5px; border-radius:4px; font-size:9px; font-weight:800; letter-spacing:.03em; vertical-align:middle; background:var(--maki-orange-bg,#FFF1EA); color:var(--maki-orange,#E94E1B); border:1px solid var(--maki-orange-ring,#E94E1B33);">FRANCHISE</span>' : ''; }
 
 // ===================== SCORE EXEMPTIONS =====================
 // Sites excluded from the efficiency score for named weeks. An exempt site scores
@@ -3180,6 +3212,7 @@ const METRICS = {
   "M19": { wage: null, food: null, foodVar: null, varIncomplete: "both" },
   "M20": { wage: null, food: null, foodVar: null, varIncomplete: "both" },
   "M21": { wage: null, food: null, foodVar: null, varIncomplete: "both" },
+  "MAF3": { wage: null, food: null, foodVar: null, varIncomplete: "both" },   // franchise: food cost + stock variance never filed, stays N/A
   "Maki Nori": { wage: 23, food: 19, foodVar: null, varIncomplete: "both" },
   "IKI2": { wage: 28.6, food: 23.72, foodVar: null, varIncomplete: "both" }
 };
@@ -3386,7 +3419,8 @@ const REVIEWS = {
   // data/reviews_full.json; weekCount / stars are overwritten on load from the per-site JSON.
   "M19": { rating: 4.81, total: 509, weekCount: 0, stars: [0,0,0,0,0] },
   "M20": { rating: 4.82, total: 671, weekCount: 0, stars: [0,0,0,0,0] },
-  "M21": { rating: 4.84, total: 209, weekCount: 0, stars: [0,0,0,0,0] }
+  "M21": { rating: 4.84, total: 209, weekCount: 0, stars: [0,0,0,0,0] },
+  "MAF3": { rating: null, total: null, weekCount: 0, stars: [0,0,0,0,0] }   // franchise O2 Arena: lifetime rating not baked
 };
 
 // --- HISTORY (last 5 weeks for sparklines) ---
@@ -3918,6 +3952,7 @@ function sphRag(v, code) {
 // Components: Wage 30%, Food cost 30%, SPH 15% (level + WoW momentum blend), Sales 10% (% + £ gap blend), Weekly ★ 10%, Food variance 5% (±5% green band). Each component hard-capped at 100. Lifetime ★ shown for info only — NOT in score.
 function efficiencyScore(s) {
   if (isScoreExempt(s.code)) return null;   // week-scoped exemption — see SCORE_EXEMPT
+  if (s.franchise || isFranchise(s.code)) return null;   // franchise sites never score (Michael, 11/11/2026)
   const m = METRICS[s.code] || {};
   const r = REVIEWS[s.code] || {};
   const wr = weeklyRating(r);
@@ -4109,7 +4144,7 @@ function tileHTML(s) {
         <div class="tile-issues-badge">${issuesCount}</div>
         <div>
           <div class="tile-code">${s.code}${s.isNew ? ' <span style="font-size:9px;font-weight:700;background:#4f46e5;color:#fff;padding:1px 5px;border-radius:6px;vertical-align:middle;letter-spacing:.3px;">NEW</span>' : ''}</div>
-          <div class="tile-name">${s.name}${s.isNew ? ' <span style="font-weight:600;color:var(--ink-3);font-size:10px;">· partial data</span>' : ''}</div>
+          <div class="tile-name">${s.name}${frBadge(s)}${s.isNew ? ' <span style="font-weight:600;color:var(--ink-3);font-size:10px;">· partial data</span>' : ''}</div>
         </div>
         <div>
           <div class="tile-delta ${deltaCls}">${v.arrow} ${v.value}</div>
@@ -4152,7 +4187,9 @@ function renderHeatmap(filter = 'all') {
     groupSites.sort(heatmapSort);
 
     let r = 0, a = 0, g = 0;
-    groupSites.forEach(s => { const b = tileRagBucket(s); if (b === 'red') r++; else if (b === 'amber') a++; else g++; });
+    const corpSites = groupSites.filter(s => !s.franchise);   // franchise tiles render but are not tallied
+    const nFr = groupSites.length - corpSites.length;
+    corpSites.forEach(s => { const b = tileRagBucket(s); if (b === 'red') r++; else if (b === 'amber') a++; else g++; });
     const summary = [
       r ? `<b class="r">${r} red</b>` : '',
       a ? `<b class="a">${a} amber</b>` : '',
@@ -4165,7 +4202,7 @@ function renderHeatmap(filter = 'all') {
           <span class="cg-accent"></span>
           <div>
             <div class="cg-name">${c.name}</div>
-            <div class="cg-am">${c.am ? c.am + ' · ' : ''}${groupSites.length} site${groupSites.length === 1 ? '' : 's'}</div>
+            <div class="cg-am">${c.am ? c.am + ' · ' : ''}${corpSites.length} site${corpSites.length === 1 ? '' : 's'}${nFr ? ' + ' + nFr + ' franchise (not counted)' : ''}</div>
           </div>
           <div class="cg-summary">${summary}</div>
         </div>
@@ -4194,9 +4231,9 @@ function renderClusterNav() {
   };
 
   let html = '<span class="cn-label">Clusters</span>';
-  html += pill('all', 'All sites', SITES);
+  html += pill('all', 'All sites', FLEET());
   CLUSTER_DEFS.forEach(c => {
-    const sites = SITES.filter(s => s.cluster === c.id);
+    const sites = FLEET().filter(s => s.cluster === c.id);
     if (sites.length) html += pill(c.id, c.name, sites);
   });
   wrap.innerHTML = html;
@@ -4222,7 +4259,7 @@ function selectCluster(id) {
 
 function renderScorecard() {
   const wrap = document.getElementById('scorecard');
-  const sites = [...SITES].sort((a,b) => {
+  const sites = [...FLEET()].sort((a,b) => {   // franchise sites are not ranked in the league
     const order = { red: 0, amber: 1, green: 2, na: 3 };
     const ra = combinedRag(a), rb = combinedRag(b);
     if (ra !== rb) return order[ra] - order[rb];
@@ -4282,7 +4319,8 @@ function renderClusters() {
   ];
   wrap.innerHTML = clusters.map(c => {
     const sites = SITES.filter(s => s.cluster === c.id).sort((a,b) => a.vsTarget - b.vsTarget);
-    const avg = sites.reduce((sum,s) => sum + s.vsTarget, 0) / sites.length;
+    const corp = sites.filter(s => !s.franchise);   // franchise rows listed, not averaged
+    const avg = corp.length ? corp.reduce((sum,s) => sum + s.vsTarget, 0) / corp.length : 0;
     const avgPct = (avg >= 0 ? '+' : '') + avg.toFixed(1) + '%';
     return `
       <div class="cluster">
@@ -4299,7 +4337,7 @@ function renderClusters() {
             return `
             <div class="cluster-row" onclick="openSite('${s.code.replace(/'/g, "\\'")}')">
               <div class="row-code">${s.code}</div>
-              <div class="row-name">${s.name}</div>
+              <div class="row-name">${s.name}${frBadge(s)}</div>
               <div class="row-delta ${s.rag === 'deep-red' ? 'red' : deltaClass(s.vsTarget)}">${arrow}${s.vsTarget.toFixed(1)}%</div>
             </div>`;
           }).join('')}
@@ -4351,7 +4389,7 @@ function openSite(code) {
   modal.innerHTML = `
     <div class="modal-header">
       <div>
-        <div class="modal-title">${s.code} — ${s.name}</div>
+        <div class="modal-title">${s.code} — ${s.name}${frBadge(s)}</div>
         <div class="modal-sub">${s.clusterName} · AM: ${s.am} · GM: ${s.gm}</div>
       </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
@@ -4486,7 +4524,7 @@ document.addEventListener('keydown', e => {
 });
 
 // Compute stats
-const stats = SITES.reduce((acc, s) => {
+const stats = FLEET().reduce((acc, s) => {
   if (s.rag === 'deep-red' || s.rag === 'red' || s.vsTarget <= -10) acc.red++;
   else if (s.rag === 'amber' || s.vsTarget < 0) acc.amber++;
   else acc.green++;
@@ -4497,7 +4535,7 @@ document.getElementById('stat-red').textContent = stats.red;
 document.getElementById('stat-amber').textContent = stats.amber;
 document.getElementById('stat-green').textContent = stats.green;
 document.getElementById('stat-issues').textContent = stats.issues;
-document.getElementById('stat-sites').textContent = SITES.length;
+document.getElementById('stat-sites').textContent = FLEET().length;
 
 renderHeatmap();
 renderScorecard();
@@ -4535,8 +4573,8 @@ const RL_FIELDS = ['Site code & name','Trigger KR(s) vs target','Date flagged (H
 
 function rlClass(s){ return s.rag === 'deep-red' ? 'red' : s.rag; }
 function renderRedLight(){
-  const reds = SITES.filter(s => s.rag === 'deep-red' || s.rag === 'red').sort((a,b)=>a.vsTarget-b.vsTarget);
-  const ambers = SITES.filter(s => s.rag === 'amber');
+  const reds = FLEET().filter(s => s.rag === 'deep-red' || s.rag === 'red').sort((a,b)=>a.vsTarget-b.vsTarget);   // franchise sites sit outside the Red Light protocol
+  const ambers = FLEET().filter(s => s.rag === 'amber');
   document.getElementById('tb-red').textContent = reds.length;
   document.getElementById('rl-sites').innerHTML = reds.concat(ambers).map(s => {
     const arrow = s.vsTarget >= 0 ? '▲' : '▼';
@@ -4964,7 +5002,7 @@ async function renderDeliverooRag(){
 
   const tok = (renderDeliverooRag._tok = (renderDeliverooRag._tok || 0) + 1);
   // Active-week rows from the already-loaded SITES overlay.
-  const rows = _delivBuildRows(SITES);
+  const rows = _delivBuildRows(FLEET());   // franchise rows come from deliveroo_franchise.json, not SITES
 
   if (rows.length){
     const fr = await _delivFranchiseRows(window.currentWeekKey || null);
@@ -5188,7 +5226,7 @@ function pbDelivAggregate(sites) {
 // Roll one region up. Every column aggregated the way that column is honestly
 // aggregated — totals for money, £-weighted for rates, review-weighted for stars.
 function regionAggregate(id) {
-  const sites = SITES.filter(s => s.cluster === id);
+  const sites = FLEET().filter(s => s.cluster === id);   // franchise sites are out of every regional figure and sub-row
   let salesA = 0, salesT = 0, haveSales = false;
   let wageN = 0, wageD = 0, foodN = 0, foodD = 0;
   let coversSum = 0, coversSales = 0, sphN = 0, sphD = 0;
@@ -5288,8 +5326,8 @@ function renderPeopleBoard() {
   aggs.sort((a, b) => (b.score == null ? -1 : b.score) - (a.score == null ? -1 : a.score));
 
   const scored = aggs.filter(a => a.score != null);
-  const fleetSites = SITES.map(efficiencyScore).filter(v => v != null);
-  const fleetAvg = fleetSites.length ? Math.round(fleetSites.reduce((a, b) => a + b, 0) / fleetSites.length) : null;
+  const fleetScores = FLEET().map(efficiencyScore).filter(v => v != null);
+  const fleetAvg = fleetScores.length ? Math.round(fleetScores.reduce((a, b) => a + b, 0) / fleetScores.length) : null;
 
   const header = `
     <div class="pb-row header">
@@ -5412,7 +5450,7 @@ function renderPeopleBoard() {
   const spread = (scored.length >= 2)
     ? `Spread between best and worst region: <strong>${scored[0].score - scored[scored.length - 1].score} points</strong>.`
     : '';
-  const foot = `<div class="pb-foot">Bands are absolute and the same for people and sites: <strong>≥90 green · 75 to 89 amber · under 75 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. ${SITES.length}-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>${scoreExemptCodes().length ? ' <strong>' + scoreExemptCodes().join(', ') + '</strong> ' + (scoreExemptCodes().length > 1 ? 'are' : 'is') + ' exempt from the score this week and excluded from both the regional and the fleet average.' : ''} ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
+  const foot = `<div class="pb-foot">Bands are absolute and the same for people and sites: <strong>≥90 green · 75 to 89 amber · under 75 red</strong>. Score /100 is the average of that region's site efficiency scores; £ and % columns are true regional totals, so they will not equal the average of the sites below them. ${FLEET().length}-site fleet average score: <strong>${fleetAvg == null ? 'N/A' : fleetAvg}</strong>${scoreExemptCodes().length ? ' <strong>' + scoreExemptCodes().join(', ') + '</strong> ' + (scoreExemptCodes().length > 1 ? 'are' : 'is') + ' exempt from the score this week and excluded from both the regional and the fleet average.' : ''} ${spread} ${rw ? '<strong>30-Day \u2605</strong> = every Google review received in the 30 days ' + rw.from.split('-').reverse().join('/') + '\u2013' + rw.to.split('-').reverse().join('/') + ', review-count weighted, target \u22654.7. <strong>Lifetime \u2605</strong> is the all-time Google rating baked on 29 May 2026 \u2014 context only, it does not refresh.' : '30-Day \u2605 unavailable for this week.'}</div>`;
 
   wrap.innerHTML = header + body + foot;
 }
@@ -5983,7 +6021,7 @@ function repaintAll(){
   try { if (typeof renderGmScore   === 'function') renderGmScore(); } catch(e){}
   // Header stat counters
   try {
-    const stats = SITES.reduce((acc, s) => {
+    const stats = FLEET().reduce((acc, s) => {
       if (s.rag === 'deep-red' || s.rag === 'red' || s.vsTarget <= -10) acc.red++;
       else if (s.rag === 'amber' || s.vsTarget < 0) acc.amber++;
       else acc.green++;
@@ -5994,7 +6032,7 @@ function repaintAll(){
     const elA=document.getElementById('stat-amber');  if(elA) elA.textContent=stats.amber;
     const elG=document.getElementById('stat-green');  if(elG) elG.textContent=stats.green;
     const elI=document.getElementById('stat-issues'); if(elI) elI.textContent=stats.issues;
-    const elS=document.getElementById('stat-sites');  if(elS) elS.textContent=SITES.length;
+    const elS=document.getElementById('stat-sites');  if(elS) elS.textContent=FLEET().length;
   } catch(e){}
   try { if (typeof paintAll === 'function') paintAll(); if (typeof updateWhatMovedSubtitle === 'function') updateWhatMovedSubtitle(); if (typeof updateHeaderCaption === 'function') updateHeaderCaption(); } catch(e) { console.warn('what-moved repaint failed', e); }
 }
@@ -7948,7 +7986,7 @@ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded"
 <!-- ============ /BROTH SCORE script ============ -->
 
 <script>/* Area Room gate: click the Japanese header text */document.querySelectorAll(".maki-brand-kanji").forEach(function(e){e.addEventListener("click",function(){location.href="area_room.html#enter"})});</script>
-<!-- period view: This week / Last week / Month / Quarter (13/10/2026) --><script src="period_view.js?v=20261013b"></script>
+<!-- period view: This week / Last week / Month / Quarter (13/10/2026) --><script src="period_view.js?v=20261111maf3"></script>
 <!-- maki usage beacon --><script>(function(){var P="AM Control Centre",U="https://script.google.com/macros/s/AKfycbyVrmiIOv3loHNtR-s6c_d5tfJKe8HXWfy29XdvKt3iz_uWJzK2Ul_89q9BMFYbWu2B/exec";try{if(location.protocol==="file:"||/[?&]embed=1/.test(location.search))return;var k="maki_seen_"+P,n=Date.now();if(+(localStorage.getItem(k)||0)>n-30*60e3)return;localStorage.setItem(k,n);fetch(U,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},keepalive:true,body:JSON.stringify({name:P,kind:"viewed",at:new Date(n).toISOString(),w:screen.width,ua:navigator.userAgent.slice(0,160)})}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

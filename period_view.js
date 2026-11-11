@@ -259,7 +259,7 @@
   var periodKey = null;     // e.g. 2026-10, 2026-Q4, 2026
   var metric = 'sales';
   var scope = 'all';        // all | <cluster name> | site:<jsonCode>
-  var DIR = { order: [], seen: {}, clusterOf: {}, clusters: [] };   // site directory from the newest week
+  var DIR = { order: [], seen: {}, clusterOf: {}, clusters: [], franchise: {} };   // site directory from the newest week
 
   /* ---------- "This Week" tab: little arrow + dropdown (14/10/2026, Michael) ----------
      The arrow on the tab button opens a small menu with the same five views as the
@@ -335,8 +335,8 @@
       if (DIR.clusters.length){
         var siteSel = scope.indexOf('site:') === 0;
         h += '<span class="pv-break"></span><span class="pv-lab">Region</span>';
-        h += '<button class="pv-pill region' + (scope === 'all' ? ' active' : '') + '" data-scope="all">All sites<small>' + DIR.order.length + '</small></button>';
-        DIR.clusters.forEach(function (cl) { h += '<button class="pv-pill region' + (scope === cl ? ' active' : '') + '" data-scope="' + esc(cl) + '">' + esc(cl) + '<small>' + DIR.order.filter(function (c) { return DIR.clusterOf[c] === cl; }).length + '</small></button>'; });
+        h += '<button class="pv-pill region' + (scope === 'all' ? ' active' : '') + '" data-scope="all">All sites<small>' + DIR.order.filter(function (c) { return !DIR.franchise[c]; }).length + '</small></button>';
+        DIR.clusters.forEach(function (cl) { h += '<button class="pv-pill region' + (scope === cl ? ' active' : '') + '" data-scope="' + esc(cl) + '">' + esc(cl) + '<small>' + DIR.order.filter(function (c) { return DIR.clusterOf[c] === cl && !DIR.franchise[c]; }).length + '</small></button>'; });
         h += '<span class="pv-lab" style="margin-left:auto">Site</span><select class="pv-sel" id="pv-site"><option value="">All</option>' + DIR.order.map(function (c) { var nm = DIR.seen[c]; return '<option value="site:' + c + '"' + (scope === 'site:' + c ? ' selected' : '') + '>' + esc(nm.label + (nm.name ? ' ' + nm.name : '')) + '</option>'; }).join('') + '</select>';
       }
     }
@@ -474,7 +474,7 @@
     var recs = [], bySite = {};
     Object.keys(j.sites).forEach(function (code) {
       var r = siteRec(j.sites[code], code); var nm = siteName(code, j.sites[code].name);
-      r.label = nm.code; r.name = nm.name; r.jsonCode = code; r.cluster = j.sites[code].cluster || '';
+      r.label = nm.code; r.name = nm.name; r.jsonCode = code; r.cluster = j.sites[code].cluster || ''; r.franchise = !!j.sites[code].franchise;   // 11/11/2026: franchise (MAF3) rides along but never enters a fleet or region aggregate
       recs.push(r); bySite[code] = r;
     });
     return { monday: monday, recs: recs, bySite: bySite };
@@ -517,7 +517,7 @@
     if (scope !== 'all' && scope.indexOf('site:') !== 0 && clusters.indexOf(scope) < 0) scope = 'all';
     if (scope.indexOf('site:') === 0 && !seen[scope.slice(5)]) scope = 'all';
     var siteOnly = scope.indexOf('site:') === 0 ? scope.slice(5) : null;
-    function inScope(r){ if (siteOnly) return r.jsonCode === siteOnly; if (scope === 'all') return true; return r.cluster === scope; }
+    function inScope(r){ if (siteOnly) return r.jsonCode === siteOnly; if (r.franchise) return false; if (scope === 'all') return true; return r.cluster === scope; }
     var scopeCodes = order.filter(function (c) { return inScope(seen[c]); });
     var scopeLabel = siteOnly ? seen[siteOnly].label + ' ' + seen[siteOnly].name : scope === 'all' ? 'All sites' : scope;
 
@@ -670,11 +670,12 @@
           per.before = before0 && before0.bySite[code] ? before0.bySite[code] : [];
           var pr = [].concat.apply([], prevB.map(function (b) { return b.bySite[code] || []; }));
           var nm = seen[code];
-          h += rowFor(esc(nm.label) + '<span>' + esc(nm.name) + '</span>', per, pr, '', ' class="pv-site-row" data-site="' + code + '" title="Open ' + esc(nm.label) + ' on its own"');
+          h += rowFor(esc(nm.label) + (seen[code].franchise ? ' <span style="display:inline-block;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:800;background:#FFF1EA;color:#E94E1B;border:1px solid #E94E1B33">FRANCHISE</span>' : '') + '<span>' + esc(nm.name) + '</span>', per, pr, '', ' class="pv-site-row" data-site="' + code + '" title="Open ' + esc(nm.label) + ' on its own"');
         });
-        var perC = curB.map(function (b) { return b.recs.filter(function (r) { return r.cluster === cl; }); });
-        perC.before = before0 ? before0.recs.filter(function (r) { return r.cluster === cl; }) : [];
-        h += rowFor(esc(cl || 'Unassigned') + ' subtotal', perC, allPrev.filter(function (r) { return r.cluster === cl; }), 'sub');
+        var inCl = function (r) { return r.cluster === cl && !r.franchise; };
+        var perC = curB.map(function (b) { return b.recs.filter(inCl); });
+        perC.before = before0 ? before0.recs.filter(inCl) : [];
+        h += rowFor(esc(cl || 'Unassigned') + ' subtotal (franchise excluded)', perC, allPrev.filter(inCl), 'sub');
       });
       var perE = curB.map(function (b) { return b.recs.filter(inScope); }); perE.before = before0 ? before0.recs.filter(inScope) : [];
       h += rowFor(scope === 'all' ? 'Estate' : esc(scope) + ' total', perE, allPrev, 'total');
@@ -746,7 +747,7 @@
       // Site / region directory from the newest week, for the bar.
       if (weeksIndex[0]) fetchWeek(weeksIndex[0].monday).then(function (j) {
         if (!j || !j.sites) return;
-        Object.keys(j.sites).forEach(function (code) { var nm = siteName(code, j.sites[code].name); DIR.order.push(code); DIR.seen[code] = { label: nm.code, name: nm.name }; DIR.clusterOf[code] = j.sites[code].cluster || ''; if (DIR.clusters.indexOf(DIR.clusterOf[code]) < 0) DIR.clusters.push(DIR.clusterOf[code]); });
+        Object.keys(j.sites).forEach(function (code) { var nm = siteName(code, j.sites[code].name); DIR.order.push(code); DIR.seen[code] = { label: nm.code, name: nm.name }; DIR.clusterOf[code] = j.sites[code].cluster || ''; DIR.franchise[code] = !!j.sites[code].franchise; if (DIR.clusters.indexOf(DIR.clusterOf[code]) < 0) DIR.clusters.push(DIR.clusterOf[code]); });
         if (isPeriod(mode)) renderBar();
       });
       // Keep the pills honest whenever the header week selector (or the
