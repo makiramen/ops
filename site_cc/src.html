@@ -178,6 +178,7 @@ td.c-r{background:var(--red-bg);color:var(--red-ink);font-weight:700}
 details.promo{display:block;padding:0}details.promo .when{width:130px;min-width:130px}details.promo>summary{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;cursor:pointer;list-style:none}details.promo>summary::-webkit-details-marker{display:none}details.promo .pmore{color:var(--maki-orange-deep)!important;font-weight:600}details.promo[open] .pmore{display:none}details.promo .pbody{padding:0 14px 12px 144px;font-size:13px;color:var(--ink)}details.promo .pbody ul{margin:6px 0 8px 18px;padding:0}details.promo .pbody li{margin:3px 0;line-height:1.4}details.promo .pmeta{font-weight:600;color:var(--ink-2)}@media(max-width:640px){details.promo .pbody{padding-left:14px}}
 @media (max-width:760px){.bdays{grid-template-columns:repeat(4,minmax(0,1fr))}.promo{flex-direction:column;gap:6px}}
 .kl-urg td:first-child{box-shadow:inset 3px 0 0 var(--red)}
+.klproc{border:1px solid var(--maki-orange-ring);background:var(--maki-orange-bg);border-radius:12px;padding:10px 14px;margin:0 0 12px}.klproc>summary{cursor:pointer;font-weight:700;color:var(--maki-orange-deep);font-size:13.5px}.klproc ol{margin:8px 0 2px;padding-left:20px}.klproc li{font-size:13px;line-height:1.5;margin:4px 0;color:var(--ink)}.klproc .pill{margin-right:4px}
 .slot{border:1.5px dashed var(--line);border-radius:10px;background:var(--surface-2);color:var(--ink-2);display:flex;align-items:center;justify-content:center;text-align:center;padding:14px;font-size:13px;min-height:84px}
 label.fl{font-size:12px;font-weight:700;color:var(--ink-2)}
 textarea,input[type=text],input[type=date]{width:100%;border:1px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;resize:vertical}
@@ -688,7 +689,18 @@ table.ledger{width:100%;border-collapse:collapse;font-size:13px}table.ledger th{
         <div class="legend"><span><i class="sw" style="background:var(--maki-orange)"></i>Selected week</span><span>Red Light 25% (red dashed)</span></div></div>
     </div>
     <div class="card">
-      <div class="ch"><h3>Order guide for today · net of stock on order</h3><span class="tag t-auto">AUTO</span></div>
+      <div class="ch"><h3>Stock monitoring · 13 keylines against PAR · net of stock on order</h3><span class="tag t-auto">AUTO</span></div>
+      <details class="klproc" open><summary>How stock monitoring works, every day</summary>
+        <ol>
+          <li><b>06:55 every morning</b> the stock position for the 13 keylines is pulled from Kobas and set against this site's PAR, the bottom line that covers 7 days. PAR is set by the EC team and re-set from the last 1 to 2 weeks of stock counts.</li>
+          <li><b><span class="pill p-r">Red</span> Out of stock:</b> on hand is below 1. Red means out of stock and nothing else. Order at the next cut-off and contact your AM now for a transfer, approved local sourcing or menu mitigation.</li>
+          <li><b><span class="pill p-a">Amber</span> Running low:</b> on hand is between 1 and 50% of PAR. It needs attention: order the quantity in the Order column at the supplier's next cut-off, do not wait for it to run out.</li>
+          <li><b><span class="pill p-g">Green</span> OK:</b> on hand is above 50% of PAR. Still top up to PAR when the Order column shows a quantity at that supplier's cut-off.</li>
+          <li><b>Order exactly what the Order column says</b>, by the cut-off on the supplier chip. It is already net of stock in hand and of anything on order. "Will not last to the next delivery" means order it and call your AM.</li>
+          <li><b><span class="pill p-n">Physical check</span></b> Kobas shows negative stock, which cannot be true. Count the line, correct Kobas, and tell Ross if the count and Kobas still disagree.</li>
+          <li><b>Keep Kobas honest:</b> book deliveries in the day they land and complete the weekly stock count, because every light on this page is only as good as the Kobas position behind it.</li>
+        </ol>
+      </details>
       <div class="chips" id="klSum"></div>
       <div class="chips" id="klSup" style="margin-top:8px"></div>
       <div class="tscroll" style="margin-top:10px"><table id="klTable"></table></div>
@@ -962,8 +974,8 @@ function heroKeys(w,pw){
   var rev='<div class="hitem">'+ic(rr)+'<div><b>Reviews, last 4 weeks: Google '+(g==null?'n/a':g.toFixed(2)+'★')+(NODEL?'':' · Deliveroo '+(dr==null?'n/a':dr.toFixed(2)+'★'))+'</b><small>'+n+' Google reviews, '+neg+' negative · target ≥ 4.70★'+(pg!=null?' · prior 4 weeks '+pg.toFixed(2)+'★':'')+'</small></div></div>';
   var d=w.d,orr=drooRag(d),miss=DM.filter(function(m){return d[m.k]==null}).length;
   var ops='<div class="hitem">'+ic(orr)+'<div><b>Deliveroo operations: '+({g:'GREEN',a:'AMBER',r:'RED',n:'NO DATA'})[orr]+'</b><small>'+DM.filter(function(m){return m.k!=='r'}).map(function(m){var v=d[m.k],r=v==null?'n':band(v,m.g,m.a,m.hi);return m.lab+' '+(v==null?'n/a':m.fmt(v))+(r==='r'?' ✕':r==='a'?' !':'')}).join(' · ')+(miss?' · '+miss+' metric'+(miss>1?'s':'')+' missing':'')+'</small></div></div>';
-  var urg=KL.lines.filter(function(l){return l[9]==='Urgent'}),chk=KL.lines.filter(function(l){return l[9]==='Check'}).length,first=urg.slice().sort(function(a,b){return a[4]-b[4]})[0];
-  var stk='<div class="hitem">'+ic(urg.length?'r':chk?'a':'g')+'<div><b>Keylines: '+urg.length+' urgent, '+chk+' need a physical count</b><small>'+(first?'First out: '+first[0]+', '+first[4]+' days, out '+first[5]+' · ':'')+'live from Kobas '+KL.pulled.replace('Kobas ','')+'</small></div></div>';
+  var kout=KL.lines.filter(function(l){return klLight(l)==='RED'}),klow=KL.lines.filter(function(l){return klLight(l)==='AMBER'}),chk=KL.lines.filter(function(l){return l[9]==='Check'}).length,first=kout.concat(klow)[0];
+  var stk='<div class="hitem">'+ic(kout.length?'r':(klow.length||chk)?'a':'g')+'<div><b>Keylines: '+kout.length+' out of stock, '+klow.length+' running low'+(chk?', '+chk+' need a physical count':'')+'</b><small>'+(first?(kout.length?'Out of stock: ':'Lowest: ')+first[0]+', '+first[2]+' on hand · ':'')+'live from Kobas '+KL.pulled.replace('Kobas ','')+'</small></div></div>';
   return '<div class="hlist" style="grid-column:1/-1"><h4>Always tracked · cost, guests, operations, stock</h4><div class="hkeys">'+food+rev+ops+stk+'</div></div>';
 }
 function renderScore(){
@@ -1435,15 +1447,28 @@ function renderDaily(){renderFold();
 }
 function tile(lab,val,sub,r,tag){return '<div class="card tile s3"><div class="ch"><span class="lab">'+lab+'</span>'+(r?PILL[r]:(tag||''))+'</div><div class="big">'+val+'</div><div class="small">'+sub+'</div></div>'}
 var KL=__KL__;
-function renderKeyline(){
-  var P={Urgent:'<span class="pill p-r">Urgent</span>',Watch:'<span class="pill p-a">Watch</span>',OK:'<span class="pill p-g">OK</span>',Check:'<span class="pill p-n">Physical check</span>'};
-  var n=function(st){return KL.lines.filter(function(l){return l[9]===st}).length};
-  $('#klSum').innerHTML='<span class="pill p-r">'+n('Urgent')+' urgent</span><span class="pill p-a">'+n('Watch')+' watch</span><span class="pill p-g">'+n('OK')+' OK</span><span class="pill p-n">'+n('Check')+' need a physical count</span>';
-  $('#klSup').innerHTML=Object.keys(KL.sup).map(function(k){var v=KL.sup[k];return '<span class="pill p-o">'+k+': order by '+v[0]+', lands '+v[1]+(v[2]?', '+v[2]:'')+'</span>'}).join('');
-  $('#klTable').innerHTML='<thead><tr><th>Item</th><th>Supplier</th><th class="r">On hand</th><th class="r">Used a day</th><th class="r">Days left</th><th>On order</th><th class="r">Baseline</th><th class="r">Order today</th><th>Next delivery</th><th>Status</th></tr></thead><tbody>'+
-    KL.lines.map(function(l){var neg=/^-/.test(l[2]);return '<tr'+(l[9]==='Urgent'?' class="kl-urg"':'')+'><td class="mname">'+l[0]+'<span class="kl-why">'+l[10]+'</span></td><td>'+l[1]+'</td><td class="r'+(neg?' c-r':'')+'">'+l[2]+'</td><td class="r">'+(l[3]==null?NA:l[3].toFixed(2))+'</td><td class="r'+(l[4]==null?'':l[4]<3?' c-r':l[4]<6?' c-a':'')+'"><b>'+(l[4]==null?NA:l[4])+'</b>'+(l[5]?'<span class="kl-why">out '+l[5]+'</span>':'')+'</td><td class="small">'+(l[6]||'<span class="ph">none</span>')+'</td><td class="r">'+(l[7]||NA)+'</td><td class="r"><b>'+(l[8]||'<span class="ph">none</span>')+'</b></td><td class="small">'+(KL.sup[l[1]]?KL.sup[l[1]][1]:NA)+'</td><td>'+P[l[9]]+'</td></tr>'}).join('')+'</tbody>';
-  $('#klFoot').textContent='Live position, not tied to the selected week. Same engine as Keyline Control, filtered to '+SCODE+'. Pulled from '+KL.pulled+', last physical check '+KL.check+'. Order today is net of stock already on order; Covered means the open order clears the Baseline if it lands.';
+/* Stock light, EC ruling 11/11/2026, same rule as Keyline Control: RED = stock below 1 (out of stock) and nothing else,
+   AMBER = 1 up to 50% of PAR (running low), GREEN = above 50% of PAR, GREY = negative Kobas stock waiting on a count.
+   The feed carries the engine's own light (l[11]); an older feed without it is derived from on hand and PAR. */
+function klLight(l){
+  if(l[11])return l[11];
+  if(l[9]==='Check'||l[9]==='Data')return 'GREY';
+  var s=parseFloat(l[2]),p=parseFloat(l[7]);if(isNaN(s))return 'GREY';
+  return s<1?'RED':(!isNaN(p)&&s<=0.5*p)?'AMBER':'GREEN';
 }
+function renderKeyline(){
+  var P={RED:'<span class="pill p-r">Out of stock</span>',AMBER:'<span class="pill p-a">Running low</span>',GREEN:'<span class="pill p-g">OK</span>',GREY:'<span class="pill p-n">Physical check</span>'};
+  var ACT={Urgent:'will not last to the next delivery','Order today':'order today',Watch:'order at the next cut-off',Over:'overstocked'};
+  var n=function(k){return KL.lines.filter(function(l){return klLight(l)===k}).length};
+  var kp=document.querySelector('.klproc');if(kp)kp.style.display=(KL.lines&&KL.lines.length)?'':'none';
+  $('#klSum').innerHTML='<span class="pill p-r">'+n('RED')+' out of stock</span><span class="pill p-a">'+n('AMBER')+' running low</span><span class="pill p-g">'+n('GREEN')+' above 50% of PAR</span><span class="pill p-n">'+n('GREY')+' need a physical count</span>';
+  $('#klSup').innerHTML=Object.keys(KL.sup).map(function(k){var v=KL.sup[k];return '<span class="pill p-o">'+k+': order by '+v[0]+', lands '+v[1]+(v[2]?', '+v[2]:'')+'</span>'}).join('');
+  $('#klTable').innerHTML='<thead><tr><th>Item</th><th>Supplier</th><th class="r">On hand</th><th class="r">Used a day</th><th class="r">Days left</th><th>On order</th><th class="r">PAR (bottom line)</th><th class="r">Order</th><th>Next delivery</th><th>Stock light</th></tr></thead><tbody>'+
+    KL.lines.map(function(l){var k=klLight(l),s=parseFloat(l[2]),p=parseFloat(l[7]),pct=l[12]!=null?l[12]:((k==='GREY'||isNaN(s)||isNaN(p)||!p)?null:Math.round(s/p*100));
+      return '<tr'+(k==='RED'?' class="kl-urg"':'')+'><td class="mname">'+l[0]+'<span class="kl-why">'+l[10]+'</span></td><td>'+l[1]+'</td><td class="r'+(k==='RED'?' c-r':k==='AMBER'?' c-a':'')+'"><b>'+l[2]+'</b>'+(pct!=null?'<span class="kl-why">'+pct+'% of PAR</span>':'')+'</td><td class="r">'+(l[3]==null?NA:l[3].toFixed(2))+'</td><td class="r"><b>'+(l[4]==null?NA:l[4])+'</b>'+(l[5]?'<span class="kl-why">out '+l[5]+'</span>':'')+'</td><td class="small">'+(l[6]||'<span class="ph">none</span>')+'</td><td class="r">'+(l[7]||NA)+(l[13]?'<span class="kl-why">amber at '+l[13]+' or under</span>':'')+'</td><td class="r"><b>'+(l[8]||'<span class="ph">none</span>')+'</b></td><td class="small">'+(KL.sup[l[1]]?KL.sup[l[1]][1]:NA)+'</td><td>'+P[k]+(ACT[l[9]]?'<span class="kl-why">'+ACT[l[9]]+'</span>':'')+'</td></tr>'}).join('')+'</tbody>';
+  $('#klFoot').textContent='Live position, not tied to the selected week. Same engine as Keyline Control, filtered to '+SCODE+'. Pulled from '+KL.pulled+', last physical check '+KL.check+'. Order is net of stock already on order; Covered means the open order clears the PAR if it lands. PAR levels are set by the EC team and re-set from the last 1 to 2 weeks of stock counts (latest 11 Nov 2026).';
+}
+
 var COVJ=__COV__,COV=COVJ.d||{};
 /* Year on year (13/10/2026, Rory x Mike): last year's cash up days (ly.json, pull_cashup_ly.py). A day compares with the same weekday 364 days earlier, a week with the same 7 weekdays, the way the old KPI sheet did. n/a where the site was not trading. */
 var LY=__LY__,LYD=LY.d||{};
