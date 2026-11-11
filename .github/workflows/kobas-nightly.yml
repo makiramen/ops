@@ -1,0 +1,70 @@
+name: Kobas nightly pull (sales, covers, labour, item mix, stock, food cost)
+
+# 11/11/2026 (Michael): "everything from Kobas, can we not just log in". One nightly pull, keyline bot login, no Mac,
+# no browser, no Claude session. Pulls last week and this week to date (so late edits to last week are caught) and
+# writes data/kobas/wc_<monday>.json, one file per week with every site in it. This replaces Mona Lisa and the
+# KPI Raw Data sheet as the weekly source for the AM Control Centre and Site CC.
+# Dispatched on time by reliable-scheduler.yml (03:20 / 05:10 / 08:40 UK, skipped once today has shipped); the cron
+# below is only the backup.
+on:
+  schedule:
+    - cron: '20 3 * * *'
+  workflow_dispatch:
+    inputs:
+      weeks:
+        description: 'Comma list of Mondays (YYYY-MM-DD). Empty = last week + this week (UK)'
+        default: ''
+      target:
+        description: 'main (data/kobas on main) or probe (JSON + raw pulls to branch kobas-probe, main untouched)'
+        default: 'main'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kobas-nightly
+  cancel-in-progress: false
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 1, persist-credentials: false }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install --quiet requests
+      - name: Pull Kobas
+        env:
+          TZ: Europe/London
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+          WEEKS: ${{ inputs.weeks }}
+        run: python3 kobas_weekly/pull.py /tmp/kobas
+      - name: Build weekly JSON
+        env: { TZ: Europe/London }
+        run: |
+          mkdir -p data/kobas
+          python3 kobas_weekly/build.py /tmp/kobas data/kobas
+          python3 kobas_weekly/state.py /tmp/kobas data/kobas >> "$GITHUB_STEP_SUMMARY"
+      - name: Commit to main
+        if: github.event_name == 'schedule' || inputs.target != 'probe'
+        run: |
+          git config user.name 'kobas nightly'; git config user.email 'ops@makiramen.com'
+          git add data/kobas
+          git commit -qm "kobas nightly: $(python3 -c "import json;print(', '.join(json.load(open('/tmp/kobas/raw/log.json'))['weeks']))")" || exit 0
+          for i in 1 2 3 4; do
+            git pull -q --rebase https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} main && \
+            git push -q https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} HEAD:main && exit 0
+            sleep $((i * 10))
+          done
+          exit 1
+      - name: Commit to branch kobas-probe (validation runs)
+        if: github.event_name == 'workflow_dispatch' && inputs.target == 'probe'
+        run: |
+          mkdir -p /tmp/pb && cp -r data/kobas /tmp/pb/ && cp -r /tmp/kobas/raw /tmp/pb/raw && cd /tmp/pb
+          git init -q -b kobas-probe && git add -A
+          git -c user.name='kobas nightly' -c user.email='ops@makiramen.com' commit -qm "kobas nightly probe ${{ github.run_id }}"
+          git push -qf https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} kobas-probe
