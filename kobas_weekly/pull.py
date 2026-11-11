@@ -189,11 +189,13 @@ def check_full(c):
 stock = [c for c in checks if c.get('type') == 'stock' and c.get('status') == 'completed' and c.get('venue_id') in VID2S]
 save('stock_check_list.json', [{kk: c.get(kk) for kk in ('id', 'venue_id', 'log_date', 'c_date', 'total_value')} for c in stock])
 def uc_pairs(vid, w):
-    """Stock periods that close a week: every completed stock check date logged Fri..Tue after the week start (sites split food
-    and drinks over two days, eg M6 food Sunday, drinks Monday), each paired with that venue's check 5..9 days earlier."""
+    """The stock period that closes a week: the LAST completed stock check date logged Fri..Tue after the week start, paired with
+    the last check 5..9 days before it. Sites that split the take over two days (M6: food Sunday, drinks Monday) must use the later
+    day at both ends: Kobas carries the other category's position forward, and pairing the earlier days gives nonsense (proved
+    11/11/2026, M6 w/c 02/11: 02/11 -> 08/11 read food variance -79%, 02/11 -> 09/11 reads +0.3%)."""
     ds = sorted({c['log_date'][:10] for c in stock if c['venue_id'] == vid})
     out = []
-    for cd in [d for d in ds if (w + datetime.timedelta(4)).isoformat() <= d <= (w + datetime.timedelta(8)).isoformat()]:
+    for cd in [d for d in ds if (w + datetime.timedelta(4)).isoformat() <= d <= (w + datetime.timedelta(8)).isoformat()][-1:]:
         lo, hi = (datetime.date.fromisoformat(cd) - datetime.timedelta(9)).isoformat(), (datetime.date.fromisoformat(cd) - datetime.timedelta(5)).isoformat()
         op = [d for d in ds if lo <= d <= hi]
         out.append((op[-1] if op else None, cd))

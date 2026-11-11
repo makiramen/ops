@@ -327,12 +327,15 @@ for mon in weeks:
         S['food_pct'] = pct((pu or {}).get('total_gbp'), gross) if (pu and gross and doc['complete']) else None
         S['food_cost_actual_pct'] = ((uc or {}).get('food') or {}).get('cost_pct')
         S['wet_cost_actual_pct'] = ((uc or {}).get('wet') or {}).get('cost_pct')
-        S['stock_variance'] = {'food_pct': ((uc or {}).get('food') or {}).get('variance_pct'), 'drinks_pct': ((uc or {}).get('wet') or {}).get('variance_pct'),
-                               'target': '±5%', 'basis': '(actual - theory usage) / theory usage, Kobas Stock Usage Comparison'}
+        fv, dv = ((uc or {}).get('food') or {}).get('variance_pct'), ((uc or {}).get('wet') or {}).get('variance_pct')
+        # beyond +/-50% is a stock count or keying fault in Kobas, not a variance: kept in usage_comparison, not published as the KPI
+        bad = {k2: v for k2, v in (('food', fv), ('drinks', dv)) if v is not None and abs(v) > 50}
+        S['stock_variance'] = {'food_pct': None if 'food' in bad else fv, 'drinks_pct': None if 'drinks' in bad else dv,
+                               'suspect_counts': bad, 'target': '±5%', 'basis': '(actual - theory usage) / theory usage, Kobas Stock Usage Comparison'}
         doc['sites'][site] = S
         if site not in FRANCHISE:
             for what, v in (('sales', gross), ('covers', covers), ('labour', hwc), ('target', target), ('item mix', S['item_mix']),
-                            ('stock take', close), ('food cost %', S['food_pct'])):
+                            ('stock take', close), ('food cost %', S['food_pct'])) + tuple((f'stock count suspect ({k2} variance {v}%)', None) for k2, v in S['stock_variance']['suspect_counts'].items()):
                 if v is None and (what not in ('stock take', 'food cost %') or doc['complete']): doc['missing'].append(f'{site}: {what}')
     doc['field_keys_seen'] = {'cash_log': CL_KEYS, 'labour': LAB_KEYS}
     fn = os.path.join(dst, f'wc_{mon.isoformat()}.json')

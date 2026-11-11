@@ -101,6 +101,8 @@ jobs:
               import re
               m = re.search(r'area-room-built: (\S+) daily:(\S+)', t[:400])
               return bool(m) and m.group(1) == uk_today().isoformat() and m.group(2) >= D()
+          def kobas_done():
+              j = jfile('data/kobas/run_state.json'); return bool(j) and j.get('last_run_uk_day') == uk_today().isoformat()
           def keyline_done():
               try: return call(f'/contents/keyline/pull-{uk_today().isoformat()}.txt?ref=main', raw=True) is not None
               except Exception: return False
@@ -113,6 +115,7 @@ jobs:
               dict(wf='budget-burn-snapshot.yml', slots=['09:40', '11:10', '12:40', '14:10', '16:10', '18:10'], done=budget_done, always=['11:10', '16:10']),
               # Area Room (07/10/2026): 10:00 UK, or after the daily tab lands if later (area-room.yml also wakes on each daily tab finish)
               dict(wf='area-room.yml', slots=['10:00', '10:45', '11:30', '12:30', '13:30', '14:15', '16:15', '18:15'], done=area_room_done, always=[]),
+              dict(wf='kobas-nightly.yml', slots=['03:20', '05:10', '08:40'], done=kobas_done, always=[]),  # 11/11/2026 Kobas weekly source
               dict(wf='site-cc-nightly.yml', slots=['05:30', '09:50', '12:45'], done=None, always=['05:30', '09:50', '12:45']),
           ]
 
