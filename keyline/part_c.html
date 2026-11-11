@@ -47,8 +47,8 @@
     <div class="chips" id="sitechips"></div>
     <div class="chips" id="filterchips"></div>
     <div class="tblwrap"><table id="t-site"><thead><tr>
-      <th>Site</th><th>Item</th><th class="num">In stock now</th><th class="num">Used a day</th><th class="num">Days left</th>
-      <th class="num">Left on delivery day</th><th class="num">PAR (bottom line)</th><th class="num">Order</th><th>Stock light</th><th>Supplier</th></tr></thead><tbody></tbody></table></div>
+      <th>Item</th><th class="num">In stock</th><th class="num">Used a day</th><th class="num">Days left</th>
+      <th class="num">Left at delivery</th><th class="num">PAR</th><th class="num">Order</th><th>Stock light</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <section id="v-nudges" class="hide">
@@ -474,15 +474,16 @@ function rowHtml(r, withSite){
     (r.baselineSource==='PAR sheet' ? '<span class="parflag" title="From the PAR sheet">PAR</span>' : '<span class="parflag" title="Computed, not on the PAR sheet" style="color:var(--muted)">CALC</span>')+
     (r.period && r.period.reserveOpen && r.floor!=null ? '<span class="sub2">floor '+fmtQty(r.floor, r.item)+'</span>' : '');
 
-  return '<tr><td>'+(withSite? r.site+' '+siteName(r.site) : r.site)+stale+'</td>'+
-    '<td><b>'+r.item.name+'</b><div class="why">'+r.why+'</div>'+cause+prov+'</td>'+
+  const tip = (r.why + ((r.comp && r.comp.cause) ? ' Kobas orders: '+r.comp.cause : '')).replace(/"/g,'&quot;').replace(/<[^>]+>/g,'');
+  return '<tr title="'+tip+'">'+
+    '<td><b>'+(withSite? r.site+' ' : '')+r.item.name+'</b><span class="sub2">'+r.sup+'</span>'+stale+asm+prov+'</td>'+
     '<td class="num">'+stockCell+'</td>'+
     '<td class="num" title="'+(r.usageSource||'')+'">'+usageCell+'</td>'+
     '<td class="num"'+(r.usageHist!=null && r.coverKobas!=null ? ' title="Stock / 8-month average daily usage. Kobas itself reports '+fmtDays(r.coverKobas)+' remaining."' : '')+'>'+daysCell+'</td>'+
     '<td class="num" title="Stock now minus usage between today and the earliest delivery this route can still make.">'+arriveCell+'</td>'+
     '<td class="num" title="'+parTitle+'Run-out floor today '+(r.floor!=null? fmtQty(r.floor, r.item):'-')+'.">'+baseCell+'</td>'+
     '<td class="num" title="'+(r.period && r.period.reserveOpen ? 'Reserve open: run-out floor minus stock' : 'Baseline minus stock')+(r.inbound>0 ? ', minus '+fmtQty(r.inbound, r.item)+' already on its way. Gap to the '+(r.period&&r.period.reserveOpen?'floor':'Baseline')+' is '+fmtQty(r.orderQty, r.item)+'.' : '')+'">'+(r.netOrder!=null ? (r.netOrder>0 ? '<b class="oq">'+fmtQty(r.netOrder, r.item)+'</b>' : '<span style="color:var(--muted)">0</span>') : '-')+(r.comp && r.comp.onOrder>0 ? '<span class="onord'+(r.comp.covered?' cov':'')+'" title="Open Kobas order">'+fmtQty(r.comp.onOrder, r.item)+' on order'+(r.comp.due? ', due '+DAYNAME[r.comp.due.getDay()].slice(0,3)+' '+r.comp.due.getDate() : '')+'</span>' : '')+'</td>'+
-    '<td>'+pill+'</td><td>'+r.sup+asm+'</td></tr>';
+    '<td>'+pill+'</td></tr>';
 }
 function renderActionTable(){
   const rows = ROWS.filter(r=>['URGENT','ORDER','WATCH','CHECK'].includes(r.status));
@@ -494,12 +495,15 @@ function renderActionTable(){
 function renderSiteTable(){
   let rows = ROWS;
   if(siteFilter!=='ALL')  rows = rows.filter(r=>r.site===siteFilter);
+  const oneSite = siteFilter!=='ALL';
   if(statusFilter!=='ALL')rows = rows.filter(r=>matchF(r,statusFilter));
   const tb = document.querySelector('#t-site tbody');
-  if(!rows.length){ tb.innerHTML='<tr><td colspan="10" class="empty">Nothing matches that filter.</td></tr>'; return; }
+  if(!rows.length){ tb.innerHTML='<tr><td colspan="8" class="empty">Nothing matches that filter.</td></tr>'; return; }
   let html='', last=null;
+  if(oneSite) html+='<tr class="sitehd"><td colspan="8">'+siteFilter+' '+siteName(siteFilter)+'</td></tr>';
+  if(!oneSite) rows = rows.slice().sort((a,b)=> seatOf(a)-seatOf(b) || LRANK[a.light]-LRANK[b.light] || RANK[a.status]-RANK[b.status] || daysOf(a)-daysOf(b));
   rows.forEach(r=>{
-    if(siteFilter==='ALL' && r.site!==last){ html+='<tr class="sitehd"><td colspan="10">'+r.site+' '+siteName(r.site)+'</td></tr>'; last=r.site; }
+    if(siteFilter==='ALL' && r.site!==last){ html+='<tr class="sitehd"><td colspan="8">'+r.site+' '+siteName(r.site)+'</td></tr>'; last=r.site; }
     html += rowHtml(r,false);
   });
   tb.innerHTML = html;
