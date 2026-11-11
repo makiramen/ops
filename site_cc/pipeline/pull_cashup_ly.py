@@ -14,7 +14,8 @@ RNG=cfg.get('cashup_range') or src['range']   # 11/11/2026: a site may read anot
 rows=list(csv.reader(open(a.csv,encoding='utf-8-sig'))) if a.csv else C.sheet_values(src['id'],RNG)
 h=rows[0]
 for i,e in V.EXPECTED_HEADERS.items():
-    if (h[i] if i<len(h) else '').strip()!=e.strip():sys.exit(f'FATAL: {RNG} column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')
+    _got=(h[i] if i<len(h) else '').strip()
+    if _got!=e.strip() and _got!=e.strip()+' Kobas':sys.exit(f'FATAL: {RNG} column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')   # 11/11/2026: RAW Data Franchisee heads col 24 'No. Of Customers Kobas', same column
 T=C.today();hi=(T-datetime.timedelta(357)).isoformat();lo='2025-04-01'
 d={}
 for r in rows[1:]:
