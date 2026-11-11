@@ -1,7 +1,8 @@
 """Key lines feed (keyline.json) from Keyline Control, the page keyline-daily.yml builds into the ops checkout (keyline.html, 06:55 UK).
 Runs that page's own engine in headless Chromium (Europe/London clock) and keeps the rows for this site, so the Site CC shows
 exactly what Keyline Control shows. Columns: item, supplier, on hand, used a day, days left, runs out, on order, Baseline,
-order today, status, why (the engine's own instruction). sup = per supplier [next cut-off, next delivery, minimum].
+order today, status, why (the engine's own instruction), then (11/11/2026, engine v2) light RED/AMBER/GREEN/GREY,
+% of PAR, the amber threshold (50% of PAR). Light rule: RED = stock below 1, AMBER = 1 to 50% of PAR, GREEN = above. sup = per supplier [next cut-off, next delivery, minimum].
 Keeps the last good file on any failure. --check prints and writes nothing.
 Usage: pull_keyline.py --site M14 --data DIR --page OPS_ROOT/keyline.html [--check]"""
 import argparse,json,os,sys
@@ -24,9 +25,11 @@ JS="""(code)=>{
    const ot=(r.netOrder===0&&r.inbound>0)?'Covered':((r.netOrder>0)?q(r.netOrder,r.item):'');
    return [r.item.name,r.sup||'',q(r.stock,r.item),chk||r.usage==null?null:Math.round(r.usage*100)/100,
            chk?null:(r.cover<10?one(r.cover):Math.round(r.cover)),chk?'':day(r.runOut),oo,chk?'':q(r.baseline,r.item),chk?'':ot,
-           L[r.status]||r.status,r.why||''];});
+           L[r.status]||r.status,r.why||'',
+           r.light||null,(chk||r.pctBaseline==null)?null:Math.round(r.pctBaseline*100),(chk||r.lowAt==null)?'':q(r.lowAt,r.item)];});
  const ord={Urgent:0,'Order today':1,Watch:2,Check:3,Data:4,OK:5,Over:6};
- lines.sort((a,b)=>(ord[a[9]]-ord[b[9]])||((a[4]==null?1e9:a[4])-(b[4]==null?1e9:b[4])));
+ const lo={RED:0,AMBER:1,GREY:2,GREEN:3};
+ lines.sort((a,b)=>((lo[a[11]]==null?9:lo[a[11]])-(lo[b[11]]==null?9:lo[b[11]]))||(ord[a[9]]-ord[b[9]])||((a[4]==null?1e9:a[4])-(b[4]==null?1e9:b[4])));
  const sup={};
  rows.forEach(r=>{if(!r.sup||sup[r.sup])return;
    sup[r.sup]=r.del?[r.del.next.cut.toLocaleDateString('en-GB',{weekday:'short',timeZone:'Europe/London'})+' '+r.del.next.cutTime,day(r.del.next.del),(r.route&&r.route.min)?'\\u00a3'+r.route.min+' min':'']
@@ -45,6 +48,6 @@ out={'src':'Keyline Control (keyline.html in makiramen/ops, keyline-daily.yml), 
 for l in out['lines']:
     for i,v in enumerate(l):
         if isinstance(v,str):l[i]=v.replace('—',', ').replace('–','-')
-print(f"keyline {A.site}: {R['n']} lines, {out['pulled']}, check {out['check']}, statuses",{s:sum(1 for l in out['lines'] if l[9]==s) for s in {l[9] for l in out['lines']}})
+print(f"keyline {A.site}: {R['n']} lines, {out['pulled']}, check {out['check']}, lights",{s:sum(1 for l in out['lines'] if l[11]==s) for s in {l[11] for l in out['lines']}},'statuses',{s:sum(1 for l in out['lines'] if l[9]==s) for s in {l[9] for l in out['lines']}})
 if A.check:print(json.dumps(out,ensure_ascii=False,indent=0)[:3000]);sys.exit(0)
 save(os.path.join(A.data,'keyline.json'),out)
