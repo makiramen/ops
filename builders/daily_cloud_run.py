@@ -147,6 +147,10 @@ def main():
     OFFER = ACCEPTED_COVERS.pop("offer_floor", None) or {}
     ACCEPTED_COVERS.pop("closures", None)   # dated site closures: read by pull_daily_cashup (PC.CLOSURES), not a day key
     ACCEPTED_COVERS.pop("weekly_closures", None)   # recurring weekday closures (Maki Nori Mon/Tue, 03/11/2026): PC.WEEKLY_CLOSURES
+    # 11/11/2026 (Michael): days whose FLEET avg spend is genuinely over the £26 ceiling (every site inside its own band,
+    # so not a doubled-sales day). Keyed dd/mm/yyyy -> reason. Lifts the ceiling for that day only, and backfills the day if
+    # it has aged out of the D-2..D window. First case: Fri 06/11/2026 at £26.23, held since 07/11.
+    FLEET_OK = ACCEPTED_COVERS.pop("fleet_spend_accepted", None) or {}
     def ramen_lo(dt):
         try:
             iso = datetime.datetime.strptime(dt, "%d/%m/%Y").date().isoformat()
@@ -174,7 +178,7 @@ def main():
                 if not (lo <= sp <= hi): flags.append(f"{code} £{sp:.2f}/head (band £{lo}-{hi})")
             # 23/10/2026: Michael ruled the fleet avg spend floor down from £20 to £0. The 22/10 day sat unshipped
             # because the fleet came in under £20; only the £26 ceiling (doubled-sales guard) still holds the day.
-            if not (0 <= fleet <= 26): return False, f"fleet avg spend £{fleet:.2f} outside £0-26 on {dt} (covers still filling?)", fleet, flags
+            if not (0 <= fleet <= 26) and dt not in FLEET_OK: return False, f"fleet avg spend £{fleet:.2f} outside £0-26 on {dt} (covers still filling?)", fleet, flags
             # 04/09/2026: a per-site spend outside its band no longer holds the WHOLE fleet day back.
             # 02/09 sat unshipped for two days because M8 (372 covers on £4,021) and M19 (250 on £3,183)
             # had doubled covers at source. The day now ships with THAT SITE's covers and avg spend
@@ -191,6 +195,14 @@ def main():
     for dd in (D2, D1):
         o2, w2, _, _ = buildable(dmy(dd.isoformat()))
         if not o2: R["warnings"].append(f"{dd.isoformat()} not buildable in this mirror ({w2}) — left as live")
+    try:
+        _li = json.load(open(os.path.join(DD, "daily_index.json"))); _have = set(_li.get("dates") or _li.get("days") or [])
+    except Exception: _have = set()
+    for _k in FLEET_OK:
+        try: _d = datetime.datetime.strptime(_k, "%d/%m/%Y").date()
+        except ValueError: continue
+        if _d < D2 and (D - _d).days <= 13 and _d.isoformat() not in _have and _d not in build_dates:
+            build_dates.append(_d); R["warnings"].append(f"{_d.isoformat()} BACKFILLED: fleet avg spend over £26 accepted by Michael ({FLEET_OK[_k]})")
     build_dates = [dd for dd in build_dates if buildable(dmy(dd.isoformat()))[0]]
     if not build_dates:
         log("nothing buildable in the cash-up mirror:", why)
