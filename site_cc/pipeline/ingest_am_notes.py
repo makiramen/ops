@@ -5,7 +5,10 @@ file, patches sites[CODE].notes into data/<CODE>_wc_<MONDAY>.json and data/all_s
 and records what it ingested in data/_notes_ingest_state.json. No laptop involved.
 
 File format: {"week":"YYYY-MM-DD","mode":"replace"|"merge","sites":{"M7":{"issues":[..],"actions":[..],
-"carryover":[..],"empty":false,"docId":"..","source":".."}, ...}}
+"carryover":[..],"empty":false,"docId":"..","source":"..",
+"done":[{"gid":"<Asana task gid>","why":"<evidence from the notes>"}]}, ...}}
+done (11/11/2026): open Asana tasks the notes clearly show as finished; queued in data/_asana_done.json and ticked
+in Asana by pull_asana.py on the next Site CC build (with a comment quoting the evidence).
 replace: the site's notes become exactly the file's notes (an empty:true site keeps any existing content).
 merge: new lines are appended, duplicates skipped; existing lines are never removed.
 Local test: python3 ingest_am_notes.py --data <dir with *_wc_*.json> --file notes.json
@@ -57,7 +60,24 @@ def validate(doc):
         for k in KEYS:
             if not isinstance(n.get(k, []), list) or not all(isinstance(x, str) for x in n.get(k, [])):
                 raise ValueError(f'{code}.{k} must be a list of strings')
+        for d in n.get('done', []) or []:
+            if not isinstance(d, dict) or not str(d.get('gid', '')).isdigit() or not str(d.get('why', '')).strip():
+                raise ValueError(f'{code}.done entries need a numeric gid and a why')
     return wk
+
+def queue_done(doc, data_dir):
+    qp = os.path.join(data_dir, '_asana_done.json')
+    Q = json.load(open(qp)) if os.path.exists(qp) else {}
+    added = 0
+    for code, n in doc['sites'].items():
+        for d in n.get('done', []) or []:
+            g = str(d['gid'])
+            if g in Q: continue
+            Q[g] = {'site': code, 'why': clean(d['why'])[:400], 'wk': doc['week'], 'queued': datetime.date.today().isoformat()}
+            added += 1
+    if added:
+        open(qp, 'w').write(json.dumps(Q, indent=2, sort_keys=True) + '\n')
+    return added, qp
 
 def merge_notes(old, new, mode):
     old = old or {}
@@ -101,6 +121,8 @@ def apply(doc, data_dir):
     newraw = dumps_like(araw, A)
     if newraw != araw:
         open(allp, 'w').write(newraw); changed.append(allp)
+    nd, qp = queue_done(doc, data_dir)
+    if nd: changed.append(qp); report.append(f'{nd} Asana tasks queued to tick')
     return wk, changed, report
 
 def main():

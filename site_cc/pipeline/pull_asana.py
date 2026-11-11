@@ -67,11 +67,33 @@ for a in acts:
         r = call('POST', '/tasks', body); g = r['data']['gid']; call('POST', f'/sections/{SEC}/addTask', {'task': g}); MAP[k] = g; made += 1
     except Exception as e: print('!! create failed', k, e)
 
+# 1b. tick tasks the meeting notes show as finished (queue written by ingest_am_notes.py, 11/11/2026)
+ROOTQ = os.environ.get('ASANA_DONE_QUEUE') or os.path.join(HERE, '..', '..', 'data', '_asana_done.json')
+try: Q = json.load(open(ROOTQ))
+except Exception: Q = {}
+AUTO = ST.get('auto_done') or {}
+CAP = 10
+mine = [(g, q) for g, q in sorted(Q.items()) if q.get('site') == A.site and g not in AUTO]
+if len(mine) > CAP:
+    print(f'!! {A.site}: {len(mine)} tasks queued to tick, over the cap of {CAP}; none ticked, check the notes run')
+    mine = []
+ticked = 0
+if mine:
+    OPEN = {t['gid']: t for t in section() if not t['completed']}
+    for g, q in mine:
+        if g not in OPEN: AUTO[g] = 'not open'; continue
+        if A.check: print('would tick:', OPEN[g]['name'][:70]); continue
+        try:
+            call('PUT', f'/tasks/{g}', {'completed': True})
+            call('POST', f'/tasks/{g}/stories', {'text': f"Ticked automatically from the meeting notes (w/c {q.get('wk')}): {q.get('why')} If this is wrong, reopen the task."})
+            AUTO[g] = datetime.date.today().isoformat(); ticked += 1
+        except Exception as e: print('!! tick failed', g, e)
+
 # 2. read the whole section back
 tasks = section()
 T = [{'gid': t['gid'], 't': t['name'], 'c': 1 if t['completed'] else 0, 'ca': (t.get('completed_at') or '')[:10] or None,
       'd': t.get('due_on'), 'o': who(t), 'cr': (t.get('created_at') or '')[:10]} for t in tasks]
-out = {'site': A.site, 'section': SEC, 'project': CFG['project'], 'pulled': datetime.date.today().isoformat(), 'map': MAP, 'tasks': T}
-print(f'{A.site}: created {made}, section has {len(T)} tasks ({sum(t["c"] for t in T)} completed)')
+out = {'site': A.site, 'section': SEC, 'project': CFG['project'], 'pulled': datetime.date.today().isoformat(), 'map': MAP, 'auto_done': AUTO, 'tasks': T}
+print(f'{A.site}: created {made}, ticked from notes {ticked}, section has {len(T)} tasks ({sum(t["c"] for t in T)} completed)')
 if not A.check:
     json.dump(out, open(P('asana.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
