@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-11-09",
+  "generated_at": "2026-11-11",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-11-02 \u2013 2026-11-08",
@@ -42,7 +42,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": 23.43,
+          "actual": 23.24,
           "target": 23.0,
           "gated": false
         },
@@ -76,19 +76,19 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": 4.5,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": -4.8,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-11-02"
       },
       "efficiency_score": {
-        "score": 85,
+        "score": 86,
         "rag": "amber",
         "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
         "weights": {
@@ -113,7 +113,7 @@
           "food": {
             "weight": 30,
             "value": 100.0,
-            "basis": "23.43% vs 25% baseline, -8/pp over"
+            "basis": "23.24% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -124,11 +124,14 @@
             "weight": 10,
             "value": 100.0,
             "basis": "4.83\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-4.80% inside \u00b15% band"
           }
         },
-        "components_dropped": [
-          "food_var"
-        ],
+        "components_dropped": [],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
@@ -152,7 +155,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-02..2026-11-08 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-09."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-02..2026-11-08 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-11."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-11-02.json (AGMM Task List Status). Open items only.",
@@ -210,33 +213,31 @@
         "week_ending": "2026-11-08",
         "resolution": "weekly",
         "partial": false,
-        "sales": 5184.0,
-        "orders": 109,
-        "aov": 47.56,
-        "new_customers": null,
+        "sales": 5184.18,
+        "orders": 153,
+        "aov": 33.88,
+        "new_customers": 51,
         "rating": 4.55,
         "open_hours_pct": 99.8,
         "avg_prep_min": 13.8,
         "rejection_pct": 0.0,
         "inaccuracy_pct": 2.7,
         "rider_wait_5min_pct": 1.3,
-        "conversion_pct": null,
+        "conversion_pct": 7.7,
         "wow": {
           "gmv_pct": -9.6,
-          "orders_abs": null,
-          "prev_gmv": 5732.0,
-          "prev_orders": null
+          "orders_abs": -26,
+          "prev_gmv": 5732.25,
+          "prev_orders": 179
         },
         "gmv_vs_4wk_pct": -3.2,
         "gmv_vs_ly_pct": 6.4,
-        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "source": "sales + orders: Deliveroo Tax Invoice PDF (Total Order Value), issued 09/11/2026 + ops from Weekly Summary sheet",
+        "busy_mode_pct": 1.0,
         "sales_estimated": false,
-        "orders_estimated": true,
-        "busy_mode_pct": 1.0
+        "orders_estimated": false
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [
           "Marketing flagged that Newcastle's Meta leads and Slerp location are underperforming and need restructuring or stopping, and new ad creatives are being made for Newcastle (Weekly DPM meeting 10/11)."

@@ -1,6 +1,6 @@
 {
   "schema_version": "1.2",
-  "generated_at": "2026-11-09",
+  "generated_at": "2026-11-11",
   "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
     "label": "Week of 2026-11-02 \u2013 2026-11-08",
@@ -76,14 +76,14 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
+          "variance_pct": 1.0,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "food": {
-          "variance_pct": null,
+          "variance_pct": -0.1,
           "target": "\u00b15%",
-          "within_band": null
+          "within_band": true
         },
         "week_commencing": "2026-11-02"
       },
@@ -124,11 +124,14 @@
             "weight": 10,
             "value": 100.0,
             "basis": "4.72\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "-0.10% inside \u00b15% band"
           }
         },
-        "components_dropped": [
-          "food_var"
-        ],
+        "components_dropped": [],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
@@ -174,7 +177,7 @@
         "venue_review_count": null,
         "response_rate": null,
         "response_rate_note": "No automated source \u2014 left open.",
-        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-02..2026-11-08 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-09."
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-02..2026-11-08 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-11."
       },
       "maintenance": {
         "source": "automation/data/maintenance_2026-11-02.json (AGMM Task List Status). Open items only.",
@@ -196,33 +199,31 @@
         "week_ending": "2026-11-08",
         "resolution": "weekly",
         "partial": false,
-        "sales": 6695.0,
-        "orders": 130,
-        "aov": 51.5,
-        "new_customers": null,
+        "sales": 6694.82,
+        "orders": 211,
+        "aov": 31.73,
+        "new_customers": 69,
         "rating": 4.56,
         "open_hours_pct": 99.8,
         "avg_prep_min": 14.4,
         "rejection_pct": 0.0,
         "inaccuracy_pct": 1.0,
         "rider_wait_5min_pct": 3.3,
-        "conversion_pct": null,
+        "conversion_pct": 11.8,
         "wow": {
           "gmv_pct": -18.8,
-          "orders_abs": null,
-          "prev_gmv": 8241.0,
-          "prev_orders": null
+          "orders_abs": -50,
+          "prev_gmv": 8240.76,
+          "prev_orders": 261
         },
         "gmv_vs_4wk_pct": -17.9,
         "gmv_vs_ly_pct": 3.9,
-        "source": "sales: Deliveroo Weekly Brand Report (GBP 1 rounding); orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "source": "sales + orders: Deliveroo Tax Invoice PDF (Total Order Value), issued 09/11/2026 + ops from Weekly Summary sheet",
+        "busy_mode_pct": 0.0,
         "sales_estimated": false,
-        "orders_estimated": true,
-        "busy_mode_pct": 0.0
+        "orders_estimated": false
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [
           "Stock count closures on Kobas were held up by manual entry errors from the new kitchen supervisors in Manchester, and edits will be limited to three items per count (Admin Meeting 09/11).",
