@@ -18,3 +18,17 @@ for site, vid in [('M1', 3), ('M3', 5), ('M9', 2)]:
     p = k.s.post(BASE + '/reports/index.php', data=data, headers={'X-Requested-With': None}, timeout=300)
     open(os.path.join(out, f'{site}_uc.html'), 'w').write(f'{p.status_code} {json.dumps(data)}\n' + p.text)
 print('ok')
+# how the View Report button submits
+p = k.s.get(BASE + '/reports/index.php', params={'m': 'CORE_Reports_UsageComparison'}, timeout=90)
+for s in sorted(set(re.findall(r'<script[^>]+src="([^"]+)"', p.text))):
+    if 'admin-' not in s: continue
+    t = k.s.get(('https:' + s) if s.startswith('//') else BASE + s, timeout=60).text
+    snips = [t[max(0, m.start() - 600):m.start() + 900] for m in re.finditer(r'view_report|stockusagecomparisonform|createOptionListDays', t)]
+    open(os.path.join(out, 'view_report_js.txt'), 'w').write('\n\n=====\n'.join(snips))
+inl = [s for s in re.findall(r'<script[^>]*>(.*?)</script>', p.text, re.S) if 'view_report' in s or 'stockusagecomparisonform' in s]
+open(os.path.join(out, 'view_report_inline.txt'), 'w').write('\n\n=====\n'.join(inl))
+# GET variant for M1
+data = {'m': 'CORE_Reports_UsageComparison', 'v': '1', 'category': '', 'venueid': '3', 'opening_years': '2026',
+        'opening_days': '2026-10-31 23:59:59', 'closing_years': '2026', 'closing_days': '2026-11-07 23:59:59'}
+g = k.s.get(BASE + '/reports/index.php', params=data, timeout=300)
+open(os.path.join(out, 'M1_uc_get.html'), 'w').write(f'{g.status_code} {len(g.text)}\n' + g.text)
