@@ -6,7 +6,9 @@ out = sys.argv[1]; os.makedirs(out, exist_ok=True)
 k = Kobas(); assert k.login(), 'login failed'
 for site, vid in [('M1', 3), ('M3', 5), ('M9', 2)]:
     r = k.s.get(BASE + '/ajax/stock_check', params={'status': 'completed', 'type': 'stock', 'venue_id': vid}, timeout=60)
-    days = sorted({x['log_date'] for x in r.json() if str(x.get('venue_id')) == str(vid)})
+    open(os.path.join(out, f'{site}_ajax.txt'), 'w').write(r.text[:3000])
+    j = k.s.get(BASE + '/data/v2/stock/check', params={'limit': 50, 'orderBy[log_date]': 'DESC', 'filterBy[venue_id][eq]': vid, 'filterBy[type][eq]': 'stock'}, timeout=60).json()
+    days = sorted({x['log_date'] for x in j if x.get('status') == 'completed'})
     open(os.path.join(out, f'{site}_checks.json'), 'w').write(json.dumps(days[-12:]))
     want = [d for d in days if d[:10] in ('2026-10-31', '2026-11-01', '2026-11-07', '2026-11-08')]
     op = [d for d in want if d[:10] <= '2026-11-01']; cl = [d for d in want if d[:10] >= '2026-11-07']
