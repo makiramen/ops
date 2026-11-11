@@ -25,7 +25,8 @@ ALIAS={'meadowhall':['M14'],'sheffield':['M14'],'fountainbridge':['M3'],'bath st
  'metrocentre':['M15'],'metro centre':['M15'],'manchester':['M9'],'leeds':['M10'],'leicester':['M11'],'nottingham':['M16'],'lakeside':['M17'],'soho':['M18'],
  'shoreditch':['M19'],'southampton':['M20'],'birmingham':['M21'],'nicolson':['M1'],'st james':['M7'],'sjq':['M7'],'renfield':['M8'],'ikigai':['IKI2'],
  'maki nori':['MakiNori'],'nori':['MakiNori'],'glasgow':['M6','M8'],'edinburgh':['M1','M3','M7','IKI2'],'edin ':['M1','M3','M7','IKI2'],'edin m3':['M3'],
- 'london':['M18','M19','MakiNori','M17'],'scotland':['M1','M3','M6','M7','M8','IKI2','M13'],'west end':[]}
+ 'london':['M18','M19','MakiNori','M17'],'scotland':['M1','M3','M6','M7','M8','IKI2','M13'],'west end':[],
+ 'the o2':['MAF3'],'o2 arena':['MAF3'],' o2 ':['MAF3']}   # 11/11/2026: MAF3 franchise, named only; 'london' stays corporate sites
 ALL_RE=re.compile(r'all\s+(sites|locations|customers|branches)',re.I)
 D1=re.compile(r'(\d{1,2})/(\d{1,2})\s*-\s*(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?')   # 15/11-31/12, 28/09-12/10
 D2=re.compile(r'(\d{1,2})\s*-\s*(\d{1,2})/(\d{1,2})(?:/(\d{2,4}))?')              # 20-30/11/26, 07-18/12/26

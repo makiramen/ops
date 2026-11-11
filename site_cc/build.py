@@ -17,11 +17,11 @@ SJ=json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'sites
 CODE=A.site or JD('weekly.json',{}).get('site') or 'M14'
 if CODE not in SJ['sites']:sys.exit(f'BUILD FAILED, nothing written: {CODE} not in sites.json')
 SC=SJ['sites'][CODE];TIERS=SJ.get('tiers') or {}
-TN=[k for k,v in TIERS.items() if CODE in v]
+TN=[] if SC.get('franchise') else [k for k,v in TIERS.items() if CODE in v]   # franchise (MAF3): never in a Maki League tier
 SITE={'code':CODE,'name':SC['name'],'label':SC.get('label') or CODE,'cluster':SC.get('cluster',''),'am':SC.get('am',''),'dam':SC.get('dam',''),
       'tier':TN[0] if TN else None,'tiers':TIERS,'dec':(SJ.get('clusters') or {}).get(SC.get('cluster'),{}).get('dec',''),'sph':SC.get('sph',22),'gm':None,'tierSites':TIERS[TN[0]] if TN else [],'compTab':SC.get('compliance_tab'),
       'has':{'delivery':SC.get('delivery',True)!=False,'loyalty':bool(SC.get('loyalty_venue')),'mapal':bool(SC.get('mapal_location')),'broth':bool(SC.get('broth_label')),'comp':bool(SC.get('compliance_tab'))},
-      'sites':[]}   # 08/10/2026 (Michael): no site switcher on the page, a site sees only itself
+      'sites':[],'franchise':bool(SC.get('franchise'))}   # 08/10/2026 (Michael): no site switcher on the page, a site sees only itself. 11/11/2026: franchise true (MAF3) = no league, no efficiency score, no fleet or cluster aggregate, FRANCHISE badge
 
 # Weekly KPI rows and Deliveroo weekly (pull_amcc.py writes weekly.json)
 W=J('weekly.json');main=W['main'];droo=W['droo']
@@ -50,7 +50,7 @@ for r in main:
 # Sales, target, covers, SPH and wage % (sales weighted) are week to date; everything weekly only (food cost, hours, waste, league, efficiency) stays
 # n/a until the week closes. The last closed week is "last week" and keeps the KPI sheet and sign off.
 _mon=TODAY-datetime.timedelta(TODAY.weekday())
-if WK and _mon.isoformat()>WK[-1]['wc']:
+if not WK or _mon.isoformat()>WK[-1]['wc']:   # 11/11/2026: a brand new site with no closed week at source (MAF3 before the AM CC carries it) still gets this week, so the page renders instead of failing on an empty week list
     _dl=JD('daily.json',{});_days=[k for k in sorted(_dl) if k>=_mon.isoformat() and k<=TODAY.isoformat()]
     _s=sum((_dl[k][0] or 0) for k in _days);_t=sum((_dl[k][1] or 0) for k in _days);_c=sum((_dl[k][2] or 0) for k in _days)
     _lw=[(k,_dl[k]) for k in _days if _dl[k][6] is not None and _dl[k][0]];_wg=round(sum(v[6]*v[0] for k,v in _lw)/sum(v[0] for k,v in _lw),2) if _lw else None
@@ -136,10 +136,10 @@ FEEDS=[  # name, as of, max age days
  ('Compliance',d10(J('compliance.json').get('pulled')),8),('Team',d10(J('team.json').get('pulled')),8),('Sales mix',d10(JD('mix.json',{}).get('pulled')),3),('EOTM',d10(J('eotm.json').get('pulled')),35),('Mapal forms',d10(MP.get('to')),3),('Maintenance',d10(MT.get('pulled')),2),('PPM schedule',d10(PPM.get('asof')),35),('Asana actions',d10(AS.get('pulled')),2)]
 # Feeds that do not exist for this site (no source in sites.json) are n/a, not late
 NA={'Deliveroo weekly':not SITE['has']['delivery'],'Delivery sales':not SITE['has']['delivery'],'Deliveroo daily':not SITE['has']['delivery'],'Loyalty':not SITE['has']['loyalty'],'Broth':not SITE['has']['broth'],'Mapal forms':not SITE['has']['mapal'],'Mapal compliance':not SITE['has']['mapal'],'Compliance':not J('compliance.json').get('pulled'),'Last year':not LY.get('d'),'Budget burn':not BUD.get('ledger'),'Marketing calendar':not PRM.get('pulled'),
-    'Team':not J('team.json').get('pulled'),'Sales mix':not JD('mix.json',{}).get('pulled'),'Key lines':not J('keyline.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled'),'PPM schedule':not PPM.get('items'),'Asana actions':not (SC.get('asana_section') and AS)}
+    'Efficiency':SITE['franchise'],'Estate ladder':SITE['franchise'],'Team':not J('team.json').get('pulled'),'Sales mix':not JD('mix.json',{}).get('pulled'),'Key lines':not J('keyline.json').get('pulled'),'EOTM':not J('eotm.json').get('pulled'),'PPM schedule':not PPM.get('items'),'Asana actions':not (SC.get('asana_section') and AS)}
 LOG=[];STALE=[]
 for n,asof,mx in FEEDS:
-    if NA.get(n) and (asof is None or n in ('Deliveroo weekly','Delivery sales','Deliveroo daily')):LOG.append({'feed':n,'asof':None,'status':'n/a'});continue
+    if NA.get(n) and (asof is None or n in ('Deliveroo weekly','Delivery sales','Deliveroo daily') or (SITE['franchise'] and n in ('Efficiency','Estate ladder'))):LOG.append({'feed':n,'asof':None,'status':'n/a'});continue
     age=(TODAY-asof).days if asof else None
     st='missing' if asof is None else ('stale' if age>mx else 'ok')
     LOG.append({'feed':n,'asof':asof.isoformat() if asof else None,'age_days':age,'max_days':mx,'status':st})

@@ -10,10 +10,11 @@ import common as C, vendor_cashup as V
 ap=argparse.ArgumentParser();ap.add_argument('--site',default='M14');ap.add_argument('--data',default='.');ap.add_argument('--csv')
 a=ap.parse_args()
 S,cfg=C.site(a.site);src=S['sources']['auto_cash_up']
-rows=list(csv.reader(open(a.csv,encoding='utf-8-sig'))) if a.csv else C.sheet_values(src['id'],src['range'])
+RNG=cfg.get('cashup_range') or src['range']   # 11/11/2026: a site may read another tab of Auto Cash Up (MAF3 franchise rows sit on RAW Data Franchisee); same columns asserted below
+rows=list(csv.reader(open(a.csv,encoding='utf-8-sig'))) if a.csv else C.sheet_values(src['id'],RNG)
 h=rows[0]
 for i,e in V.EXPECTED_HEADERS.items():
-    if (h[i] if i<len(h) else '').strip()!=e.strip():sys.exit(f'FATAL: Raw Data 2 column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')
+    if (h[i] if i<len(h) else '').strip()!=e.strip():sys.exit(f'FATAL: {RNG} column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')
 T=C.today();hi=(T-datetime.timedelta(357)).isoformat();lo='2025-04-01'
 d={}
 for r in rows[1:]:

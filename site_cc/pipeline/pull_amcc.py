@@ -7,7 +7,12 @@ import json,glob,os,re,argparse,datetime
 ap=argparse.ArgumentParser();ap.add_argument('--amcc',required=True);ap.add_argument('--site',default='M14')
 ap.add_argument('--data',default='.');ap.add_argument('--from',dest='frm',default='2026-05-04');ap.add_argument('--check',action='store_true')
 a=ap.parse_args()
-g=lambda o,*p:(o:=o) and [o:=(o or {}).get(k) for k in p][-1]
+def g(o,*p):
+    """Nested get, null safe: any missing, null or non dict level gives None (never {} or 0)."""
+    for k in p:
+        if not isinstance(o,dict):return None
+        o=o.get(k)
+    return o
 def row(s,wc):
     k=s.get('kpis') or {};st=s.get('stock_take') or {};rv=s.get('reviews') or {};ef=s.get('efficiency_score') or {}
     m=[wc,g(k,'sales','actual'),g(k,'sales','target'),g(k,'covers','actual'),g(k,'sph','actual'),g(k,'wage_pct','actual'),g(k,'food_pct','actual'),
@@ -45,7 +50,7 @@ TIER=[v for v in (SJ.get('tiers') or {}).values() if a.site in v]
 TIER=TIER[0] if TIER else None
 def league(al):
     g=lambda c,k:(((al.get(c) or {}).get('kpis') or {}).get(k) or {}).get('actual')
-    v={c:(g(c,'wage_pct'),g(c,'food_pct'),g(c,'sph')) for c in TIER};p={c:0 for c in TIER}
+    v={c:(g(c,'wage_pct'),g(c,'food_pct'),g(c,'sph')) for c in TIER};p={c:0 for c in TIER}   # TIER never holds a franchise code (sites.json tiers), so MAF3 cannot score
     for i,best in ((0,min),(1,min),(2,max)):
         xs=[x[i] for x in v.values() if x[i] is not None]
         if xs:
@@ -67,8 +72,10 @@ for wc in got:
     lad=None
     al=json.load(open(fa))['sites'] if os.path.exists(fa) else {}
     if al:
-        lad=sorted([[c,(v.get('efficiency_score') or {}).get('score')] for c,v in al.items() if (v.get('efficiency_score') or {}).get('score') is not None],key=lambda x:-x[1])
+        # franchise sites (sites.json franchise:true, or franchise:true at source) never enter the estate ladder, even if a score were ever present (Michael 11/11/2026)
+        lad=sorted([[c,(v.get('efficiency_score') or {}).get('score')] for c,v in al.items() if (v.get('efficiency_score') or {}).get('score') is not None and not v.get('franchise') and not (SJ['sites'].get(c) or {}).get('franchise')],key=lambda x:-x[1])
     st=None
+    if (SJ['sites'].get(a.site) or {}).get('franchise'):lad=None   # franchise: no whole group standing, no ladder on its own page
     if lad:
         sc=ef['s'];st=[1+sum(1 for c,v in lad if v>sc),len(lad),sc] if sc is not None else None
     lg=league(al) if TIER and os.path.exists(fa) else None

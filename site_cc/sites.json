@@ -1,5 +1,5 @@
 {
- "_note": "One entry per site. The nightly job builds every site listed with \"live\": true. Sheet ids are shared by all sites. A null source key (for example loyalty_venue) means that feed does not exist for the site: the pull writes an empty feed and the page shows n/a. Tiers = The Maki League tiers (+3 lowest wage %, +3 lowest food cost %, +3 highest SPH, within the tier, each week). Rollout: M7, M14, M17 live (08/10/2026); M18, M9, M1 added 12/10/2026; set live true per site to roll out. Optional \"gm\" per site overrides the GM name the reviews intelligence has on file. Tiers re-read from the Tier System sheet 20/10/2026 (Q4 2026 season): Omori M17 M9 M15 M8 M16 M7 M21; Chumori M19 M3 M14 M13 M10 M11 M18 M20 M12; Kobachi IKI2 M6 M1. The sheet is the official table, re-check it whenever a tier looks wrong.",
+ "_note": "One entry per site. The nightly job builds every site listed with \"live\": true. Sheet ids are shared by all sites. A null source key (for example loyalty_venue) means that feed does not exist for the site: the pull writes an empty feed and the page shows n/a. Tiers = The Maki League tiers (+3 lowest wage %, +3 lowest food cost %, +3 highest SPH, within the tier, each week). Rollout: M7, M14, M17 live (08/10/2026); M18, M9, M1 added 12/10/2026; set live true per site to roll out. Optional \"gm\" per site overrides the GM name the reviews intelligence has on file. Tiers re-read from the Tier System sheet 20/10/2026 (Q4 2026 season): Omori M17 M9 M15 M8 M16 M7 M21; Chumori M19 M3 M14 M13 M10 M11 M18 M20 M12; Kobachi IKI2 M6 M1. The sheet is the official table, re-check it whenever a tier looks wrong. 11/11/2026: MAF3 (O2 Arena, franchise) added with \"franchise\": true: no tier, no efficiency score, excluded from every fleet or cluster aggregate; the page shows Franchise, not scored and a FRANCHISE badge.",
  "sources": {
   "auto_cash_up": {
    "id": "1T4TtCs-SkBjinToxG45oKksUiPPPIllo2Pqrqbaix6w",
@@ -216,7 +216,9 @@
    "asana_section": "1219205670910249"
   },
   "M12": {
-   "guudjob_aliases": ["Maki NE1 Ltd"],
+   "guudjob_aliases": [
+    "Maki NE1 Ltd"
+   ],
    "name": "Newcastle",
    "label": "Maki 12",
    "live": true,
@@ -224,7 +226,9 @@
    "reviews_site": "Newcastle",
    "broth_label": "Maki NE1 Ltd",
    "mapal_location": "Maki NE1 Ltd",
-   "mapal_aliases": ["Maki Newcastle Ltd"],
+   "mapal_aliases": [
+    "Maki Newcastle Ltd"
+   ],
    "loyalty_venue": "Eldon Square, Newcastle",
    "compliance_tab": null,
    "onboarding_tab": "M12",
@@ -464,6 +468,28 @@
    "dam": "Amy Tang",
    "tier": "Ōmori 大盛り",
    "asana_section": "1219205670910247"
+  },
+  "MAF3": {
+   "name": "O2 Arena",
+   "label": "Maki O2",
+   "live": true,
+   "franchise": true,
+   "cashup_venue": "Maki O2",
+   "cashup_range": "'RAW Data Franchisee'!A:AA",
+   "reviews_site": "Maki O2",
+   "kobas_venue": "Maki O2 Arena",
+   "broth_label": "Maki O2 Arena",
+   "mapal_location": "Maki O2 Arena",
+   "loyalty_venue": null,
+   "compliance_tab": null,
+   "onboarding_tab": null,
+   "delivery": true,
+   "cluster": "South England",
+   "am": "Ziang Lin",
+   "dam": "Kaitlin Docherty",
+   "tier": null,
+   "asana_section": null,
+   "note": "Franchise (MAF3, The O2). 11/11/2026 Michael: own Site CC page, South England, no Maki League tier, no efficiency score, never in a fleet or cluster aggregate. cashup_range: Auto Cash Up keeps franchise rows on tab RAW Data Franchisee, a day behind (vendor_cashup VENUE_IGNORE note); tab name unverified at source. kobas_venue is informational (no pull reads Kobas by venue yet)."
   }
  },
  "tiers": {

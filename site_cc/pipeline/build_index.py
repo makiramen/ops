@@ -12,13 +12,14 @@ for code,c in S['sites'].items():
     groups.setdefault(c.get('cluster','Other'),[]).append((code,c))
 def card(code,c):
     p=os.path.join(A.root,'site',code,'build_log.json')
+    fr=' <em class="fr">Franchise</em>' if c.get('franchise') else ''   # 11/11/2026: franchise sites (MAF3) carry a Maki orange badge, listed in their cluster but never scored
     if not os.path.exists(p):
-        return f'<div class="c off"><b>{E(c.get("label") or code)}</b><span>{E(c["name"])}</span><small>Not built yet</small></div>'
+        return f'<div class="c off"><b>{E(c.get("label") or code)}{fr}</b><span>{E(c["name"])}</span><small>Not built yet</small></div>'
     L=json.load(open(p));late=[f['feed'] for f in L.get('feeds',[]) if f.get('status') in ('stale','missing')]
     b=L.get('built','')
     when=f'{b[8:10]}/{b[5:7]} {b[11:16]} UTC' if len(b)>=16 else b
     st=f'<small class="late">Late: {E(", ".join(late))}</small>' if late else '<small class="ok">All feeds in</small>'
-    return f'<a class="c" href="{code}/"><b>{E(c.get("label") or code)}</b><span>{E(c["name"])}</span><small>Built {E(when)}</small>{st}</a>'
+    return f'<a class="c" href="{code}/"><b>{E(c.get("label") or code)}{fr}</b><span>{E(c["name"])}</span><small>Built {E(when)}</small>{st}</a>'
 order=list((S.get('clusters') or {}).keys())+[g for g in groups if g not in (S.get('clusters') or {})]
 body=''
 for g in order:
@@ -39,6 +40,7 @@ h2{{margin:22px 0 2px;font-size:13px;letter-spacing:.1em;text-transform:uppercas
 .g{{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px}}
 .c{{display:flex;flex-direction:column;gap:2px;background:#fff;border:1px solid var(--line);border-top:4px solid var(--o);border-radius:12px;padding:12px 14px;text-decoration:none;color:inherit}}
 a.c:hover{{border-color:var(--o)}}.c b{{font-size:17px}}.c span{{color:var(--ink2)}}.c small{{font-size:12px;color:var(--ink2)}}
+.c b em.fr{{display:inline-block;vertical-align:middle;margin-left:6px;padding:1px 7px;border-radius:999px;background:#FDE7DD;color:#C43E12;border:1px solid #F4B79F;font:800 10px/1.5 inherit;font-style:normal;letter-spacing:.08em;text-transform:uppercase}}
 .c small.late{{color:#b91c1c;font-weight:700}}.c small.ok{{color:#047857;font-weight:700}}.c.off{{opacity:.6;border-top-color:#94a3b8}}
 p.f{{color:var(--ink2);font-size:12px;margin-top:24px}}
 </style></head><body><header><b>Maki<i>&bull;</i>Ramen</b><div>Site Control Centres · every site</div></header><main>{body}

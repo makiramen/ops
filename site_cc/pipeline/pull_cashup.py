@@ -12,10 +12,11 @@ ap=argparse.ArgumentParser();ap.add_argument('--site',default='M14');ap.add_argu
 ap.add_argument('--days',type=int,default=21);ap.add_argument('--from',dest='frm');ap.add_argument('--csv');ap.add_argument('--check',action='store_true')
 a=ap.parse_args()
 S,cfg=C.site(a.site);src=S['sources']['auto_cash_up']
-rows=list(csv.reader(open(a.csv,encoding='utf-8-sig'))) if a.csv else C.sheet_values(src['id'],src['range'])
+RNG=cfg.get('cashup_range') or src['range']   # 11/11/2026: a site may read another tab of Auto Cash Up (MAF3 franchise rows sit on RAW Data Franchisee); same columns asserted below
+rows=list(csv.reader(open(a.csv,encoding='utf-8-sig'))) if a.csv else C.sheet_values(src['id'],RNG)
 h=rows[0]
 for i,e in V.EXPECTED_HEADERS.items():
-    if (h[i] if i<len(h) else '').strip()!=e.strip():sys.exit(f'FATAL: Raw Data 2 column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')
+    if (h[i] if i<len(h) else '').strip()!=e.strip():sys.exit(f'FATAL: {RNG} column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')
 T=C.today().isoformat();lo=a.frm or (C.today()-datetime.timedelta(a.days)).isoformat();lo=max(lo,cfg.get('opened') or '2026-04-20')
 dly,cov,dlv=[C.json.load(open(os.path.join(a.data,f))) for f in ('daily.json','covers.json','delivery.json')]
 n=0;warn=[]
