@@ -10,6 +10,7 @@ sys.path.insert(0,os.path.dirname(os.path.abspath(__file__)))
 import common as C, vendor_cashup as V
 ap=argparse.ArgumentParser();ap.add_argument('--site',default='M14');ap.add_argument('--data',default='.')
 ap.add_argument('--days',type=int,default=21);ap.add_argument('--from',dest='frm');ap.add_argument('--csv');ap.add_argument('--check',action='store_true')
+ap.add_argument('--kobas',default=os.path.join(os.environ.get('OPS_ROOT','..'),'data','kobas'))   # 12/11/2026: Kobas nightly per-week files, FOH/BOH fallback
 a=ap.parse_args()
 S,cfg=C.site(a.site);src=S['sources']['auto_cash_up']
 RNG=cfg.get('cashup_range') or src['range']   # 11/11/2026: a site may read another tab of Auto Cash Up (MAF3 franchise rows sit on RAW Data Franchisee); same columns asserted below
@@ -18,6 +19,16 @@ h=rows[0]
 for i,e in V.EXPECTED_HEADERS.items():
     _got=(h[i] if i<len(h) else '').strip()
     if _got!=e.strip() and _got!=e.strip()+' Kobas':sys.exit(f'FATAL: {RNG} column {i} is {h[i] if i<len(h) else None!r}, expected {e!r}')   # 11/11/2026: RAW Data Franchisee heads col 24 'No. Of Customers Kobas', same column
+_KW={}
+def kobas_split(d):
+    wc=(datetime.date.fromisoformat(d)-datetime.timedelta(datetime.date.fromisoformat(d).weekday())).isoformat()
+    if wc not in _KW:
+        f=os.path.join(a.kobas,f'wc_{wc}.json')
+        try:_KW[wc]=C.json.load(open(f))['sites'].get(a.site,{}).get('days',{})
+        except Exception:_KW[wc]={}
+    l=(_KW[wc].get(d) or {}).get('labour') or {}
+    f,b=l.get('foh'),l.get('boh')
+    return (round(f,2),round(b,2)) if f and b else (None,None)
 T=C.today().isoformat();lo=a.frm or (C.today()-datetime.timedelta(a.days)).isoformat();lo=max(lo,cfg.get('opened') or '2026-04-20')
 dly,cov,dlv=[C.json.load(open(os.path.join(a.data,f))) for f in ('daily.json','covers.json','delivery.json')]
 n=0;warn=[]
@@ -38,6 +49,9 @@ for r in rows[1:]:
     lab=V.num(r[V.IDX_LABOUR_TOTAL]);w=V.pct(r[V.IDX_WAGE_PCT])
     if w is None and lab and sales:w=round(lab/sales*100,2)
     foh,_,boh,_,st=V.extract_split(r,lab,a.site,d,warn)
+    if foh is None or boh is None:   # 12/11/2026: cash up split blank or not reconciling, take Kobas FOH/BOH (same figures the AM Control Centre shows)
+        kf,kb=kobas_split(d)
+        if kf is not None and kb is not None:foh,boh,st=kf,kb,'kobas'
     ts,td=V.num(r[V.IDX_SIT_IN_TARGET]),V.num(r[V.IDX_DELIVERY_TARGET])
     tgt=None if (ts is None and td is None) else round((ts or 0)+(td or 0),2)
     row=[round(sales,2),tgt or None,int(cust or 0),V.num(r[V.IDX_AVG_SPEND]),foh,boh,w,st]
