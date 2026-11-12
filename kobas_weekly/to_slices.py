@@ -59,7 +59,7 @@ def mlweek(S, doc):
             'labourTotalKobas': W['labour_total'], 'wagePctKobasBasis': W['wage_pct_kobas']}
 
 
-NAME = {**{f'M{i}': f'Maki {i}' for i in range(1, 30)}, 'IKI2': 'Ikigai 2', 'MakiNori': 'Maki Nori', 'MAF3': 'Maki O2 Arena'}
+NAME = {**{f'M{i}': f'Maki {i}' for i in range(1, 30)}, 'IKI2': 'Ikigai 2', 'MakiNori': 'Maki Nori', 'MAF3': 'Maki O2 Arena', 'MAF1': 'Maki West End', 'MAF2': 'Maki Manchester NQ', 'MAF4': 'Maki Braehead'}
 
 
 def key(w): d = datetime.date.fromisoformat(w); return f'{w}_to_{(d + datetime.timedelta(6)).isoformat()}'
