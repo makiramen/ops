@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
   "generated_at": "2026-11-11",
-  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "source": "build_site_json.py — per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
-    "label": "Week of 2026-11-02 \u2013 2026-11-08",
+    "label": "Week of 2026-11-02 – 2026-11-08",
     "commencing": "2026-11-02",
     "ending": "2026-11-08"
   },
@@ -76,21 +76,21 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
-          "target": "\u00b15%",
-          "within_band": null
+          "variance_pct": 5.2,
+          "target": "±5%",
+          "within_band": false
         },
         "food": {
-          "variance_pct": null,
-          "target": "\u00b15%",
-          "within_band": null
+          "variance_pct": 2.6,
+          "target": "±5%",
+          "within_band": true
         },
         "week_commencing": "2026-11-02"
       },
       "efficiency_score": {
-        "score": 88,
+        "score": 89,
         "rag": "amber",
-        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "scale": "0–100, 100 = at target; bands: green ≥95, amber ≥80, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
@@ -103,12 +103,12 @@
           "sales": {
             "weight": 10,
             "value": 74.06,
-            "basis": "70% (100-28.89) + 30% (\u00a3gap -9534 vs \u00b1\u00a350k cal)"
+            "basis": "70% (100-28.89) + 30% (£gap -9534 vs ±£50k cal)"
           },
           "sph": {
             "weight": 15,
             "value": 100.0,
-            "basis": "\u00a323.17 vs \u00a322 tgt \u2014 level 100, WoW +8.68% \u2192 mom 100"
+            "basis": "£23.17 vs £22 tgt — level 100, WoW +8.68% → mom 100"
           },
           "food": {
             "weight": 30,
@@ -123,20 +123,23 @@
           "weekly_star": {
             "weight": 10,
             "value": 100.0,
-            "basis": "4.84\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "basis": "4.84★ vs 4.7★ OKR (0 at 4.0★)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "2.60% inside ±5% band"
           }
         },
-        "components_dropped": [
-          "food_var"
-        ],
-        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 — SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime★ excluded"
       },
       "red_light": {
         "status": "red",
         "triggers": [
           "sales -28.9% vs target"
         ],
-        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+        "basis": "computed from the dashboard's own KPIs (sales vs target ≤ -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
         "week_avg_rating": 4.8444,
@@ -153,7 +156,7 @@
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
-        "response_rate_note": "No automated source \u2014 left open.",
+        "response_rate_note": "No automated source — left open.",
         "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-02..2026-11-08 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-11."
       },
       "maintenance": {
@@ -165,7 +168,7 @@
         "note": "0 outstanding"
       },
       "issues_solutions": {
-        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "source": "GM KPI meeting notes — email pull not built.",
         "status": "pending",
         "live": false,
         "items": [],
@@ -200,19 +203,17 @@
         "sales_estimated": false,
         "orders_estimated": false
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [
-          "Lakeside's weekly sales stay between \u00a320K and \u00a325K (\u00a323.4K last week), with labour at 22.92%, good food costs and strong delivery numbers (London KPI meeting 10/11 and Admin Meeting 09/11).",
+          "Lakeside's weekly sales stay between £20K and £25K (£23.4K last week), with labour at 22.92%, good food costs and strong delivery numbers (London KPI meeting 10/11 and Admin Meeting 09/11).",
           "Google rating was 4.84 across 45 reviews with no one star reviews.",
-          "Spend per head is improving but hovers between \u00a322 and \u00a323; Kei Cannon sets weekly product targets for items such as volcano and Tokyo rolls, and one upsell lifted spend per head by 45p.",
+          "Spend per head is improving but hovers between £22 and £23; Kei Cannon sets weekly product targets for items such as volcano and Tokyo rolls, and one upsell lifted spend per head by 45p.",
           "Ziang Lin said that level is not enough and the standard upsell sequence must be used.",
           "All sites failed the recent cleanliness and brand standards audits (dirty bar tops, wobbly tables, misplaced marketing stands, dusty seats, uniforms), and menus must be cleaned; Kei said menu cleaning is already in the weekly routines.",
           "B2B event plans are ongoing, and Ziang Lin visits Lakeside on Wednesday 11/11.",
           "The Lakeside QR codes sent customers to a loyalty sign up page rather than direct ordering (Admin Meeting 09/11).",
-          "Lakeside missed its sales target by \u00a39,500, with wages contained at 22.92% and spend per head up to \u00a323.17, as retail footfall has declined since September (AM Updates meeting 11/11).",
+          "Lakeside missed its sales target by £9,500, with wages contained at 22.92% and spend per head up to £23.17, as retail footfall has declined since September (AM Updates meeting 11/11).",
           "Lakeside is taking part in a shopping centre display with a ramen bowl and has started weekly live singing nights with local talent (AM Updates meeting 11/11).",
           "B2B events run with Kaitlin Docherty drew interest in ramen and rice as well as sushi (AM Updates meeting 11/11)."
         ],
@@ -224,7 +225,7 @@
         "carryover": [],
         "empty": false,
         "docId": "10MO3clwTnt8iIMUmrCeHIUB1qLHgCLVo8Kx9JMz1MNU",
-        "source": "Weekly MR London Region KPI Meeting Gemini notes of 10/11/2026 15:00 GMT (email summary and Drive doc, Ziang Lin chairing, reviewing w/c 02/11: Soho close to \u00a343K at 27.7% wage and Shoreditch \u00a326.7K at 23.4% match the Admin Meeting figures), mapped by section and speaker (Lakeside, Kei Cannon), plus site named lines from the Admin Meeting Gemini notes of 09/11/2026 08:51 GMT (reviewing w/c 02/11: Soho \u00a342.8K at 27.7% wage matches the London meeting; site named points only). The Otter summaries of the same meeting were not needed. No Lakeside GM/HC doc for w/c 02/11 was found. No KPI Report doc for w/c 02/11 was found in the KPI Report folder, and no BOH weekly report for the week was found in Gmail or Drive. Top up: AM Updates meeting Gemini notes of 11/11/2026 14:57 GMT (email summary 16:51 UTC and Drive doc, reviewing w/c 02/11: Soho \u00a3892 over target and Shoreditch 23.41% wage match the London meeting), mapped by site section (Lakeside section). Personal HR points (role changes, probation, demotion, leave) left off the public page."
+        "source": "Weekly MR London Region KPI Meeting Gemini notes of 10/11/2026 15:00 GMT (email summary and Drive doc, Ziang Lin chairing, reviewing w/c 02/11: Soho close to £43K at 27.7% wage and Shoreditch £26.7K at 23.4% match the Admin Meeting figures), mapped by section and speaker (Lakeside, Kei Cannon), plus site named lines from the Admin Meeting Gemini notes of 09/11/2026 08:51 GMT (reviewing w/c 02/11: Soho £42.8K at 27.7% wage matches the London meeting; site named points only). The Otter summaries of the same meeting were not needed. No Lakeside GM/HC doc for w/c 02/11 was found. No KPI Report doc for w/c 02/11 was found in the KPI Report folder, and no BOH weekly report for the week was found in Gmail or Drive. Top up: AM Updates meeting Gemini notes of 11/11/2026 14:57 GMT (email summary 16:51 UTC and Drive doc, reviewing w/c 02/11: Soho £892 over target and Shoreditch 23.41% wage match the London meeting), mapped by site section (Lakeside section). Personal HR points (role changes, probation, demotion, leave) left off the public page."
       }
     }
   }

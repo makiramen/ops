@@ -1,9 +1,9 @@
 {
   "schema_version": "1.2",
   "generated_at": "2026-11-11",
-  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "source": "build_site_json.py — per-pipe slices (SYSTEMS_MAP contract).",
   "week": {
-    "label": "Week of 2026-11-02 \u2013 2026-11-08",
+    "label": "Week of 2026-11-02 – 2026-11-08",
     "commencing": "2026-11-02",
     "ending": "2026-11-08"
   },
@@ -76,21 +76,21 @@
       },
       "stock_take": {
         "drinks": {
-          "variance_pct": null,
-          "target": "\u00b15%",
-          "within_band": null
+          "variance_pct": 1.4,
+          "target": "±5%",
+          "within_band": true
         },
         "food": {
-          "variance_pct": null,
-          "target": "\u00b15%",
-          "within_band": null
+          "variance_pct": 4.6,
+          "target": "±5%",
+          "within_band": true
         },
         "week_commencing": "2026-11-02"
       },
       "efficiency_score": {
-        "score": 88,
+        "score": 89,
         "rag": "amber",
-        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "scale": "0–100, 100 = at target; bands: green ≥95, amber ≥80, red <80",
         "weights": {
           "wage": 30,
           "food": 30,
@@ -103,12 +103,12 @@
           "sales": {
             "weight": 10,
             "value": 100.0,
-            "basis": "70% (100+3.76) + 30% (\u00a3gap +969 vs \u00b1\u00a350k cal)"
+            "basis": "70% (100+3.76) + 30% (£gap +969 vs ±£50k cal)"
           },
           "sph": {
             "weight": 15,
             "value": 99.7,
-            "basis": "\u00a323.55 vs \u00a322 tgt \u2014 level 100, WoW +4.90% \u2192 mom 99"
+            "basis": "£23.55 vs £22 tgt — level 100, WoW +4.90% → mom 99"
           },
           "food": {
             "weight": 30,
@@ -123,20 +123,23 @@
           "weekly_star": {
             "weight": 10,
             "value": 100.0,
-            "basis": "4.81\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+            "basis": "4.81★ vs 4.7★ OKR (0 at 4.0★)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "4.60% inside ±5% band"
           }
         },
-        "components_dropped": [
-          "food_var"
-        ],
-        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 — SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime★ excluded"
       },
       "red_light": {
         "status": "red",
         "triggers": [
           "food 25.2%"
         ],
-        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+        "basis": "computed from the dashboard's own KPIs (sales vs target ≤ -10%, wage > 26%, food > 25%); no external pull"
       },
       "reviews": {
         "week_avg_rating": 4.8125,
@@ -153,14 +156,14 @@
           {
             "stars": 3,
             "author": "Jasi S",
-            "text": "(Translated by Google) The food was unfortunately only average \u2013 I think it could easily be improved.\n\nOur appetizers arrived after the main courses, which is hard to explain given how quiet the restaurant was.\n\nThe service was friendly.\n\nUnfortunately, the price was also difficult to justify.\n\n(Original)\nDas Essen war leider nicht mehr als durchschnittlich - ich denke das l\u00e4sst sich leicht toppen.\nUnsere Vorspeisen kamen leider erst nach dem Hauptspeisen, was bei wenig Betrieb wenig erkl\u00e4rbar ist.\nDer Service war nett.\nPreislich leider auch nur schwer zu vertreten.",
+            "text": "(Translated by Google) The food was unfortunately only average – I think it could easily be improved.\n\nOur appetizers arrived after the main courses, which is hard to explain given how quiet the restaurant was.\n\nThe service was friendly.\n\nUnfortunately, the price was also difficult to justify.\n\n(Original)\nDas Essen war leider nicht mehr als durchschnittlich - ich denke das lässt sich leicht toppen.\nUnsere Vorspeisen kamen leider erst nach dem Hauptspeisen, was bei wenig Betrieb wenig erklärbar ist.\nDer Service war nett.\nPreislich leider auch nur schwer zu vertreten.",
             "date": "2026-11-02",
             "url": null
           },
           {
             "stars": 2,
             "author": "Sebastian Schwarz",
-            "text": "did not live up to the reviews. Kind service but besides from that nothing to write home about. main dishes where served before the starters and we weren\u2019t to happy with what we had chosen.",
+            "text": "did not live up to the reviews. Kind service but besides from that nothing to write home about. main dishes where served before the starters and we weren’t to happy with what we had chosen.",
             "date": "2026-11-02",
             "url": null
           }
@@ -168,7 +171,7 @@
         "venue_rating": null,
         "venue_review_count": null,
         "response_rate": null,
-        "response_rate_note": "No automated source \u2014 left open.",
+        "response_rate_note": "No automated source — left open.",
         "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-02..2026-11-08 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-11."
       },
       "maintenance": {
@@ -179,16 +182,16 @@
         "tasks": [
           {
             "task": "The Maki Ramen light not working",
-            "priority": "\u2014",
+            "priority": "—",
             "logged_week": "20/10/2026",
-            "owner": "\u2014",
+            "owner": "—",
             "status": "open"
           }
         ],
         "note": "1 open item(s)"
       },
       "issues_solutions": {
-        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "source": "GM KPI meeting notes — email pull not built.",
         "status": "pending",
         "live": false,
         "items": [],
@@ -223,14 +226,12 @@
         "sales_estimated": false,
         "orders_estimated": false
       },
-      "gaps": [
-        "Stock-take \u2014 no variance entered this week"
-      ],
+      "gaps": [],
       "notes": {
         "issues": [
-          "Shoreditch took \u00a326.7K with labour contained at 23.4% (London KPI meeting 10/11 and Admin Meeting 09/11).",
-          "Spend per head rose to \u00a323.55, the highest in South England for some time, and the site led the region on edamame sales.",
-          "Delivery revenue grew from \u00a31,000 to \u00a32,300 over two weeks, and the Google rating was 4.81.",
+          "Shoreditch took £26.7K with labour contained at 23.4% (London KPI meeting 10/11 and Admin Meeting 09/11).",
+          "Spend per head rose to £23.55, the highest in South England for some time, and the site led the region on edamame sales.",
+          "Delivery revenue grew from £1,000 to £2,300 over two weeks, and the Google rating was 4.81.",
           "Shoreditch became the first South England site to get a five star EHO rating on a first visit, with no GM or head chef present.",
           "Like Soho, it was overstaffed on a quiet Monday, and labour must be controlled with Jerry and Remy using the new centralised sushi station in BOH.",
           "All sites failed the recent cleanliness and brand standards audits, including staff not acknowledging visitors within 10 seconds, dirty stainless steel sushi worktops, dirty menus, wobbly tables and uniform breaches such as missing kimonos or grey trousers.",
@@ -238,8 +239,8 @@
           "A head office memo was posted in the Shoreditch management chat on 10/11 and must be read.",
           "The management team is one AGM and two supervisors, plus a part time supervisor.",
           "Last month Shoreditch made a net profit for the first time (London KPI meeting 10/11).",
-          "Shoreditch beat its sales target by about \u00a31,000, food cost fell from 27% to 25%, and delivery revenue reached \u00a32,600 with a 4.8 rating (AM Updates meeting 11/11).",
-          "Shoreditch is close to 1,000 Google reviews, and Michael Salvador approved a staff party budget of \u00a325 per person for reaching the milestone (AM Updates meeting 11/11)."
+          "Shoreditch beat its sales target by about £1,000, food cost fell from 27% to 25%, and delivery revenue reached £2,600 with a 4.8 rating (AM Updates meeting 11/11).",
+          "Shoreditch is close to 1,000 Google reviews, and Michael Salvador approved a staff party budget of £25 per person for reaching the milestone (AM Updates meeting 11/11)."
         ],
         "actions": [
           "Clean all chairs and fix the wobbly tables today - Owner: Leslie (10/11/2026)",
@@ -252,7 +253,7 @@
         "carryover": [],
         "empty": false,
         "docId": "10MO3clwTnt8iIMUmrCeHIUB1qLHgCLVo8Kx9JMz1MNU",
-        "source": "Weekly MR London Region KPI Meeting Gemini notes of 10/11/2026 15:00 GMT (email summary and Drive doc, Ziang Lin chairing, reviewing w/c 02/11: Soho close to \u00a343K at 27.7% wage and Shoreditch \u00a326.7K at 23.4% match the Admin Meeting figures), mapped by section and speaker (Maki Ramen Shoreditch, Leslie), plus site named lines from the Admin Meeting Gemini notes of 09/11/2026 08:51 GMT (reviewing w/c 02/11: Soho \u00a342.8K at 27.7% wage matches the London meeting; site named points only). No Shoreditch GM/HC doc for w/c 02/11 was found. No KPI Report doc for w/c 02/11 was found in the KPI Report folder, and no BOH weekly report for the week was found in Gmail or Drive. Top up: AM Updates meeting Gemini notes of 11/11/2026 14:57 GMT (email summary 16:51 UTC and Drive doc, reviewing w/c 02/11: Soho \u00a3892 over target and Shoreditch 23.41% wage match the London meeting), mapped by site section (Shoreditch section, which Gemini transcribes as Shortage). Personal HR points (role changes, probation, demotion, leave) left off the public page."
+        "source": "Weekly MR London Region KPI Meeting Gemini notes of 10/11/2026 15:00 GMT (email summary and Drive doc, Ziang Lin chairing, reviewing w/c 02/11: Soho close to £43K at 27.7% wage and Shoreditch £26.7K at 23.4% match the Admin Meeting figures), mapped by section and speaker (Maki Ramen Shoreditch, Leslie), plus site named lines from the Admin Meeting Gemini notes of 09/11/2026 08:51 GMT (reviewing w/c 02/11: Soho £42.8K at 27.7% wage matches the London meeting; site named points only). No Shoreditch GM/HC doc for w/c 02/11 was found. No KPI Report doc for w/c 02/11 was found in the KPI Report folder, and no BOH weekly report for the week was found in Gmail or Drive. Top up: AM Updates meeting Gemini notes of 11/11/2026 14:57 GMT (email summary 16:51 UTC and Drive doc, reviewing w/c 02/11: Soho £892 over target and Shoreditch 23.41% wage match the London meeting), mapped by site section (Shoreditch section, which Gemini transcribes as Shortage). Personal HR points (role changes, probation, demotion, leave) left off the public page."
       }
     }
   }
