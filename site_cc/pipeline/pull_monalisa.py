@@ -27,10 +27,15 @@ def num(s):
     try:return float(s) if s not in('','-') else None
     except ValueError:return None
 START=datetime.date.fromisoformat(a.frm);T=C.today();rows={}
+OW=T-datetime.timedelta(T.weekday());ow={}   # 12/11/2026 (Michael): the gate's week bar needs this week's budget rota and daily sales targets, future days included
 for x in r[1:]:
     if not x or x[0].strip()!=cfg['cashup_venue']:continue
     try:d=datetime.datetime.strptime(x[1].strip(),'%d/%m/%Y').date()
     except ValueError:continue
+    if OW<=d<OW+datetime.timedelta(7):
+        b=num(x[C_['bud']]) if C_['bud']<len(x) else None
+        if b is None and PROJ is not None:b=num(x[PROJ]) if PROJ<len(x) else None
+        ow[d.isoformat()]={'bud':b,'tgt':num(x[C_['tgt']]) if C_['tgt']<len(x) else None}
     if d<START or d>=T:continue
     rows[d]={k:num(x[i]) if i<len(x) else None for k,i in C_.items()}
     rows[d]['proj']=0
@@ -55,5 +60,6 @@ for wc,xs in sorted(W.items()):
     else:lab['proj'].pop(k,None)
 if not a.check:
     ml['w']=dict(sorted(ml['w'].items()));ml['pulled']=T.isoformat();lab['d']=dict(sorted(lab['d'].items()));lab['proj']=dict(sorted(lab['proj'].items()));lab['pulled']=T.isoformat()
+    lab['open']={'wc':OW.isoformat(),'bud':round(sum(v['bud'] for v in ow.values()),2) if len(ow)==7 and all(v['bud'] is not None for v in ow.values()) else None,'tgt':{k:v['tgt'] for k,v in sorted(ow.items())}}
     C.save(P('ml_weekly.json'),ml);C.save(P('labour.json'),lab)
 print('mona lisa',a.site,'weeks',sum(1 for x in W.values() if len(x)==7),'last',max(ml['w']))
