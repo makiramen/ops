@@ -23,7 +23,7 @@ dly,cov,dlv=[C.json.load(open(os.path.join(a.data,f))) for f in ('daily.json','c
 n=0;warn=[]
 for r in rows[1:]:
     r=r+['']*(30-len(r))
-    if r[V.IDX_VENUE].strip()!=cfg['cashup_venue']:continue
+    if r[V.IDX_VENUE].strip().lower()!=cfg['cashup_venue'].strip().lower():continue   # 12/11/2026: case-insensitive (franchise labels)
     d=V.iso_date(r[V.IDX_DATE])
     if not d or d<lo or d>=T:continue
     sales=V.num(r[V.IDX_ACTUAL]);cust=V.num(r[V.IDX_COVERS])
@@ -47,4 +47,5 @@ if not a.check:
     for f,o in (('daily.json',dict(sorted(dly.items()))),):C.save(os.path.join(a.data,f),o)
     cov['d']=dict(sorted(cov['d'].items()));cov['_pulled']=T;C.save(os.path.join(a.data,'covers.json'),cov)
     dlv['d']=dict(sorted(dlv['d'].items()));dlv['_pulled']=T;C.save(os.path.join(a.data,'delivery.json'),dlv)
+if not dly:print('cash up',a.site,'NO ROWS for',repr(cfg['cashup_venue']),'on',RNG,'labels there:',sorted({(r[V.IDX_VENUE] if len(r)>V.IDX_VENUE else '').strip() for r in rows[1:]}-{''}));sys.exit(1)
 print('cash up',a.site,'days',n,'from',lo,'last',max(dly),'warnings',len(warn))

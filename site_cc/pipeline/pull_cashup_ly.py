@@ -20,7 +20,7 @@ T=C.today();hi=(T-datetime.timedelta(357)).isoformat();lo='2025-04-01'
 d={}
 for r in rows[1:]:
     r=r+['']*(30-len(r))
-    if r[V.IDX_VENUE].strip()!=cfg['cashup_venue']:continue
+    if r[V.IDX_VENUE].strip().lower()!=cfg['cashup_venue'].strip().lower():continue   # 12/11/2026: case-insensitive (franchise labels)
     dt=V.iso_date(r[V.IDX_DATE])
     if not dt or dt<lo or dt>hi:continue
     sales=V.num(r[V.IDX_ACTUAL])

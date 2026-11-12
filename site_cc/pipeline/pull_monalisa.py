@@ -29,7 +29,7 @@ def num(s):
 START=datetime.date.fromisoformat(a.frm);T=C.today();rows={}
 OW=T-datetime.timedelta(T.weekday());ow={}   # 12/11/2026 (Michael): the gate's week bar needs this week's budget rota and daily sales targets, future days included
 for x in r[1:]:
-    if not x or x[0].strip()!=cfg['cashup_venue']:continue
+    if not x or x[0].strip().lower()!=(cfg.get('monalisa_venue') or cfg['cashup_venue']).strip().lower():continue   # 12/11/2026: optional monalisa_venue, case-insensitive
     try:d=datetime.datetime.strptime(x[1].strip(),'%d/%m/%Y').date()
     except ValueError:continue
     if OW<=d<OW+datetime.timedelta(7):
@@ -62,4 +62,5 @@ if not a.check:
     ml['w']=dict(sorted(ml['w'].items()));ml['pulled']=T.isoformat();lab['d']=dict(sorted(lab['d'].items()));lab['proj']=dict(sorted(lab['proj'].items()));lab['pulled']=T.isoformat()
     lab['open']={'wc':OW.isoformat(),'bud':round(sum(v['bud'] for v in ow.values()),2) if len(ow)==7 and all(v['bud'] is not None for v in ow.values()) else None,'tgt':{k:v['tgt'] for k,v in sorted(ow.items())}}
     C.save(P('ml_weekly.json'),ml);C.save(P('labour.json'),lab)
+if not ml['w']:print('mona lisa',a.site,'NO ROWS for',repr(cfg.get('monalisa_venue') or cfg['cashup_venue']),'labels there:',sorted({(x[0] if x else '').strip() for x in r[1:]}-{''}));sys.exit(1)
 print('mona lisa',a.site,'weeks',sum(1 for x in W.values() if len(x)==7),'last',max(ml['w']))
