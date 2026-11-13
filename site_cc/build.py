@@ -163,8 +163,8 @@ KH={}
 for _f in sorted(_g.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','data','kobas','wc_*.json'))):
     try:
         for _d,_v in ((json.load(open(_f)).get('sites') or {}).get(CODE) or {}).get('days',{}).items():
-            _h=(_v.get('labour') or {}).get('hours')
-            if _h:KH[_d]=round(_h,2)
+            _l=(_v or {}).get('labour') or {};_h=_l.get('hours')
+            if _h:KH[_d]=[round(_h,2),_l.get('hours_foh') or None,_l.get('hours_boh') or None]   # total, FOH, BOH (FOH and BOH from Rotas > Hours Worked)
     except Exception:pass
 T={'__TODAY__':TODAY.isoformat(),'__WK__':json.dumps(WK,separators=(',',':')),'__STAND__':R('stand.json'),'__EALL__':R('effall.json'),
    '__EFF__':R('eff.json').replace(' \u2014 ',', ').replace('\u2014',', '),'__LOY__':R('loyalty.json'),'__MIX__':C(JD('mix.json',{})),'__COV__':R('covers.json'),'__DEL__':C(dlv),'__DROO__':C(DD),
