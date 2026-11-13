@@ -7,32 +7,42 @@ from kobas_pull import Kobas, BASE
 out = sys.argv[1]; os.makedirs(out, exist_ok=True)
 k = Kobas()
 if not k.login(): json.dump({'error': 'LOGIN FAILED'}, open(os.path.join(out, 'hours_probe.json'), 'w')); sys.exit(30)
-R = {'pages': {}, 'links': {}, 'report_keys': [], 'js': {}}
-WANT = re.compile(r'report|staff|rota|timesheet|hours|labour|team|shift|payroll|wage', re.I)
+R = {'pages': {}, 'paths': [], 'report_keys': [], 'titles': {}, 'scripts': []}
+P = set(); KEYS = set()
+ROUTE = re.compile(r'["\'`(=]\s*(/?(?:data|reports?|staff|rotas?|teams?|admin|timesheets?|payroll|hr)/[A-Za-z_\-/.]{2,90})')
+def scan(t):
+    for m in re.finditer(r'href="([^"#?]+)', t):
+        h = html.unescape(m.group(1))
+        if not re.search(r'\d', h) and not h.startswith('http'): P.add(h)
+    for m in ROUTE.finditer(t):
+        if not re.search(r'\d', m.group(1)): P.add(m.group(1))
+    for m in re.finditer(r'["\']([a-z]+(?:_[a-z]+)+_report)["\']', t): KEYS.add(m.group(1))
+    for m in re.finditer(r'report_key["\']?\s*[:=\]]+\s*["\']([a-z_]+)["\']', t): KEYS.add(m.group(1))
 def page(path):
     try:
         r = k.s.get(BASE + path, timeout=90); t = r.text
-        R['pages'][path] = [r.status_code, len(t)]
-        for m in re.finditer(r'<a[^>]+href="([^"#]+)"[^>]*>(.*?)</a>', t, re.S):
-            h, lab = html.unescape(m.group(1)), re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', m.group(2))).strip()[:80]
-            if WANT.search(h) or WANT.search(lab): R['links'][h.split('?')[0]] = lab
-        for m in re.finditer(r'["\']([a-z]+(?:_[a-z]+)+_report)["\']', t): R['report_keys'].append(m.group(1))
-        return t
+        ti = re.search(r'<title>(.*?)</title>', t, re.S)
+        R['pages'][path] = [r.status_code, len(t)]; R['titles'][path] = (ti.group(1).strip()[:80] if ti else None)
+        if r.status_code == 200: scan(t)
+        return t if r.status_code == 200 else ''
     except Exception as e: R['pages'][path] = ['ERR', repr(e)[:150]]; return ''
-home = page('/')
-for p in ['/reports/', '/reports/labour-costs/', '/staff/', '/rotas/', '/admin/', '/reports/index.php']: page(p)
-for p in sorted(R['links'])[:60]:
-    if p.startswith('/') and p not in R['pages'] and re.search(r'report|hours|timesheet|rota|labour', p, re.I): page(p)
-# script bundles: report keys and data routes that mention hours / shifts / staff
-srcs = set(re.findall(r'<script[^>]+src="([^"]+)"', home))
-for s in list(srcs)[:25]:
+home = page('/'); lc = page('/reports/labour-costs/'); page('/rotas/'); page('/rota/manage/'); page('/staff/')
+for p in ['/reports/hours-worked/', '/reports/staff-hours/', '/reports/timesheets/', '/reports/rota-vs-actual/', '/reports/labour/', '/reports/wages/',
+          '/reports/staff-hours-worked/', '/reports/hours/', '/reports/payroll/', '/reports/shift-hours/', '/staff/hours/', '/staff/timesheets/',
+          '/staff/hours-worked/', '/staff/reports/', '/rotas/reports/', '/reports/labour-hours/', '/reports/clock-ins/', '/reports/attendance/',
+          '/reports/labour-costs-by-role/', '/reports/labour-by-department/', '/payroll/', '/hr/', '/teams/']: page(p)
+srcs = set()
+for t in (home, lc):
+    srcs |= set(re.findall(r'<script[^>]+src="([^"]+)"', t))
+for s in sorted(srcs)[:40]:
     try:
-        u = s if s.startswith('http') else BASE + s
-        t = k.s.get(u, timeout=90).text
-        keys = sorted(set(re.findall(r'["\']([a-z]+(?:_[a-z]+)+_report)["\']', t)))
-        routes = sorted(set(x for x in re.findall(r'["\'`](/(?:data|reports|staff|rotas)/[A-Za-z0-9_\-/:{}$.]{3,80})["\'`]', t) if WANT.search(x)))
-        if keys or routes: R['js'][s.split('?')[0][-80:]] = {'report_keys': keys, 'routes': routes[:150]}
-    except Exception as e: R['js'][s[-80:]] = {'err': repr(e)[:100]}
-R['report_keys'] = sorted(set(R['report_keys']))
+        u = s if s.startswith('http') else BASE + (s if s.startswith('/') else '/' + s)
+        if 'kobas' not in u: continue
+        t = k.s.get(u, timeout=90).text; R['scripts'].append([s.split('?')[0][-70:], len(t)]); scan(t)
+    except Exception as e: R['scripts'].append([s[-70:], repr(e)[:80]])
+# the labour costs page: which column / filter names does it know (headers only)
+R['labour_page_words'] = sorted(set(re.findall(r'(?:of which [A-Z][A-Za-z ]+|Hours Worked[A-Za-z ()\.]*|by (?:role|department|category)[a-z ]*)', lc)))[:40]
+R['paths'] = sorted(P)
+R['report_keys'] = sorted(KEYS)
 json.dump(R, open(os.path.join(out, 'hours_probe.json'), 'w'), indent=1)
-print(json.dumps({'pages': R['pages'], 'n_links': len(R['links']), 'keys': R['report_keys']}))
+print(json.dumps({'pages': R['pages'], 'n_paths': len(R['paths']), 'keys': R['report_keys']}))
