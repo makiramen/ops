@@ -50,14 +50,17 @@ R['shapes']['past M7'] = [{kk: x[kk] for kk in ('id', 'rotadate', 'status')} for
 rid = mine[-2]['id'] if len(mine) > 1 else mine[-1]['id']
 t = k.s.get(BASE + '/rotas/', timeout=120).text; links(t, 'rotas'); heads(t, 'rotas')
 t = k.s.get(BASE + '/rotas/index.php', params={'filtervenueid': 9}, timeout=120).text; links(t, 'rotas venue')
-for lab, params in [('m=view', {'m': 'view', 'rotaid': rid}), ('m=hours', {'m': 'hours', 'rotaid': rid}), ('m=hoursworked', {'m': 'hoursworked', 'rotaid': rid}), ('id', {'id': rid}), ('rotaid', {'rotaid': rid}), ('m=edit', {'m': 'edit', 'rotaid': rid})]:
-    r = k.s.get(BASE + '/rotas/index.php', params=params, timeout=120); R['status']['rotas ' + lab] = [r.status_code, len(r.text)]
-    if r.status_code == 200: heads(r.text, 'rotas ' + lab)
-r = k.s.get(BASE + '/rotas/gethoursworkedinfo.php', params={'venueid': 9, 'rotaid': rid, 'staffid': 0}, timeout=60); R['status']['hwinfo'] = [r.status_code, len(r.text)]
-r = k.s.get(BASE + '/data/rota/%s' % rid, timeout=60, headers={'Accept': 'application/json'}); R['status']['data/rota/id'] = [r.status_code, len(r.text)]
-if r.status_code == 200:
-    try: R['shapes']['data/rota/id'] = shape(r.json())
-    except Exception: pass
-r = k.s.get(BASE + '/data/reports/labour-costs/', timeout=60); R['status']['lc list'] = [r.status_code, len(r.text)]
+m = re.search(r'index\.php\?m=full&(?:amp;)?iRotaID=(\d+)&(?:amp;)?rotashow=(V_\d+)', t); R['shapes']['sample link'] = m.group(0) if m else None
+for lab, params in [('full V_9', {'m': 'full', 'iRotaID': rid, 'rotashow': 'V_9'}), ('full', {'m': 'full', 'iRotaID': rid})]:
+    r = k.s.get(BASE + '/rotas/index.php', params=params, timeout=180); R['status']['rotas ' + lab] = [r.status_code, len(r.text)]
+    if r.status_code != 200: continue
+    x = r.text; heads(x, 'rotas ' + lab); links(x, 'rotas ' + lab + ' links')
+    # structure only: class names and data- attribute names on rows / cells, and the distinct short labels in header-ish cells
+    R['shapes']['rotas ' + lab + ' struct'] = {
+        'classes': sorted(set(c for cl in re.findall(r'class="([^"]+)"', x) for c in cl.split() if re.search(r'role|shift|hour|total|dept|categ|foh|boh|staff|worked|cost', c, re.I) and not re.search(r'\d', c)))[:80],
+        'data_attrs': sorted(set(re.findall(r'\s(data-[a-z\-]+)=', x)))[:60],
+        'strong': sorted(set(y.strip()[:40] for y in re.findall(r'<(?:strong|b|h\d|label)[^>]*>([^<\d]{3,40})<', x)))[:120],
+        'js_funcs': sorted(set(re.findall(r'javascript:([A-Za-z]+)\(', x)))[:40],
+        'hidden_fields': sorted(set(re.findall(r'<input[^>]+type="hidden"[^>]+(?:name|id)="([A-Za-z_]+)"', x)))[:40]}
 json.dump(R, open(os.path.join(out, 'hours_probe.json'), 'w'), indent=1)
 print(json.dumps(R['status']))
