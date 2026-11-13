@@ -30,19 +30,34 @@ def get(path, params=None, label=None):
             return t
         R['shapes'][lab] = shape(j); return j
     except Exception as e: R['status'][lab] = ['ERR', repr(e)[:150]]; return None
-home = k.s.get(BASE + '/rotas/', timeout=90).text
-for s in set(re.findall(r'<script[^>]+src="([^"]+)"', home + k.s.get(BASE + '/reports/labour-costs/', timeout=90).text + k.s.get(BASE + '/', timeout=90).text)):
-    if not re.search(r'core/rotas|core/daily|core/staff|labour-costs|angular/staff-|angular/week', s): continue
-    t = k.s.get('https:' + s if s.startswith('//') else s, timeout=90).text
-    for w in ['gethoursworkedinfo.php', 'getrotapaidshifts.php', '/data/rota/', '/data/rota/past', 'hours-approved', 'getrotadetails.php', 'getrotainfo.php', 'getroles.php', '/ajax/rota_staff', 'getbackpayshifts.php', '/data/week/', '/data/staff/pay-details/']:
-        for m in list(re.finditer(re.escape(w), t))[:3]:
-            R['snips'].setdefault(w, []).append(t[max(0, m.start() - 260):m.end() + 260])
-VID = 9  # M7 St James Quarter
-get('/data/rota/past', {'venue_id': VID, 'limit': 3}, 'rota/past venue_id')
-get('/data/rota/past', None, 'rota/past')
-get('/data/rota/', {'venue_id': VID}, 'rota venue_id')
-get('/data/week/last', None, 'week/last'); get('/data/week/till-now', None, 'week/till-now')
-get('/rotas/getroles.php', None, 'getroles'); get('/rotas/gethoursworkedinfo.php', {'venue_id': VID}, 'gethoursworkedinfo')
-get('/rotas/getrotapaidshifts.php', {'venue_id': VID}, 'getrotapaidshifts'); get('/rotas/getrotainfo.php', {'venue_id': VID}, 'getrotainfo')
+SAFE = re.compile(r'hours|worked|approv|view|edit|export|rota|report|paid|cost|labour|role|csv|print|summary', re.I)
+def links(t, lab):
+    o = {}
+    for m in re.finditer(r'<a[^>]+href="([^"]+)"[^>]*>(.*?)</a>', t, re.S):
+        h = re.sub(r'\d+', 'N', m.group(1).replace('&amp;', '&')); tx = re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', m.group(2))).strip()
+        if 'rota' in h.lower() or SAFE.search(tx): o[h[:120]] = tx[:40] if SAFE.search(tx) and not re.search(r'\d', tx) else ''
+    for m in re.finditer(r'<(?:select|input)[^>]+name="([^"]+)"', t): o['FIELD ' + m.group(1)] = ''
+    for m in re.finditer(r'<form[^>]+action="([^"]*)"', t): o['FORM ' + re.sub(r'\d+', 'N', m.group(1))[:100]] = ''
+    R['shapes'][lab] = o
+def heads(t, lab):
+    R['shapes'][lab + ' heads'] = {'th': sorted(set(re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', x)).strip()[:40] for x in re.findall(r'<th[^>]*>(.*?)</th>', t, re.S)))[:80],
+        'words': sorted(set(re.findall(r'Front of House|Back of House|Management|Uncategorised|Hours Worked|Paid Hours|Approved|Department|Kitchen|FOH|BOH', t))),
+        'role_options': sorted(set(re.sub(r'\s+', ' ', x).strip()[:40] for sel in re.findall(r'<select[^>]+(?:name|id)="[^"]*role[^"]*"[^>]*>(.*?)</select>', t, re.S | re.I) for x in re.findall(r'<option[^>]*>([^<]*)', sel)))[:80],
+        'len': len(t)}
+past = k.s.get(BASE + '/data/rota/past', params={'include-current-week': 1}, timeout=120).json()
+mine = sorted([x for x in past if x.get('venueid') == 9], key=lambda x: x['rotadate'])[-3:]
+R['shapes']['past M7'] = [{kk: x[kk] for kk in ('id', 'rotadate', 'status')} for x in mine]
+rid = mine[-2]['id'] if len(mine) > 1 else mine[-1]['id']
+t = k.s.get(BASE + '/rotas/', timeout=120).text; links(t, 'rotas'); heads(t, 'rotas')
+t = k.s.get(BASE + '/rotas/index.php', params={'filtervenueid': 9}, timeout=120).text; links(t, 'rotas venue')
+for lab, params in [('m=view', {'m': 'view', 'rotaid': rid}), ('m=hours', {'m': 'hours', 'rotaid': rid}), ('m=hoursworked', {'m': 'hoursworked', 'rotaid': rid}), ('id', {'id': rid}), ('rotaid', {'rotaid': rid}), ('m=edit', {'m': 'edit', 'rotaid': rid})]:
+    r = k.s.get(BASE + '/rotas/index.php', params=params, timeout=120); R['status']['rotas ' + lab] = [r.status_code, len(r.text)]
+    if r.status_code == 200: heads(r.text, 'rotas ' + lab)
+r = k.s.get(BASE + '/rotas/gethoursworkedinfo.php', params={'venueid': 9, 'rotaid': rid, 'staffid': 0}, timeout=60); R['status']['hwinfo'] = [r.status_code, len(r.text)]
+r = k.s.get(BASE + '/data/rota/%s' % rid, timeout=60, headers={'Accept': 'application/json'}); R['status']['data/rota/id'] = [r.status_code, len(r.text)]
+if r.status_code == 200:
+    try: R['shapes']['data/rota/id'] = shape(r.json())
+    except Exception: pass
+r = k.s.get(BASE + '/data/reports/labour-costs/', timeout=60); R['status']['lc list'] = [r.status_code, len(r.text)]
 json.dump(R, open(os.path.join(out, 'hours_probe.json'), 'w'), indent=1)
 print(json.dumps(R['status']))
