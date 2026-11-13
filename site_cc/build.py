@@ -157,10 +157,19 @@ for n,asof,mx in FEEDS:
     if st!='ok':STALE.append([n,asof.strftime('%d/%m') if asof else 'n/a'])
 
 C=lambda o:json.dumps(o,ensure_ascii=False,separators=(',',':'))
+# 13/11/2026 (Michael x Remy): hours worked per day from the nightly Kobas pull (data/kobas/wc_*.json), for cost per labour hour and sales per labour hour
+import glob as _g
+KH={}
+for _f in sorted(_g.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','data','kobas','wc_*.json'))):
+    try:
+        for _d,_v in ((json.load(open(_f)).get('sites') or {}).get(CODE) or {}).get('days',{}).items():
+            _h=(_v.get('labour') or {}).get('hours')
+            if _h:KH[_d]=round(_h,2)
+    except Exception:pass
 T={'__TODAY__':TODAY.isoformat(),'__WK__':json.dumps(WK,separators=(',',':')),'__STAND__':R('stand.json'),'__EALL__':R('effall.json'),
    '__EFF__':R('eff.json').replace(' \u2014 ',', ').replace('\u2014',', '),'__LOY__':R('loyalty.json'),'__MIX__':C(JD('mix.json',{})),'__COV__':R('covers.json'),'__DEL__':C(dlv),'__DROO__':C(DD),
    '__ACTS__':C(ACTS),'__COMP__':C(J('compliance.json')),'__TEAM__':C(J('team.json')),'__GAPS__':C(J('gaps.json')),'__DAILY__':R('daily.json'),
-   '__KL__':C(J('keyline.json')),'__BROTH__':C(br),'__LY__':C(LY),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__MCOMP__':C(MCOMP),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE),'__MAINT__':C(MT).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__PPM__':C(PPM),'__BUD__':C(BUD).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013',' to '),'__PROMO__':C(PRM).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')}
+   '__KL__':C(J('keyline.json')),'__BROTH__':C(br),'__LY__':C(LY),'__REV__':R('reviews.json'),'__LAB__':R('labour.json'),'__KH__':C(KH),'__EOTM__':C(J('eotm.json')),'__NOTES__':C(out),'__MAPAL__':C(MP).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__MCOMP__':C(MCOMP),'__RI__':C(RI).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__SITE__':C(SITE),'__MAINT__':C(MT).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-'),'__PPM__':C(PPM),'__BUD__':C(BUD).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013',' to '),'__PROMO__':C(PRM).replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')}
 s=open(os.path.join(os.path.dirname(os.path.abspath(__file__)),'src.html')).read()
 ND=lambda v:v.replace(' \u2014 ',', ').replace('\u2014',', ').replace('\u2013','-')  # feed text (reviews, notes, actions) never brings a dash in
 import sys as _s;_s.path.insert(0,os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','builders'))
