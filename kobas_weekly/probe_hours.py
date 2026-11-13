@@ -18,11 +18,11 @@ for site in ('M7', 'M8', 'M15', 'MAF1', 'MAF4', 'M9'):
         t = k.s.post(BASE + f'/rotas/index.php?m=fullhours&iRotaID={rid}&venueid={vid}', data={'department': dep}, timeout=180).text
         agg = {}; tot_labels = {}
         for row in re.findall(r'<tr class="tabledata">(.*?)</tr>', t, re.S):
-            name = txt(re.search(r'<strong>(.*?)</strong>', row, re.S).group(1)) if re.search(r'<strong>', row) else ''
+            nm = re.search(r'<strong[^>]*>(.*?)</strong>', row, re.S); name = txt(nm.group(1)) if nm else ''
             for m in re.finditer(r'<td[^>]*class="staff_\d+_day_(\d)"[^>]*>(.*?)(?=<td|$)', row, re.S):
                 for cls, sh in re.findall(r'<div[^>]*?(class="[^"]*")?>(.*?)</div>', m.group(2), re.S):
                     h = re.search(r'</a>\s*<br\s*/?>\s*(\d+)h(?:&nbsp;|\s)*(\d+)m', sh)
-                    lab = txt(re.search(r'<strong>(.*?)</strong>', sh, re.S).group(1)) if re.search(r'<strong>', sh) else '?'
+                    lm = re.search(r'<strong[^>]*>(.*?)</strong>', sh, re.S); lab = txt(lm.group(1)) if lm else '?'
                     if lab and name and lab.lower() in name.lower(): lab = '?'
                     links = '|'.join(sorted(set(txt(x) for x in re.findall(r'<a[^>]*>(.*?)</a>', sh, re.S) if len(txt(x)) < 16 and not re.search(r'\d', txt(x)))))
                     key = f"{lab[:28]} / {'flag' if 'failure' in (cls or '') else 'ok'} / {links[:40]}"
