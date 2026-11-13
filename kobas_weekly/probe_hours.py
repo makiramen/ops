@@ -27,18 +27,17 @@ def page(path):
         return t if r.status_code == 200 else ''
     except Exception as e: R['pages'][path] = ['ERR', repr(e)[:150]]; return ''
 home = page('/'); lc = page('/reports/labour-costs/'); page('/rotas/'); page('/rota/manage/'); page('/staff/')
-for p in ['/reports/hours-worked/', '/reports/staff-hours/', '/reports/timesheets/', '/reports/rota-vs-actual/', '/reports/labour/', '/reports/wages/',
-          '/reports/staff-hours-worked/', '/reports/hours/', '/reports/payroll/', '/reports/shift-hours/', '/staff/hours/', '/staff/timesheets/',
-          '/staff/hours-worked/', '/staff/reports/', '/rotas/reports/', '/reports/labour-hours/', '/reports/clock-ins/', '/reports/attendance/',
-          '/reports/labour-costs-by-role/', '/reports/labour-by-department/', '/payroll/', '/hr/', '/teams/']: page(p)
+rt = page('/rotas/'); st = page('/staff/')
 srcs = set()
-for t in (home, lc):
+for t in (home, lc, rt, st):
     srcs |= set(re.findall(r'<script[^>]+src="([^"]+)"', t))
-for s in sorted(srcs)[:40]:
+for s in sorted(srcs)[:80]:
     try:
-        u = s if s.startswith('http') else BASE + (s if s.startswith('/') else '/' + s)
-        if 'kobas' not in u: continue
-        t = k.s.get(u, timeout=90).text; R['scripts'].append([s.split('?')[0][-70:], len(t)]); scan(t)
+        u = 'https:' + s if s.startswith('//') else s if s.startswith('http') else BASE + (s if s.startswith('/') else '/' + s)
+        if 'vendor' in u or 'jquery' in u: continue
+        t = k.s.get(u, timeout=90).text; scan(t)
+        rts = sorted(set(m.group(0)[:90] for m in re.finditer(r'[A-Za-z_\-/.]*(?:hours|timesheet|clock|shift|role|department|labour|payroll|rota)[A-Za-z_\-/.]*', t) if '/' in m.group(0) or '.php' in m.group(0)))
+        R['scripts'].append([s.split('?')[0][-60:], len(t), rts[:60]])
     except Exception as e: R['scripts'].append([s[-70:], repr(e)[:80]])
 # the labour costs page: which column / filter names does it know (headers only)
 R['labour_page_words'] = sorted(set(re.findall(r'(?:of which [A-Z][A-Za-z ]+|Hours Worked[A-Za-z ()\.]*|by (?:role|department|category)[a-z ]*)', lc)))[:40]
