@@ -103,21 +103,39 @@ with ThreadPoolExecutor(5) as ex: log['items_fail'] = sum(ex.map(items, [(s, v, 
 DEPTS = {'foh': 'FrontofHouse', 'boh': 'BackofHouse', 'management': 'Management', 'norole': 'norole'}
 try: rotas = {(x['venueid'], str(x['rotadate'])[:10]): x['id'] for x in get('/data/rota/past', {'include-current-week': 1}).json()}
 except Exception as e: rotas = {}; err('rota list', e)
+# 13/11/2026: the page lists the venue's staff, so it also carries their shifts worked at OTHER venues (each shift names the
+# venue it was worked at). Only shifts worked at this venue count, which is what the Labour Costs report hours are.
+try:
+    _vj = get('/data/venue').json(); _vj = _vj.get('data', _vj) if isinstance(_vj, dict) else _vj
+    VNAMES = {int(x['id']): str(x.get('name', '')).strip() for x in _vj if isinstance(x, dict) and x.get('id') is not None}
+except Exception as e: VNAMES = {}; err('venue names', e)
+_txt = lambda h: re.sub(r'\s+', ' ', html.unescape(re.sub(r'<[^>]+>', ' ', h))).strip()
 def dept_hours(job):
     site, vid, w = job; rid = rotas.get((vid, w.isoformat()))
     if not rid: return {'site': site, 'week': w.isoformat(), 'error': 'no rota'}
-    o = {'site': site, 'week': w.isoformat(), 'rota_id': rid}
+    o = {'site': site, 'week': w.isoformat(), 'rota_id': rid}; pages = {}
     for key, dep in DEPTS.items():
         try:
             t = post_form(f'/rotas/index.php?m=fullhours&iRotaID={rid}&venueid={vid}', {'department': dep}).text
             if not re.search(r'<option[^>]*value="%s"[^>]*selected' % dep, t): raise RuntimeError('department filter not applied')
-            hrs = [0.0] * 7; shifts = 0
+            sh_ = []
             for m in re.finditer(r'<td[^>]*class="staff_\d+_day_(\d)"[^>]*>(.*?)(?=<td|</tr>)', t, re.S):
                 for sh in re.findall(r'<div[^>]*>(.*?)</div>', m.group(2), re.S):
-                    h = re.search(r'</a>\s*<br\s*/?>\s*(\d+)h(?:&nbsp;|\s)*(\d+)m', sh)
-                    if h: hrs[int(m.group(1)) - 1] += int(h.group(1)) + int(h.group(2)) / 60.0; shifts += 1
-            o[key] = [round(x, 2) for x in hrs]; o[key + '_shifts'] = shifts
-        except Exception as e: o[key] = None; err(f'dept hours {site} {w} {key}', e)
+                    h = re.search(r'</a>\s*<br\s*/?>\s*(\d+)h(?:&nbsp;|\s)*(\d+)m', sh); lm = re.search(r'<strong[^>]*>(.*?)</strong>', sh, re.S)
+                    if h: sh_.append((int(m.group(1)) - 1, _txt(lm.group(1)) if lm else '', int(h.group(1)) + int(h.group(2)) / 60.0))
+            pages[key] = sh_
+        except Exception as e: pages[key] = None; err(f'dept hours {site} {w} {key}', e)
+    by = {}
+    for sh_ in pages.values():
+        for _, lab, hh in sh_ or []: by[lab] = by.get(lab, 0) + hh
+    own = VNAMES.get(vid) if VNAMES.get(vid) in by else (max(by, key=by.get) if by else None)   # this venue's label; fallback: the label with most hours
+    for key, sh_ in pages.items():
+        if sh_ is None: o[key] = None; continue
+        hrs = [0.0] * 7; away = 0.0
+        for d_, lab, hh in sh_:
+            if lab == own: hrs[d_] += hh
+            else: away += hh
+        o[key] = [round(x, 2) for x in hrs]; o[key + '_other_venue_hours'] = round(away, 2)
     return o
 with ThreadPoolExecutor(4) as ex: save('dept_hours.json', list(ex.map(dept_hours, [(s_, v_, w) for w in weeks for s_, v_ in V.items()])))
 
