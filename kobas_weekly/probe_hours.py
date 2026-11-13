@@ -37,26 +37,22 @@ rid = mine[-2]['id'] if len(mine) > 1 else mine[-1]['id']; R['shapes']['rota'] =
 mask = lambda v: re.sub(r'[A-Za-z]', 'a', re.sub(r'\d', '9', v))
 txt = lambda h: re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', h)).strip()
 LAB = re.compile(r'^(total|totals|front of house|back of house|foh|boh|management|uncategorised|department|kitchen|hours|all)\b', re.I)
-for lab, params in [('fullhours', {'m': 'fullhours', 'iRotaID': rid, 'venueid': 9}), ('fullhours FOH', {'m': 'fullhours', 'iRotaID': rid, 'venueid': 9, 'department': 'FOH'}),
-                    ('print ALL', {'m': 'print', 'iRotaID': rid, 'venueid': 9, 'department': 'ALL'})]:
-    r = k.s.get(BASE + '/rotas/index.php', params=params, timeout=180); R['status'][lab] = [r.status_code, len(r.text)]
+for meth in ('get', 'post'):
+  for dep in ('ALL', 'FrontofHouse', 'BackofHouse'):
+    lab = meth + ' ' + dep
+    if meth == 'get': r = k.s.get(BASE + '/rotas/index.php', params={'m': 'fullhours', 'iRotaID': rid, 'venueid': 9, 'department': dep}, timeout=180)
+    else: r = k.s.post(BASE + '/rotas/index.php?m=fullhours&iRotaID=%s&venueid=9' % rid, data={'department': dep}, timeout=180)
+    R['status'][lab] = [r.status_code, len(r.text)]
     if r.status_code != 200: continue
-    x = r.text; o = {}
-    o['th'] = sorted(set(txt(y)[:40] for y in re.findall(r'<th[^>]*>(.*?)</th>', x, re.S) if not re.search(r'[a-z]{3,} [A-Z][a-z]{3,}', txt(y))))[:80]
-    for nm in ('department', 'view'):
-        m = re.search(r'<select[^>]+name="%s"[^>]*>(.*?)</select>' % nm, x, re.S)
-        if m: o['options ' + nm] = re.findall(r'<option[^>]*value="([^"]*)"', m.group(1))[:30]
-    tabs = re.findall(r'<table[^>]*>(.*?)</table>', x, re.S); o['tables'] = []
-    for tb in tabs[:12]:
-        rows = re.findall(r'<tr[^>]*>(.*?)</tr>', tb, re.S); info = {'rows': len(rows), 'sample': [], 'labelled': []}
-        for rw in rows:
-            cells = [txt(c) for c in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', rw, re.S)]
-            if not cells: continue
-            if LAB.search(cells[0]) and len(info['labelled']) < 12: info['labelled'].append([cells[0][:30]] + [mask(c)[:14] for c in cells[1:14]])
-            elif len(info['sample']) < 2: info['sample'].append([mask(c)[:14] for c in cells[:14]])
-        o['tables'].append(info)
-    o['words'] = sorted(set(re.findall(r'Front of House|Back of House|Management|Uncategorised|Hours Worked|Paid Hours|Approved|Department|FOH|BOH|Export[A-Za-z ]{0,20}|CSV', x)))
-    o['exports'] = sorted(set(re.sub(r'\d+', 'N', h.replace('&amp;', '&'))[:120] for h in re.findall(r'href="([^"]*(?:export|csv|print|m=)[^"]*)"', x, re.I)))[:30]
+    x = r.text; o = {'tables': []}
+    m = re.search(r'<select[^>]+name="department"[^>]*>(.*?)</select>', x, re.S)
+    if m: o['selected'] = re.findall(r'<option[^>]*value="([^"]*)"[^>]*selected', m.group(1))
+    fm = re.search(r'<form[^>]*>(?:(?!</form>).)*name="department"', x, re.S)
+    if fm: o['form'] = re.sub(r'\d+', 'N', re.search(r'<form[^>]*>', fm.group(0)).group(0))[:200]
+    for tb in re.findall(r'<table[^>]*>(.*?)</table>', x, re.S)[:6]:
+        rows = [[txt(c) for c in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', rw, re.S)] for rw in re.findall(r'<tr[^>]*>(.*?)</tr>', tb, re.S)]
+        rows = [c for c in rows if c]
+        o['tables'].append({'rows': len(rows), 'first': [[mask(c)[:22] for c in rw[:10]] for rw in rows[:5]], 'last': [[(c[:22] if LAB.search(rw[0]) else mask(c)[:22]) for c in rw[:10]] for rw in rows[-3:]]})
     R['shapes'][lab] = o
 json.dump(R, open(os.path.join(out, 'hours_probe.json'), 'w'), indent=1)
 print(json.dumps(R['status']))
