@@ -37,22 +37,20 @@ rid = mine[-2]['id'] if len(mine) > 1 else mine[-1]['id']; R['shapes']['rota'] =
 mask = lambda v: re.sub(r'[A-Za-z]', 'a', re.sub(r'\d', '9', v))
 txt = lambda h: re.sub(r'\s+', ' ', re.sub(r'<[^>]+>', ' ', h)).strip()
 LAB = re.compile(r'^(total|totals|front of house|back of house|foh|boh|management|uncategorised|department|kitchen|hours|all)\b', re.I)
-for meth in ('get', 'post'):
-  for dep in ('ALL', 'FrontofHouse', 'BackofHouse'):
-    lab = meth + ' ' + dep
-    if meth == 'get': r = k.s.get(BASE + '/rotas/index.php', params={'m': 'fullhours', 'iRotaID': rid, 'venueid': 9, 'department': dep}, timeout=180)
-    else: r = k.s.post(BASE + '/rotas/index.php?m=fullhours&iRotaID=%s&venueid=9' % rid, data={'department': dep}, timeout=180)
-    R['status'][lab] = [r.status_code, len(r.text)]
-    if r.status_code != 200: continue
-    x = r.text; o = {'tables': []}
-    m = re.search(r'<select[^>]+name="department"[^>]*>(.*?)</select>', x, re.S)
-    if m: o['selected'] = re.findall(r'<option[^>]*value="([^"]*)"[^>]*selected', m.group(1))
-    fm = re.search(r'<form[^>]*>(?:(?!</form>).)*name="department"', x, re.S)
-    if fm: o['form'] = re.sub(r'\d+', 'N', re.search(r'<form[^>]*>', fm.group(0)).group(0))[:200]
-    for tb in re.findall(r'<table[^>]*>(.*?)</table>', x, re.S)[:6]:
-        rows = [[txt(c) for c in re.findall(r'<t[dh][^>]*>(.*?)</t[dh]>', rw, re.S)] for rw in re.findall(r'<tr[^>]*>(.*?)</tr>', tb, re.S)]
-        rows = [c for c in rows if c]
-        o['tables'].append({'rows': len(rows), 'first': [[mask(c)[:22] for c in rw[:10]] for rw in rows[:5]], 'last': [[(c[:22] if LAB.search(rw[0]) else mask(c)[:22]) for c in rw[:10]] for rw in rows[-3:]]})
-    R['shapes'][lab] = o
+r = k.s.post(BASE + '/rotas/index.php?m=fullhours&iRotaID=%s&venueid=9' % rid, data={'department': 'BackofHouse'}, timeout=180)
+x = r.text; tb = re.findall(r'<table[^>]*>.*?</table>', x, re.S)[2]
+def mhtml(h):
+    h = re.sub(r'(title|alt|href|onclick|data-[a-z\-]+|value|name|id)="[^"]*"', lambda m: m.group(1) + '="_"', h)
+    return re.sub(r'>([^<]+)<', lambda m: '>' + mask(m.group(1)) + '<', h)
+rows = re.findall(r'<tr[^>]*>.*?</tr>', tb, re.S)
+R['shapes']['table_open'] = re.search(r'<table[^>]*>', tb).group(0)[:200]
+R['shapes']['rows'] = [re.sub(r'\s+', ' ', mhtml(rw))[:2600] for rw in rows[:2] + rows[3:5] + rows[-2:]]
+# does each staff row have 9 cells, and how do the per staff totals add up (aggregate only)
+tot = 0; shape_counts = {}
+for rw in rows[2:]:
+    n = len(re.findall(r'<td', rw)); shape_counts[n] = shape_counts.get(n, 0) + 1
+    m = re.search(r'Total:\s*(\d+)h(?:&nbsp;|\s)*(\d+)m', rw)
+    if m: tot += int(m.group(1)) + int(m.group(2)) / 60
+R['shapes']['td_counts'] = shape_counts; R['shapes']['boh_week_hours_from_totals'] = round(tot, 2)
 json.dump(R, open(os.path.join(out, 'hours_probe.json'), 'w'), indent=1)
 print(json.dumps(R['status']))
