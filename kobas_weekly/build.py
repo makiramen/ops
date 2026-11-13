@@ -91,6 +91,18 @@ def lab(s, d, *names):
         if (s, d, n) in LAB: return LAB[(s, d, n)]
     return None
 
+# ---------------- hours worked by department (Rotas > Hours Worked, totals only) ----------------
+DH = {}
+for x in jload(os.path.join(RAW, 'dept_hours.json'), []) or []:
+    try: w0 = datetime.date.fromisoformat(x['week'])
+    except Exception: continue
+    for key in ('foh', 'boh', 'management', 'norole'):
+        if isinstance(x.get(key), list):
+            for i, v in enumerate(x[key][:7]): DH[(x['site'], (w0 + datetime.timedelta(i)).isoformat(), key)] = v
+def dh(s, d, key):
+    v = DH.get((s, d, key))
+    return None if v is None else round(v, 2)
+
 # ---------------- stock usage ----------------
 SU = {}
 p = os.path.join(RAW, 'stock_usage.csv')
@@ -292,7 +304,8 @@ for mon in weeks:
                 'labour': {'hours_worked_cost': lab(site, d, 'Hours Worked Cost', 'Hours Worked Cost (incl. Employer NIC)'),
                            'total_labour': lab(site, d, 'Total Labour'), 'foh': lab(site, d, 'of which Front of House'),
                            'boh': lab(site, d, 'of which Back of House'), 'management': lab(site, d, 'of which Management'),
-                           'uncategorised': lab(site, d, 'of which Uncategorised'), 'hours': lab(site, d, 'Hours Worked')},
+                           'uncategorised': lab(site, d, 'of which Uncategorised'), 'hours': lab(site, d, 'Hours Worked'),
+                           'hours_foh': dh(site, d, 'foh'), 'hours_boh': dh(site, d, 'boh'), 'hours_management': dh(site, d, 'management'), 'hours_norole': dh(site, d, 'norole')},
                 'waste': r2(SU.get((site, d, 'waste'))), 'comp': r2(SU.get((site, d, 'comp'))), 'director': r2(SU.get((site, d, 'director'))),
                 'purchases': {lt: r2(PUR.get((site, d, lt))) for lt in ('food', 'wet', 'controllables')} if DL is not None else None}
         D = [x for x in S['days'].values() if x]
@@ -308,6 +321,7 @@ for mon in weeks:
              'covers': covers, 'sph': r2(sit / covers) if (sit and covers) else None, 'avg_spend_all': r2(gross / covers) if (gross and covers) else None,
              'labour_hours_worked_cost': hwc, 'labour_total': tl, 'labour_hours': hrs,
              'labour_foh': tot(lambda x: x['labour']['foh']), 'labour_boh': tot(lambda x: x['labour']['boh']),
+             'labour_hours_foh': tot(lambda x: x['labour']['hours_foh']), 'labour_hours_boh': tot(lambda x: x['labour']['hours_boh']),
              'labour_management': tot(lambda x: x['labour']['management']), 'labour_uncategorised': tot(lambda x: x['labour']['uncategorised']),
              'wage_pct': pct(hwc, gross), 'wage_pct_kobas': pct(tl, net), 'rev_per_labour_hour': r2(net / hrs) if (net and hrs) else None,
              'waste': tot(lambda x: x['waste']), 'comp': tot(lambda x: x['comp']), 'director': tot(lambda x: x['director'])}

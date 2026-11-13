@@ -97,6 +97,30 @@ def items(job):
     except Exception as e: err(f'items {site} {w}', e); return 1
 with ThreadPoolExecutor(5) as ex: log['items_fail'] = sum(ex.map(items, [(s, v, w) for w in weeks for s, v in V.items()]))
 
+# ---- 2b) hours worked by department (13/11/2026, Michael x Remy: FOH and BOH cost per labour hour) ----------------
+# Rotas > Hours Worked (index.php?m=fullhours), the department filter is a POST. Only the totals per department per day are
+# kept: no staff names, no shift rows.
+DEPTS = {'foh': 'FrontofHouse', 'boh': 'BackofHouse', 'management': 'Management', 'norole': 'norole'}
+try: rotas = {(x['venueid'], str(x['rotadate'])[:10]): x['id'] for x in get('/data/rota/past', {'include-current-week': 1}).json()}
+except Exception as e: rotas = {}; err('rota list', e)
+def dept_hours(job):
+    site, vid, w = job; rid = rotas.get((vid, w.isoformat()))
+    if not rid: return {'site': site, 'week': w.isoformat(), 'error': 'no rota'}
+    o = {'site': site, 'week': w.isoformat(), 'rota_id': rid}
+    for key, dep in DEPTS.items():
+        try:
+            t = post_form(f'/rotas/index.php?m=fullhours&iRotaID={rid}&venueid={vid}', {'department': dep}).text
+            if not re.search(r'<option[^>]*value="%s"[^>]*selected' % dep, t): raise RuntimeError('department filter not applied')
+            hrs = [0.0] * 7; shifts = 0
+            for m in re.finditer(r'<td[^>]*class="staff_\d+_day_(\d)"[^>]*>(.*?)(?=<td|</tr>)', t, re.S):
+                for sh in re.findall(r'<div[^>]*>(.*?)</div>', m.group(2), re.S):
+                    h = re.search(r'</a>\s*<br\s*/?>\s*(\d+)h(?:&nbsp;|\s)*(\d+)m', sh)
+                    if h: hrs[int(m.group(1)) - 1] += int(h.group(1)) + int(h.group(2)) / 60.0; shifts += 1
+            o[key] = [round(x, 2) for x in hrs]; o[key + '_shifts'] = shifts
+        except Exception as e: o[key] = None; err(f'dept hours {site} {w} {key}', e)
+    return o
+with ThreadPoolExecutor(4) as ex: save('dept_hours.json', list(ex.map(dept_hours, [(s_, v_, w) for w in weeks for s_, v_ in V.items()])))
+
 # ---- 3) queued reports: labour costs (one per Monday) + stock usage (whole span), queued together then waited on ------
 def queue(key, filters):
     data = [('reportQueue[report_key]', key)]
