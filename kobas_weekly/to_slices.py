@@ -59,6 +59,52 @@ def mlweek(S, doc):
             'labourTotalKobas': W['labour_total'], 'wagePctKobasBasis': W['wage_pct_kobas']}
 
 
+# 16/11/2026 (Michael): the weekly wage % is the SUM OF THE DAILIES (Daily tab labour / Daily tab sales), not the
+# Kobas week as it stands later. Kobas re-costs earlier days upward through the week, so the two drift apart.
+# A site with no dailies (franchise) keeps the Kobas figure and is named in _meta.wage_basis.
+DAILY_SRC = (src.rstrip('/').rsplit('/', 1)[0] + '/daily') if src.startswith('http') else os.path.join(os.path.dirname(os.path.abspath(src.rstrip('/'))), 'daily')
+_daily_cache = {}
+
+
+def daily(day):
+    if day not in _daily_cache:
+        try:
+            if DAILY_SRC.startswith('http'):
+                with urllib.request.urlopen(f'{DAILY_SRC}/daily_{day}.json', timeout=60) as r: _daily_cache[day] = json.loads(r.read())
+            else:
+                _daily_cache[day] = json.load(open(os.path.join(DAILY_SRC, f'daily_{day}.json')))
+        except Exception:
+            _daily_cache[day] = None
+    return _daily_cache[day]
+
+
+def daily_wage(code, w):
+    """(labour GBP, wage %, days used) from the dailies of week w, or None when the site has no daily labour."""
+    m = datetime.date.fromisoformat(w); lab = sal = 0.0; n = 0
+    for i in range(7):
+        d = ((daily((m + datetime.timedelta(i)).isoformat()) or {}).get('sites') or {}).get(code) or {}
+        l, a = (d.get('labour') or {}).get('total'), (d.get('sales') or {}).get('actual')
+        if l is not None and a:
+            lab += l; sal += a; n += 1
+    return (r2(lab), r2(100 * lab / sal), n) if n and sal else None
+
+
+WAGE_BASIS = {}
+
+
+def mlweek_d(S, doc, code, w):
+    o = mlweek(S, doc)
+    if not o: return o
+    dw = daily_wage(code, w)
+    o['labourKobasHWC'] = o.get('labourActualGBP'); o['wagePctKobasHWC'] = o.get('wagePctOfRevenue')
+    if dw:
+        o['labourActualGBP'], o['wagePctOfRevenue'], o['wageDailyDays'] = dw
+        if w == wk: WAGE_BASIS[code] = f'dailies ({dw[2]} days)'
+    elif w == wk:
+        WAGE_BASIS[code] = 'Kobas (no dailies for this site)'
+    return o
+
+
 NAME = {**{f'M{i}': f'Maki {i}' for i in range(1, 30)}, 'IKI2': 'Ikigai 2', 'MakiNori': 'Maki Nori', 'MAF3': 'Maki O2 Arena', 'MAF1': 'Maki West End', 'MAF2': 'Maki Manchester NQ', 'MAF4': 'Maki Braehead'}
 
 
@@ -69,9 +115,10 @@ sites = sorted(set(cur['sites']) | set((prv or {}).get('sites', {})))
 put(f'monalisa_{wk}.json', {
     '_meta': {'source': SRC, 'primaryWeek': key(wk), 'priorWeek': key(prev), '_not_in_kobas': ['labourBudgetGBP'],
               'note': 'salesActual = (eat-in + takeaway + delivery net) x 1.2, the KPI sheet Actual basis; labourActualGBP = Kobas Hours Worked Cost; '
-                      'wagePctOfRevenue = HWC / gross (unchanged dashboard basis); wagePctKobasBasis = Total Labour / net (LAB-01 basis, alongside).'},
-    'sites': {s: {'mcode': s, 'venueName': NAME.get(s, s), 'weeks': {key(wk): mlweek(cur['sites'].get(s), cur),
-                                                         **({key(prev): mlweek(prv['sites'].get(s), prv)} if prv else {})}} for s in sites}})
+                      'wagePctOfRevenue and labourActualGBP = SUM OF THE DAILIES (Michael 16/11/2026), Kobas HWC kept alongside as labourKobasHWC / wagePctKobasHWC; wagePctKobasBasis = Total Labour / net (LAB-01 basis, alongside).'},
+    'sites': {s: {'mcode': s, 'venueName': NAME.get(s, s), 'weeks': {key(wk): mlweek_d(cur['sites'].get(s), cur, s, wk),
+                                                         **({key(prev): mlweek_d(prv['sites'].get(s), prv, s, prev)} if prv else {})}} for s in sites}})
+print('wage basis:', WAGE_BASIS)
 put(f'covers_sph_{wk}.json', {
     '_source': SRC + ' | covers = Kobas covers + tabs without covers set + round(Stripe GBP / 22); sph = sit in gross / covers',
     'week_commencing': wk, 'prev_commencing': prev, 'method': 'kobas',
