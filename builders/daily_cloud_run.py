@@ -178,7 +178,8 @@ def main():
                 if not (lo <= sp <= hi): flags.append(f"{code} £{sp:.2f}/head (band £{lo}-{hi})")
             # 23/10/2026: Michael ruled the fleet avg spend floor down from £20 to £0. The 22/10 day sat unshipped
             # because the fleet came in under £20; only the £26 ceiling (doubled-sales guard) still holds the day.
-            if not (0 <= fleet <= 26) and dt not in FLEET_OK: return False, f"fleet avg spend £{fleet:.2f} outside £0-26 on {dt} (covers still filling?)", fleet, flags
+            # 16/11/2026: Michael raised the ceiling from £26 to £30 (Sun 15/11 at £26.21 was real spend).
+            if not (0 <= fleet <= 30) and dt not in FLEET_OK: return False, f"fleet avg spend £{fleet:.2f} outside £0-30 on {dt} (covers still filling?)", fleet, flags
             # 04/09/2026: a per-site spend outside its band no longer holds the WHOLE fleet day back.
             # 02/09 sat unshipped for two days because M8 (372 covers on £4,021) and M19 (250 on £3,183)
             # had doubled covers at source. The day now ships with THAT SITE's covers and avg spend
@@ -202,7 +203,7 @@ def main():
         try: _d = datetime.datetime.strptime(_k, "%d/%m/%Y").date()
         except ValueError: continue
         if _d < D2 and (D - _d).days <= 13 and _d.isoformat() not in _have and _d not in build_dates:
-            build_dates.append(_d); R["warnings"].append(f"{_d.isoformat()} BACKFILLED: fleet avg spend over £26 accepted by Michael ({FLEET_OK[_k]})")
+            build_dates.append(_d); R["warnings"].append(f"{_d.isoformat()} BACKFILLED: fleet avg spend over £30 accepted by Michael ({FLEET_OK[_k]})")
     build_dates = [dd for dd in build_dates if buildable(dmy(dd.isoformat()))[0]]
     if not build_dates:
         log("nothing buildable in the cash-up mirror:", why)
