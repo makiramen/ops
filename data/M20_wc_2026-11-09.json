@@ -1,0 +1,232 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-11-16",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-11-09 \u2013 2026-11-15",
+    "commencing": "2026-11-09",
+    "ending": "2026-11-15"
+  },
+  "sites": {
+    "M20": {
+      "code": "M20",
+      "name": "Maki 20",
+      "gm": "TBC",
+      "gm_confirm": true,
+      "am": "Lincoln",
+      "cluster": "South England",
+      "franchise": false,
+      "kpis": {
+        "sales": {
+          "actual": 38371.85,
+          "target": 40000.0,
+          "var_pct": -4.07,
+          "prev": 42070.39,
+          "wow_abs": -3698.54,
+          "wow_pct": -8.79
+        },
+        "covers": {
+          "actual": 1711,
+          "prev": 1875,
+          "wow_abs": -164,
+          "wow_pct": -8.75
+        },
+        "sph": {
+          "actual": 20.85,
+          "prev": 20.96,
+          "wow_abs": -0.11,
+          "wow_pct": -0.52,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 24.95,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 26.48,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 660.84
+        },
+        "waste": {
+          "actual": 706.6
+        },
+        "delivery_total": {
+          "sales": 2693.96,
+          "days": 7,
+          "target": null,
+          "target_days": 0,
+          "var_pct": null,
+          "orders": 60,
+          "order_days": 6,
+          "prev": 2776.5,
+          "wow_abs": -82.54,
+          "wow_pct": -2.97,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": null,
+          "target": "\u00b15%",
+          "within_band": null
+        },
+        "food": {
+          "variance_pct": 2.89,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-11-09"
+      },
+      "efficiency_score": {
+        "score": 74,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 96.17,
+            "basis": "70% (100-4.07) + 30% (\u00a3gap -1628 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 70.02,
+            "basis": "\u00a320.85 vs \u00a322 tgt \u2014 level 81, WoW -0.52% \u2192 mom 45"
+          },
+          "food": {
+            "weight": 30,
+            "value": 88.16,
+            "basis": "26.48% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 40.75,
+            "basis": "24.95% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.82\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "2.89% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "food 26.5%"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.8226,
+        "new_reviews": 62,
+        "star_breakdown": {
+          "1": 1,
+          "2": 0,
+          "3": 1,
+          "4": 5,
+          "5": 55
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Amy Chan",
+            "text": "If you come from Asia, please know that this place is made for British taste. It is not authentic at all. The staff were friendly but unfortunately I came here for the food.",
+            "date": "2026-11-13",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "frank",
+            "text": "Extremely Disappointing\n\nI\u2019ve visited multiple Maki & Ramen locations across London and have never had a bad experience. Unfortunately, the Southampton location was an entirely different story.\n\nI visited last Thursday and, despite the restaurant being extremely quiet (no more than five tables occupied), we waited at least 10 minutes just to be seated.It took a further 25 minutes for a member of staff to come and take our drink order, despite us watching them serve tables who had arrived after us. Whether this was because we are young or simply a lack of organisation and proper order of service, I couldn\u2019t say.\n\nInitially, we only ordered soft drinks, which took so long to arrive that our food order had already been taken by the time they reached the table.\n\nWe opted for the \u00a318 lunch deal, upgrading a few items, which would have been great value for money had the food been of an acceptable standard.\n\nWe started with the chicken gyozas, which were extremely bland and genuinely some of the worst I\u2019ve had in a restaurant. We also upgraded to the dynamite prawns, which I\u2019ve previously eaten at the Soho location. However, these were equally disappointing, with virtually no spice and very little sauce.\n\nFor mains, we chose the chicken yakisoba, which was okay, and upgraded to the steak ramen, which was frankly appalling. The broth had a very unpleasant aftertaste and the steak was entirely grey. We also ordered the rainbow sushi roll, another dish I\u2019d previously enjoyed at the Soho location. Whilst most of the roll was delicious, the sea bream had an unusually strong fishy smell and didn\u2019t taste right.\n\nThroughout the meal, not a single member of staff came over to check whether everything was okay. Had anyone bothered to do so, we would have raised our concerns and sent back both the ramen and the sushi.\n\nWe also upgraded our drinks to a Pornstar Martini and a Gaia cocktail. Whilst there was nothing particularly wrong with the taste, both arrived halfway through our meal and were practically dumped on the table.\n\nTo top it all off, a service charge was automatically added to the bill, which felt particularly insulting given the standard of service we\u2019d received.\n\nShortly after leaving the restaurant, we both became extremely unwell with symptoms consistent with food poisoning. I cannot say with certainty which dish, if any, was responsible, but the timing was concerning, particularly given our experience with the steak ramen and the fish in the sushi.\n\nHaving previously had such positive experiences at other Maki & Ramen locations, this visit was incredibly disappointing. The service was unacceptable, the food quality was inconsistent at best, and the experience as a whole has completely put me off returning to the Southampton branch. I would strongly encourage others to think twice before visiting.",
+            "date": "2026-11-09",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-09..2026-11-15 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-16."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-11-09.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 1,
+        "tasks": [
+          {
+            "task": "Hand washing sink (KP area) water flow is very low",
+            "priority": "\u2014",
+            "logged_week": "20/10/2026",
+            "owner": "\u2014",
+            "status": "open"
+          }
+        ],
+        "note": "1 open item(s)"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-15",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": null,
+        "orders": 60,
+        "aov": null,
+        "new_customers": null,
+        "rating": 5.0,
+        "open_hours_pct": 100.0,
+        "avg_prep_min": 15.3,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 1.5,
+        "rider_wait_5min_pct": 3.0,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "orders_estimated": true,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": []
+    }
+  }
+}

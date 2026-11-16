@@ -1,0 +1,117 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-11-16",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-11-09 \u2013 2026-11-15",
+    "commencing": "2026-11-09",
+    "ending": "2026-11-15"
+  },
+  "sites": {
+    "MAF4": {
+      "code": "MAF4",
+      "name": "Maki Braehead",
+      "gm": "(confirm)",
+      "gm_confirm": false,
+      "am": "Ka Ho",
+      "cluster": "Scotland & Newcastle",
+      "franchise": true,
+      "kpis": {
+        "sales": {
+          "actual": 34109.43,
+          "target": null,
+          "var_pct": null,
+          "prev": 37964.72,
+          "wow_abs": -3855.29,
+          "wow_pct": -10.15
+        },
+        "covers": {
+          "actual": 1509,
+          "prev": 1655,
+          "wow_abs": -146,
+          "wow_pct": -8.82
+        },
+        "sph": {
+          "actual": 22.57,
+          "prev": 22.94,
+          "wow_abs": -0.37,
+          "wow_pct": -1.61,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 25.05,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 18.94,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 597.12
+        },
+        "waste": {
+          "actual": 160.06
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": -20.9,
+          "target": "\u00b15%",
+          "within_band": false
+        },
+        "food": {
+          "variance_pct": -30.69,
+          "target": "\u00b15%",
+          "within_band": false
+        },
+        "week_commencing": "2026-11-09"
+      },
+      "efficiency_score": null,
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull; FRANCHISE site: shown on its own card only, excluded from the fleet red-light count"
+      },
+      "reviews": {
+        "week_avg_rating": null,
+        "new_reviews": null,
+        "star_breakdown": null,
+        "negatives": null,
+        "negative_reviews": [],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Reviews sheet 1aFGfbGr... per-site 'Maki N -' star tabs (weekly avg rating / counts) + 'Raw Data' tab (negative comment text, rating<=3 + comment). Cumulative venue rating not in sheet (null)."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-11-09.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": null,
+      "gaps": [
+        "Reviews \u2014 no week rating in source",
+        "Deliveroo \u2014 no Weekly Summary row and not above PDF Sales Overview cutoff this week"
+      ]
+    }
+  }
+}

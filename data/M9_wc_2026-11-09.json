@@ -1,0 +1,236 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-11-16",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-11-09 \u2013 2026-11-15",
+    "commencing": "2026-11-09",
+    "ending": "2026-11-15"
+  },
+  "sites": {
+    "M9": {
+      "code": "M9",
+      "name": "Maki 9",
+      "gm": "Kai Chau Leung / Chan Zhi Quan",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "franchise": false,
+      "kpis": {
+        "sales": {
+          "actual": 82037.38,
+          "target": 73000.0,
+          "var_pct": 12.38,
+          "prev": 77688.25,
+          "wow_abs": 4349.13,
+          "wow_pct": 5.6
+        },
+        "covers": {
+          "actual": 3148,
+          "prev": 3182,
+          "wow_abs": -34,
+          "wow_pct": -1.07
+        },
+        "sph": {
+          "actual": 22.2,
+          "prev": 21.94,
+          "wow_abs": 0.26,
+          "wow_pct": 1.19,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 18.3,
+          "target": null
+        },
+        "food_pct": {
+          "actual": 23.57,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 1035.8
+        },
+        "waste": {
+          "actual": 1304.85
+        },
+        "delivery_total": {
+          "sales": 12140.15,
+          "days": 7,
+          "target": 8760.0,
+          "target_days": 7,
+          "var_pct": 38.59,
+          "orders": 250,
+          "order_days": 6,
+          "prev": 7878.2,
+          "wow_abs": 4261.95,
+          "wow_pct": 54.1,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": -2.4,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": 0.76,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-11-09"
+      },
+      "efficiency_score": {
+        "score": 98,
+        "rag": "green",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "70% (100+12.38) + 30% (\u00a3gap +9037 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 88.57,
+            "basis": "\u00a322.20 vs \u00a322 tgt \u2014 level 100, WoW +1.19% \u2192 mom 62"
+          },
+          "food": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "23.57% vs 25% baseline, -8/pp over"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 100.0,
+            "basis": "18.30% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.77\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "0.76% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "green",
+        "triggers": [],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7746,
+        "new_reviews": 71,
+        "star_breakdown": {
+          "1": 1,
+          "2": 1,
+          "3": 2,
+          "4": 5,
+          "5": 62
+        },
+        "negatives": 4,
+        "negative_reviews": [
+          {
+            "stars": 3,
+            "author": "Ian Wood",
+            "text": "Service was very good. Food was nice, but very expensive for what it was. \u00a315 yakisoba tofu dish had just three small slices of tofu and one piece of tender stem broccoli. The banging of the drum every time a customer group was seated became a bit annoying.",
+            "date": "2026-11-14",
+            "url": null
+          },
+          {
+            "stars": 2,
+            "author": "Local reviewer.",
+            "text": "The service was ok the atmosphere was good. The food came served warm and not hot as we wanted it. Overall experience was mediocre sadly..",
+            "date": "2026-11-10",
+            "url": null
+          },
+          {
+            "stars": 3,
+            "author": "Ma haluen",
+            "text": "Food is average, much better sushi and ramen in other places in Chinatown.\n\nSushi tasted like it was made hours in advance. I expect most of the food here probably is.",
+            "date": "2026-11-09",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Bear Claw",
+            "text": "Adding this review due to very poor customer service, didn\u2019t even get through the front door. Was booked for 8pm at the weekend. Arrived early, 7.30pm. Was told I am too early and I will have to wait outside!  Or to go away and come back. Taking into account it was very cold on the evening in question. I asked,  can I not wait at a bar area. Was told they don\u2019t really have a bar. 2 other people then arrived, exactly 2 minutes later. They were led straight in. From seeing this I promptly left and went to another establishment where I was welcomed with no issue. PS. Didn\u2019t have a booking with them, told me not to wait in the cold and seated me while they prepared a table. Now this is the service I expect. Not to be treated like an inconvenience.",
+            "date": "2026-11-09",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-09..2026-11-15 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-16."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-11-09.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-15",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": null,
+        "orders": 250,
+        "aov": null,
+        "new_customers": null,
+        "rating": 4.53,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 16.0,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 3.4,
+        "rider_wait_5min_pct": 3.3,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "orders_estimated": true,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": []
+    }
+  }
+}

@@ -1,0 +1,223 @@
+{
+  "schema_version": "1.2",
+  "generated_at": "2026-11-16",
+  "source": "build_site_json.py \u2014 per-pipe slices (SYSTEMS_MAP contract).",
+  "week": {
+    "label": "Week of 2026-11-09 \u2013 2026-11-15",
+    "commencing": "2026-11-09",
+    "ending": "2026-11-15"
+  },
+  "sites": {
+    "M21": {
+      "code": "M21",
+      "name": "Maki 21",
+      "gm": "Emily",
+      "gm_confirm": true,
+      "am": "Inka Cheung",
+      "cluster": "North England & Midlands",
+      "franchise": false,
+      "kpis": {
+        "sales": {
+          "actual": 41152.55,
+          "target": 51500.0,
+          "var_pct": -20.09,
+          "prev": 36497.27,
+          "wow_abs": 4655.28,
+          "wow_pct": 12.76
+        },
+        "covers": {
+          "actual": 1823,
+          "prev": 1768,
+          "wow_abs": 55,
+          "wow_pct": 3.11
+        },
+        "sph": {
+          "actual": 21.27,
+          "prev": 19.5,
+          "wow_abs": 1.77,
+          "wow_pct": 9.08,
+          "label": "Spend Per Head (covers-weighted Avg Spend)"
+        },
+        "wage_pct": {
+          "actual": 25.88,
+          "target": null
+        },
+        "food_pct": {
+          "actual": null,
+          "target": 23.0,
+          "gated": false
+        },
+        "labour_hours": {
+          "actual": 738.8
+        },
+        "waste": {
+          "actual": 604.13
+        },
+        "delivery_total": {
+          "sales": 2382.38,
+          "days": 7,
+          "target": null,
+          "target_days": 0,
+          "var_pct": null,
+          "orders": 42,
+          "order_days": 6,
+          "prev": 2019.19,
+          "wow_abs": 363.19,
+          "wow_pct": 17.99,
+          "source": "Kobas Daily Headline Revenue Report (All Venues) -> Script Raw Data sheet, Delivery column (Deliverect lines, all platforms incl. HungryPanda, gross incl. VAT), via the Auto Cash Up dailies",
+          "basis": "sum of daily delivery GBP Mon-Sun; orders = Deliveroo Daily Master (Deliveroo only)"
+        }
+      },
+      "labour_split": {
+        "split_status": "filed",
+        "days_with_split": 7,
+        "days_present": 7,
+        "source": "Mona Lisa 'Input Tabs' actual FOH/BOH block (pipe 1).",
+        "note": "'absent' = the site filed no actual FOH/BOH split on any trading day of the week - NOT a failed validation and NOT a zero. 'filed' = it filed something; this pipe does not reconstruct or validate the split (rows are shifted in that tab), so 'filed' is not a validated 'ok'."
+      },
+      "stock_take": {
+        "drinks": {
+          "variance_pct": 1.07,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "food": {
+          "variance_pct": 2.39,
+          "target": "\u00b15%",
+          "within_band": true
+        },
+        "week_commencing": "2026-11-09"
+      },
+      "efficiency_score": {
+        "score": 64,
+        "rag": "red",
+        "scale": "0\u2013100, 100 = at target; bands: green \u226595, amber \u226580, red <80",
+        "weights": {
+          "wage": 30,
+          "food": 30,
+          "sph": 15,
+          "sales": 10,
+          "weekly_star": 10,
+          "food_var": 5
+        },
+        "components": {
+          "sales": {
+            "weight": 10,
+            "value": 79.73,
+            "basis": "70% (100-20.09) + 30% (\u00a3gap -10347 vs \u00b1\u00a350k cal)"
+          },
+          "sph": {
+            "weight": 15,
+            "value": 91.48,
+            "basis": "\u00a321.27 vs \u00a322 tgt \u2014 level 88, WoW +9.08% \u2192 mom 100"
+          },
+          "wage": {
+            "weight": 30,
+            "value": 26.8,
+            "basis": "25.88% vs 21% target, -15/pp over"
+          },
+          "weekly_star": {
+            "weight": 10,
+            "value": 100.0,
+            "basis": "4.73\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
+          },
+          "food_var": {
+            "weight": 5,
+            "value": 100,
+            "basis": "2.39% inside \u00b15% band"
+          }
+        },
+        "components_dropped": [
+          "food"
+        ],
+        "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
+      },
+      "red_light": {
+        "status": "red",
+        "triggers": [
+          "sales -20.1% vs target"
+        ],
+        "basis": "computed from the dashboard's own KPIs (sales vs target \u2264 -10%, wage > 26%, food > 25%); no external pull"
+      },
+      "reviews": {
+        "week_avg_rating": 4.7297,
+        "new_reviews": 37,
+        "star_breakdown": {
+          "1": 2,
+          "2": 0,
+          "3": 0,
+          "4": 2,
+          "5": 33
+        },
+        "negatives": 2,
+        "negative_reviews": [
+          {
+            "stars": 1,
+            "author": "Mohammed Ali (Ali)",
+            "text": "To all the sheeps that fall for it and say this place has amazing food, you don\u2019t know what good food is, and you don\u2019t know anything because you never ate good food ever in your life, so you don\u2019t know what delicious food taste like. I am very disappointed at this place not tasty at all, a shin cup pot noodle or ramen tastes way better than this place. Food took time to be served, wonky table, wobbly chairs and no service at all.",
+            "date": "2026-11-12",
+            "url": null
+          },
+          {
+            "stars": 1,
+            "author": "Sheyda Gr",
+            "text": "I have had two bad experiences in a row. Last time I went in and sat down near the kitchen and my food took over 35 minutes to come. There were not enough people to ensure they keep an eye on customers who sit in that area and nobody looked this way. I had to constantly try and catch someone\u2019s eye although had my hand up all the time. Although I love the food but i don\u2019t think I\u2019ll go back as it was very disappointing .\nTonight I ordered the same food as I always do \u201cSteak Tataki Ramen\u201d and when it arrived it did \u201cnot\u201d look like a Ramen, it was Dry, no juice at all. I had to put hot water in the bowl from the kettle with extra soya sauce to pretend like I am actually having a Ramen. Very upsetting to be honest coz these are very very basic stuff that can be done differently to change a customers experience.",
+            "date": "2026-11-12",
+            "url": null
+          }
+        ],
+        "venue_rating": null,
+        "venue_review_count": null,
+        "response_rate": null,
+        "response_rate_note": "No automated source \u2014 left open.",
+        "source": "Google Reviews workbook 1aFGfbGr... 'Raw Data' tab (gid 284143046), full-history rows deduped on reviewId, filtered by review RECEIVED date to 2026-11-09..2026-11-15 (Mon-Sun). Per-site star tabs NOT used (corrupt). Daily Pipe 8b feed NOT used for counts (its reviews[] caps positives at 12/site and drops comment-less reviews). negative_reviews = rating<=3 with a non-empty comment; `negatives` counts ALL rating<=3 including those with no comment. url null (not in source). Cumulative venue rating not in this source (null). Built 2026-11-16."
+      },
+      "maintenance": {
+        "source": "automation/data/maintenance_2026-11-09.json (AGMM Task List Status). Open items only.",
+        "status": "pulled",
+        "pulled": true,
+        "outstanding_count": 0,
+        "tasks": [],
+        "note": "0 outstanding"
+      },
+      "issues_solutions": {
+        "source": "GM KPI meeting notes \u2014 email pull not built.",
+        "status": "pending",
+        "live": false,
+        "items": [],
+        "note": "Separate stream; needs the GM-notes email pull wired in."
+      },
+      "deliveroo": {
+        "store": null,
+        "week_ending": "2026-11-15",
+        "resolution": "weekly",
+        "partial": false,
+        "sales": null,
+        "orders": 42,
+        "aov": null,
+        "new_customers": null,
+        "rating": 3.67,
+        "open_hours_pct": 99.8,
+        "avg_prep_min": 12.1,
+        "rejection_pct": 0.0,
+        "inaccuracy_pct": 5.8,
+        "rider_wait_5min_pct": 2.0,
+        "conversion_pct": null,
+        "wow": {
+          "gmv_pct": null,
+          "orders_abs": null,
+          "prev_gmv": null,
+          "prev_orders": null
+        },
+        "gmv_vs_4wk_pct": null,
+        "gmv_vs_ly_pct": null,
+        "source": "orders: Deliveroo Daily Master delivered, Mon-Sun + ops from Weekly Summary sheet",
+        "orders_estimated": true,
+        "busy_mode_pct": 0.0
+      },
+      "gaps": [
+        "Food % \u2014 Kobas reads 13.02% on 16/11 (deliveries not all keyed yet), held as not landed until the invoices are in"
+      ]
+    }
+  }
+}
