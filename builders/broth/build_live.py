@@ -389,7 +389,7 @@ cases.sort(key=lambda c: (prio_rank[c["priority"]], not c.get("escalated"), c["r
 
 estate = {}
 for kind in KINDS:
-    rs = [r for r in scores if r["kind"] == kind]
+    rs = [r for r in scores if r["kind"] == kind and r["region"] != "franchise"]   # 16/11/2026 Michael: corporate estate only
     tot = sum(r["readings"] for r in rs)
     estate[kind] = {"spec": list(SPEC[kind]),
         "readings": tot,

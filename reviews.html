@@ -362,10 +362,16 @@ const OKR=4.7;
 let D=null, S={ptype:'week',pkey:null,scope:{type:'fleet',id:null},tab:'overview',metric:'combined',f:{q:'',stars:'',cat:'',site:''},hidden:new Set(),readerLimit:60};
 
 const QS=new URLSearchParams(location.search);const EMBED=QS.get('embed')==='1';
+// 16/11/2026 (Michael): franchise listings are kept out of the corporate view. ?franchise=1 shows them on their own, with no region and no AM.
+const FRV=QS.get('franchise')==='1';const isFr=c=>/^MAF/.test(c||'');
+function splitFranchise(){Object.keys(D.roster).forEach(c=>{if(isFr(c)!==FRV)delete D.roster[c];});D.reviews=D.reviews.filter(r=>D.roster[r.site]);
+  if(D.meta&&D.meta.not_connected)Object.keys(D.meta.not_connected).forEach(c=>{if(!D.roster[c])delete D.meta.not_connected[c];});
+  if(FRV){Object.values(D.roster).forEach(r=>{r.region='Franchise';r.region_id='franchise';r.am='';r.head='Franchisee';r.dam='not allocated';});D.regions={'Franchise':{id:'franchise',head:'Franchisee',dam:'not allocated'}};}}
 if(EMBED){document.documentElement.classList.add('embed');}
 async function load(){
   const el=$('#RV_DATA'); let txt=el.textContent.trim();
   if(txt&&!txt.startsWith('/*')){D=JSON.parse(txt);}else{const r=await fetch('data/reviews_intel.json');D=await r.json();}
+  splitFranchise();
   init();
 }
 /* ---------- periods ---------- */

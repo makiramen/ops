@@ -1191,6 +1191,7 @@
     -->
     <button class="tabbtn" data-tab="actions">Action Tracker</button>
     <button class="tabbtn" data-tab="gmscore">GM Scorecard</button>
+    <button class="tabbtn" data-tab="franchise" style="margin-left:auto">Franchise</button>
   </nav>
 
   <!-- ============ TAB: DAILY ============ -->
@@ -1609,6 +1610,31 @@
     <div id="rl-deliveroo"></div>
   </div><!-- /tab-deliveroo -->
 
+  <!-- ============ TAB: FRANCHISE (16/11/2026, Michael: franchise sites live here only, never in a corporate view, not allocated to any region or AM) ============ -->
+  <div class="tabpanel" id="tab-franchise">
+    <div class="mini-hero">
+      <h2>Franchise sites</h2>
+      <p>Kept apart from the corporate estate. Not in any region, not allocated to any Area Manager, and not counted in any corporate total, score, league or Red Light count.</p>
+    </div>
+    <div class="section-head"><h2>Site cards</h2><div class="hint">Same week as the selector above · click a card for detail</div></div>
+    <div class="heatmap" id="fr-heatmap"></div>
+    <div id="fr-links" style="margin:10px 2px 22px; font-size:12.5px;"></div>
+    <div class="section-head"><h2 id="fr-deliveroo-head">Deliveroo RAG</h2><div class="hint">Franchise storefronts only</div></div>
+    <div id="fr-deliveroo"></div>
+    <div class="section-head" style="margin-top:22px;"><h2>Reviews</h2><div class="hint">Franchise listings only</div></div>
+    <iframe id="fr-rv-frame" title="Franchise reviews" loading="lazy" style="width:100%; border:0; display:block; min-height:900px; background:transparent;"></iframe>
+    <script>
+    (function(){
+      var frame = document.getElementById('fr-rv-frame'), loaded = false;
+      function wk(){ var s = document.getElementById('week-select'); return s && s.value ? s.value : ''; }
+      function open_(){ if (loaded) return; loaded = true; frame.src = 'reviews.html?embed=1&franchise=1' + (wk() ? '&week=' + encodeURIComponent(wk()) : ''); }
+      document.querySelectorAll('.tabbtn[data-tab="franchise"]').forEach(function(b){ b.addEventListener('click', open_); });
+      var ws = document.getElementById('week-select'); if (ws) ws.addEventListener('change', function(){ if (loaded && frame.contentWindow) frame.contentWindow.postMessage({type:'rv-week', week: ws.value}, '*'); });
+      window.addEventListener('message', function(e){ if (e.source !== frame.contentWindow) return; var d = e.data || {}; if (d.type === 'rv-height' && d.h) frame.style.height = (Math.max(600, d.h) + 20) + 'px'; });
+    })();
+    </script>
+  </div><!-- /tab-franchise -->
+
   <!-- ============ TAB: REVIEWS INTELLIGENCE (Pipe 5c, added 25/08/2026 by patch_reviews_tab.py) ============ -->
   <div class="tabpanel" id="tab-reviews">
     <style>
@@ -1625,7 +1651,7 @@
       function open_(){ if (loaded) return; loaded = true; frame.src = 'reviews.html?embed=1' + (wk() ? '&week=' + encodeURIComponent(wk()) : ''); document.getElementById('rv-status').textContent = 'Reviews Intelligence · week follows the selector above.'; }
       document.querySelectorAll('.tabbtn[data-tab="reviews"]').forEach(function(b){ b.addEventListener('click', open_); });
       var ws = document.getElementById('week-select'); if (ws) ws.addEventListener('change', function(){ if (loaded && frame.contentWindow) frame.contentWindow.postMessage({type:'rv-week', week: ws.value}, '*'); });
-      window.addEventListener('message', function(e){ var d = e.data || {}; if (d.type === 'rv-height' && d.h) frame.style.height = (Math.max(900, d.h) + 20) + 'px'; if (d.type === 'rv-scrolltop') window.scrollTo({ top: 0, behavior: 'smooth' }); });
+      window.addEventListener('message', function(e){ if (e.source !== frame.contentWindow) return; var d = e.data || {}; if (d.type === 'rv-height' && d.h) frame.style.height = (Math.max(900, d.h) + 20) + 'px'; if (d.type === 'rv-scrolltop') window.scrollTo({ top: 0, behavior: 'smooth' }); });
       fetch('data/reviews_summary.json?cb=' + Date.now()).then(function(r){ return r.ok ? r.json() : null; }).then(function(s){
         if (!s) return; var b = document.getElementById('tb-reviews'); var n = (s.red_sites || 0) + (s.food_safety_mentions || 0);
         if (n > 0) { b.textContent = s.red_sites || s.food_safety_mentions; b.style.display = ''; b.title = (s.red_sites || 0) + ' red site(s), ' + (s.food_safety_mentions || 0) + ' food-safety mention(s), w/c ' + s.week; }
@@ -2917,9 +2943,9 @@ const SITES = [
     "code": "MAF3",
     "franchise": true,
     "name": "Maki O2 Arena",
-    "cluster": "south",
-    "clusterName": "South England",
-    "am": "Lincoln",
+    "cluster": "franchise",
+    "clusterName": "Franchise",
+    "am": "",
     "gm": "TBC",
     "rag": "amber",
     "vsTarget": 0,
@@ -2939,9 +2965,9 @@ const SITES = [
     "code": "MAF1",
     "franchise": true,
     "name": "Maki West End",
-    "cluster": "scotland",
-    "clusterName": "Scotland & Newcastle",
-    "am": "Óisín Patrick Darragh",
+    "cluster": "franchise",
+    "clusterName": "Franchise",
+    "am": "",
     "gm": "TBC",
     "rag": "amber",
     "vsTarget": 0,
@@ -2961,9 +2987,9 @@ const SITES = [
     "code": "MAF2",
     "franchise": true,
     "name": "Maki Northern Quarter",
-    "cluster": "north",
-    "clusterName": "North England & Midlands",
-    "am": "Inka Cheung",
+    "cluster": "franchise",
+    "clusterName": "Franchise",
+    "am": "",
     "gm": "TBC",
     "rag": "amber",
     "vsTarget": 0,
@@ -2983,9 +3009,9 @@ const SITES = [
     "code": "MAF4",
     "franchise": true,
     "name": "Maki Braehead",
-    "cluster": "scotland",
-    "clusterName": "Scotland & Newcastle",
-    "am": "Óisín Patrick Darragh",
+    "cluster": "franchise",
+    "clusterName": "Franchise",
+    "am": "",
     "gm": "TBC",
     "rag": "amber",
     "vsTarget": 0,
@@ -4240,7 +4266,7 @@ function renderHeatmap(filter = 'all') {
 
   // Cluster render order: known clusters first, then any "other" cluster present in data.
   const knownIds = CLUSTER_DEFS.map(c => c.id);
-  const otherIds = [...new Set(SITES.map(s => s.cluster).filter(c => c && !knownIds.includes(c)))];
+  const otherIds = [...new Set(SITES.filter(s => !s.franchise).map(s => s.cluster).filter(c => c && !knownIds.includes(c)))];   // 16/11/2026: franchise sites live on the Franchise tab only
   const groupDefs = [
     ...CLUSTER_DEFS,
     ...otherIds.map(id => ({ id, name: (SITES.find(s => s.cluster === id) || {}).clusterName || 'Other', am: '' }))
@@ -4284,6 +4310,20 @@ function renderHeatmap(filter = 'all') {
 
   wrap.innerHTML = html;
   if (typeof renderClusterNav === 'function') renderClusterNav();
+  if (typeof renderFranchiseTab === 'function') renderFranchiseTab();
+}
+
+// Franchise tab (16/11/2026, Michael): the only place franchise sites appear. Own cards,
+// no region, no AM, nothing shared with the corporate estate.
+function renderFranchiseTab() {
+  const host = document.getElementById('fr-heatmap');
+  if (!host) return;
+  const fr = SITES.filter(s => s.franchise);
+  host.innerHTML = fr.length ? fr.map(tileHTML).join('')
+    : '<div style="font-size:12.5px; color:var(--ink-3); padding:8px 2px;">No franchise figures for this week.</div>';
+  const links = document.getElementById('fr-links');
+  if (links) links.innerHTML = 'Site pages: ' + SITES_ALL.filter(s => s.franchise).map(s =>
+    `<a href="site/${s.code}/" target="_blank" style="color:var(--maki-orange); font-weight:700; text-decoration:none; margin-right:14px;">${s.name} ↗</a>`).join('');
 }
 
 // Build the sticky cluster quick-nav from SITES (counts + per-cluster RAG tallies).
@@ -4462,7 +4502,7 @@ function openSite(code) {
     <div class="modal-header">
       <div>
         <div class="modal-title">${s.code} — ${s.name}${frBadge(s)}</div>
-        <div class="modal-sub">${s.clusterName} · AM: ${s.am} · GM: ${s.gm}</div>
+        <div class="modal-sub">${s.franchise ? 'Franchise · not allocated to a region or AM' : s.clusterName + ' · AM: ' + s.am} · GM: ${s.gm}</div>
       </div>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
@@ -4960,7 +5000,7 @@ function _delivPaintRows(host, rows, wkLabel, fallbackNote, opts){
   }
   host.innerHTML = (fallbackNote || '') + banner + body + `
     <div style="font-size:12px; color:var(--ink-soft,#555); padding:0 2px;">
-      <strong>${corpCounts.red} red · ${corpCounts.amber} amber · ${corpCounts.green} green</strong> across ${nCorp} corporate sites on Deliveroo this week${rows.length > nCorp ? ' (franchise sites shown in their regions, not counted here)' : ''}.
+      <strong>${corpCounts.red} red · ${corpCounts.amber} amber · ${corpCounts.green} green</strong> across ${nCorp} corporate sites on Deliveroo this week.
       Thresholds — rating ≥4.7/≥4.0 · open-hrs ≥98/≥95 · prep ≤15/≤18 · inaccuracy ≤2/≤3 · rider-wait ≤2/≤4. RED if any metric red; GREEN if all five green; a missing metric ⇒ AMBER.
       <div style="margin-top:7px; padding-top:7px; border-top:1px dotted var(--line,#e3e3e3); color:var(--ink-soft,#777);">
         <strong>Note — these are our bands, not Deliveroo's.</strong> Deliveroo's own RAG key (the &ldquo;Deliveroo RAG&rdquo; sheet) is harsher on rating (red at ≤4.50, not below 4.0) and on open hours (green needs ≥99), and far softer on rider wait (green under 5%, red above 10%). Sites can therefore show a different colour here than in that sheet — for w/c 27/07 that was M3, M8, M12 and M17 (amber here, red there) and M6 (red here, amber there). A colour clash is a difference of key, not a data fault. Ours are the canonical AM bands, locked 23/06.
@@ -5034,7 +5074,7 @@ function _delivFmtWk(k){ const p = String(k).split('-'); return p.length === 3 ?
 // Franchise rows for a week, placed in their region. MAF1 Glasgow = Scotland, MAF2 Northern Quarter
 // (Manchester) = North, MAF3 The O2 = South (Michael, 21/10/2026). If the week has no franchise data
 // yet, the latest earlier week is used and the row badge names that week.
-const DELIV_FRANCHISE_CLUSTER = { MAF1:'scotland', MAF2:'north', MAF3:'south' };
+const DELIV_FRANCHISE_CLUSTER = {};   // 16/11/2026: franchise storefronts are not allocated to a region
 async function _delivFranchiseRows(weekKey){
   const data = await _delivLoadFranchise();
   const weeks = (data && data.weeks) || {};
@@ -5049,6 +5089,14 @@ async function _delivFranchiseRows(weekKey){
     return { code: d.code, name: d.name, rag: r.rag, drivers: r.drivers, metrics, handKeyed:false,
              franchise:true, frWeek, cluster: DELIV_FRANCHISE_CLUSTER[d.code] || null };
   });
+}
+function _delivPaintFranchise(fr, label){
+  const fh = document.getElementById('fr-deliveroo');
+  if (!fh) return;
+  const hd = document.getElementById('fr-deliveroo-head');
+  if (hd) hd.textContent = label ? ('Deliveroo RAG · ' + label) : 'Deliveroo RAG';
+  if (fr && fr.length) _delivPaintRows(fh, fr.slice().sort((a, b) => a.code.localeCompare(b.code, undefined, { numeric:true })), label, '', { franchise:true });
+  else fh.innerHTML = '<div style="font-size:12.5px; color:var(--ink-3); padding:8px 2px;">No franchise Deliveroo rows for this week.</div>';
 }
 function _delivMerge(corp, fr){
   const order = { red:0, amber:1, green:2 };
@@ -5079,7 +5127,8 @@ async function renderDeliverooRag(){
   if (rows.length){
     const fr = await _delivFranchiseRows(window.currentWeekKey || null);
     if (tok !== renderDeliverooRag._tok) return;   // superseded by a newer repaint
-    _delivPaintRows(host, _delivMerge(rows, fr), wkLabel, '', { byRegion:true });
+    _delivPaintRows(host, rows, wkLabel, '', { byRegion:true });
+    _delivPaintFranchise(fr, wkLabel);
     return;
   }
 
@@ -5094,7 +5143,8 @@ async function renderDeliverooRag(){
       </div>`;
     const fr = await _delivFranchiseRows(fb.key || null);
     if (tok !== renderDeliverooRag._tok) return;
-    _delivPaintRows(host, _delivMerge(fb.rows, fr), fb.label, note, { byRegion:true });
+    _delivPaintRows(host, fb.rows.filter(r => !r.franchise && !isFranchise(r.code)), fb.label, note, { byRegion:true });
+    _delivPaintFranchise(fr, fb.label);
     return;
   }
 
@@ -7863,12 +7913,22 @@ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded"
       DIR+'index.json and one file per week.</div>' });
   }
 
+  // 16/11/2026 (Michael): franchise locations are kept off the corporate broth tab.
+  function brothNoFranchise(d){
+    if(!d)return d;
+    var isFr=function(x){return !!x&&(x.region==='franchise'||/^MAF/.test(x.code||''))}, frLoc={};
+    (d.scores||[]).forEach(function(r){if(isFr(r))frLoc[r.loc]=1});
+    ['scores','flags','cases','cells','deviations'].forEach(function(k){
+      if(Array.isArray(d[k]))d[k]=d[k].filter(function(r){return !isFr(r)&&!frLoc[r.loc]})});
+    if(d.regions&&d.regions.franchise)delete d.regions.franchise;
+    return d;
+  }
   function load(mon){
     var w=(IDX.weeks||[]).filter(function(x){return x.monday===mon})[0]; if(!w)return;
     $('brothWeekMeta').textContent=w.days+' day'+(w.days>1?'s':'')+' · '+w.p1+' P1';
     if(cache[mon])return render(cache[mon]);
     fetch(DIR+w.file,{cache:'no-store'}).then(function(r){return r.json()})
-      .then(function(d){cache[mon]=d;render(d)});
+      .then(function(d){d=brothNoFranchise(d);cache[mon]=d;render(d)});
   }
 
   function render(d){
@@ -8058,7 +8118,7 @@ if(document.readyState==="loading") document.addEventListener("DOMContentLoaded"
 <!-- ============ /BROTH SCORE script ============ -->
 
 <script>/* Area Room gate: click the Japanese header text */document.querySelectorAll(".maki-brand-kanji").forEach(function(e){e.addEventListener("click",function(){location.href="area_room.html#enter"})});</script>
-<!-- period view: This week / Last week / Month / Quarter (13/10/2026) --><script src="period_view.js?v=20261111maf3"></script>
+<!-- period view: This week / Last week / Month / Quarter (13/10/2026) --><script src="period_view.js?v=20261116fr"></script>
 <!-- maki usage beacon --><script>(function(){var P="AM Control Centre",U="https://script.google.com/macros/s/AKfycbyVrmiIOv3loHNtR-s6c_d5tfJKe8HXWfy29XdvKt3iz_uWJzK2Ul_89q9BMFYbWu2B/exec";try{if(location.protocol==="file:"||/[?&]embed=1/.test(location.search))return;var k="maki_seen_"+P,n=Date.now();if(+(localStorage.getItem(k)||0)>n-30*60e3)return;localStorage.setItem(k,n);fetch(U,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain"},keepalive:true,body:JSON.stringify({name:P,kind:"viewed",at:new Date(n).toISOString(),w:screen.width,ua:navigator.userAgent.slice(0,160)})}).catch(function(){})}catch(e){}})();</script>
 </body>
 </html>

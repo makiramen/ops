@@ -43,7 +43,7 @@ NOT_IN_SOURCE = {"IKI2": "Ikigai is not wired into the Google Reviews workbook (
 # `Maki Birmingham` (first rows 20/08), mapped to M21 with Michael's approval.
 # Sites with reviews but no weekly KPI card (no all_sites_wc entry) are added to the roster here.
 # 02/10/2026: MAF4 Braehead (source label `Maki F4`, first rows 18/09), mapped with Michael's approval.
-EXTRA_ROSTER = {"MAF4": {"site_label": "Braehead", "gm": None, "am": None, "region": "Scotland & Newcastle"}}
+EXTRA_ROSTER = {"MAF4": {"site_label": "Braehead", "gm": None, "am": None, "region": "Franchise"}}   # 16/11/2026 Michael: franchise is not allocated to a region
 
 CLAUSE_SPLIT = re.compile(r"(?<=[.!?;])\s+|\n+|\s+(?=\b(?:but|however|although|though|except|unfortunately)\b)", re.I)
 TRANSLATED = re.compile(r"\(Translated by Google\)\s*(.*?)\s*\(Original\)\s*(.*)", re.S)
@@ -318,7 +318,7 @@ def main():
         weeks = sorted({r["week"] for r in reviews})
         complete = [w for w in weeks if (datetime.date.fromisoformat(w) + datetime.timedelta(days=6)).isoformat() < pulled]
         wk = complete[-1] if complete else weeks[-1]
-        wr = [r for r in reviews if r["week"] == wk]
+        wr = [r for r in reviews if r["week"] == wk and not r["site"].startswith("MAF")]   # 16/11/2026 Michael: franchise never counts in the corporate summary / tab badge
         per = {}
         for r in wr:
             p = per.setdefault(r["site"], {"n": 0, "sum": 0, "neg": 0, "issues": 0, "hyg": 0})

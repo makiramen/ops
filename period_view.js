@@ -473,6 +473,7 @@
     var j = cache[monday]; if (!j || !j.sites) return null;
     var recs = [], bySite = {};
     Object.keys(j.sites).forEach(function (code) {
+      if (j.sites[code].franchise) return;   // 16/11/2026 (Michael): franchise sites are not part of any corporate period view
       var r = siteRec(j.sites[code], code); var nm = siteName(code, j.sites[code].name);
       r.label = nm.code; r.name = nm.name; r.jsonCode = code; r.cluster = j.sites[code].cluster || ''; r.franchise = !!j.sites[code].franchise;   // 11/11/2026: franchise (MAF3) rides along but never enters a fleet or region aggregate
       recs.push(r); bySite[code] = r;
@@ -747,7 +748,7 @@
       // Site / region directory from the newest week, for the bar.
       if (weeksIndex[0]) fetchWeek(weeksIndex[0].monday).then(function (j) {
         if (!j || !j.sites) return;
-        Object.keys(j.sites).forEach(function (code) { var nm = siteName(code, j.sites[code].name); DIR.order.push(code); DIR.seen[code] = { label: nm.code, name: nm.name }; DIR.clusterOf[code] = j.sites[code].cluster || ''; DIR.franchise[code] = !!j.sites[code].franchise; if (DIR.clusters.indexOf(DIR.clusterOf[code]) < 0) DIR.clusters.push(DIR.clusterOf[code]); });
+        Object.keys(j.sites).forEach(function (code) { if (j.sites[code].franchise) return; var nm = siteName(code, j.sites[code].name); DIR.order.push(code); DIR.seen[code] = { label: nm.code, name: nm.name }; DIR.clusterOf[code] = j.sites[code].cluster || ''; DIR.franchise[code] = !!j.sites[code].franchise; if (DIR.clusters.indexOf(DIR.clusterOf[code]) < 0) DIR.clusters.push(DIR.clusterOf[code]); });
         if (isPeriod(mode)) renderBar();
       });
       // Keep the pills honest whenever the header week selector (or the

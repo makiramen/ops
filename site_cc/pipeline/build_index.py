@@ -12,7 +12,7 @@ for code,c in S['sites'].items():
     groups.setdefault(c.get('cluster','Other'),[]).append((code,c))
 def card(code,c):
     p=os.path.join(A.root,'site',code,'build_log.json')
-    fr=' <em class="fr">Franchise</em>' if c.get('franchise') else ''   # 11/11/2026: franchise sites (MAF3) carry a Maki orange badge, listed in their cluster but never scored
+    fr=' <em class="fr">Franchise</em>' if c.get('franchise') else ''   # 11/11/2026: franchise sites (MAF3) carry a Maki orange badge, never scored. 16/11/2026 (Michael): franchise sites sit in their own Franchise group, not allocated to a region or AM
     if not os.path.exists(p):
         return f'<div class="c off"><b>{E(c.get("label") or code)}{fr}</b><span>{E(c["name"])}</span><small>Not built yet</small></div>'
     L=json.load(open(p));late=[f['feed'] for f in L.get('feeds',[]) if f.get('status') in ('stale','missing')]

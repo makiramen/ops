@@ -17,7 +17,7 @@ SITES = {
     "Maki Newcastle Ltd":     ("M12",  "Newcastle Eldon Sq",    "scotland"),  # old Mapal location, merged into NE1 Ltd (see LOC_ALIAS)
     "Maki Aberdeen Ltd":      ("M13",  "Aberdeen",              "scotland"),
     "Maki METRO":             ("M15",  "Metrocentre",           "scotland"),
-    "Maki Braehead":          ("MAF4", "Braehead",              "scotland"),  # Michael 22/10/2026: MAF4, Scotland & Newcastle
+    "Maki Braehead":          ("MAF4", "Braehead",              "franchise"),  # Michael 16/11/2026: franchise is not allocated to a region (was Scotland & Newcastle, 22/10)
     "Maki Manchester LTD":    ("M9",   "Manchester",            "midlands"),
     "Maki Leeds Ltd":         ("M10",  "Leeds",                 "midlands"),
     "Maki Leicester Ltd":     ("M11",  "Leicester",             "midlands"),
