@@ -111,7 +111,8 @@ jobs:
           JOBS = [
               dict(wf='keyline-daily.yml', slots=['06:55', '07:40', '08:20', '09:20', '10:20', '11:20'], done=keyline_done, always=[]),
               dict(wf='broth-tab.yml', slots=['07:00', '08:00', '09:40', '11:00', '12:20', '14:00', '17:20', '21:20'], done=broth_done, always=['12:20', '17:20', '21:20']),
-              dict(wf='daily-tab.yml', slots=['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30', '21:30'], done=daily_done, always=['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30', '21:30']),  # hourly: picks up Google reviews within the hour of the late nightly pull
+              # 16/11/2026 Michael: covers and sales now land by 06:00 Dubai, so the daily tab first tries 06:00 UK (10:00 Dubai), retries hourly
+              dict(wf='daily-tab.yml', slots=['06:00', '07:00', '08:00', '08:30', '09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30', '21:30'], done=daily_done, always=['09:30', '10:30', '11:30', '12:30', '13:30', '14:30', '15:30', '16:30', '17:30', '18:30', '19:30', '20:30', '21:30']),  # hourly: picks up Google reviews within the hour of the late nightly pull
               dict(wf='budget-burn-snapshot.yml', slots=['09:40', '11:10', '12:40', '14:10', '16:10', '18:10'], done=budget_done, always=['11:10', '16:10']),
               # Area Room (07/10/2026): 10:00 UK, or after the daily tab lands if later (area-room.yml also wakes on each daily tab finish)
               dict(wf='area-room.yml', slots=['10:00', '10:45', '11:30', '12:30', '13:30', '14:15', '16:15', '18:15'], done=area_room_done, always=[]),
