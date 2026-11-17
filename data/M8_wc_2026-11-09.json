@@ -43,7 +43,7 @@
           "target": null
         },
         "food_pct": {
-          "actual": 23.13,
+          "actual": 23.37,
           "target": 23.0,
           "gated": false
         },
@@ -77,14 +77,14 @@
       },
       "stock_take": {
         "drinks": {
+          "variance_pct": 5.34,
+          "target": "\u00b15%",
+          "within_band": false
+        },
+        "food": {
           "variance_pct": null,
           "target": "\u00b15%",
           "within_band": null
-        },
-        "food": {
-          "variance_pct": 5.09,
-          "target": "\u00b15%",
-          "within_band": false
         },
         "week_commencing": "2026-11-09"
       },
@@ -114,7 +114,7 @@
           "food": {
             "weight": 30,
             "value": 100.0,
-            "basis": "23.13% vs 25% baseline, -8/pp over"
+            "basis": "23.37% vs 25% baseline, -8/pp over"
           },
           "wage": {
             "weight": 30,
@@ -125,14 +125,11 @@
             "weight": 10,
             "value": 100.0,
             "basis": "4.83\u2605 vs 4.7\u2605 OKR (0 at 4.0\u2605)"
-          },
-          "food_var": {
-            "weight": 5,
-            "value": 99.28,
-            "basis": "5.09% outside \u00b15% band"
           }
         },
-        "components_dropped": [],
+        "components_dropped": [
+          "food_var"
+        ],
         "formula_ref": "control_centre efficiencyScore() v3 \u2014 SPH 15% (level vs per-format target + WoW momentum); each component hard-capped at 100; Lifetime\u2605 excluded"
       },
       "red_light": {
@@ -223,7 +220,9 @@
         "orders_estimated": true,
         "busy_mode_pct": 0.0
       },
-      "gaps": []
+      "gaps": [
+        "Stock-take \u2014 food variance held: the 15/11 check counted drinks only (food 0), Kobas reads 38.12%; held as suspect until the food count is re-keyed (owner Lincoln)"
+      ]
     }
   }
 }
