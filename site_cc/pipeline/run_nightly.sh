@@ -32,6 +32,7 @@ for CODE in $(python3 -c "import json;print(' '.join(k for k,v in json.load(open
   step python3 pipeline/pull_eotm.py     --site "$CODE" --data "$D"
   step python3 pipeline/pull_team.py     --site "$CODE" --data "$D"
   step python3 pipeline/pull_mix.py      --site "$CODE" --data "$D"                  # drinks / sushi / sides % from Kobas_Daily, 10/11/2026
+  step python3 pipeline/pull_kpisheet.py --site "$CODE" --data "$D"                 # franchise only (sites.json kpi_sheet): weekly KPIs + mix from Matt's KPI sheet, 17/11/2026
   step python3 pipeline/pull_maintenance.py --site "$CODE" --data "$D"
   step python3 pipeline/pull_ppm.py      --site "$CODE" --data "$D"
   step python3 pipeline/pull_facilities.py --site "$CODE" --data "$D"             # Ross's M&R Facilities app overlays ppm.json (needs secret PYTHONANYWHERE_TOKEN), 10/11/2026
