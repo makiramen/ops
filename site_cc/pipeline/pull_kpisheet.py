@@ -17,8 +17,8 @@ if not SID:print(f'kpisheet {A.site}: no kpi_sheet in sites.json, nothing to do'
 FROM='2026-05-04'
 rows=sheet_values(SID,"'Analysis'!A1:AD400")
 if not rows:raise SystemExit(f'kpisheet {A.site}: Analysis tab empty or not shared with site-cc-reader, keeping the last good files')
-hi=next((i for i,r in enumerate(rows[:10]) if r and str(r[0]).strip().lower().startswith('commencing')),None)
-if hi is None:raise SystemExit(f'kpisheet {A.site}: no Commencing header row in Analysis, keeping the last good files')
+hi=next((i for i,r in enumerate(rows[:15]) if any(str(c).strip().lower().startswith('commencing') for c in r)),None)
+if hi is None:raise SystemExit(f'kpisheet {A.site}: no Commencing header row in Analysis, keeping the last good files. First rows: {rows[:6]}')
 H=[str(h).strip().lower() for h in rows[hi]]
 starts=[i for i,h in enumerate(H) if h.startswith('commencing')]+[len(H)]
 blocks=[{H[j]:j for j in range(starts[b],starts[b+1])} for b in range(len(starts)-1)]
@@ -49,7 +49,7 @@ def g(r,c):return num(r[c]) if c is not None and c<len(r) else None
 lastclosed=today()-datetime.timedelta(days=today().weekday()+7)   # Monday of the last completed week
 wk={};mixw={}
 for r in rows[hi+1:]:
-    d=iso(r[0]) if r else None
+    d=iso(r[starts[0]]) if len(r)>starts[0] else None
     if not d or d.isoformat()<FROM or d>lastclosed:continue
     sales=g(r,c_sales)
     if not sales:continue
