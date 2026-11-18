@@ -911,7 +911,7 @@ td.sitecell { white-space: nowrap; }
   </div>
 
   <div class="section">
-    <h2 title="Covers and targets are the AM Control Centre figures · target = AM weekly sales target ÷ AM SPH target (£22; Ikigai £21; Maki Nori £35) · green ≥100% · amber ≥85%">Green Light: covers vs target <span class="subtle" style="cursor:help">ⓘ</span></h2>
+    <h2 title="Covers and targets are the AM Control Centre figures · target = AM weekly sales target, less the site's delivery share (delivery brings no covers), ÷ AM SPH target (£22; Ikigai £21; Maki Nori £35) · green ≥100% · amber ≥85%">Green Light: covers vs target <span class="subtle" style="cursor:help">ⓘ</span></h2>
     <div class="controls" style="justify-content:space-between">
       <div><div class="sub" id="glweek"></div><div class="subtle" id="glsrc" style="font-size:12px;margin-top:2px"></div></div>
       <div class="rangebtns" id="glrange">
@@ -1419,6 +1419,7 @@ td.sitecell { white-space: nowrap; }
 <!-- v6.6.2 (9 Oct 2026): STATIC_MAX_AGE_H 6 -> 30 for the once-a-day publish -->
 <!-- v6.8 (13 Oct 2026): Summary story and marketing return tightened; assumptions and actions via the manual feeds sheet -->
 <!-- v6.8.1 (13 Oct 2026): hero covers from the weekly cash-up feed; Monthly compares the same weekdays 4 weeks earlier -->
+<!-- v6.12 (18 Nov 2026): covers target takes delivery out of the AM sales target (site's own trailing 4 week delivery share) -->
 <!-- v6.11 (18 Nov 2026): Green Light covers and covers targets read from the AM Control Centre files (AM supersedes the marketing sheet) -->
 <!-- v6.9.2 (19 Oct 2026): Slerp tab fetches the published data.json itself so a stale browser cache can't pin it to the 5 Oct snapshot -->
 <!-- v6.10 (20 Oct 2026): Slerp Daily / Weekly / Monthly show which sites had orders (click a day, week or month); needs HubPublish v5 dayStores -->
@@ -2382,7 +2383,9 @@ function hubOfferFresh(d) {
 }
 // v6.11 (18 Nov 2026, Michael): the AM Control Centre supersedes the marketing sheet on covers.
 // Every Green Light row is rewritten on load from the AM dash's own files:
-//   covers target = AM weekly sales target / AM SPH target (GBP 22; Ikigai 21; Maki Nori 35)
+//   covers target = AM weekly sales target, less the site's delivery share, / AM SPH target (GBP 22; Ikigai 21; Maki Nori 35)
+//   v6.12: delivery brings no covers, so it comes out of the target. Delivery share = the site's own delivery / sales
+//   over the 4 completed weeks before the week (earliest 4 weeks on file where there is no earlier history).
 //   covers actual = AM covers (closed week: the weekly AM file; week in progress: the Kobas pull)
 // A row keeps its marketing sheet figure only where the AM dash has none (listed in AM_ALIGN.kept).
 var AM_DATA_BASE = 'https://makiramen.github.io/ops/data/';
@@ -2407,11 +2410,14 @@ function amRowFigures(file, site) {
   if (file.kind === 'weekly') {
     var k = s.kpis || {};
     if (!k.covers || k.covers.actual == null) return null;
-    return { target: k.sales ? k.sales.target : null, covers: Number(k.covers.actual) || 0, days: 7 };
+    var hasDel = file.hasDel, dts = k.delivery_total && k.delivery_total.sales != null ? Number(k.delivery_total.sales) : 0;
+    return { target: k.sales ? k.sales.target : null, covers: Number(k.covers.actual) || 0, days: 7,
+      del: hasDel ? dts : null, sales: hasDel && k.sales ? Number(k.sales.actual) || 0 : null };
   }
   var wk = s.week || {};
   var dt = wk.days_traded != null ? Number(wk.days_traded) : file.days;
-  return { target: wk.target_gross, covers: Number(wk.covers) || 0, days: Math.min(7, dt || 0) };
+  return { target: wk.target_gross, covers: Number(wk.covers) || 0, days: Math.min(7, dt || 0),
+    del: Number(wk.delivery_gross) || 0, sales: Number(wk.sales_gross) || 0 };
 }
 function amCoversAlign(d) {
   var rows = d && Array.isArray(d.green_light) ? d.green_light : null;
@@ -2421,14 +2427,34 @@ function amCoversAlign(d) {
   var keys = Object.keys(weeks);
   var work = Promise.all(keys.map(amWeekFile)).then(function(files) {
     var byWeek = {}, kept = [], n = 0, nw = 0;
-    keys.forEach(function(w, i) { if (files[i]) { byWeek[w] = files[i]; nw++; } });
+    keys.forEach(function(w, i) {
+      var f = files[i]; if (!f) return;
+      if (f.kind === 'weekly') f.hasDel = Object.keys(f.sites).some(function(c) { var k = f.sites[c].kpis; return k && k.delivery_total && k.delivery_total.sales != null; });
+      byWeek[w] = f; nw++;
+    });
+    // delivery share per site: completed weeks with delivery on file, oldest first
+    var hist = {};
+    Object.keys(byWeek).sort().forEach(function(w) {
+      rows.forEach(function(r) {
+        if (String(r.week_commencing || '').slice(0, 10) !== w) return;
+        var site = String(r.site || '').toUpperCase(), f = amRowFigures(byWeek[w], site);
+        if (f && f.days >= 7 && f.del != null && f.sales > 0) (hist[site] = hist[site] || []).push({ w: w, del: f.del, sales: f.sales });
+      });
+    });
+    function delShare(site, w) {
+      var h = hist[site] || [];
+      var before = h.filter(function(x) { return x.w < w; }).slice(-4);
+      var use = before.length ? before : h.slice(0, 4);
+      var d = 0, s = 0; use.forEach(function(x) { d += x.del; s += x.sales; });
+      return s > 0 ? Math.min(0.9, d / s) : 0;
+    }
     rows.forEach(function(r) {
       var w = String(r.week_commencing || '').slice(0, 10), site = String(r.site || '').toUpperCase();
       var f = byWeek[w] ? amRowFigures(byWeek[w], site) : null;
       if (!f) { kept.push(site + ' ' + w); return; }
       r.covers_actual = f.covers;
       r.days_traded = f.days;
-      if (Number(f.target) > 0) r.covers_target_week = Math.round(Number(f.target) / (AM_SPH[site] || AM_SPH_DEFAULT));
+      if (Number(f.target) > 0) { r.am_delivery_share = delShare(site, w); r.covers_target_week = Math.round(Number(f.target) * (1 - r.am_delivery_share) / (AM_SPH[site] || AM_SPH_DEFAULT)); }
       else kept.push(site + ' ' + w + ' (target)');
       var tw = Number(r.covers_target_week) || 0;
       var pro = Math.round(tw * f.days / 7);
@@ -3393,7 +3419,7 @@ function renderGreenLight(csv) {
   glCsvCache = csv;
   var srcEl = document.getElementById('glsrc');
   if (srcEl) srcEl.textContent = AM_ALIGN.ok
-    ? 'Covers and targets match the AM Control Centre (sales target ÷ SPH target)' + (AM_ALIGN.kept.length ? ' · ' + AM_ALIGN.kept.length + ' row' + (AM_ALIGN.kept.length > 1 ? 's' : '') + ' on the marketing sheet figure (no AM figure)' : '')
+    ? 'Covers and targets match the AM Control Centre (sales target less delivery, ÷ SPH target)' + (AM_ALIGN.kept.length ? ' · ' + AM_ALIGN.kept.length + ' row' + (AM_ALIGN.kept.length > 1 ? 's' : '') + ' on the marketing sheet figure (no AM figure)' : '')
     : 'AM Control Centre feed not reached: showing the marketing sheet figures (sales ÷ £22)';
   var g = glParse(csv);
   var tbody = document.getElementById('gltable');
