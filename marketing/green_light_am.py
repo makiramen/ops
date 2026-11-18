@@ -17,7 +17,7 @@ Default week = the last complete Monday to Sunday week.
 import argparse, datetime as dt, glob, json, os, re, sys
 
 SITES = ['M1', 'M3', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12', 'M13', 'M14', 'M15',
-         'M16', 'M17', 'M18', 'M19', 'M20', 'MakiNori', 'IKI2']
+         'M16', 'M21', 'M17', 'M18', 'M19', 'M20', 'MakiNori', 'IKI2']
 SPH = {'MakiNori': 35, 'IKI2': 21}
 SPH_DEFAULT = 22
 HISTORY_WEEKS = 16

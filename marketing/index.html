@@ -1419,6 +1419,7 @@ td.sitecell { white-space: nowrap; }
 <!-- v6.6.2 (9 Oct 2026): STATIC_MAX_AGE_H 6 -> 30 for the once-a-day publish -->
 <!-- v6.8 (13 Oct 2026): Summary story and marketing return tightened; assumptions and actions via the manual feeds sheet -->
 <!-- v6.8.1 (13 Oct 2026): hero covers from the weekly cash-up feed; Monthly compares the same weekdays 4 weeks earlier -->
+<!-- v6.13 (18 Nov 2026): M21 Birmingham added to the Green Light board from the AM dash files -->
 <!-- v6.12 (18 Nov 2026): covers target takes delivery out of the AM sales target (site's own trailing 4 week delivery share) -->
 <!-- v6.11 (18 Nov 2026): Green Light covers and covers targets read from the AM Control Centre files (AM supersedes the marketing sheet) -->
 <!-- v6.9.2 (19 Oct 2026): Slerp tab fetches the published data.json itself so a stale browser cache can't pin it to the 5 Oct snapshot -->
@@ -2391,6 +2392,7 @@ function hubOfferFresh(d) {
 var AM_DATA_BASE = 'https://makiramen.github.io/ops/data/';
 var AM_SPH_DEFAULT = 22, AM_SPH = { NORI: 35, IKIGAI: 21 };
 var AM_CODE = { NORI: 'MakiNori', IKIGAI: 'IKI2' };
+var AM_EXTRA_SITES = ['M21'];
 var AM_ALIGN = { ok: false, weeks: 0, rows: 0, kept: [] };
 function amFetchJson(url) {
   return fetch(url).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
@@ -2431,6 +2433,16 @@ function amCoversAlign(d) {
       var f = files[i]; if (!f) return;
       if (f.kind === 'weekly') f.hasDel = Object.keys(f.sites).some(function(c) { var k = f.sites[c].kpis; return k && k.delivery_total && k.delivery_total.sales != null; });
       byWeek[w] = f; nw++;
+    });
+    // v6.13: sites on the AM dash but not on the marketing sheet (M21 Birmingham) get a row for every week the AM dash has covers for them
+    AM_EXTRA_SITES.forEach(function(site) {
+      Object.keys(byWeek).forEach(function(w) {
+        var wkRows = rows.filter(function(r) { return String(r.week_commencing || '').slice(0, 10) === w; });
+        if (!wkRows.length || wkRows.some(function(r) { return String(r.site || '').toUpperCase() === site; })) return;
+        var f = amRowFigures(byWeek[w], site);
+        if (!f || (!f.covers && !(Number(f.target) > 0))) return;
+        rows.push({ week_commencing: wkRows[0].week_commencing, site: site, days_traded: f.days, covers_actual: f.covers, covers_target_week: 0, target_pro_rata: 0, pct_of_pro_rata: '', rag: 'NO TARGET', computed_at: wkRows[0].computed_at });
+      });
     });
     // delivery share per site: completed weeks with delivery on file, oldest first
     var hist = {};
@@ -3364,11 +3376,11 @@ function barCell(val, max, text, color) {
 var SITE_NAMES = {
   M1: 'Nicolson', M3: 'Fountainbridge', M6: 'Bath Street', M7: 'SJQ', M8: 'Renfield', M9: 'York Street', M10: 'Leeds',
   M11: 'Leicester', M12: 'Newcastle', M13: 'Aberdeen', M14: 'Meadowhall', M15: 'Metrocentre',
-  M16: 'Nottingham', M17: 'Lakeside', M18: 'Soho', M19: 'Shoreditch', M20: 'Southampton', NORI: 'Maki Nori', IKIGAI: 'Ikigai'
+  M16: 'Nottingham', M17: 'Lakeside', M18: 'Soho', M19: 'Shoreditch', M20: 'Southampton', M21: 'Birmingham', NORI: 'Maki Nori', IKIGAI: 'Ikigai'
 };
 var CLUSTERS = {
   'Scotland & Newcastle': ['M1', 'M2', 'M3', 'M6', 'M7', 'M8', 'M12', 'M13', 'M15', 'IKIGAI'],
-  'North England & Midlands': ['M9', 'M10', 'M11', 'M14', 'M16'],
+  'North England & Midlands': ['M9', 'M10', 'M11', 'M14', 'M16', 'M21'],
   'South England': ['M17', 'M18', 'M19', 'M20', 'NORI']
 };
 function clusterOf(code) {
