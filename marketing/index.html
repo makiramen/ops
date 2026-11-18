@@ -911,9 +911,9 @@ td.sitecell { white-space: nowrap; }
   </div>
 
   <div class="section">
-    <h2 title="Kobas Cash Log → COVERS_SALES_DAILY · targets = Mona Lisa weekly sales ÷ £22 SPH · green ≥100% · amber ≥85%">Green Light — covers vs target <span class="subtle" style="cursor:help">ⓘ</span></h2>
+    <h2 title="Covers and targets are the AM Control Centre figures · target = AM weekly sales target ÷ AM SPH target (£22; Ikigai £21; Maki Nori £35) · green ≥100% · amber ≥85%">Green Light: covers vs target <span class="subtle" style="cursor:help">ⓘ</span></h2>
     <div class="controls" style="justify-content:space-between">
-      <div class="sub" id="glweek"></div>
+      <div><div class="sub" id="glweek"></div><div class="subtle" id="glsrc" style="font-size:12px;margin-top:2px"></div></div>
       <div class="rangebtns" id="glrange">
         <button data-range="1" class="active">Last week</button>
         <button data-range="4">4 weeks</button>
@@ -1419,6 +1419,7 @@ td.sitecell { white-space: nowrap; }
 <!-- v6.6.2 (9 Oct 2026): STATIC_MAX_AGE_H 6 -> 30 for the once-a-day publish -->
 <!-- v6.8 (13 Oct 2026): Summary story and marketing return tightened; assumptions and actions via the manual feeds sheet -->
 <!-- v6.8.1 (13 Oct 2026): hero covers from the weekly cash-up feed; Monthly compares the same weekdays 4 weeks earlier -->
+<!-- v6.11 (18 Nov 2026): Green Light covers and covers targets read from the AM Control Centre files (AM supersedes the marketing sheet) -->
 <!-- v6.9.2 (19 Oct 2026): Slerp tab fetches the published data.json itself so a stale browser cache can't pin it to the 5 Oct snapshot -->
 <!-- v6.10 (20 Oct 2026): Slerp Daily / Weekly / Monthly show which sites had orders (click a day, week or month); needs HubPublish v5 dayStores -->
 <!-- v6.9 (19 Oct 2026): Slerp tab rebuilt as Summary / Daily / Weekly / Monthly views in the Loyalty design; feed-stale banner -->
@@ -2379,6 +2380,71 @@ function hubOfferFresh(d) {
   bar.textContent = 'Newer data ready (as of ' + String(d.generated_at).replace('T', ' ') + ' UK) · click to refresh';
   bar.onclick = function() { location.reload(); };
 }
+// v6.11 (18 Nov 2026, Michael): the AM Control Centre supersedes the marketing sheet on covers.
+// Every Green Light row is rewritten on load from the AM dash's own files:
+//   covers target = AM weekly sales target / AM SPH target (GBP 22; Ikigai 21; Maki Nori 35)
+//   covers actual = AM covers (closed week: the weekly AM file; week in progress: the Kobas pull)
+// A row keeps its marketing sheet figure only where the AM dash has none (listed in AM_ALIGN.kept).
+var AM_DATA_BASE = 'https://makiramen.github.io/ops/data/';
+var AM_SPH_DEFAULT = 22, AM_SPH = { NORI: 35, IKIGAI: 21 };
+var AM_CODE = { NORI: 'MakiNori', IKIGAI: 'IKI2' };
+var AM_ALIGN = { ok: false, weeks: 0, rows: 0, kept: [] };
+function amFetchJson(url) {
+  return fetch(url).then(function(r) { return r.ok ? r.json() : null; }).catch(function() { return null; });
+}
+function amWeekFile(w) {
+  var t = '?t=' + Math.floor(Date.now() / 6e5);
+  return amFetchJson(AM_DATA_BASE + 'all_sites_wc_' + w + '.json' + t).then(function(a) {
+    if (a && a.sites) return { kind: 'weekly', sites: a.sites };
+    return amFetchJson(AM_DATA_BASE + 'kobas/wc_' + w + '.json' + t).then(function(k) {
+      return k && k.sites ? { kind: 'kobas', sites: k.sites, days: Number(k.days_pulled) || 0 } : null;
+    });
+  });
+}
+function amRowFigures(file, site) {
+  var s = file.sites[AM_CODE[site] || site];
+  if (!s) return null;
+  if (file.kind === 'weekly') {
+    var k = s.kpis || {};
+    if (!k.covers || k.covers.actual == null) return null;
+    return { target: k.sales ? k.sales.target : null, covers: Number(k.covers.actual) || 0, days: 7 };
+  }
+  var wk = s.week || {};
+  var dt = wk.days_traded != null ? Number(wk.days_traded) : file.days;
+  return { target: wk.target_gross, covers: Number(wk.covers) || 0, days: Math.min(7, dt || 0) };
+}
+function amCoversAlign(d) {
+  var rows = d && Array.isArray(d.green_light) ? d.green_light : null;
+  if (!rows || !rows.length) return Promise.resolve(d);
+  var weeks = {};
+  rows.forEach(function(r) { var w = String(r.week_commencing || '').slice(0, 10); if (w) weeks[w] = 1; });
+  var keys = Object.keys(weeks);
+  var work = Promise.all(keys.map(amWeekFile)).then(function(files) {
+    var byWeek = {}, kept = [], n = 0, nw = 0;
+    keys.forEach(function(w, i) { if (files[i]) { byWeek[w] = files[i]; nw++; } });
+    rows.forEach(function(r) {
+      var w = String(r.week_commencing || '').slice(0, 10), site = String(r.site || '').toUpperCase();
+      var f = byWeek[w] ? amRowFigures(byWeek[w], site) : null;
+      if (!f) { kept.push(site + ' ' + w); return; }
+      r.covers_actual = f.covers;
+      r.days_traded = f.days;
+      if (Number(f.target) > 0) r.covers_target_week = Math.round(Number(f.target) / (AM_SPH[site] || AM_SPH_DEFAULT));
+      else kept.push(site + ' ' + w + ' (target)');
+      var tw = Number(r.covers_target_week) || 0;
+      var pro = Math.round(tw * f.days / 7);
+      r.target_pro_rata = pro;
+      r.pct_of_pro_rata = pro > 0 ? Math.round(f.covers / pro * 100) : '';
+      r.rag = pro > 0 ? (r.pct_of_pro_rata >= 100 ? 'GREEN' : r.pct_of_pro_rata >= 85 ? 'AMBER' : 'RED') : 'NO TARGET';
+      r.am_source = byWeek[w].kind;
+      n++;
+    });
+    AM_ALIGN = { ok: n > 0, weeks: nw, rows: n, kept: kept };
+    return d;
+  }).catch(function(e) { console.warn('AM covers align failed', e); return d; });
+  var timeout = new Promise(function(res) { setTimeout(function() { res(d); }, 12000); });
+  return Promise.race([work, timeout]);
+}
+
 function loadData() {
   if (_dataPromise) return _dataPromise;
   _dataPromise = (async function() {
@@ -2394,12 +2460,14 @@ function loadData() {
         hubStamp(cached, 'newer data ready');
       }).catch(function(e) { hubStamp(cached, 'offline copy'); console.warn('fresh fetch failed', e); });
       hubStamp(cached, 'checking for newer…');
+      await amCoversAlign(cached);
       return cached;
     }
     var d = await freshP;
     DATA = d;
     hubCachePut(d);
     hubStamp(d, d.source === 'exec' ? 'live build' : '');
+    await amCoversAlign(d);
     return d;
   })();
   return _dataPromise;
@@ -3323,6 +3391,10 @@ var GL_CLUSTER_ORDER = ['Scotland & Newcastle', 'North England & Midlands', 'Sou
 
 function renderGreenLight(csv) {
   glCsvCache = csv;
+  var srcEl = document.getElementById('glsrc');
+  if (srcEl) srcEl.textContent = AM_ALIGN.ok
+    ? 'Covers and targets match the AM Control Centre (sales target ÷ SPH target)' + (AM_ALIGN.kept.length ? ' · ' + AM_ALIGN.kept.length + ' row' + (AM_ALIGN.kept.length > 1 ? 's' : '') + ' on the marketing sheet figure (no AM figure)' : '')
+    : 'AM Control Centre feed not reached: showing the marketing sheet figures (sales ÷ £22)';
   var g = glParse(csv);
   var tbody = document.getElementById('gltable');
   var summary = document.getElementById('glsummary');
