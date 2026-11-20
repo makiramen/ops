@@ -54,7 +54,11 @@ for r in rows[1:]:
         if kf is not None and kb is not None:foh,boh,st=kf,kb,'kobas'
     ts,td=V.num(r[V.IDX_SIT_IN_TARGET]),V.num(r[V.IDX_DELIVERY_TARGET])
     tgt=None if (ts is None and td is None) else round((ts or 0)+(td or 0),2)
-    row=[round(sales,2),tgt or None,int(cust or 0),V.num(r[V.IDX_AVG_SPEND]),foh,boh,w,st]
+    spend=V.num(r[V.IDX_AVG_SPEND])
+    if cfg.get('franchise'):   # 20/11/2026: RAW Data Franchisee carries Average Spend and Wages/Revenue one row LOW (O2, Braehead: 16/11's figures sit on 17/11), so compute both from the same row
+        w=round(lab/sales*100,2) if lab and sales else None
+        si=V.num(r[V.IDX_SIT_IN]);spend=round((si or sales)/cust,2) if cust else None
+    row=[round(sales,2),tgt or None,int(cust or 0),spend,foh,boh,w,st]
     if a.check and dly.get(d)!=row:print('DIFF daily',d,dly.get(d),'source',row)
     dly[d]=row;n+=1
 if not a.check:
