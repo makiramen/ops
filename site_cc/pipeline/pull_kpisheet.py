@@ -84,3 +84,23 @@ cur=json.load(open(MP)) if os.path.exists(MP) else {}
 if mixw and not cur.get('days'):   # the site's own Kobas_Daily mix wins; franchise sites have none
     save(MP,{'src':'Franchise KPI sheet (Matt), Analysis tab','srctxt':'the franchise KPI sheet (Analysis tab)','sheet':SID,'pulled':today().isoformat(),
              'targets':{'drinks':10.0,'sushi':20.0,'sides':13.5},'days':{},'weeks':dict(sorted(mixw.items()))})
+
+# 20/11/2026 (Michael: "site cc's should be taken from here", Matt's KPI sheets): the gate week bar's daily sales targets and
+# budget rota (Sales to target, Labour left) come from the KPI sheet's 'Targets by DAY' tab, not Mona Lisa (MAF1/MAF2 are not
+# in Mona Lisa at all, MAF4 had no Target Sales there). Cols: A date, C sales target, G 2026 budget £. Overwrites labour.json 'open'.
+try:
+    td=sheet_values(SID,"'Targets by DAY'!A1:H800")
+    OW=today()-datetime.timedelta(today().weekday());ow={}
+    for r in td:
+        d=iso(r[0]) if r else None
+        if d and OW<=d<OW+datetime.timedelta(7):ow[d.isoformat()]={'tgt':g(r,2),'bud':g(r,6)}
+    if len(ow)==7:
+        LP=os.path.join(A.data,'labour.json');L=json.load(open(LP)) if os.path.exists(LP) else {}
+        b=[v['bud'] for v in ow.values()]
+        L['open']={'wc':OW.isoformat(),'bud':round(sum(b),2) if all(x is not None for x in b) else None,'tgt':{k:v['tgt'] for k,v in sorted(ow.items())},
+                   'src':'Franchise KPI sheet, Targets by DAY'}
+        print(f"kpisheet {A.site}: open week {OW} from Targets by DAY, budget {L['open']['bud']}, targets {list(L['open']['tgt'].values())}")
+        save(LP,L)
+    else:print(f'kpisheet {A.site}: Targets by DAY has {len(ow)} of 7 days for w/c {OW}, open week left as is')
+except SystemExit:raise
+except Exception as e:print(f'kpisheet {A.site}: Targets by DAY read failed ({e}), open week left as is')
