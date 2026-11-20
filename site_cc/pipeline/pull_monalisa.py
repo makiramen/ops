@@ -26,6 +26,12 @@ def num(s):
     s=(s or '').replace('£','').replace(',','').replace('%','').strip()
     try:return float(s) if s not in('','-') else None
     except ValueError:return None
+SIT=h.index('Sit In target') if 'Sit In target' in h else None;DEL=h.index('Delivery Target') if 'Delivery Target' in h else None
+def tgt(x):   # 20/11/2026 (Michael): Braehead leaves Target Sales blank but fills Sit In target, so fall back to Sit In + Delivery target
+    v=num(x[C_['tgt']]) if C_['tgt']<len(x) else None
+    if v is not None:return v
+    p=[num(x[i]) for i in (SIT,DEL) if i is not None and i<len(x)];p=[q for q in p if q is not None]
+    return sum(p) if p else None
 START=datetime.date.fromisoformat(a.frm);T=C.today();rows={}
 OW=T-datetime.timedelta(T.weekday());ow={}   # 12/11/2026 (Michael): the gate's week bar needs this week's budget rota and daily sales targets, future days included
 for x in r[1:]:
@@ -35,10 +41,10 @@ for x in r[1:]:
     if OW<=d<OW+datetime.timedelta(7):
         b=num(x[C_['bud']]) if C_['bud']<len(x) else None
         if b is None and PROJ is not None:b=num(x[PROJ]) if PROJ<len(x) else None
-        ow[d.isoformat()]={'bud':b,'tgt':num(x[C_['tgt']]) if C_['tgt']<len(x) else None}
+        ow[d.isoformat()]={'bud':b,'tgt':tgt(x)}
     if d<START or d>=T:continue
     rows[d]={k:num(x[i]) if i<len(x) else None for k,i in C_.items()}
-    rows[d]['proj']=0
+    rows[d]['tgt']=tgt(x);rows[d]['proj']=0
     if rows[d]['bud'] is None and PROJ is not None:   # Budget blank: take Projected for that day
         pv=num(x[PROJ]) if PROJ<len(x) else None
         if pv is not None:rows[d]['bud']=pv;rows[d]['proj']=1
