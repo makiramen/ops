@@ -1686,7 +1686,7 @@ function renderPeople(){
   $('#peopleTiles').innerHTML=tile('Wage %',pct1(w.wage),'Green ≤ 22% · amber to 24% · Red Light above 24%',w.wage==null?'n':wageRag(w.wage))+
     tile('Labour hours',w.hours==null?NA:w.hours.toFixed(1),'Budget rota £ vs actual on the KPI Sheet',null,'<span class="tag t-auto">AUTO</span>')+
     tile('Open roles','2','FT bartender · PT FOH/bar for November',null,'<span class="tag t-man">MANUAL</span>')+
-    tile('General Manager','Vacant','Hiring stage to be added',null,'<span class="pill p-r">✕ Gap</span>');
+    (SITE.gm&&!/vacant|confirm|tbc/i.test(SITE.gm)?tile('General Manager',esc(SITE.gm),'GM in post',null,''):tile('General Manager','Vacant','Hiring stage to be added',null,'<span class="pill p-r">✕ Gap</span>'));  /* 21/11/2026 (Michael): GM name per site from sites.json gm; M3, M11, M12 vacant */
   var ws=lastN(S.wc,10).slice().reverse();
   $('#labTable').innerHTML='<thead><tr><th>w/c</th><th class="r">Sales</th><th class="r">Wage %</th><th class="r">Labour hrs</th><th class="r">Sales per labour hr</th></tr></thead><tbody><tr class="tgtrow"><td>Target</td><td class="r">'+gbp(TGTW)+'</td><td class="r">≤ 22.0%</td><td class="r">Budget rota</td><td class="r">·</td></tr>'+
     ws.map(function(x){return '<tr'+(x.wc===S.wc?' class="sel"':'')+'><td><b>'+dm(x.wc)+'</b></td><td class="r'+(x.sales==null?'':' c-'+(x.sales>=x.target?'g':x.sales>=x.target*.9?'a':'r'))+'">'+gbp(x.sales)+'</td><td class="r'+(x.wage==null?'':' c-'+wageRag(x.wage))+'">'+pct1(x.wage)+'</td><td class="r">'+(x.hours==null?NA:x.hours.toFixed(1))+'</td><td class="r">'+(x.hours&&x.sales?'£'+(x.sales/x.hours).toFixed(2):NA)+'</td></tr>'}).join('')+'</tbody>';
