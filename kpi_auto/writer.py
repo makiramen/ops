@@ -182,10 +182,24 @@ for site, sid in SITES.items():
 # ---- apply ----
 done = [['site sheet', 'cells written']]
 if MODE == 'apply':
+    # A protected cell on one site sheet (M8 since 09/11) used to abort the whole run. Now: drop the
+    # protected entry named in the error ("Invalid data[N]"), retry the rest, and list what was skipped.
+    _bad = re.compile(r'Invalid data\[(\d+)\].*protected', re.S)
     for sid, data in writes.items():
+        skipped = []
         for i in range(0, len(data), 500):
-            svc.values().batchUpdate(spreadsheetId=sid, body={'valueInputOption': 'USER_ENTERED', 'data': data[i:i + 500]}).execute()
-        done.append([sid, len(data)])
+            chunk = list(data[i:i + 500])
+            for _ in range(len(chunk) + 1):
+                if not chunk: break
+                try:
+                    svc.values().batchUpdate(spreadsheetId=sid, body={'valueInputOption': 'USER_ENTERED', 'data': chunk}).execute()
+                    break
+                except Exception as e:
+                    m = _bad.search(str(e))
+                    if not m or int(m.group(1)) >= len(chunk): raise
+                    skipped.append(chunk.pop(int(m.group(1)))['range'])
+        done.append([sid, len(data) - len(skipped)] + ([f'PROTECTED, skipped {len(skipped)}: ' + ', '.join(skipped)[:1500]] if skipped else []))
+        if skipped: print(f'PROTECTED CELLS skipped on {sid}: {len(skipped)} ({", ".join(skipped[:10])})', flush=True)
     for site, sid, tab, tabs, last in rollovers:
         tpl = TEMPLATE.get(site) or TEMPLATE.get('*')
         src = next((t for t in tabs if tpl and t['title'] == tpl), None)
