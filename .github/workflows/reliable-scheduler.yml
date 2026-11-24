@@ -11,6 +11,7 @@ name: Reliable scheduler (on time dispatch)
 # with the job token, which GitHub always honours). Missed slots are caught up on the next wake.
 # A slot is skipped when the data is already current, or a run since the slot is queued, running or
 # succeeded. Everything it dispatches is idempotent. No Mac, no browser, no Claude session.
+# 24/11/2026: each wake also restarts the scheduler itself while a slot is due within 65 minutes (see SELF RESTART below).
 on:
   push:
     branches: [main]
@@ -156,6 +157,17 @@ jobs:
               nxt = sorted(at(s) for j in JOBS for s in j['slots'] if at(s) > now)
               if not nxt or nxt[0] > START + LOOKAHEAD:
                   log('nothing else due in this wake' + (f', next slot {nxt[0].astimezone(UK):%H:%M} UK' if nxt else ''))
+                  # 24/11/2026 SELF RESTART. The hub push did not arrive at 14:10 UK, so the 14:00 and 14:30 live slots were
+                  # missed. While another slot is due within the next 65 minutes this wake starts its own successor
+                  # (it queues behind this run in the concurrency group and sleeps to that slot), so the trading day no
+                  # longer depends on the hub push or on GitHub's cron. A gap over 65 minutes (overnight) ends the chain;
+                  # the next hub push or cron wake starts it again. No fast loop: the successor always has a slot to sleep to.
+                  if nxt and nxt[0] <= now + LOOKAHEAD - timedelta(minutes=5):
+                      try:
+                          call('/actions/workflows/reliable-scheduler.yml/dispatches', 'POST', {'ref': 'main'})
+                          log('restarted the scheduler for the next slot')
+                      except Exception as e:
+                          log(f'self restart failed: {e}')
                   break
               wait = (nxt[0] - now).total_seconds() + 5
               log(f'sleeping {int(wait // 60)} min until the {nxt[0].astimezone(UK):%H:%M} UK slot')
