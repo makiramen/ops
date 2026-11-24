@@ -2254,7 +2254,7 @@ function rvClick(e){var t=e.target.closest('[data-rp],[data-rs],[data-rst],[data
 /* ===== Live tab (24/11/2026, Michael). Reads <site>.json from the branch live-data, written by .github/workflows/live-tracker.yml
    (site_cc/live/pull_live.py: Kobas, no Mac). Rulings: own tab, every position; covers, revenue, SPH and wage % count CLOSED tables only;
    upsells in units only (no pounds); server initials only; avg spend = SPH; no upsell targets yet; wage % is an estimate, no RAG. */
-var LIVE_SITES=['M18'],LIVE_ON=!FRAN&&LIVE_SITES.indexOf(SCODE)>=0,LIVE_URL='https://raw.githubusercontent.com/makiramen/ops/live-data/'+SCODE+'.json',LV={d:null,err:null,at:0};
+var LIVE_SITES=['M18','M9'],LIVE_ON=!FRAN&&LIVE_SITES.indexOf(SCODE)>=0,LIVE_URL='https://raw.githubusercontent.com/makiramen/ops/live-data/'+SCODE+'.json',LV={d:null,err:null,at:0};
 function ukNow(){try{return new Date().toLocaleString('sv-SE',{timeZone:'Europe/London'}).replace(' ','T').slice(0,16)}catch(e){return new Date().toISOString().slice(0,16)}}
 function liveFetch(force){if(!LIVE_ON||location.protocol==='file:'&&LV.d)return;var now=Date.now();if(!force&&now-LV.at<120000)return;LV.at=now;
   fetch(LIVE_URL+'?t='+Math.floor(now/120000),{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}).then(function(d){if(!LV.d||String(d.asof)>=String(LV.d.asof))LV.d=d;LV.err=null;if(S.tab==='live'&&S.per==='week')renderLive()}).catch(function(e){LV.err=String(e&&e.message||e);if(S.tab==='live'&&S.per==='week')renderLive()})}
