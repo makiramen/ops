@@ -20,7 +20,7 @@ on:
         default: ''
       sites:
         description: 'Site codes'
-        default: 'M18,M9'
+        default: 'M18,M9,M11'
 permissions:
   contents: write
 concurrency:
@@ -52,7 +52,7 @@ jobs:
           KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
           KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
           DAY: ${{ inputs.day }}
-          LIVE_SITES: ${{ inputs.sites || 'M18,M9' }}   # 24/11/2026 Michael: M18 first, M9 added the same day
+          LIVE_SITES: ${{ inputs.sites || 'M18,M9,M11' }}   # 24/11/2026 Michael: M18 first, M9 then M11 added the same day
         run: |
           mkdir -p /tmp/live
           python3 site_cc/live/pull_live.py /tmp/live 2>&1 | tee /tmp/live/log.txt
