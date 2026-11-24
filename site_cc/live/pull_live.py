@@ -122,14 +122,14 @@ def clock_hours(A, now_h, rota):
     no later than that person's planned finish on the rota, which is how Kobas itself closes a missed clock out. Someone
     clocked in who is not on the rota is held to the median planned shift length of the day (8 h if no rota)."""
     def hh(ts): return int(ts[11:13]) + int(ts[14:16]) / 60.0
-    st, hrs, on, by_rota, by_len = {}, 0.0, 0, 0, 0
+    st, hrs, on, by_rota, by_len, iv = {}, 0.0, 0, 0, 0, []
     for e in A:
         if e['obj'] != 'user' or e['act'] not in ('clockin', 'clockout', 'breakstart', 'breakend'): continue
         s = st.setdefault(e['staff'], {'in': None, 'first': None}); h = hh(e['ts'])
         if e['act'] in ('clockin', 'breakend'):
             if s['in'] is None: s['in'] = h
             if s['first'] is None: s['first'] = h
-        elif s['in'] is not None: hrs += max(0.0, h - s['in']); s['in'] = None
+        elif s['in'] is not None: hrs += max(0.0, h - s['in']); iv.append((s['in'], h)); s['in'] = None
     lens = sorted(b - a for v in (rota or {}).values() for a, b in v); typical = lens[len(lens) // 2] if lens else 8.0
     rk = {}
     for kname in (rota or {}):
@@ -141,8 +141,14 @@ def clock_hours(A, now_h, rota):
         ends = [b for a, b in (rota or {}).get(key, []) if a - 3 <= s['first'] <= b] if key else []
         if ends: end = min(now_h, max(max(ends), s['in'])); by_rota += end < now_h
         else: end = min(now_h, s['first'] + typical); by_len += end < now_h
-        hrs += max(0.0, end - s['in']); on += end >= now_h
-    return round(hrs, 2), on, len(st), by_rota, by_len
+        hrs += max(0.0, end - s['in']); iv.append((s['in'], end)); on += end >= now_h
+    # 24/11/2026 (Michael: wage / revenue per hour): staff hours on shift inside each clock hour
+    per = {}
+    for a, b in iv:
+        for hr in range(int(a), int(b) + 1):
+            ov = min(b, hr + 1) - max(a, hr)
+            if ov > 0: per[hr] = per.get(hr, 0.0) + ov
+    return round(hrs, 2), on, len(st), by_rota, by_len, per
 
 
 def cost_per_hour(site, day):
@@ -251,19 +257,32 @@ def build(site, day, now, k):
         for u in UPS: h[u] += x[u]
         h['bowls'] += x['ramen']; h['sushi'] += x['sushi']
         if x['closed']: h['sales_closed'] = round(h['sales_closed'] + x['rev'], 2)
-    o['hours'] = [H[h] for h in sorted(H)]
+    HA = {}   # closed sales of every kind (eat in closed tables + delivery and takeaway) by the hour rung: the wage % basis
+    for x in rows:
+        if x['closed'] and not x['staff']: HA[x['time'][:2]] = round(HA.get(x['time'][:2], 0.0) + x['rev'], 2)
     S = {}
     for x in E: S.setdefault(initials(re.sub(r'\s+-\s+till.*$', '', x['src'], flags=re.I)), []).append(x)
     o['servers'] = sorted(({'i': i, **units(X), **{kk: vv for kk, vv in pair(X).items() if kk != 'bills'}, 'bills': len(bills(X))} for i, X in S.items()), key=lambda s: -s['bills'])
     if A is not None:
         try: rota = rota_today(k, vid, day)
         except Exception as e: rota = None; flags.append(f'Rota not readable ({e}): a missed clock out is held to 8 hours')
-        hrs, on, seen, by_rota, by_len = clock_hours(A, now_h if day == now.date() else 24.0, rota); rate, wc = cost_per_hour(site, day)
+        hrs, on, seen, by_rota, by_len, per_h = clock_hours(A, now_h if day == now.date() else 24.0, rota); rate, wc = cost_per_hour(site, day)
         if rate is None: flags.append('No cost per hour in data/kobas for the last completed week: wage % estimate not possible')
         cost = round(hrs * rate, 2) if rate else None
         o['wage_est'] = {'hours_clocked': hrs, 'on_shift_now': on, 'people_clocked': seen, 'closed_at_rota_finish': by_rota, 'closed_at_typical_length': by_len,
                          'on_rota_today': len(rota) if rota is not None else None, 'cost_per_hour': rate, 'rate_week': wc, 'cost': cost,
                          'pct': round(100.0 * cost / rev_closed_all, 1) if (cost and rev_closed_all > 0) else None, 'estimate': True}
+        # per hour, trading hours only (11:00 on): staff hours on shift x cost per hour against the closed sales rung in that hour
+        last_h = 23 if day != now.date() else min(23, now.hour)
+        for hr in range(11, last_h + 1):
+            kk = f'{hr:02d}'
+            if kk not in H and per_h.get(hr): H[kk] = {'h': kk, 'still': 0, 'spark': 0, 'eda': 0, 'kim': 0, 'bowls': 0, 'sushi': 0, 'sales_closed': 0.0}
+        for kk, h in H.items():
+            sh = per_h.get(int(kk)); sa = HA.get(kk, 0.0)
+            h['staff_h'] = round(sh, 2) if sh else 0; h['sales_all_closed'] = sa
+            h['wage_cost'] = round(sh * rate, 2) if (sh and rate) else None
+            h['wage_pct'] = round(100.0 * sh * rate / sa, 1) if (sh and rate and sa > 0) else None
+    o['hours'] = [H[h] for h in sorted(H)]
     return o
 
 
