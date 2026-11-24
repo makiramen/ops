@@ -107,6 +107,7 @@ jobs:
               try: return call(f'/contents/keyline/pull-{uk_today().isoformat()}.txt?ref=main', raw=True) is not None
               except Exception: return False
 
+          LIVE_SLOTS = [f'{h:02d}:{m:02d}' for h in range(11, 24) for m in (0, 30) if (h, m) <= (23, 0)]
           # slots: UK times. Until the data is current every slot fires; 'always' slots fire regardless.
           JOBS = [
               dict(wf='keyline-daily.yml', slots=['06:55', '07:40', '08:20', '09:20', '10:20', '11:20'], done=keyline_done, always=[]),
@@ -118,6 +119,8 @@ jobs:
               dict(wf='area-room.yml', slots=['10:00', '10:45', '11:30', '12:30', '13:30', '14:15', '16:15', '18:15'], done=area_room_done, always=[]),
               dict(wf='kobas-nightly.yml', slots=['03:20', '05:10', '08:40'], done=kobas_done, always=[]),  # 11/11/2026 Kobas weekly source
               dict(wf='site-cc-nightly.yml', slots=['05:30', '09:50', '12:45'], done=None, always=['05:30', '09:50', '12:45']),
+              # 24/11/2026 Michael: Site CC Live tab, every 30 minutes 11:00 to 23:00 UK (writes to branch live-data only, no Pages deploy)
+              dict(wf='live-tracker.yml', slots=LIVE_SLOTS, done=None, always=LIVE_SLOTS),
           ]
 
           def at(hhmm):

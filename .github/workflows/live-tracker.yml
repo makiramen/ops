@@ -1,0 +1,77 @@
+name: Site CC live tracker (writes to branch live-data only)
+
+# 24/11/2026, Michael: live upsells, ramen with a sushi, SPH, sales vs target and an estimated wage % on the Site CC
+# Live tab, pilot M18 and M11, no Mac. This workflow logs into Kobas, builds one small JSON per site and force pushes
+# them to the branch live-data. main is never touched, so there is no Pages deploy per refresh.
+# SCHEDULE (24/11/2026, Michael): every 30 minutes, 11:00 to 23:00 UK. GitHub's own cron runs hours late on this repo, so the
+# on time trigger is reliable-scheduler.yml (it dispatches this workflow at each :00 and :30 slot). The cron below is only a
+# backup, and the guard step drops any run outside 10:55 to 23:20 UK. Both only work once this file is on main.
+# A push to the branch live-test still runs it at once, with a finished day pulled alongside to reconcile against.
+on:
+  schedule:
+    - cron: '3,33 10-23 * * *'
+  push:
+    branches: [live-test]
+    paths: ['site_cc/live/**', '.github/workflows/live-tracker.yml']
+  workflow_dispatch:
+    inputs:
+      day:
+        description: 'Day to pull, YYYY-MM-DD (blank = today, UK)'
+        default: ''
+      sites:
+        description: 'Site codes'
+        default: 'M18'
+permissions:
+  contents: write
+concurrency:
+  group: live-tracker
+  cancel-in-progress: false
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: UK trading window guard (scheduled runs only)
+        id: guard
+        run: |
+          HM=$(TZ=Europe/London date +%H%M)
+          if [ "${{ github.event_name }}" = "schedule" ] && { [ "$HM" -lt 1055 ] || [ "$HM" -gt 2320 ]; }; then echo "UK $HM, outside 11:00 to 23:00, skipping"; echo "go=0" >> $GITHUB_OUTPUT; else echo "go=1" >> $GITHUB_OUTPUT; fi
+      - uses: actions/checkout@v4
+        if: steps.guard.outputs.go == '1'
+        with: { fetch-depth: 1, persist-credentials: false }
+      - uses: actions/setup-python@v5
+        if: steps.guard.outputs.go == '1'
+        with: { python-version: '3.12' }
+      - if: steps.guard.outputs.go == '1'
+        run: pip install --quiet requests
+      - name: Pull live figures
+        if: steps.guard.outputs.go == '1'
+        env:
+          TZ: Europe/London
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+          DAY: ${{ inputs.day }}
+          LIVE_SITES: ${{ inputs.sites || 'M18' }}   # 24/11/2026 Michael: M18 only to start
+        run: |
+          mkdir -p /tmp/live
+          python3 site_cc/live/pull_live.py /tmp/live 2>&1 | tee /tmp/live/log.txt
+      - name: Check day (test stage only, a finished day to reconcile against)
+        if: github.event_name == 'push'
+        env:
+          TZ: Europe/London
+          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
+          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
+          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
+          DAY: '2026-11-23'
+          LIVE_SITES: 'M18,M11'
+        run: |
+          mkdir -p /tmp/live/check_2026-11-23
+          python3 site_cc/live/pull_live.py /tmp/live/check_2026-11-23 2>&1 | tee /tmp/live/check_2026-11-23/log.txt
+      - name: Publish to branch live-data
+        if: always() && steps.guard.outputs.go == '1'
+        run: |
+          cd /tmp/live || exit 0
+          git init -q -b live-data && git add -A
+          git -c user.name='live tracker' -c user.email='ops@makiramen.com' commit -qm "live $(TZ=Europe/London date '+%F %H:%M')" || exit 0
+          git push -f https://x-access-token:${{ github.token }}@github.com/${{ github.repository }} live-data
