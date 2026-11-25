@@ -160,7 +160,7 @@ def cost_per_hour(site, day):
         except Exception: continue
         c = h = 0.0
         for d in D.values():
-            lab = d.get('labour') or {}
+            lab = (d or {}).get('labour') or {}      # a day the site did not trade is null in the weekly file
             if lab.get('hours_worked_cost') and lab.get('hours'): c += lab['hours_worked_cost']; h += lab['hours']
         if h > 0: return round(c / h, 2), wc
     return None, None
@@ -177,7 +177,7 @@ def build(site, day, now, k):
                  'm': 'CORE_Reports_DailySalesByOrder', 'v': '1', 'submit': ' View '}, timeout=120)
     rows = parse_orders(r.text) if r.status_code == 200 else None
     if not rows:      # structure only, never row text (the repo is public)
-        i = r.text.find('rollover'); print('DEBUG by-order', site, r.status_code, len(r.text), 'rollover at', i, '|', re.sub(r'>[^<]+<', '>#<', r.text[max(0, i - 200):i + 1800]).replace('\n', ' ')[:2000], file=sys.stderr)
+        i = r.text.find('rollover'); print('DEBUG by-order', site, r.status_code, len(r.text), 'rollover at', i, '|', re.sub(r'>[^<]+<', '>#<', r.text[max(0, i - 200):i + 1800].split('<script')[0]).replace('\n', ' ')[:2000], file=sys.stderr)
     if rows is None: flags.append('Daily Sales By Order: no table returned'); rows = []
     try: A = parse_audit(k.s.get(BASE + '/reports/csv-gen/epos_audit.php', params={'v': vid, 'date': day.isoformat()}, timeout=120).text)
     except Exception as e: A = None; flags.append(f'EPoS audit log missing ({e}): closed tables and clock ins unknown')
