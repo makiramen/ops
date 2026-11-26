@@ -108,7 +108,9 @@ jobs:
               try: return call(f'/contents/keyline/pull-{uk_today().isoformat()}.txt?ref=main', raw=True) is not None
               except Exception: return False
 
-          LIVE_SLOTS = [f'{h:02d}:{m:02d}' for h in range(11, 24) for m in (0, 30) if (h, m) <= (23, 0)]
+          # 26/11/2026 Michael: last pull at midnight, once everyone has clocked out (the run pulls yesterday as final figures);
+          # 06:30 runs it once more after the nightly Kobas pull, which carries the cash up's own labour cost
+          LIVE_SLOTS = ['00:00', '06:30'] + [f'{h:02d}:{m:02d}' for h in range(11, 24) for m in (0, 30) if (h, m) <= (23, 0)]
           # slots: UK times. Until the data is current every slot fires; 'always' slots fire regardless.
           JOBS = [
               dict(wf='keyline-daily.yml', slots=['06:55', '07:40', '08:20', '09:20', '10:20', '11:20'], done=keyline_done, always=[]),
@@ -154,7 +156,7 @@ jobs:
                   try: evaluate(job)
                   except Exception as e: log(f'{job["wf"]}: error {e}')
               now = datetime.now(UTC)
-              nxt = sorted(at(s) for j in JOBS for s in j['slots'] if at(s) > now)
+              nxt = sorted([at(s) for j in JOBS for s in j['slots'] if at(s) > now] + [at('00:00') + timedelta(days=1)])   # 26/11/2026: tomorrow's 00:00 live slot keeps the chain alive past 23:00
               if not nxt or nxt[0] > START + LOOKAHEAD:
                   log('nothing else due in this wake' + (f', next slot {nxt[0].astimezone(UK):%H:%M} UK' if nxt else ''))
                   # 24/11/2026 SELF RESTART. The hub push did not arrive at 14:10 UK, so the 14:00 and 14:30 live slots were

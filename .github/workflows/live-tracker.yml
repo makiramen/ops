@@ -3,10 +3,12 @@ name: Site CC live tracker (writes to branch live-data only)
 # 24/11/2026, Michael: live upsells, ramen with a sushi, SPH, sales vs target and an estimated wage % on the Site CC
 # Live tab, pilot M18 and M11, no Mac. This workflow logs into Kobas, builds one small JSON per site and force pushes
 # them to the branch live-data. main is never touched, so there is no Pages deploy per refresh.
+# 26/11/2026 (Michael: as tight as possible against the cash up, last pull at midnight): 00:00 UK pulls yesterday as final
+# figures (whole day, cash up basis), 06:30 UK repeats it once the nightly Kobas pull holds the day's actual labour cost.
 # SCHEDULE (24/11/2026, Michael): every 30 minutes, 11:00 to 23:00 UK. GitHub's own cron runs hours late on this repo, so the
 # on time trigger is reliable-scheduler.yml (it dispatches this workflow at each :00 and :30 slot). The cron below is only a
 # backup, and the guard step drops any run outside 10:55 to 23:20 UK. Both only work once this file is on main.
-# A push to the branch live-test still runs it at once, with a finished day pulled alongside to reconcile against.
+# A push to the branch live-test still runs it at once (with the no names debug block, LIVE_DEBUG).
 on:
   schedule:
     - cron: '3,33 10-23 * * *'
@@ -29,7 +31,7 @@ concurrency:
 jobs:
   live:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: UK trading window guard (scheduled runs only)
         id: guard
@@ -52,22 +54,11 @@ jobs:
           KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
           KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
           DAY: ${{ inputs.day }}
+          LIVE_DEBUG: ${{ github.event_name == 'push' && '1' || '' }}
           LIVE_SITES: ${{ inputs.sites || 'M1,M3,M6,M7,M8,IKI2,M12,M13,M15,M9,M10,M11,M14,M16,M17,M18,M19,M20,M21' }}   # 25/11/2026 Michael: rolled out to all corporate sites on Kobas (was M18, M9, M11); MakiNori left out, Kobas venue 57 has no orders
         run: |
           mkdir -p /tmp/live
           python3 site_cc/live/pull_live.py /tmp/live 2>&1 | tee /tmp/live/log.txt
-      - name: Check day (test stage only, a finished day to reconcile against)
-        if: github.event_name == 'push'
-        env:
-          TZ: Europe/London
-          KOBAS_COMPANY_ID: ${{ secrets.KOBAS_COMPANY_ID }}
-          KOBAS_USERNAME: ${{ secrets.KOBAS_USERNAME }}
-          KOBAS_PASSWORD: ${{ secrets.KOBAS_PASSWORD }}
-          DAY: '2026-11-23'
-          LIVE_SITES: 'M18,M11'
-        run: |
-          mkdir -p /tmp/live/check_2026-11-23
-          python3 site_cc/live/pull_live.py /tmp/live/check_2026-11-23 2>&1 | tee /tmp/live/check_2026-11-23/log.txt
       - name: Publish to branch live-data
         if: always() && steps.guard.outputs.go == '1'
         run: |
