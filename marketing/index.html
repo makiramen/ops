@@ -2422,6 +2422,8 @@ function amRowFigures(file, site) {
     del: Number(wk.delivery_gross) || 0, sales: Number(wk.sales_gross) || 0 };
 }
 function amCoversAlign(d) {
+  // 26/11/2026 (Michael): Maki Nori is permanently closed, last traded 22/11/2026. No Green Light row from w/c 23/11 on; earlier weeks keep it.
+  if (d && Array.isArray(d.green_light)) d.green_light = d.green_light.filter(function(r) { return !(String(r.site || '').toUpperCase() === 'NORI' && String(r.week_commencing || '').slice(0, 10) >= '2026-11-23'); });
   var rows = d && Array.isArray(d.green_light) ? d.green_light : null;
   if (!rows || !rows.length) return Promise.resolve(d);
   var weeks = {};

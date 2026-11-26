@@ -389,7 +389,7 @@ function headCols(first){
 /* ---------- RAG bands (08/10/2026). Green hits the plan target, amber is close, red is a miss or a Red Light ---------- */
 var OWN=[
   {who:"Lincoln",role:"Area Manager · Lakeside, Southampton, Shoreditch",sites:["M17","M20","M19"]},
-  {who:"Kaitlin",role:"Deputy Area Manager · Soho, Maki Nori, Shoreditch",sites:["M18","MakiNori","M19"]},
+  {who:"Kaitlin",role:"Deputy Area Manager · Soho, Shoreditch",sites:["M18","M19"]},
   {who:"Kei",role:"Acting GM Lakeside · B2B for the region",sites:["M17"],b2b:true}
 ];
 function share(v,t){return v==null||t==null?null:(v>=t?"g":(v>=0.75*t?"a":"r"))}
@@ -449,7 +449,7 @@ function peopleScore(){
     if(o.b2b&&D.b2b&&D.b2b.kpi){
       var bk=pk&&pk!=="base"&&pk!=="pre"?pk:"sep",K=D.b2b.kpi[bk];
       if(K){
-        var BR=[["Active partnerships",K.partnerships,5],["Student stands",K.stands,4],["Paid events",K.paid_events,1],["Outreach, Lakeside",K["out_Lakeside"],10],["Outreach, Southampton",K["out_Southampton"],10],["Outreach, Soho",K["out_Soho"],10],["Outreach, Maki Nori",K["out_Maki Nori"],10],["Outreach, Shoreditch",K["out_Shoreditch"],10]];
+        var BR=[["Active partnerships",K.partnerships,5],["Student stands",K.stands,4],["Paid events",K.paid_events,1],["Outreach, Lakeside",K["out_Lakeside"],10],["Outreach, Southampton",K["out_Southampton"],10],["Outreach, Soho",K["out_Soho"],10],["Outreach, Shoreditch",K["out_Shoreditch"],10]];
         b2b='<tr class="band"><td colspan="'+(o.sites.length+1)+'">B2B · '+(bk==="sep"?"September":"this plan week")+'</td></tr>';
         BR.forEach(function(x){var r=share(x[1],x[2]);if(r)all.push(r);b2b+='<tr><td class="m">'+x[0]+' <span class="muted">/ '+x[2]+'</span></td>'+rcell(x[1],r,x[1]==null?'':fmt(x[1])).replace('<td class="c','<td colspan="'+o.sites.length+'" class="c')+'</tr>'});
       }
@@ -713,7 +713,7 @@ function renderClean(){
 function offer(o){var n=Number(o);if(o!==''&&!isNaN(n))return (n<1?Math.round(n*100):Math.round(n))+'% off';return String(o).replace(/ACTI VE/,'ACTIVE').replace(/EVENMTS/,'EVENTS')}
 function renderB2B(){
   var B=D.b2b,K=B.kpi,cur=curPeriod();
-  var LON=["Soho","Maki Nori","Shoreditch"],STH=["Lakeside","Southampton"];
+  var LON=["Soho","Shoreditch"],STH=["Lakeside","Southampton"];
   var mine=LON.concat(STH);
   var P=[["sep","Sep"],["w1","Week 1"],["w2","Week 2"],["w3","Week 3"],["w4","Week 4"]];
   var PUSH={w1:4,w2:4,w3:4,w4:1};/* Deliveroo push 12/10 to 02/11, Mon to Thu */
@@ -725,7 +725,6 @@ function renderB2B(){
     {k:"Student accommodation stands",t:4,f:"stands"},
     {k:"App sign ups",t:1000,f:null,note:"geo tag report not wired"},
     {k:"Outreach: new contacts, Soho",t:10,f:"out_Soho",site:"Soho"},
-    {k:"Outreach: new contacts, Maki Nori",t:10,f:"out_Maki Nori",site:"Maki Nori"},
     {k:"Outreach: new contacts, Shoreditch",t:10,f:"out_Shoreditch",site:"Shoreditch"},
     {k:"Outreach: new contacts, Lakeside",t:10,f:"out_Lakeside",site:"Lakeside"},
     {k:"Outreach: new contacts, Southampton",t:10,f:"out_Southampton",site:"Southampton"},
@@ -734,7 +733,6 @@ function renderB2B(){
     {k:"Frozen Ramen units",t:50,f:null,note:"no units column in the tracker yet"},
     {k:"Seasonal promos live on time",t:"All",f:null,note:"see Kaitlin & Kei tab"},
     {k:"Deliveroo promo days, Soho",t:5,promo:"Soho"},
-    {k:"Deliveroo promo days, Maki Nori",t:5,promo:"Maki Nori"},
     {k:"Deliveroo promo days, Shoreditch",t:5,promo:"Shoreditch"},
     {k:"Deliveroo promo days, Lakeside",t:5,promo:"Lakeside"},
     {k:"Deliveroo promo days, Southampton",t:5,promo:"Southampton"},
@@ -808,7 +806,7 @@ function renderTeam(){
   var days=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   var k=K[dow];var kt=k[0]==="Off"?"<b>Day off</b>":"Lunch <b>"+k[0]+"</b> · Dinner <b>"+k[1]+"</b> · 11:00 to 21:00";
   var h='<div class="people">';
-  h+='<div class="person"><div class="av">Ka</div><h3>Kaitlin</h3><div class="role">Deputy Area Manager · Soho, Maki Nori, Shoreditch</div><div class="today">'+(started?'Today ('+days[dow]+'): '+kt:'Plan starts <b>Tue 13/10</b>. From then: '+kt.replace("<b>Day off</b>","day off")+' on '+days[dow]+'s')+'</div>'+
+  h+='<div class="person"><div class="av">Ka</div><h3>Kaitlin</h3><div class="role">Deputy Area Manager · Soho, Shoreditch</div><div class="today">'+(started?'Today ('+days[dow]+'): '+kt:'Plan starts <b>Tue 13/10</b>. From then: '+kt.replace("<b>Day off</b>","day off")+' on '+days[dow]+'s')+'</div>'+
     '<ul><li>Labour: Soho 25%, Nori 35%, Shoreditch 25%</li><li>Reviews a week: 40 / 30 / 40, plus 100 sign ups at Soho and Shoreditch</li><li>Cleanliness 3 out of 5, 95% checklists on Mapal</li><li>Daily message to Lincoln, weekly report before Tuesday KPI</li><li>Monthly audits for all three by Sat 07/11</li></ul>'+
     '<div class="muted" style="margin-top:8px">End of day messages: not wired yet. Will drop in here once we pick the channel she sends them on.</div></div>';
   h+='<div class="person"><div class="av">Ke</div><h3>Kei</h3><div class="role">B2B, whole region 3.5 days a week · Acting GM Lakeside</div><div class="today">Pipeline: <b>'+Object.keys(D.b2b.snap).reduce(function(s,x){return s+D.b2b.snap[x].leads},0)+'</b> leads · <b>'+Object.keys(D.b2b.snap).reduce(function(s,x){return s+D.b2b.snap[x].live},0)+'</b> live partners · <b>'+Object.keys(D.b2b.snap).reduce(function(s,x){return s+D.b2b.snap[x].no_follow},0)+'</b> stale follow ups</div>'+

@@ -68,6 +68,9 @@ CLUSTERS = [
     ("South England", "Lincoln (Ziang)", "Kaitlin Dorcherty",
      ["M17", "M18", "M19", "M20", "MakiNori"]),
 ]
+# 26/11/2026 Michael: Maki Nori permanently closed (last traded 22/11/2026). A closed site is left out of every
+# day on or after the date; earlier days keep it.
+CLOSED_FROM = {"MakiNori": "2026-11-23"}
 CODE_TO_CLUSTER = {c: n for n, _am, _dam, codes in CLUSTERS for c in codes}
 SITES = [c for _n, _am, _dam, codes in CLUSTERS for c in codes]
 
@@ -258,8 +261,11 @@ def build(rows, target, window_days):
             "with_comment": sum(1 for i in items if i["has_comment"]),
         }
 
+    closed = {c for c in SITES if CLOSED_FROM.get(c) and target.isoformat() >= CLOSED_FROM[c]}
     sites, no_reviews, capped = {}, [], {}
     for code in SITES:
+        if code in closed:
+            continue
         win = sorted(per[code]["window"],
                      key=lambda r: (r["date"], r["stars"]), reverse=True)
         day = per[code]["day"]
@@ -284,6 +290,7 @@ def build(rows, target, window_days):
 
     regions = {}
     for name, am, dam, codes in CLUSTERS:
+        codes = [c for c in codes if c not in closed]
         d_items = [r for c in codes for r in per[c]["day"]]
         w_items = [r for c in codes for r in per[c]["window"]]
         regions[name] = {"am": am, "dam": dam, "sites": codes,

@@ -363,6 +363,11 @@ let D=null, S={ptype:'week',pkey:null,scope:{type:'fleet',id:null},tab:'overview
 
 const QS=new URLSearchParams(location.search);const EMBED=QS.get('embed')==='1';
 // 16/11/2026 (Michael): franchise listings are kept out of the corporate view. ?franchise=1 shows them on their own, with no region and no AM.
+// 26/11/2026 (Michael): Maki Nori is permanently closed, last traded 22/11/2026. A closed site drops out of every period it has no reviews in;
+// reviews its listing receives after the closure are ignored. Earlier periods keep it.
+const CLOSED_FROM={MakiNori:'2026-11-23'};
+const siteVis=c=>!(CLOSED_FROM[c]&&!D.reviews.some(r=>r.site===c&&r[S.ptype]===S.pkey));
+const RK=()=>Object.keys(D.roster).filter(siteVis), RV=()=>Object.values(D.roster).filter(x=>siteVis(x.code));
 const FRV=QS.get('franchise')==='1';const isFr=c=>/^MAF/.test(c||'');
 function splitFranchise(){Object.keys(D.roster).forEach(c=>{if(isFr(c)!==FRV)delete D.roster[c];});D.reviews=D.reviews.filter(r=>D.roster[r.site]);
   if(D.meta&&D.meta.not_connected)Object.keys(D.meta.not_connected).forEach(c=>{if(!D.roster[c])delete D.meta.not_connected[c];});
@@ -372,6 +377,7 @@ async function load(){
   const el=$('#RV_DATA'); let txt=el.textContent.trim();
   if(txt&&!txt.startsWith('/*')){D=JSON.parse(txt);}else{const r=await fetch('data/reviews_intel.json');D=await r.json();}
   splitFranchise();
+  D.reviews=D.reviews.filter(r=>!(CLOSED_FROM[r.site]&&r.date>=CLOSED_FROM[r.site]));
   init();
 }
 /* ---------- periods ---------- */
@@ -469,8 +475,8 @@ function renderCnav(){
   const fleet=stats(all);
   const pill=(id,name,st,sites,active)=>{const rag={red:0,amber:0,green:0};sites.forEach(s=>{const g=siteRag(stats(all.filter(r=>r.site===s)));if(rag[g]!=null)rag[g]++;});
     return `<button class="cn-pill ${active?'active':''}" data-id="${esc(id)}"><span class="cn-name">${esc(name)}</span><span class="cn-count">${st.n}</span><span class="cn-rag">${rag.red?`<span class="chip-dot red" ${tip(0,rag.red+' red')}></span>`:''}${rag.amber?`<span class="chip-dot amber"></span>`:''}${rag.green?`<span class="chip-dot green"></span>`:''}</span></button>`;};
-  html+=pill('__fleet','Fleet',fleet,Object.keys(D.roster),S.scope.type==='fleet');
-  Object.keys(D.regions).forEach(reg=>{const sites=Object.values(D.roster).filter(x=>x.region===reg).map(x=>x.code);html+=pill(reg,reg,stats(all.filter(r=>sites.includes(r.site))),sites,S.scope.type==='region'&&S.scope.id===reg||S.scope.type==='site'&&D.roster[S.scope.id].region===reg);});
+  html+=pill('__fleet','Fleet',fleet,RK(),S.scope.type==='fleet');
+  Object.keys(D.regions).forEach(reg=>{const sites=RV().filter(x=>x.region===reg).map(x=>x.code);html+=pill(reg,reg,stats(all.filter(r=>sites.includes(r.site))),sites,S.scope.type==='region'&&S.scope.id===reg||S.scope.type==='site'&&D.roster[S.scope.id].region===reg);});
   if(S.scope.type==='site'){const R=D.roster[S.scope.id];html+=`<span class="cn-site">Site: <b>${esc(R.name)}</b> <span class="muted">${esc(R.gm||'GM tbc')}</span><span class="x" id="cnClear">✕ back to ${esc(R.region)}</span></span>`;}
   $('#cnav').innerHTML=html;
   $$('#cnav .cn-pill').forEach(b=>b.onclick=()=>{const id=b.dataset.id;if(id==='__fleet')setScope('fleet',null);else setScope('region',id);});
@@ -566,7 +572,7 @@ function renderBoard(){
   const pk=S.pkey,rs=D.reviews.filter(r=>r[S.ptype]===pk);
   const cell=(st)=>{const top=Object.entries(st.cats).sort((a,b)=>b[1]-a[1])[0];return `<div class="sc-chip ${starRag(st.avg)}" ${tip(0,'Average star rating vs OKR ≥ 4.7')}>${st.avg==null?'–':st.avg.toFixed(2)}</div><div class="sc-chip ${negRag(st.negPct,st.n)}" ${tip(0,st.neg+' reviews ≤3★')}>${st.n?st.negPct.toFixed(1)+'%':'–'}</div><div class="sc-num">${st.issues}</div><div class="sc-chip ${rateRag(st.issueRate,st.n)}" ${tip(0,'Issues per 100 reviews received')}>${st.issueRate==null?'–':st.issueRate.toFixed(0)}</div><div>${stackBar(st.cats,st.issues)}</div><div class="small">${top?`<span style="color:${catCol(top[0])};font-weight:700">${esc(D.taxonomy[top[0]].label)}</span> ${top[1]}`:'<span class="muted">–</span>'}</div>`;};
   let html=`<div class="scorecard-row header"><div>Region / site</div><div>Head · DAM / GM</div><div style="text-align:center">Reviews</div><div style="text-align:center">★</div><div style="text-align:center">≤3★</div><div style="text-align:center">Issues</div><div style="text-align:center">per 100</div><div>Issue mix</div><div>Top issue</div></div>`;
-  const regRows=Object.keys(D.regions).map(reg=>{const sites=Object.values(D.roster).filter(x=>x.region===reg).map(x=>x.code);return {reg,sites,st:stats(rs.filter(r=>sites.includes(r.site)))};}).sort((a,b)=>(b.st.issueRate||0)-(a.st.issueRate||0));
+  const regRows=Object.keys(D.regions).map(reg=>{const sites=RV().filter(x=>x.region===reg).map(x=>x.code);return {reg,sites,st:stats(rs.filter(r=>sites.includes(r.site)))};}).sort((a,b)=>(b.st.issueRate||0)-(a.st.issueRate||0));
   regRows.forEach(({reg,sites,st})=>{const R=D.regions[reg];const open=S.scope.type==='region'?S.scope.id===reg:S.scope.type==='site'?D.roster[S.scope.id].region===reg:false;
     html+=`<div class="scorecard-row region" data-reg="${esc(reg)}"><div><span class="sc-chev">${open?'▾':'▸'}</span><span class="sc-code">${esc(reg)}</span> <span class="sc-name">${sites.length} sites</span></div><div class="sc-name"><b style="color:var(--ink)">${esc(R.head)}</b> · ${esc(R.dam)}</div><div class="sc-num"><b>${st.n}</b></div>${cell(st)}</div>`;
     if(open){sites.map(s=>({s,st:stats(rs.filter(r=>r.site===s))})).sort((a,b)=>(b.st.issueRate||0)-(a.st.issueRate||0)||(b.st.negPct||0)-(a.st.negPct||0)).forEach(({s,st})=>{const R=D.roster[s];
@@ -580,11 +586,11 @@ function renderHeatmap(){
   const all=D.reviews.filter(r=>r[S.ptype]===S.pkey);const fleet=stats(all);
   const m=S.metric;let html='';
   Object.keys(D.regions).forEach(reg=>{
-    const sites=Object.values(D.roster).filter(x=>x.region===reg&&siteIn(x.code,S.scope)).map(x=>x.code);if(!sites.length)return;
+    const sites=RV().filter(x=>x.region===reg&&siteIn(x.code,S.scope)).map(x=>x.code);if(!sites.length)return;
     const rst=stats(all.filter(r=>sites.includes(r.site)));const R=D.regions[reg];
     const tiles=sites.map(s=>({s,st:stats(all.filter(r=>r.site===s))}));
     const val=(st)=>m==='star'?st.avg:m==='neg'?st.negPct:m==='rate'?st.issueRate:m==='vol'?st.n:null;
-    const rag=(st)=>m==='combined'?siteRag(st):m==='star'?(st.n<5?'na':starRag(st.avg)):m==='neg'?negRag(st.negPct,st.n):m==='rate'?rateRag(st.issueRate,st.n):(st.n>=fleet.n/Math.max(1,Object.keys(D.roster).length)?'green':st.n>=5?'amber':'red');
+    const rag=(st)=>m==='combined'?siteRag(st):m==='star'?(st.n<5?'na':starRag(st.avg)):m==='neg'?negRag(st.negPct,st.n):m==='rate'?rateRag(st.issueRate,st.n):(st.n>=fleet.n/Math.max(1,RK().length)?'green':st.n>=5?'amber':'red');
     tiles.sort((a,b)=>{const o={red:0,amber:1,green:2,na:3};if(m==='combined')return o[rag(a.st)]-o[rag(b.st)]||(b.st.issueRate||0)-(a.st.issueRate||0);if(m==='star')return (a.st.avg??9)-(b.st.avg??9);if(m==='vol')return a.st.n-b.st.n;return (val(b.st)||0)-(val(a.st)||0);});
     html+=`<div class="cluster-group"><div class="cluster-head"><span class="cluster-title">${esc(reg)}</span><span class="cluster-am">${esc(R.head)} · DAM ${esc(R.dam)}</span><span class="cluster-score">${rst.n} reviews · <span class="sc-chip ${starRag(rst.avg)}">${rst.avg==null?'–':rst.avg.toFixed(2)}★</span> · ${rst.issues} issues</span></div><div class="heatmap">`;
     tiles.forEach(({s,st})=>{const R=D.roster[s];const g=rag(st);const small=st.n<5&&m!=='vol';const big=small?(st.n?'n='+st.n:'–'):m==='star'?(st.avg==null?'–':st.avg.toFixed(2)):m==='neg'?(st.n?st.negPct.toFixed(1)+'%':'–'):m==='rate'?(st.issueRate==null?'–':st.issueRate.toFixed(0)):m==='vol'?st.n:(st.issueRate==null?'–':st.issueRate.toFixed(0));

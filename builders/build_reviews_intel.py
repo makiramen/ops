@@ -43,6 +43,9 @@ NOT_IN_SOURCE = {"IKI2": "Ikigai is not wired into the Google Reviews workbook (
 # `Maki Birmingham` (first rows 20/08), mapped to M21 with Michael's approval.
 # Sites with reviews but no weekly KPI card (no all_sites_wc entry) are added to the roster here.
 # 02/10/2026: MAF4 Braehead (source label `Maki F4`, first rows 18/09), mapped with Michael's approval.
+# 26/11/2026 Michael: Maki Nori is permanently closed (last traded 22/11/2026), remove it from everything.
+# Reviews a closed listing receives on or after the date are dropped; earlier reviews stay as history.
+CLOSED_FROM = {"MakiNori": "2026-11-23"}
 EXTRA_ROSTER = {"MAF4": {"site_label": "Braehead", "gm": None, "am": None, "region": "Franchise"}}   # 16/11/2026 Michael: franchise is not allocated to a region
 
 CLAUSE_SPLIT = re.compile(r"(?<=[.!?;])\s+|\n+|\s+(?=\b(?:but|however|although|though|except|unfortunately)\b)", re.I)
@@ -243,6 +246,8 @@ def main():
     stats = collections.Counter()
     llm_used = 0
     for r in full["reviews"]:
+        if CLOSED_FROM.get(r["c"]) and r["d"] >= CLOSED_FROM[r["c"]]:
+            stats["closed_site_dropped"] += 1; continue
         cl = classify(r, C)
         rid = r["id"]
         src = "rules"

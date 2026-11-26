@@ -56,7 +56,7 @@ PERIODS = [
 ]
 SITES = {
     "M18": {"name": "Soho", "region": "South", "lead": "Kaitlin", "droo": True},
-    "MakiNori": {"name": "Maki Nori", "region": "South", "lead": "Kaitlin", "droo": False},
+    # 26/11/2026 Michael: Maki Nori is permanently closed, removed from the Area Room
     "M19": {"name": "Shoreditch", "region": "South", "lead": "Lincoln and Kaitlin", "droo": True},
     "M17": {"name": "Lakeside", "region": "South", "lead": "Lincoln, Kei acting GM", "droo": True},
     "M20": {"name": "Southampton", "region": "South", "lead": "Lincoln", "droo": True},
@@ -66,7 +66,6 @@ GM_OVERRIDE = {"M19": "Lesley", "M20": "Diana"}  # confirmed by Michael 07/10/20
 DAILY_URL = "https://raw.githubusercontent.com/makiramen/ops/main/data/daily/"
 TARGETS = {  # weekly site targets from the stabilisation plan (7 Oct 2026)
     "M18": {"labour": 25, "reviews": 40, "signups": 100},
-    "MakiNori": {"labour": 35, "reviews": 30, "signups": None},
     "M19": {"labour": 25, "reviews": 40, "signups": 100},
     "M17": {"labour": 23, "reviews": 40, "signups": 100},
     "M20": {"labour": 24, "reviews": 40, "signups": 150},
@@ -226,7 +225,7 @@ def build_b2b():
         row["stands"] = sum(1 for s in stud if in_p(s["last_stand"], a, b))
         su = [s["signups"] for s in stud if in_p(s["last_stand"], a, b) and s["signups"] is not None]
         row["signups_stands"] = sum(su) if su else None
-        for site in ["Soho", "Maki Nori", "Shoreditch", "Lakeside", "Southampton"]:
+        for site in ["Soho", "Shoreditch", "Lakeside", "Southampton"]:
             row["out_" + site] = sum(1 for l in leads if l["site"] == site and in_p(l["first"], a, b))
         row["paid_events"] = sum(1 for e in events if e["type"] not in ("Freshers Fair", "Site Promo") and str(e["status"]).lower() in ("confirmed", "booked", "complete") and in_p(e["date"], a, b)) \
             + sum(1 for c_ in cat_won if in_p(c_["date"], a, b))
@@ -234,7 +233,7 @@ def build_b2b():
 
     # pipeline snapshot by site
     snap = {}
-    for site in ["Soho", "Maki Nori", "Shoreditch", "Lakeside", "Southampton"]:
+    for site in ["Soho", "Shoreditch", "Lakeside", "Southampton"]:
         L = [l for l in leads if l["site"] == site]
         snap[site] = {
             "leads": len(L),
@@ -285,7 +284,7 @@ def build_daily(days=7):
         cu, rv = _get("daily_%s.json" % d_), _get("daily_reviews_%s.json" % d_)
         if rv and out["reviews_latest"] == "none":
             out["reviews_latest"] = d_   # newest day with a reviews file; the build marker carries it
-        for c in ["M17", "M18", "M19", "M20", "MakiNori", "O2"]:
+        for c in ["M17", "M18", "M19", "M20", "O2"]:
             row = {"day": (cu or {}).get("day") or dt.date.fromisoformat(d_).strftime("%A")}
             s = ((cu or {}).get("sites") or {}).get(c)
             if s:
