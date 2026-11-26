@@ -2253,6 +2253,8 @@ function rvClick(e){var t=e.target.closest('[data-rp],[data-rs],[data-rst],[data
   if(d.k){if(d.k==='low'){v.stars=[1,2];v.show='all'}else if(d.k==='neg'){v.stars=[];v.show='neg'}else if(d.k==='iss'){v.stars=[];v.show='neg'}else if(d.k==='pos'){v.stars=[];v.show='pos'}save();renderReviews();return true}
   return false}
 
+/* 26/11/2026 (Michael: as tight as possible against the cash up): sit in = eat in + takeaway, covers on the cash up basis, a final
+   pull at midnight (d.final) counts the whole day, and once the nightly Kobas pull has the day the wage % is the actual one. */
 /* ===== Live tab (24/11/2026, Michael). Reads <site>.json from the branch live-data, written by .github/workflows/live-tracker.yml
    (site_cc/live/pull_live.py: Kobas, no Mac). Rulings: own tab, every position; covers, revenue, SPH and wage % count CLOSED tables only;
    upsells in units only (no pounds); server initials only; avg spend = SPH; no upsell targets yet; wage % is an estimate, no RAG. */
@@ -2267,21 +2269,21 @@ function renderLive(){var el=$('#liveBody');if(!el||!LIVE_ON)return;var d=LV.d;
   var c=d.closed||{},rg=d.rung||{},u=rg.upsell||{},pr=rg.pair||{},tt=d.to_target,w=d.wage_est,per=c.upsell_per_100_covers||{},hrs=d.hours||[],curH=String(d.asof).slice(11,13);
   var n1=function(v){return v==null?NA:(Math.round(v*10)/10).toFixed(1)},n0=function(v){return v==null?NA:String(v)},money2=function(v){return v==null?NA:'£'+v.toFixed(2)};
   var dayLab=dayName(d.day)+' '+dm(d.day);
-  var h2;if(!isToday)h2='Showing '+dayLab+' at close. Today starts at 11:00 UK.';
+  var h2;if(!isToday)h2='Showing '+dayLab+(d.final?' final figures':' at close')+'. Today starts at 11:00 UK.';
   else if(!tt||d.target==null)h2='Trading today · no day target on file';
   else if(tt.left>0)h2=gbp(tt.left)+' still needed'+(tt.per_hour?' · '+gbp(tt.per_hour)+' per hour to close':'');
   else h2='Target passed. '+gbp((c.all_sales||0)-d.target)+' over the day target.';
   var late=isToday&&inWin&&mins>50;
-  var sub='Last update '+String(d.asof).slice(11,16)+' UK'+(isToday&&mins>=0?' ('+(mins<1?'just now':mins+' min ago')+')':'')+' · updates every 30 minutes, 11:00 to 23:00 · closed tables only · staff tabs excluded'+(late?' <span class="pill p-a">! Update is late</span>':'')+(LV.err?' <span class="pill p-n">Feed not reachable, showing the last numbers</span>':'');
+  var sub='Last update '+String(d.asof).slice(11,16)+' UK'+(isToday&&mins>=0?' ('+(mins<1?'just now':mins+' min ago')+')':'')+' · updates every 30 minutes, 11:00 to 23:00, final figures at midnight · '+(d.final?'whole day':'closed tables only')+' · staff tabs excluded'+(late?' <span class="pill p-a">! Update is late</span>':'')+(LV.err?' <span class="pill p-n">Feed not reachable, showing the last numbers</span>':'');
   var h=hd(h2,sub);
   /* sales vs target, eat in revenue, SPH */
   var pct=tt&&tt.pct!=null?tt.pct:null,sphT=SITE.sph,sv=c.sph!=null&&sphT?c.sph-sphT:null;
   h+='<div class="grid"><div class="card s12 lhero"><div class="llab">Sales so far vs today\'s target (closed tables + delivery)</div><div class="big">'+gbp(c.all_sales)+(d.target!=null?' <small>of '+gbp(d.target)+'</small>':'')+(pct!=null?' <span class="pill '+(pct>=100?'p-g':'p-o')+'">'+Math.round(pct)+'%</span>':'')+'</div><div class="lbar"><i style="width:'+Math.max(0,Math.min(100,pct||0))+'%"></i></div><div class="small">'+(d.target==null?'No day sales target on file for today.':tt&&tt.left>0?'<b>'+gbp(tt.left)+'</b> still needed'+(tt.per_hour?', <b>'+gbp(tt.per_hour)+' per hour</b> from now to 23:00':'')+'.':'Day target passed.')+' Open tables are added when they are paid.</div></div>';
-  h+='<div class="card s3"><div class="llab">Eat in revenue</div><div class="big">'+gbp(c.eat_in_sales)+'</div><div class="small">'+n0(c.tables)+' table'+(c.tables===1?'':'s')+' closed · '+n0(d.open_tables)+' still open · '+n0(c.covers)+' cover'+(c.covers===1?'':'s')+'</div></div>';
+  h+='<div class="card s3"><div class="llab">Sit in revenue</div><div class="big">'+gbp(c.eat_in_sales)+'</div><div class="small">'+n0(c.tables)+' table'+(c.tables===1?'':'s')+' closed · '+n0(d.open_tables)+' still open · '+n0(c.covers)+' cover'+(c.covers===1?'':'s')+'</div></div>';
   h+='<div class="card s3"><div class="llab">Avg spend (SPH)</div><div class="big">'+money2(c.sph)+(sv!=null?' <span class="pill '+(sv>=0?'p-g':sv>=-2?'p-a':'p-r')+'">'+(sv>=0?'+':'-')+'£'+Math.abs(sv).toFixed(2)+'</span>':'')+'</div><div class="small">Target '+money2(sphT)+' · closed tables only'+(c.sph==null?' · shows once the first table is paid':'')+'</div></div>';
   /* live wage / revenue (estimate from clock ins, plain %, no RAG) */
   var wOk=w&&w.pct!=null&&w.pct<=100,lfh=null;hrs.forEach(function(x){if((!isToday||x.h<curH)&&x.staff_h)lfh=x});
-  h+='<div class="card s3"><div class="llab">Wage / revenue · today so far</div><div class="big">'+(wOk?n1(w.pct)+'%':'Too early')+' <small>estimate</small></div><div class="small">'+(w&&w.cost!=null?'<b>'+gbp(w.cost)+'</b> wages against <b>'+gbp(c.all_sales)+'</b> closed sales'+(w.on_shift_now!=null?' · '+w.on_shift_now+' on shift now':''):'Shows once the team has clocked in')+'</div></div>';
+  h+='<div class="card s3"><div class="llab">Wage / revenue · today so far</div><div class="big">'+(wOk?(w.estimate===false?(Math.round(w.pct*100)/100).toFixed(2):n1(w.pct))+'%':'Too early')+' <small>'+(w&&w.estimate===false?'actual':'estimate')+'</small></div><div class="small">'+(w&&w.cost!=null?'<b>'+gbp(w.cost)+'</b> wages against <b>'+gbp(c.all_sales)+'</b> closed sales'+(w.on_shift_now!=null?' · '+w.on_shift_now+' on shift now':''):'Shows once the team has clocked in')+'</div></div>';
   h+='<div class="card s3"><div class="llab">Wage / revenue · previous hour'+(lfh?' ('+lfh.h+':00)':'')+'</div><div class="big">'+(lfh?(lfh.wage_pct!=null?(lfh.wage_pct>100?'100%+':n1(lfh.wage_pct)+'%'):(isToday?'Not paid yet':'No sales')):NA)+' <small>estimate</small></div><div class="small">'+(lfh&&lfh.wage_cost!=null?'<b>'+gbp(lfh.wage_cost)+'</b> wages against <b>'+gbp(lfh.sales_all_closed||0)+'</b> closed sales'+(isToday?' · comes down as open tables are paid':''):'Shows after the first full hour')+'</div></div></div>';
   /* upsells: units only */
   var hNow={};hrs.forEach(function(x){if(x.h===curH)hNow=x});
