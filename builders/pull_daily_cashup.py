@@ -80,7 +80,7 @@ import json
 import os
 import re
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # ----------------------------------------------------------------------------
 # Site map. Keys are TRIMMED venue labels -- 5 of 22 carry trailing spaces at
@@ -263,6 +263,10 @@ IDX_COVERS, IDX_AVG_SPEND, IDX_WAGE_PCT = 24, 25, 26
 # The window the FOH/BOH block always falls inside, shifted or not.
 BLOCK_START, BLOCK_END = 9, 21
 
+# Swap tripwire: FOH must be this far off its own 14-day median, with each side within
+# the tolerance of the OTHER side's median, before a day is warned as looking swapped.
+SWAP_MIN_MOVE, SWAP_MIRROR_TOL = 8.0, 3.0
+
 EXPECTED_HEADERS = {
     IDX_VENUE: "Venue ",
     IDX_DATE: "Date",
@@ -361,25 +365,62 @@ def extract_split(row, total_labour, code, date_str, warnings):
             vals[i] = v
 
     idxs = sorted(vals)
+
+    # 26/11/2026 (Michael): M7 on Tue 24/11 was published the wrong way round
+    # (FOH 54.7% / BOH 45.3%, source says 45.3% / 54.7%). The sheet's FOH+BOH
+    # (GBP 1,954.54) was GBP 2.19 off total labour (GBP 1,952.35), and by
+    # coincidence BOH PROJECTED (1,067.64) + FOH ACTUAL (885.65) landed within
+    # GBP 0.94 of the total, so the old "rightmost triple wins" rule took that
+    # pair. A replay over all 13,326 rows of the tab found 81 rows read wrong
+    # the same way. Two guards now stop it:
+    #
+    #  1. THE PROJECTED PAIR IS NAMED AND EXCLUDED. FOH projected and BOH
+    #     projected are two adjacent money cells whose sum sits in the
+    #     `Projected` cell just to their LEFT (at most the hours cell between).
+    #     A cell in that pair can never be half of the actual pair.
+    #  2. A PENNY-EXACT SUM BEATS A TOLERANCE MATCH. The real pair adds up to
+    #     the sheet's own FOH+BOH cell to the penny; a coincidence does not.
+    #     Only when no exact sum exists is a within-tolerance match accepted,
+    #     and then it is warned about by name.
+    projected = set()
+    for a in range(1, len(idxs) - 1):
+        i, j = idxs[a], idxs[a + 1]
+        if vals[i] <= 0 or vals[j] <= 0:
+            continue
+        psum = vals[i] + vals[j]
+        if any(abs(vals[idxs[h]] - psum) <= 0.021 for h in range(max(0, a - 2), a)):
+            projected = {i, j}
+            break
+
     best = None
     for a in range(len(idxs)):
         for b in range(a + 1, len(idxs)):
             i, j = idxs[a], idxs[b]
             if vals[i] <= 0 or vals[j] <= 0:
                 continue
+            if i in projected or j in projected:
+                continue
             target = vals[i] + vals[j]
             for c in range(b + 1, len(idxs)):
                 k = idxs[c]
-                if abs(vals[k] - target) > max(0.02, target * 0.0005):
+                off = abs(vals[k] - target)
+                if off > max(0.02, target * 0.0005):
                     continue
                 if total_labour and vals[k] > total_labour * 1.005:
                     continue
-                cand = (k, j, i)
+                exact = 1 if off <= 0.021 else 0
+                cand = (exact, k, j, i)
                 if best is None or cand > best[0]:
-                    best = (cand, vals[i], vals[j])
+                    best = (cand, vals[i], vals[j], off)
 
     if best is not None:
-        (_, _, _), foh_v, boh_v = best
+        (exact, _, _, _), foh_v, boh_v, off = best
+        if not exact:
+            warnings.append(
+                f"{date_str} {code}: FOH £{foh_v:,.2f} + BOH £{boh_v:,.2f} only "
+                f"matches the sheet's total within £{off:,.2f}, not to the penny "
+                f"- check the split at source"
+            )
     else:
         # FALLBACK. The reconciliation anchor needs the sum to appear in a cell.
         # Maki 6 is shifted RIGHT far enough that its `FOH+BOH` cell is consumed,
@@ -595,6 +636,54 @@ def main():
 
     os.makedirs(a.out, exist_ok=True)
     written = []
+
+    # SWAP TRIPWIRE (26/11/2026, Michael). A site's FOH share is steady day to
+    # day (M7 sat between 40% and 49% for six weeks, then "54.7%" on the day the
+    # split was read the wrong way round). So every verified split is compared
+    # with that site's own medians over the previous 14 days on disk. When the
+    # day looks like the usual split MIRRORED (FOH 8+ points off its median,
+    # and each side sitting within 3 points of the OTHER side's median) it is
+    # warned about by name. Warn only: it never blanks or changes a figure.
+    # Replayed over 121 days this fires about once every five days, including
+    # on M7 24/11. A plain "moved 10 points" rule fired 178 times: too noisy.
+    def _prior(code, date_str, n=14):
+        fo, bo = [], []
+        d0 = datetime.fromisoformat(date_str)
+        for back in range(1, 29):
+            if len(fo) >= n:
+                break
+            dk = (d0 - timedelta(days=back)).date().isoformat()
+            lab = None
+            if dk in days and code in days[dk]["sites"]:
+                lab = days[dk]["sites"][code]["labour"]
+            else:
+                try:
+                    with open(os.path.join(a.out, f"daily_{dk}.json"), encoding="utf-8") as fh:
+                        lab = ((json.load(fh).get("sites") or {}).get(code) or {}).get("labour")
+                except Exception:
+                    lab = None
+            if (lab and lab.get("split_status") == "ok"
+                    and lab.get("foh_pct") is not None and lab.get("boh_pct") is not None):
+                fo.append(lab["foh_pct"]); bo.append(lab["boh_pct"])
+        return sorted(fo), sorted(bo)
+
+    for date_str in sorted(days):
+        for code, site in days[date_str]["sites"].items():
+            lab = site["labour"]
+            if lab["split_status"] != "ok" or lab["foh_pct"] is None:
+                continue
+            fo, bo = _prior(code, date_str)
+            if len(fo) < 5:
+                continue
+            mf, mb = fo[len(fo) // 2], bo[len(bo) // 2]
+            if (abs(lab["foh_pct"] - mf) >= SWAP_MIN_MOVE
+                    and abs(lab["boh_pct"] - mf) <= SWAP_MIRROR_TOL
+                    and abs(lab["foh_pct"] - mb) <= SWAP_MIRROR_TOL):
+                warnings.append(
+                    f"{date_str} {code}: FOH {lab['foh_pct']}% / BOH {lab['boh_pct']}% "
+                    f"looks like its usual split the wrong way round (14-day "
+                    f"medians FOH {mf}% / BOH {mb}%) - check FOH and BOH at source"
+                )
 
     for date_str in sorted(days):
         sites = days[date_str]["sites"]

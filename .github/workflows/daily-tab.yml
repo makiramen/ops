@@ -57,6 +57,11 @@ jobs:
           grep -E "^!!|Error|newest|^ok" /tmp/fetch.log | tail -6 | while read -r l; do echo "::notice title=fetch::${l:0:400}"; done
           exit $rc
 
+      # 26/11/2026 (Michael): the FOH/BOH split reader is replayed against real rows it once got wrong
+      # (M7 24/11 published the wrong way round) before any build. A failure stops the run loudly.
+      - name: FOH/BOH split reader regression test
+        run: python3 builders/test_daily_split.py
+
       - name: Build, diff, commit, push
         id: run
         env:
