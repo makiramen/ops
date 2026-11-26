@@ -37,6 +37,7 @@ for wc,(n,g) in DB['inv'].items():
     if not r:continue
     if r[7] is None or r[8] is None:r[7]=g;r[8]=n;r[9]=round(g/n,2)
 K=W['k'];WK=[]
+R100=lambda v:100.0 if isinstance(v,(int,float)) and not isinstance(v,bool) and 99<=v<100 else v  # 26/11/2026 (Michael): Deliveroo open hours 99%+ shown as 100% on the page; data files keep the raw figure
 ML=J('ml_weekly.json')['w']  # Mona Lisa weekly gap fill: stored values win
 for r in main:
     o=dict(zip(K,r));d=D.get(r[0],[r[0]]+[None]*9)
@@ -45,6 +46,7 @@ for r in main:
         for k in ('sales','target','wage','hours','waste'):
             if o.get(k) is None and m.get(k) is not None:o[k]=m[k]
     o['d']=dict(zip(W['dk'][1:],d[1:]))
+    if 'open' in o['d']:o['d']['open']=R100(o['d']['open'])  # 26/11/2026 (Michael): Deliveroo open hours 99%+ shown as 100%
     WK.append(o)
 # 13/10/2026 (Michael): the week in progress is a week on the page too ("this week"), built week to date from the daily cash up.
 # Sales, target, covers, SPH and wage % (sales weighted) are week to date; everything weekly only (food cost, hours, waste, league, efficiency) stays
@@ -114,6 +116,14 @@ _gr=SJ['sources'].get('google_reply') or {};SITE['greply']=_gr.get('webapp') if 
 MT=JD('maint.json',{'pulled':None,'open':[],'done':[],'recap':{'items':[]},'n':{}});PPM=JD('ppm.json',{'asof':None,'items':[]})
 dly=J('daily.json');cov=J('covers.json');dlv=J('delivery.json') if SC.get('delivery',True)!=False else {'d':{}};
 DD=JD('droo_daily.json',{'src':'Deliveroo daily not pulled yet','to':None,'d':{},'w':{}}) if SC.get('delivery',True)!=False else {'src':'Deliveroo daily: no delivery at this site','to':None,'d':{},'w':{}}  # pull_deliveroo_daily.py
+def _dd100(DD):
+    for tk,kk in (('d','k'),('w','wk')):
+        ks=DD.get(kk) or [];tb=DD.get(tk) or {}
+        if 'open_pct' not in ks:continue
+        ix=ks.index('open_pct')
+        for r in tb.values():
+            if isinstance(r,list) and len(r)>ix:r[ix]=R100(r[ix])
+_dd100(DD)
 br=J('broth.json');rv=J('reviews.json');loy=J('loyalty.json')
 BUD=JD('budget.json',{'src':'Budget burn not pulled yet','pulled':None,'as_at':None,'cap':None,'ledger':{},'wk':{}});PRM=JD('promos.json',{'src':'Marketing calendar not pulled yet','pulled':None,'items':[]})  # 20/10/2026 (Michael): Budget burn on Stock & Cost, Marketing tab
 # 21/10/2026 (Michael): promo briefs from the marketing Drive, matched to this site; the page shows only those in play, click for the full brief

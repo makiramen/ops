@@ -1382,6 +1382,30 @@
     .wow-down .wow-delta { color:#dc2626; }
   </style>
   <script>
+  /* 26/11/2026 (Michael): Deliveroo open hours of 99% or more are shown as 100% everywhere on this page
+     (Deliveroo rarely reports a clean 100). Applied once, as each data file is read, so every tab, band and
+     roll up agrees. The data files keep the raw figure. Green stays 98%+, amber to 95%. */
+  (function(){
+    var up=function(v){return (typeof v==='number'&&v>=99&&v<100)?100:v;};
+    var walk=function(o,depth){
+      if(!o||typeof o!=='object'||depth>6)return;
+      if(Array.isArray(o)){for(var i=0;i<o.length;i++)walk(o[i],depth+1);return;}
+      if(typeof o.open_hours_pct==='number')o.open_hours_pct=up(o.open_hours_pct);
+      for(var k in o){var v=o[k];if(v&&typeof v==='object'&&k!=='reviews'&&k!=='notes')walk(v,depth+1);}
+    };
+    var daily=function(j){
+      var fix=function(tbl,ix){if(!tbl||ix<0)return;for(var a in tbl){var t=tbl[a];for(var c in t){var r=t[c];if(Array.isArray(r))r[ix]=up(r[ix]);}}};
+      if(Array.isArray(j.k))fix(j.d,j.k.indexOf('open_pct'));
+      if(Array.isArray(j.wk))fix(j.w,j.wk.indexOf('open_pct'));
+    };
+    window._rooOpen100=function(j){try{if(j&&typeof j==='object'){if(j.d&&j.w&&(j.k||j.wk))daily(j);else if(j.sites||j.weeks||j.deliveroo)walk(j,0);}}catch(e){}return j;};
+    if(window.Response&&Response.prototype&&Response.prototype.json){
+      var orig=Response.prototype.json;
+      Response.prototype.json=function(){return orig.call(this).then(window._rooOpen100);};
+    }
+  })();
+  </script>
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
       if (typeof SITES === 'undefined') return;
       function parsePct(s, key) {
@@ -5894,7 +5918,7 @@ function rooPanelHtml(s, d, monday, jsonCode, prevWk, daily, rooRev, agg, prevAg
     ${tile('Busy mode %', num(d.busy_mode_pct, 1, '', '%'), busyBand(d.busy_mode_pct), dlt('busy_mode_pct', 'down-is-good', 'pp', 1))}
     ${tile('Rejections %', num(d.rejection_pct, 1, '', '%'), rejBand(d.rejection_pct), dlt('rejection_pct', 'down-is-good', 'pp', 1))}
   </div>
-  <div style="font-size:10px; color:var(--ink-3); margin:-8px 0 14px;">Thresholds as the Deliveroo RAG tab: rating ≥4.7/≥4.0, open hours ≥98/≥95, prep ≤15/≤18, inaccuracy ≤2/≤3, rider wait ≤2/≤4. WoW: ${prevWk ? 'vs w/c ' + esc(prevWk.monday) : 'previous week not available'}.</div>`;
+  <div style="font-size:10px; color:var(--ink-3); margin:-8px 0 14px;">Thresholds as the Deliveroo RAG tab: rating ≥4.7/≥4.0, open hours ≥98/≥95 (99%+ shown as 100), prep ≤15/≤18, inaccuracy ≤2/≤3, rider wait ≤2/≤4. WoW: ${prevWk ? 'vs w/c ' + esc(prevWk.monday) : 'previous week not available'}.</div>`;
 
   // Last 7 days from deliveroo_daily.json
   const thS = 'font-size:10px; color:var(--ink-3); text-transform:uppercase; letter-spacing:.06em; font-weight:600; text-align:right; padding:4px 6px; border-bottom:1px solid var(--line);';
