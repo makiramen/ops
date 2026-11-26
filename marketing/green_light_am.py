@@ -20,6 +20,7 @@ SITES = ['M1', 'M3', 'M6', 'M7', 'M8', 'M9', 'M10', 'M11', 'M12', 'M13', 'M14', 
          'M16', 'M21', 'M17', 'M18', 'M19', 'M20', 'MakiNori', 'IKI2']
 SPH = {'MakiNori': 35, 'IKI2': 21}
 SPH_DEFAULT = 22
+CLOSED_FROM = {'MakiNori': '2026-11-23'}   # permanently closed (Michael 26/11/2026): no row from this week on
 HISTORY_WEEKS = 16
 
 
@@ -94,6 +95,8 @@ def board(repo, wc):
     rows = []
     for s in SITES:
         g = figures(f, s)
+        if CLOSED_FROM.get(s) and wc >= CLOSED_FROM[s]:
+            continue
         if not g:
             rows.append({'site': s, 'rag': 'NO AM FIGURE'})
             continue

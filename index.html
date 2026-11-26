@@ -3139,7 +3139,7 @@ const SITES = [
 // calls applySiteGate() once the week's manifest is in, rebuilding SITES from
 // SITES_ALL: every ungated site, plus any date-gated site that week actually has.
 // Mirrors SITE_LIVE_FROM in build_site_json.py.
-const SITE_LIVE_FROM = { "M21": "2026-08-21", "MAF3": "2026-10-26", "MAF1": "2026-11-09", "MAF2": "2026-11-09", "MAF4": "2026-11-09" };   // 12/11/2026: MAF1/2/4 franchise cards appear only in weeks the build carries them   // MAF3 O2 Arena (franchise) from w/c 26/10/2026, Michael 11/11/2026
+const SITE_LIVE_FROM = { "Maki Nori": "2026-05-04" /* 26/11/2026 Michael: Maki Nori permanently closed, last traded 22/11; shown only in the weeks the build carries it */, "M21": "2026-08-21", "MAF3": "2026-10-26", "MAF1": "2026-11-09", "MAF2": "2026-11-09", "MAF4": "2026-11-09" };   // 12/11/2026: MAF1/2/4 franchise cards appear only in weeks the build carries them   // MAF3 O2 Arena (franchise) from w/c 26/10/2026, Michael 11/11/2026
 const SITES_ALL = SITES.slice();
 function applySiteGate(weekCodes){
   const present = new Set(weekCodes || []);
@@ -7874,9 +7874,9 @@ function ecbSetLive(state, txt){
   t.textContent = txt;
 }
 // Dated site closures. Read live from builders/covers_accepted.json (one source with the daily cash up); this copy is the fallback.
-let ECB_CLOSURES = {"M21":{"from":"2026-10-11","until":null,"why":"Closed after a fire"}};
+let ECB_CLOSURES = {"M21":{"from":"2026-10-11","until":"2026-10-29","why":"Closed after a fire"},"MN":{"from":"2026-11-23","until":null,"why":"Maki Nori permanently closed"}};
 async function ecbLoadClosures(){
-  try{ const r=await fetch("./builders/covers_accepted.json?cb="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); if(j && j.closures) ECB_CLOSURES=j.closures; } }catch(_e){}
+  try{ const r=await fetch("./builders/covers_accepted.json?cb="+Date.now(),{cache:"no-store"}); if(r.ok){ const j=await r.json(); if(j && j.closures){ ECB_CLOSURES=j.closures; if(ECB_CLOSURES.MakiNori) ECB_CLOSURES.MN=ECB_CLOSURES.MakiNori; if(ECB_CLOSURES.IKI2) ECB_CLOSURES.IK2=ECB_CLOSURES.IKI2; } } }catch(_e){}   // the ledger codes Maki Nori as MN and Ikigai as IK2
 }
 async function ecbRefresh(){
   ecbSetLive("loading","Refreshing…");

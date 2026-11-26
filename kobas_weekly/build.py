@@ -27,7 +27,7 @@ Per site, per week:
 """
 import os, re, sys, csv, io, json, glob, math, datetime
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from sitemap import V, VID2S, FRANCHISE, WET_CATS, CTRL_RX
+from sitemap import V, VID2S, FRANCHISE, WET_CATS, CTRL_RX, CLOSED_FROM
 
 src, dst = sys.argv[1], sys.argv[2]
 RAW = os.path.join(src, 'raw')
@@ -284,6 +284,7 @@ for mon in weeks:
            'sites': {}, 'missing': [], 'pull_errors': LOG.get('errors', [])}
     prev = jload(os.path.join(dst, f'wc_{(mon - datetime.timedelta(7)).isoformat()}.json'), {}) or {}
     for site in V:
+        if CLOSED_FROM.get(site) and mon.isoformat() >= CLOSED_FROM[site]: continue   # permanently closed site, not in this week
         S = {'venue_id': V[site], 'franchise': site in FRANCHISE, 'days': {}}
         for d in pulled:
             e, t, dl = (cl(site, d, 'expectedNetPaymentsConsumptions:of which ' + x) for x in ('Eat-in sales', 'Takeaway sales', 'Delivery sales'))

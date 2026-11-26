@@ -6,5 +6,8 @@ V = {'M1': 3, 'M3': 5, 'M6': 43, 'M7': 9, 'M8': 47, 'M9': 2, 'M10': 13, 'M11': 2
      'MAF1': 18, 'MAF2': 21, 'MAF4': 63}   # 12/11/2026: franchises West End, Manchester NQ, Braehead (Kobas venue ids read 10/09/2026)
 VID2S = {v: k for k, v in V.items()}
 FRANCHISE = {'MAF1', 'MAF2', 'MAF3', 'MAF4'}
+# Permanently closed sites: left out of every week starting on or after the date (26/11/2026 Michael: Maki Nori is officially closed,
+# remove it from everything; last trading day Sun 22/11/2026). Earlier weeks keep the site as it traded.
+CLOSED_FROM = {'MakiNori': '2026-11-23'}
 WET_CATS = ('ALCOHOLIC DRINKS', 'SOFT DRINKS')          # stock categories counted as wet (drinks)
 CTRL_RX = r'CONTROLLABLE|PACKAGING|CONSUMABLE'         # stock categories counted as controllables (neither food nor wet)
