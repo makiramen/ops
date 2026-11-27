@@ -383,7 +383,7 @@ def build(site, day, now, k, vnames=None):
         covers = int(round(T['covers']['eatin']['total'] + (T['covers'].get('takeaway') or {}).get('total', 0)))      # 26/11/2026: the cash up counts takeaway covers too
     except Exception as e: flags.append(f'Sales Breakdown covers missing ({e})')
 
-    cov_src = 'sales breakdown'
+    cov_src = 'sales breakdown'; CLg = {}
     if final:      # the Cash Log (once cashed up) is the cash up's covers: covers + tabs without covers set (kobas_weekly/build.py)
         try:
             CLg = cash_log(k, vid, day); kc = CLg.get('covers:Covers')
@@ -445,7 +445,13 @@ def build(site, day, now, k, vnames=None):
     per100 = (lambda n: round(100.0 * n / covers, 1)) if covers else (lambda n: None)
     uc = units(EC); pc = pair(EC)
     ok = A is not None or final
-    o['closed'] = {'eat_in_sales': rev_sit if ok else None, 'takeaway_sales': rev_take, 'all_sales': rev_closed_all if ok else None, 'covers': covers, 'covers_source': cov_src,
+    sales_src = 'till, cash up basis'
+    if final:      # 27/11/2026: once the site has cashed up, the Cash Log's own net sales x 1.2 ARE the cash up (it also carries refunds the till lines do not)
+        ce, ct, cd = (CLg.get('expectedNetPaymentsConsumptions:of which ' + n) for n in ('Eat-in sales', 'Takeaway sales', 'Delivery sales'))
+        ct, cd = ct or 0.0, cd or 0.0      # a mode with no sales is blank in the Cash Log
+        if ce is not None and (ce + ct + cd) > 0:
+            rev_take = round(ct * 1.2, 2); rev_sit = round((ce + ct) * 1.2, 2); rev_closed_all = round((ce + ct + cd) * 1.2, 2); sales_src = 'cash log'
+    o['closed'] = {'eat_in_sales': rev_sit if ok else None, 'takeaway_sales': rev_take, 'all_sales': rev_closed_all if ok else None, 'sales_source': sales_src, 'covers': covers, 'covers_source': cov_src,
                    'sph': round(rev_sit / covers, 2) if (covers and ok) else None, 'tables': len(bills(EC)),
                    'upsell_per_100_covers': {u: per100(n) for u, n in uc.items()}, 'sushi_per_100_covers': per100(pc['sushi']), 'ramen_per_100_covers': per100(pc['bowls'])}
     o['open_tables'] = len(bills([x for x in E if not x['closed']])) if ok else None
